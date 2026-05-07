@@ -41,10 +41,10 @@ echo
 
 unset NUM_OF_JOBS
 # setenv NUM_OF_JOBS 1
-setenv NUM_OF_JOBS 10
+# setenv NUM_OF_JOBS 10
 # setenv NUM_OF_JOBS 100
 # setenv NUM_OF_JOBS 2500
-# setenv NUM_OF_JOBS 5000
+setenv NUM_OF_JOBS 5000
 # setenv NUM_OF_JOBS 7500
 # setenv NUM_OF_JOBS 10000
 echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}         ${NUM_OF_JOBS}"
