@@ -25,12 +25,10 @@
 
 // Include libraries:
 #include "../include/targets.h"
-#include "/w/hallb-scshelf2102/clas12/asportes/2N-Analyzer-e4nu/framework/namespaces/general_utilities/utilities.h"
+#include "../framework/namespaces/general_utilities/utilities.h"
 
 // Include classes:
-#include "/w/hallb-scshelf2102/clas12/asportes/2N-Analyzer-e4nu/framework/classes/AMaps/AMaps.cpp"
-#include "/w/hallb-scshelf2102/clas12/asportes/2N-Analyzer-e4nu/framework/classes/DSCuts/DSCuts.h"
-#include "/w/hallb-scshelf2102/clas12/asportes/2N-Analyzer-e4nu/framework/classes/hPlots/hsPlots.cpp"
+#include "../framework/classes/DSCuts/DSCuts.h"
 
 using namespace std;
 using namespace utilities;
