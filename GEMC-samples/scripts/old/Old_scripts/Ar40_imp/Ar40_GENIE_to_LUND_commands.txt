@@ -1,0 +1,18 @@
+git pull ; root 'GENIE_to_LUND.C("/w/hallb-scshelf2102/clas12/asportes/2N_Analysis_Truth_Samples/Ar40/G18_10a_00_000/Q2_th_test_samples/4029MeV/master-routine_validation_01-eScattering/Ar40_G18_10a_00_000_Q2_0_19_4029MeV.root","/lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco/2N_Analysis_Reco_Samples/Ar40/G18_10a_00_000/4029MeV/Q2_0_19","Ar40_G18_10a_00_000_Q2_0_19_4029MeV_lundfile",10,"Ar",40,18)' -q
+
+
+git pull ; root 'GENIE_to_LUND.C("/w/hallb-scshelf2102/clas12/asportes/2N_Analysis_Truth_Samples/Ar40/G18_10a_00_000/4029MeV_Q2_0_25/master-routine_validation_01-eScattering/*.root","/lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/GENIE_Reco_Samples/Ar40/G18_10a_00_000/4029MeV_Q2_0_25_Ar40_target_zpos_test","Ar40_G18_10a_00_000_Q2_0_25_4029MeV_lundfile",100,"Ar",40,18)' -q
+
+git pull ; root 'GENIE_to_LUND_converter/GENIE_to_LUND_converter.C("/w/hallb-scshelf2102/clas12/asportes/2N_Analysis_Truth_Samples/Ar40/G18_10a_00_000/4029MeV_Q2_0_25/master-routine_validation_01-eScattering/*.root",100,"Ar",40,18)' -q
+
+// rgm_fall2021_Ar test:
+git pull ; root 'GENIE_to_LUND_converter/GENIE_to_LUND_converter.C("/w/hallb-scshelf2102/clas12/asportes/2N_Analysis_Truth_Samples/Ar40/G18_10a_00_000/4029MeV_Q2_0_25/master-routine_validation_01-eScattering/*.root",100,"Ar",40,18)' -q
+
+// rgm_fall2021_C test:
+git pull ; root 'GENIE_to_LUND_converter/GENIE_to_LUND_converter.C("/w/hallb-scshelf2102/clas12/asportes/2N_Analysis_Truth_Samples/C12/G18_10a_00_000/2070MeV_Q2_0_02/master-routine_validation_01-eScattering/*.root",100,"1-foil",12,6)' -q
+
+// rgm_fall2021_C_v2_S test:
+git pull ; root 'GENIE_to_LUND_converter/GENIE_to_LUND_converter.C("/w/hallb-scshelf2102/clas12/asportes/2N_Analysis_Truth_Samples/C12/G18_10a_00_000/2070MeV_Q2_0_02/master-routine_validation_01-eScattering/*.root",100,"1-foil-small",12,6)' -q
+
+// rgm_fall2021_C_v2_L test:
+git pull ; root 'GENIE_to_LUND_converter/GENIE_to_LUND_converter.C("/w/hallb-scshelf2102/clas12/asportes/2N_Analysis_Truth_Samples/C12/G18_10a_00_000/4029MeV_Q2_0_25/master-routine_validation_01-eScattering/*.root",100,"1-foil-large",12,6)' -q
