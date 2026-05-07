@@ -1,0 +1,11 @@
+*.root 
+*~
+*.so
+*.pcm
+*.d
+*#
+*.ev
+*.hipo
+*.out
+
+./build

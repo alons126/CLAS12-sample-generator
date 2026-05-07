@@ -87,10 +87,12 @@ void GENIE_to_LUND_converter(TString InputFiles = "", /* TString OutputTopDir = 
 
     cout << "\033[33m\nLUND file prefix: \t\033[0m" << lundfile_prefix << endl;
 
+    // Set up output directories
     TString OutputFileBase = "/lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/GENIE_Reco_Samples";
-    TString OutputTopDir = OutputFileBase + "/" + target_element + "/" + genie_tune + "/" + beam_e + "_" + Q2_cut + ending + "_devGEMC_rgm_fall2021_Ar";
+    // TString OutputTopDir = OutputFileBase + "/" + target_element + "/" + genie_tune + "/" + beam_e + "_" + Q2_cut + ending + "_devGEMC_rgm_fall2021_Ar";
     // TString OutputTopDir = OutputFileBase + "/" + target_element + "/" + genie_tune + "/" + beam_e + "_" + Q2_cut + ending + "_devGEMC_rgm_fall2021_C_L";
     // TString OutputTopDir = OutputFileBase + "/" + target_element + "/" + genie_tune + "/" + beam_e + "_" + Q2_cut + ending + "_devGEMC_rgm_fall2021_C_S";
+    TString OutputTopDir = OutputFileBase + "/" + target_element + "/" + genie_tune + "/" + beam_e + "_" + Q2_cut + ending + "_GEMC5.14";
     // TString OutputTopDir = OutputFileBase + "/" + target_element + "/" + genie_tune + "/" + beam_e + "_" + Q2_cut + ending;
     system(("rm -rf " + std::string(OutputTopDir.Data())).c_str());    // Remove the directory if it exists
     system(("mkdir -p " + std::string(OutputTopDir.Data())).c_str());  // Create the directory
@@ -128,7 +130,7 @@ void GENIE_to_LUND_converter(TString InputFiles = "", /* TString OutputTopDir = 
 
     // Acceptance maps --------------------------------------------------------------------------------------------------------------------------------------------------
 
-    //TODO: enable AMaps after generation!
+    // TODO: enable AMaps after generation!
 
     // cout << "\nPreparing acceptance maps...\n" << endl;
 
@@ -158,9 +160,8 @@ void GENIE_to_LUND_converter(TString InputFiles = "", /* TString OutputTopDir = 
 
     std::vector<TObject*> HistoList;
 
-    TH2D* theta_e_VS_phi_e =
-        new TH2D("theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}", 100, -180., 180., 100, 0., 50.);
-        // new TH2D("theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}", HistElectronSliceNumOfXBins, -180., 180., HistElectronSliceNumOfYBins, 0., 50.);
+    TH2D* theta_e_VS_phi_e = new TH2D("theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}", 100, -180., 180., 100, 0., 50.);
+    // new TH2D("theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}", HistElectronSliceNumOfXBins, -180., 180., HistElectronSliceNumOfYBins, 0., 50.);
     HistoList.push_back(theta_e_VS_phi_e);
 
     // hsPlots theta_e_VS_phi_e_BySliceOfPe = hsPlots(ElectronMomSliceLimits, hsPlots::TH2D_TYPE, HistoList, "theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}
