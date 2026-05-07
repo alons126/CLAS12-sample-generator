@@ -20,8 +20,8 @@
 #include <fstream>
 #include <iostream>
 
-// Include CLAS12 libraries:
-#include "../include/clas12_include.h"
+// // Include CLAS12 libraries:
+// #include "../include/clas12_include.h"
 
 // Include libraries:
 #include "../include/targets.h"
