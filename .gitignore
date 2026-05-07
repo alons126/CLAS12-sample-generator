@@ -1,0 +1,13 @@
+*.root 
+*~
+*.so
+*.pcm
+*.d
+*#
+*.ev
+*.hipo
+*.out
+
+./build
+
+GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d

@@ -1,5 +1,11 @@
 #!/bin/csh
 
+# Wrapper for the ROOT GENIE-to-LUND conversion workflow.
+# This script is intended to be run from inside GEMC-samples/. It sets
+# the truth-sample input location and target / beam configuration, checks
+# that the expected ROOT inputs exist, and then invokes
+# GENIE_to_LUND_converter/GENIE_to_LUND_converter.C.
+
 # Setup environment
 # ======================================================================================================
 source ./scripts/set_env.csh
@@ -39,8 +45,8 @@ endif
 unsetenv TL_SAMPLE_TARGET_NUCLEUS
 # setenv TL_SAMPLE_TARGET_NUCLEUS H1
 # setenv TL_SAMPLE_TARGET_NUCLEUS D2
-# setenv TL_SAMPLE_TARGET_NUCLEUS C12
-setenv TL_SAMPLE_TARGET_NUCLEUS Ar40
+setenv TL_SAMPLE_TARGET_NUCLEUS C12
+# setenv TL_SAMPLE_TARGET_NUCLEUS Ar40
 echo "\033[35mTL_SAMPLE_TARGET_NUCLEUS:\033[0m ${TL_SAMPLE_TARGET_NUCLEUS}"
 echo ""
 
@@ -71,20 +77,21 @@ echo ""
 
 # Set GENIE tune
 unsetenv TL_GENIE_TUNE
-# setenv TL_GENIE_TUNE G18_10a_00_000
-setenv TL_GENIE_TUNE GEM21_11a_00_000
+setenv TL_GENIE_TUNE G18_10a_00_000
+# setenv TL_GENIE_TUNE GEM21_11a_00_000
 echo "\033[35mTL_GENIE_TUNE:\033[0m ${TL_GENIE_TUNE}"
 echo ""
 
 # Set beam energy
 unsetenv TL_SAMPLE_ENERGY
-# setenv TL_SAMPLE_ENERGY 2070MeV
-setenv TL_SAMPLE_ENERGY 4029MeV
+setenv TL_SAMPLE_ENERGY 2070MeV
+# setenv TL_SAMPLE_ENERGY 4029MeV
 # setenv TL_SAMPLE_ENERGY 5986MeV
 echo "\033[35mTL_SAMPLE_ENERGY:\033[0m ${TL_SAMPLE_ENERGY}"
 echo ""
 
 # Set target type
+# Relevant for GENIE-to-LUND conversion since it determines the target geometry and thus the acceptance cuts. Used with the targets.h header in GENIE_to_LUND_converter.C.
 unsetenv TL_SAMPLE_TARGET_TYPE
 
 if ("${TL_SAMPLE_TARGET_NUCLEUS}" == "H1" || "${TL_SAMPLE_TARGET_NUCLEUS}" == "D2") then
@@ -101,18 +108,6 @@ else
     echo "\033[31mError:\033[0m unknown target type for energy/target: ${TL_SAMPLE_ENERGY}, ${TL_SAMPLE_TARGET_NUCLEUS}"
     exit 1
 endif
-# if ("${TL_SAMPLE_TARGET_NUCLEUS}" == "H1" || "${TL_SAMPLE_TARGET_NUCLEUS}" == "D2") then
-#     setenv TL_SAMPLE_TARGET_TYPE liquid
-# else if (("${TL_SAMPLE_ENERGY}" == "2070MeV" || "${TL_SAMPLE_ENERGY}" == "4029MeV") && "${TL_SAMPLE_TARGET_NUCLEUS}" == "C12") then
-#     setenv TL_SAMPLE_TARGET_TYPE 1-foil
-# else if ("${TL_SAMPLE_ENERGY}" == "5986MeV" && "${TL_SAMPLE_TARGET_NUCLEUS}" == "C12") then
-#     setenv TL_SAMPLE_TARGET_TYPE 4-foil
-# else if ("${TL_SAMPLE_TARGET_NUCLEUS}" == "Ar40") then
-#     setenv TL_SAMPLE_TARGET_TYPE Ar
-# else
-#     echo "\033[31mError:\033[0m unknown target type for energy/target: ${TL_SAMPLE_ENERGY}, ${TL_SAMPLE_TARGET_NUCLEUS}"
-#     exit 1
-# endif
 
 echo "\033[35mTL_SAMPLE_TARGET_TYPE:\033[0m ${TL_SAMPLE_TARGET_TYPE}"
 echo ""
