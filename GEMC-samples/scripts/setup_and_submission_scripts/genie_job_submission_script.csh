@@ -34,15 +34,16 @@ echo "${COLOR_START}CUSTOM_GEMC_VERSION:${COLOR_END} ${CUSTOM_GEMC_VERSION}"
 echo
 
 unset GEMC_VERSION
-setenv GEMC_VERSION dev
+setenv GEMC_VERSION 5.14
+# setenv GEMC_VERSION dev
 echo "${COLOR_START}GEMC_VERSION:${COLOR_END}        ${GEMC_VERSION}"
 echo
 
 unset NUM_OF_JOBS
 # setenv NUM_OF_JOBS 1
-# setenv NUM_OF_JOBS 10
+setenv NUM_OF_JOBS 10
 # setenv NUM_OF_JOBS 100
-setenv NUM_OF_JOBS 2500
+# setenv NUM_OF_JOBS 2500
 # setenv NUM_OF_JOBS 5000
 # setenv NUM_OF_JOBS 7500
 # setenv NUM_OF_JOBS 10000
@@ -155,22 +156,22 @@ foreach FC_STATUSES ( 0 )
 
     # Loop over target nuclei
     # --------------------------------------------------------------------------------------------------
-    # foreach SAMPLE_TARGET_NUCLEI ( C12 )
-    foreach SAMPLE_TARGET_NUCLEI ( C12 Ar40 )
+    foreach SAMPLE_TARGET_NUCLEI ( C12 )
+    # foreach SAMPLE_TARGET_NUCLEI ( C12 Ar40 )
     # foreach SAMPLE_TARGET_NUCLEI ( H1 D2 C12 Ar40 )
 
         # Loop over GENIE tunes
         # ----------------------------------------------------------------------------------------------
-        # foreach GENIE_TUNES ( G18_10a_00_000 )
+        foreach GENIE_TUNES ( G18_10a_00_000 )
         # foreach GENIE_TUNES ( GEM21_11a_00_000 )
-        foreach GENIE_TUNES ( G18_10a_00_000 GEM21_11a_00_000 )
+        # foreach GENIE_TUNES ( G18_10a_00_000 GEM21_11a_00_000 )
 
             # Loop over beam energies
             # ------------------------------------------------------------------------------------------
-            # foreach BEAM_E ( 2070MeV )
+            foreach BEAM_E ( 2070MeV )
             # foreach BEAM_E ( 4029MeV )
             # foreach BEAM_E ( 5986MeV )
-            foreach BEAM_E ( 2070MeV 4029MeV )
+            # foreach BEAM_E ( 2070MeV 4029MeV )
             # foreach BEAM_E ( 2070MeV 4029MeV 5986MeV )
                 echo
                 echo "${COLOR_START}Processing GENIE sample for ${COLOR_END}${SAMPLE_TARGET_NUCLEI}${COLOR_START} (${COLOR_END}${GENIE_TUNES}${COLOR_START}) at beam energy ${COLOR_END}${BEAM_E}"
@@ -275,7 +276,8 @@ foreach FC_STATUSES ( 0 )
 
                 # Set OUTPATH directory
                 unsetenv OUTPATH
-                setenv OUTPATH ${OUTPATH_BASE}/${SAMPLE_TARGET_NUCLEUS}/${GENIE_TUNE}/${TEMP_BEAM_E}_${Q2_CUT}${FC_STATUS}_devGEMC_${TARGET_VARIATION}
+                setenv OUTPATH ${OUTPATH_BASE}/${SAMPLE_TARGET_NUCLEUS}/${GENIE_TUNE}/${TEMP_BEAM_E}_${Q2_CUT}${FC_STATUS}_GEMC5.14
+                # setenv OUTPATH ${OUTPATH_BASE}/${SAMPLE_TARGET_NUCLEUS}/${GENIE_TUNE}/${TEMP_BEAM_E}_${Q2_CUT}${FC_STATUS}_devGEMC_${TARGET_VARIATION}
 
                 echo "${PRINT_OUT_COLOR}//////////////////////////////////////////////////////////////////////${COLOR_END}"
                 echo "${PRINT_OUT_COLOR}// Setting GENIE slurm job submission                               //${COLOR_END}"
@@ -455,7 +457,7 @@ foreach FC_STATUSES ( 0 )
 
                 echo "${PRINT_OUT_COLOR}Submitted job with command:${COLOR_END}"
                 echo "${PRINT_OUT_COLOR}sbatch --job-name=${COLOR_END}${SLURM_JOB_NAME}${PRINT_OUT_COLOR} --array=${COLOR_END}${ARRAY} ${SUBMIT_SCRIPT_FILE}"
-                sbatch --job-name="${SLURM_JOB_NAME}" --array=${ARRAY} ${SUBMIT_SCRIPT_FILE}
+                # sbatch --job-name="${SLURM_JOB_NAME}" --array=${ARRAY} ${SUBMIT_SCRIPT_FILE}
                 echo
                 echo
             end  # End of loop over beam energies
