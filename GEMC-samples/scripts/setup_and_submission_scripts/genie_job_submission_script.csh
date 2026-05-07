@@ -347,7 +347,7 @@ foreach FC_STATUSES ( 0 )
 
                 # Determine the correct submit script path based on TEMP_BEAM_E
                 unsetenv REQUIREMENTS_PATH
-                setenv REQUIREMENTS_PATH ${RUNNING_DIR}/Generation_files_${TEMP_BEAM_E_ROUNDED}
+                setenv REQUIREMENTS_PATH ${RUNNING_DIR}/Generation_files_${TEMP_BEAM_E_ROUNDED}/${GEMC_VERSION}
                 echo "${PRINT_OUT_COLOR}REQUIREMENTS_PATH:${COLOR_END} ${REQUIREMENTS_PATH}"
                 echo
 
