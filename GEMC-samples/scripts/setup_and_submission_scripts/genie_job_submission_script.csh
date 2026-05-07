@@ -162,8 +162,8 @@ foreach FC_STATUSES ( 0 )
 
         # Loop over GENIE tunes
         # ----------------------------------------------------------------------------------------------
-        foreach GENIE_TUNES ( G18_10a_00_000 )
-        # foreach GENIE_TUNES ( GEM21_11a_00_000 )
+        # foreach GENIE_TUNES ( G18_10a_00_000 )
+        foreach GENIE_TUNES ( GEM21_11a_00_000 )
         # foreach GENIE_TUNES ( G18_10a_00_000 GEM21_11a_00_000 )
 
             # Loop over beam energies
