@@ -203,7 +203,7 @@ foreach FC_STATUSES ( 0 )
                 endif
 
                 # Set printing color based on beam energy and fiducial cuts status
-                unsetenv unset TARGET_VARIATION
+                unsetenv TARGET_VARIATION
                 if ("${TEMP_BEAM_E}" == "2070MeV" && "${SAMPLE_TARGET_NUCLEUS}" == "C12") then
                     setenv TARGET_VARIATION rgm_fall2021_C_S
                 else if ("${TEMP_BEAM_E}" == "4029MeV" && "${SAMPLE_TARGET_NUCLEUS}" == "C12") then
