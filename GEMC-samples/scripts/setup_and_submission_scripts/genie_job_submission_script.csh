@@ -432,7 +432,8 @@ foreach FC_STATUSES ( 0 )
                 echo "${PRINT_OUT_COLOR}Submitting GENIE sbatch job...${COLOR_END}"
 
                 unsetenv SLURM_JOB_NAME
-                setenv SLURM_JOB_NAME ${SAMPLE_TARGET_NUCLEUS}_${GENIE_TUNE}_${TEMP_BEAM_E}_${Q2_CUT}${FC_STATUS}
+                setenv SLURM_JOB_NAME ${SAMPLE_TARGET_NUCLEUS}_${GENIE_TUNE}_${TEMP_BEAM_E}_${Q2_CUT}${FC_STATUS}_GEMC5.14
+                # setenv SLURM_JOB_NAME ${SAMPLE_TARGET_NUCLEUS}_${GENIE_TUNE}_${TEMP_BEAM_E}_${Q2_CUT}${FC_STATUS}
                 echo "${PRINT_OUT_COLOR}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
                 echo ""
                     
