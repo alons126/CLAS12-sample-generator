@@ -123,8 +123,8 @@ if ("${CUSTOM_GEMC_VERSION}" == "true") then
     echo
 
     # Set GEMC data directory to a custom path. This is important to ensure that the correct geometry and configuration files are used for the simulations, especially if using a custom or development version of GEMC.
-    unsetenv GEMC_DATA_DIR
-    setenv GEMC_DATA_DIR ${CLAS12TAGS_DIR}
+    # unsetenv GEMC_DATA_DIR
+    # setenv GEMC_DATA_DIR ${CLAS12TAGS_DIR}
     echo "${COLOR_START}GEMC_DATA_DIR:${COLOR_END} ${GEMC_DATA_DIR}"
 
     # Check if GEMC_DATA_DIR is a directory

@@ -39,7 +39,8 @@ echo "${COLOR_START}CUSTOM_GEMC_VERSION:${COLOR_END} ${CUSTOM_GEMC_VERSION}"
 echo
 
 unset GEMC_VERSION
-setenv GEMC_VERSION dev
+# setenv GEMC_VERSION dev
+setenv GEMC_VERSION 5.14
 echo "${COLOR_START}GEMC_VERSION:${COLOR_END}        ${GEMC_VERSION}"
 echo
 
@@ -47,9 +48,9 @@ unset NUM_OF_JOBS
 # setenv NUM_OF_JOBS 10
 # setenv NUM_OF_JOBS 100
 # setenv NUM_OF_JOBS 2500
-# setenv NUM_OF_JOBS 5000
+setenv NUM_OF_JOBS 5000
 # setenv NUM_OF_JOBS 7500
-setenv NUM_OF_JOBS 10000
+# setenv NUM_OF_JOBS 10000
 echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}         ${NUM_OF_JOBS}"
 echo
 
@@ -111,8 +112,8 @@ if ("${CUSTOM_GEMC_VERSION}" == "true") then
     echo
 
     # Set GEMC data directory to a custom path. This is important to ensure that the correct geometry and configuration files are used for the simulations, especially if using a custom or development version of GEMC.
-    unsetenv GEMC_DATA_DIR
-    setenv GEMC_DATA_DIR ${CLAS12TAGS_DIR}
+    # unsetenv GEMC_DATA_DIR
+    # setenv GEMC_DATA_DIR ${CLAS12TAGS_DIR}
     echo "${COLOR_START}GEMC_DATA_DIR:${COLOR_END} ${GEMC_DATA_DIR}"
 
     # Check if GEMC_DATA_DIR is a directory
@@ -189,7 +190,8 @@ foreach BEAM_E ( 2070MeV 4029MeV 5986MeV )
 
         # Set paths based on TEMP_BEAM_E and TARGET_VARIATION for uniform sample generation and submission. These environment variables will be used in the uniform sample generation and submission scripts to ensure that the correct paths and configurations are used for each beam energy and target variation.
         unsetenv OUTPATH_BASE
-        setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_e-p-n_samples/${TEMP_BEAM_E}_devGEMC_${TARGET_VARIATION}
+        setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_e-p-n_samples/${TEMP_BEAM_E}_GEMC5.14_rgm_fall2021_C_S
+        # setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_e-p-n_samples/${TEMP_BEAM_E}_devGEMC_${TARGET_VARIATION}
         # setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_e-p-n_samples/${TEMP_BEAM_E}_ConstPn_devGEMC_${TARGET_VARIATION}
         echo "${PRINT_OUT_COLOR}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
 
@@ -372,7 +374,7 @@ foreach BEAM_E ( 2070MeV 4029MeV 5986MeV )
 
         echo "${PRINT_OUT_COLOR}Submitted job with command:${COLOR_END}"
         echo "${PRINT_OUT_COLOR}sbatch --job-name=${COLOR_END}${SLURM_JOB_NAME}${PRINT_OUT_COLOR} --array=${COLOR_END}${ARRAY} ${SUBMIT_SCRIPT_FILE}"
-        sbatch --job-name="${SLURM_JOB_NAME}" --array=${ARRAY} ${SUBMIT_SCRIPT_FILE}
+        # sbatch --job-name="${SLURM_JOB_NAME}" --array=${ARRAY} ${SUBMIT_SCRIPT_FILE}
         echo
         echo
     end # end foreach OUTPATH_PARTICLE ( 1e ep en )
