@@ -137,9 +137,9 @@ echo "${COLOR_START}============================================================
 printf "%s%s%s\n" "${COLOR_START}= Looping over particle types                                         =${COLOR_END}"
 echo "${COLOR_START}=======================================================================${COLOR_END}"
 echo ""
-# foreach BEAM_E ( 2070MeV )
+foreach BEAM_E ( 2070MeV )
 # foreach BEAM_E ( 4029MeV 5986MeV )
-foreach BEAM_E ( 2070MeV 4029MeV 5986MeV )
+# foreach BEAM_E ( 2070MeV 4029MeV 5986MeV )
     foreach OUTPATH_PARTICLE ( 1e )
     # foreach OUTPATH_PARTICLE ( en )
     # foreach OUTPATH_PARTICLE ( 1e en )
