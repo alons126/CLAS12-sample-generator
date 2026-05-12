@@ -24,7 +24,8 @@ echo "${COLOR_START}============================================================
 echo ""
 
 unset TARGET_VARIATION
-setenv TARGET_VARIATION rgm_fall2021_Ar
+setenv TARGET_VARIATION rgm_fall2021_C_S
+# setenv TARGET_VARIATION rgm_fall2021_Ar
 echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}    ${TARGET_VARIATION}"
 echo
 
@@ -140,9 +141,9 @@ echo ""
 foreach BEAM_E ( 2070MeV )
 # foreach BEAM_E ( 4029MeV 5986MeV )
 # foreach BEAM_E ( 2070MeV 4029MeV 5986MeV )
-    # foreach OUTPATH_PARTICLE ( 1e )
+    foreach OUTPATH_PARTICLE ( 1e )
     # foreach OUTPATH_PARTICLE ( ep )
-    foreach OUTPATH_PARTICLE ( en )
+    # foreach OUTPATH_PARTICLE ( en )
     # foreach OUTPATH_PARTICLE ( 1e en )
     # foreach OUTPATH_PARTICLE ( 1e ep en )
         echo
