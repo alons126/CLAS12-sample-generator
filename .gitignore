@@ -1,3 +1,4 @@
+# Ignore build files and generated data files
 *.root 
 *~
 *.so
@@ -8,6 +9,8 @@
 *.hipo
 *.out
 
+# Ignore build directory
 ./build
 
+# Ignore specific generated files
 GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d
