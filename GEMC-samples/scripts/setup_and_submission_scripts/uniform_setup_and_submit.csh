@@ -375,7 +375,7 @@ foreach BEAM_E ( 2070MeV )
 
         echo "${PRINT_OUT_COLOR}Submitted job with command:${COLOR_END}"
         echo "${PRINT_OUT_COLOR}sbatch --job-name=${COLOR_END}${SLURM_JOB_NAME}${PRINT_OUT_COLOR} --array=${COLOR_END}${ARRAY} ${SUBMIT_SCRIPT_FILE}"
-        # sbatch --job-name="${SLURM_JOB_NAME}" --array=${ARRAY} ${SUBMIT_SCRIPT_FILE}
+        sbatch --job-name="${SLURM_JOB_NAME}" --array=${ARRAY} ${SUBMIT_SCRIPT_FILE}
         echo
         echo
     end # end foreach OUTPATH_PARTICLE ( 1e ep en )
