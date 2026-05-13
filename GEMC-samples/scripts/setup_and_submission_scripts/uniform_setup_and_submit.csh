@@ -192,8 +192,8 @@ foreach BEAM_E ( 2070MeV )
 
         # Set paths based on TEMP_BEAM_E and TARGET_VARIATION for uniform sample generation and submission. These environment variables will be used in the uniform sample generation and submission scripts to ensure that the correct paths and configurations are used for each beam energy and target variation.
         unsetenv OUTPATH_BASE
-        setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/${TEMP_BEAM_E}_GEMC5.14_${TARGET_VARIATION}
-        # setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/${TEMP_BEAM_E}_GEMC5.14_${TARGET_VARIATION}_ConstPn
+        # setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/${TEMP_BEAM_E}_GEMC5.14_${TARGET_VARIATION}
+        setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/${TEMP_BEAM_E}_GEMC5.14_${TARGET_VARIATION}_ConstPn
         # setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/${TEMP_BEAM_E}_devGEMC_${TARGET_VARIATION}
         # setenv OUTPATH_BASE /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/${TEMP_BEAM_E}_ConstPn_devGEMC_${TARGET_VARIATION}
         echo "${PRINT_OUT_COLOR}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
@@ -351,8 +351,8 @@ foreach BEAM_E ( 2070MeV )
         echo
 
         unsetenv SLURM_JOB_NAME
-        setenv SLURM_JOB_NAME Uniform_${TEMP_OUTPATH_PARTICLE}_sample_${TEMP_BEAM_E}
-        # setenv SLURM_JOB_NAME Uniform_${TEMP_OUTPATH_PARTICLE}_ConstPn_sample_${TEMP_BEAM_E}
+        # setenv SLURM_JOB_NAME Uniform_${TEMP_OUTPATH_PARTICLE}_sample_${TEMP_BEAM_E}
+        setenv SLURM_JOB_NAME Uniform_${TEMP_OUTPATH_PARTICLE}_ConstPn_sample_${TEMP_BEAM_E}
         echo "${PRINT_OUT_COLOR}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
         echo ""
 
