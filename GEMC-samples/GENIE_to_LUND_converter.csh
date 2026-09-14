@@ -21,7 +21,8 @@ echo
 unsetenv NUM_OF_FILES
 # setenv NUM_OF_FILES 1000
 # setenv NUM_OF_FILES 2500
-setenv NUM_OF_FILES 10000
+setenv NUM_OF_FILES 5000
+# setenv NUM_OF_FILES 10000
 echo "\033[35mNUM_OF_FILES:\033[0m ${NUM_OF_FILES}"
 echo ""
 
@@ -77,8 +78,8 @@ echo ""
 
 # Set GENIE tune
 unsetenv TL_GENIE_TUNE
-setenv TL_GENIE_TUNE G18_10a_00_000
-# setenv TL_GENIE_TUNE GEM21_11a_00_000
+# setenv TL_GENIE_TUNE G18_10a_00_000
+setenv TL_GENIE_TUNE GEM21_11a_00_000
 echo "\033[35mTL_GENIE_TUNE:\033[0m ${TL_GENIE_TUNE}"
 echo ""
 
