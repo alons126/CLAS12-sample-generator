@@ -1,53 +1,42 @@
-# GENIE-to-LUND Conversion
-
-## Purpose
-
-This workflow converts GENIE `gst` ROOT trees into LUND text files for later GEMC processing.
-
-Primary entry points:
-
-- `GEMC-samples/GENIE_to_LUND_converter.csh`
-- `GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter.C`
-
-## How It Is Intended To Run
-
-The wrapper script assumes it is launched from inside `GEMC-samples/`.
+# GENIE GST to LUND conversion
 
 ```bash
-cd GEMC-samples
-csh GENIE_to_LUND_converter.csh
+build/debug/apps/clas12-genie-to-lund \
+  --config config/samples/genie.conf \
+  --input '/path/to/truth/gst*.root' \
+  --output runs/genie-example
 ```
 
-The wrapper:
+Quote globs so ROOT receives the pattern. Inputs must contain a tree named `gst`. Beam energy, target geometry and nuclear A/Z are explicit settings; the converter no longer guesses them from input filenames. The sample config uses Ar geometry and A=40/Z=18. Check these values against the actual input and selected detector card.
 
-- sets the target, GENIE tune, beam energy, and Q2 cut
-- locates input `.root` files under a hardcoded truth-sample directory
-- invokes the ROOT macro `GENIE_to_LUND_converter.C`
+## Required schema
 
-## Inputs
+| Branches | ROOT types |
+| --- | --- |
+| `qel`, `mec`, `res`, `dis` | `Bool_t` |
+| `resid`, `nf` | `Int_t` |
+| `pxl`, `pyl`, `pzl` | `Double_t` |
+| `pdgf[nf]` | `Int_t` array |
+| `pxf[nf]`, `pyf[nf]`, `pzf[nf]` | `Double_t` arrays |
 
-The current wrapper is configured around:
+Missing branches, wrong types, inconsistent array lengths, empty inputs and unsupported-only inputs produce errors. `El` and `Ef` are not required: output energy is calculated from momentum and the selected particle mass, as in the imported converter.
 
-- `BASE_TL_SAMPLE_DIR`
-- `TL_SAMPLE_TARGET_NUCLEUS`
-- `TL_GENIE_TUNE`
-- `TL_SAMPLE_ENERGY`
-- `TL_SAMPLE_Q2_CUT`
+## Retained physics conventions
 
-The macro expects GENIE `gst` trees and writes LUND files in batches of `10000` events per output file.
+- Write the scattered electron first.
+- Retain protons, neutrons, charged/neutral pions and photons; skip other final-state species.
+- Give every particle in an event the same sampled vertex.
+- Store `resid` in LUND header field 4.
+- Store process code 1=QE, 2=MEC, 3=RES, 4=DIS in header field 10. When multiple flags are true, use that priority order. Events with none of these flags are skipped.
+- Preserve the input entry index in header field 9.
+- Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
-## Verified Issues In This Checkout
+Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV, mass in GeV, vertex in cm. Shared masses are listed in `src/common/TargetGeometry.cpp`.
 
-- `GENIE_to_LUND_converter.csh` depends on `BASE_TL_SAMPLE_DIR=/w/hallb-scshelf2102/...`, which does not exist locally.
-- `GENIE_to_LUND_converter.C` includes absolute external headers and source files under `/w/hallb-scshelf2102/...`, so it does not compile in this environment.
-- `GENIE_to_LUND_converter.C` currently hardcodes the output suffix `_devGEMC_rgm_fall2021_Ar`, which is incorrect for non-Ar targets.
+## Splitting and completion
 
-## Practical Consequence
+`files × events-per-file` is the maximum number of **written** events. Skipped processes do not count toward it. Conversion retains a final partial file instead of stopping early when fewer than 10,000 input entries remain.
 
-In the current local environment, the wrapper exits on the missing truth-sample directory before conversion begins. If that path issue is bypassed, the ROOT macro still fails to compile because its external dependencies are not present.
+For six accepted events with `--files 3 --events-per-file 4`, output contains two files with counts 4 and 2. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
 
-## Suggested Fixes
-
-- Move site-specific input and output paths into environment variables.
-- Replace absolute framework includes with configurable include paths or local dependencies.
-- Derive the output target variation from the selected target and beam energy instead of hardcoding the Ar variation.
+Use a new output directory for each conversion. `monitoring.root` contains per-PDG diagnostics for written particles. The converter does not generate the old PDF report.

@@ -1,54 +1,45 @@
-# GEMC And Reconstruction Batch Submission
+# GEMC, reconstruction and Slurm
 
-## Purpose
+Generation and conversion produce the same manifest schema, so these commands work with either workflow.
 
-This workflow submits Slurm batch jobs that:
+## Preview one run
 
-- run GEMC on existing LUND inputs
-- write MC HIPO output
-- run reconstruction with `recon-util`
-
-Primary orchestration entry points:
-
-- `GEMC-samples/setup_and_submit_jobs.csh`
-- `GEMC-samples/scripts/setup_and_submission_scripts/run_setup_and_submission_scripts.csh`
-- `GEMC-samples/scripts/setup_and_submission_scripts/genie_job_submission_script.csh`
-- `GEMC-samples/scripts/setup_and_submission_scripts/uniform_setup_and_submit.csh`
-
-Batch payloads:
-
-- `GEMC-samples/scripts/job_submission_scripts/submit_GEMC_GENIE_sample.sh`
-- `GEMC-samples/scripts/job_submission_scripts/submit_GEMC_uniform_sample.sh`
-
-## How It Is Intended To Run
-
-The top-level wrapper assumes it is launched from inside `GEMC-samples/`.
+After generating `runs/first-electron` using the README example:
 
 ```bash
-cd GEMC-samples
-csh setup_and_submit_jobs.csh
+python3 scripts/simulation/run.py \
+  --manifest runs/first-electron/manifest.json \
+  --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
+  --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
+  --site config/sites/local.json \
+  --torus -1
 ```
 
-The orchestration layer:
+This is a dry run. It validates the manifest totals, file paths and configuration-file existence and prints the exact GEMC/reconstruction commands. It creates no simulation output and does not require installed GEMC binaries. It does not inspect the physical compatibility of detector-card contents; select cards, energy, geometry and field settings consistently.
 
-- sources shared environment setup
-- optionally updates the checkout
-- selects uniform or GENIE submission flows
-- submits Slurm arrays that run GEMC and reconstruction
+Add `--execute` to run. `--solenoid` defaults to −1. `--file-index 2` selects the second manifest file; otherwise the runner processes all files sequentially. Paths containing spaces are passed as individual subprocess arguments.
 
-## Verified Issues In This Checkout
+The runner creates `mchipo/mc_INDEX.hipo` and `reconhipo/recon_INDEX.hipo`. It uses the manifest count for both `gemc -N` and `recon-util -n`, including partial files. Reconstruction only starts if GEMC succeeds and produces a nonempty HIPO file. A successful `simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files.
 
-- `setup_and_submit_jobs.csh` sources `scripts/update_script.csh` before submission.
-- `update_script.csh` runs `git clean -fxd`, `git reset --hard`, and `git pull`.
-- The GENIE submission flow depends on hardcoded output roots under `/lustre24/...`, which are missing locally.
-- The batch payload scripts assume the runtime environment provides `gemc`, `recon-util`, and Slurm variables such as `SLURM_ARRAY_TASK_ID`.
+Existing outputs are rejected. A per-file lock prevents two processes from executing the same task concurrently. Failed jobs retain their locks/partial output for inspection; there is no automatic cleanup or resume. Use a fresh run directory, or deliberately resolve the failed file's state before retrying. A single run directory supports one simulation configuration.
 
-## Practical Consequence
+## Slurm array
 
-The top-level entry point is not safe to run casually in a dirty working tree. Even before cluster submission concerns, it can delete untracked files and discard local changes.
+Run from a configured cluster login environment with files on shared storage:
 
-## Suggested Fixes
+```bash
+python3 scripts/slurm/submit.py \
+  --manifest runs/first-electron/manifest.json \
+  --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
+  --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
+  --site config/sites/jlab.json \
+  --torus -1
+```
 
-- Remove destructive Git operations from the default submission path.
-- Split repository-update behavior into a separate, explicit maintenance script.
-- Add a non-submitting validation mode for checking paths, cards, and YAML files without invoking `sbatch`.
+This previews `sbatch`. Add `--execute` to submit. One array task is created per manifest file; each invokes the same runner with `$SLURM_ARRAY_TASK_ID`. The worker environment must provide Python 3.9+, GEMC, reconstruction and access to the script/config/input paths. The submitter does not install software or source environment scripts.
+
+Edit site JSON for scheduler resources and executable paths. Slurm's normal stdout/stderr defaults apply. Use `--runner /shared/path/run.py` if the default source/install path is not the one workers should use.
+
+## Scope of validation
+
+Local automated tests use fake executables and tiny samples. Actual GEMC and reconstruction execution must be checked in the intended environment. The repository preserves imported gcard/YAML files; it does not silently assign detector versions based on output names.

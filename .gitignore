@@ -10,7 +10,13 @@
 *.out
 
 # Ignore build directory
-./build
+build/
 
 # Ignore specific generated files
 GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d
+
+/CMakeUserPresets.json
+/runs/
+__pycache__/
+*.pyc
+.DS_Store

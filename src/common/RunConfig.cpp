@@ -1,0 +1,157 @@
+#include "common/RunConfig.h"
+
+#include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
+
+#include "common/TargetGeometry.h"
+namespace samples {
+namespace {
+std::string trim(std::string s) {
+    auto first = s.find_first_not_of(" \t\r\n");
+    return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
+}
+}  // namespace
+RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
+    RunConfig c;
+    c.values_ = {{"beam-energy", "5.98636"},
+                 {"target", "Ar"},
+                 {"A", "1"},
+                 {"Z", "1"},
+                 {"output", ""},
+                 {"files", "1"},
+                 {"events-per-file", "10000"},
+                 {"seed", "67890"},
+                 {"vertex-seed", "12345"},
+                 {"prefix", genie ? "GENIE_sample" : "Uniform_sample"}};
+    if (genie)
+        c.values_.insert({{"input", ""}});
+    else
+        c.values_.insert({{"channel", "1e"},
+                          {"electron-theta-min", "5"},
+                          {"electron-theta-max", "40"},
+                          {"nucleon-theta-min", "5"},
+                          {"nucleon-theta-max", "auto"},
+                          {"nucleon-momentum", "fixed"},
+                          {"nucleon-p", "1"},
+                          {"nucleon-p-min", "0.3"},
+                          {"nucleon-p-max", "auto"},
+                          {"electron-momentum", "uniform"},
+                          {"trigger-theta", "25"},
+                          {"trigger-phi-offset", "auto"}});
+    auto assign = [&](const std::string& k, const std::string& v) {
+        if (!c.values_.count(k)) throw std::runtime_error("Unknown setting: " + k);
+        c.values_[k] = v;
+    };
+    std::map<std::string, std::string> overrides;
+    std::string config;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.rfind("--", 0) != 0 || i + 1 == argc) throw std::runtime_error("Expected --key value: " + arg);
+        auto key = arg.substr(2);
+        std::string value = argv[++i];
+        if (key == "config") {
+            if (!config.empty()) throw std::runtime_error("Use only one --config file");
+            config = value;
+        } else {
+            if (!overrides.emplace(key, value).second) throw std::runtime_error("Repeated option: " + key);
+        }
+    }
+    if (!config.empty()) {
+        std::ifstream in(config);
+        if (!in) throw std::runtime_error("Cannot open config: " + config);
+        std::string line;
+        std::map<std::string, bool> seen;
+        while (std::getline(in, line)) {
+            line = trim(line);
+            if (line.empty() || line[0] == '#') continue;
+            auto eq = line.find('=');
+            if (eq == std::string::npos) throw std::runtime_error("Expected key = value: " + line);
+            auto key = trim(line.substr(0, eq));
+            if (seen[key]) throw std::runtime_error("Repeated config key: " + key);
+            seen[key] = true;
+            assign(key, trim(line.substr(eq + 1)));
+        }
+    }
+    for (const auto& [k, v] : overrides) assign(k, v);
+    if (!genie) {
+        if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
+        if (c.get("nucleon-p-max") == "auto") c.values_["nucleon-p-max"] = c.get("beam-energy");
+        if (c.get("trigger-phi-offset") == "auto") {
+            double e = c.number("beam-energy");
+            c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
+        }
+    }
+    c.validate(genie);
+    if (genie && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
+    c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
+    return c;
+}
+std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
+double RunConfig::number(const std::string& k) const {
+    std::size_t used = 0;
+    double value = std::stod(get(k), &used);
+    if (used != get(k).size() || !std::isfinite(value)) throw std::runtime_error("Invalid number: " + k);
+    return value;
+}
+std::uint64_t RunConfig::integer(const std::string& k) const {
+    const auto s = get(k);
+    if (s.empty() || s.find_first_not_of("0123456789") != std::string::npos) throw std::runtime_error("Expected unsigned integer: " + k);
+    return std::stoull(s);
+}
+void RunConfig::validate(bool genie) const {
+    if (get("output").empty()) throw std::runtime_error("--output is required; use a new run directory");
+    if (number("beam-energy") <= 0) throw std::runtime_error("beam-energy must be positive");
+    for (auto k : {"files", "events-per-file", "seed", "vertex-seed"}) {
+        auto n = integer(k);
+        if (!n || n > std::numeric_limits<unsigned int>::max()) throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]");
+    }
+    if (integer("A") < 1 || integer("A") > 300 || integer("Z") > integer("A")) throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A");
+    if (get("prefix").empty() || get("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos)
+        throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
+    TargetGeometry::validate(get("target"));
+    if (genie) {
+        if (get("input").empty()) throw std::runtime_error("--input GST ROOT file or glob is required");
+        return;
+    }
+    if (get("channel") != "1e" && get("channel") != "ep" && get("channel") != "en") throw std::runtime_error("channel must be 1e, ep or en");
+    for (auto stem : {"electron", "nucleon"}) {
+        double lo = number(std::string(stem) + "-theta-min"), hi = number(std::string(stem) + "-theta-max");
+        if (!(0 <= lo && lo < hi && hi <= 180)) throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180");
+    }
+    if (get("nucleon-momentum") != "fixed" && get("nucleon-momentum") != "uniform") throw std::runtime_error("nucleon-momentum must be fixed or uniform");
+    if (get("electron-momentum") != "uniform" && get("electron-momentum") != "beam") throw std::runtime_error("electron-momentum must be uniform or beam");
+    if (number("nucleon-p") <= 0 || number("nucleon-p-min") < 0 || number("nucleon-p-max") <= number("nucleon-p-min")) throw std::runtime_error("Invalid nucleon momentum bounds");
+    if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) throw std::runtime_error("Invalid trigger angle");
+}
+std::string jsonString(const std::string& s) {
+    std::ostringstream out;
+    out << '"';
+    for (unsigned char ch : s) {
+        if (ch == '"' || ch == '\\')
+            out << '\\' << ch;
+        else if (ch < 0x20)
+            out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(ch) << std::dec;
+        else
+            out << ch;
+    }
+    out << '"';
+    return out.str();
+}
+std::string help(bool genie) {
+    std::string result = genie ? "clas12-genie-to-lund --input 'gst*.root' --output NEW_DIRECTORY\n" : "clas12-uniform --channel 1e|ep|en --output NEW_DIRECTORY\n";
+    result +=
+        "Settings: --config FILE, --beam-energy GeV, --target GEOMETRY, --A N, --Z N,\n"
+        "--files N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME.\n"
+        "Files use key = value; CLI values override file settings. No automatic overwrite.\n";
+    if (!genie)
+        result +=
+            "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
+            "--electron-momentum uniform|beam, --nucleon-momentum fixed|uniform,\n"
+            "--nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
+    return result;
+}
+}  // namespace samples

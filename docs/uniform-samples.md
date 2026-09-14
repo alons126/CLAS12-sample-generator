@@ -1,66 +1,48 @@
-# Uniform Samples
+# Uniform samples
 
-## Purpose
-
-This workflow prepares and submits uniform CLAS12 samples for:
-
-- `(e,e')`
-- `(e,e'pFD)`
-- `(e,e'nFD)`
-
-Primary entry point:
-
-- `GEMC-samples/scripts/setup_and_submission_scripts/uniform_setup_and_submit.csh`
-
-Batch payload:
-
-- `GEMC-samples/scripts/job_submission_scripts/submit_GEMC_uniform_sample.sh`
-
-## How It Is Intended To Run
-
-The script assumes it is launched from inside `GEMC-samples/`.
+## Generate a small sample
 
 ```bash
-cd GEMC-samples
-csh scripts/setup_and_submission_scripts/uniform_setup_and_submit.csh
+build/debug/apps/clas12-uniform \
+  --config config/samples/uniform-electron.conf \
+  --events-per-file 100 --output runs/electron-example
 ```
 
-The setup script:
+Use `uniform-proton.conf` or `uniform-neutron.conf` for the two-particle modes. The file prefix is a label; the manifest carries the actual channel, energy and file counts.
 
-- selects beam energies
-- selects particle species
-- resolves the beam-energy-specific `gcard` and YAML files
-- prepares output directory structure
-- submits Slurm arrays with `sbatch`
+## Sampling prescriptions
 
-## Inputs
+| Channel | Sampled particle | Trigger electron |
+| --- | --- | --- |
+| `1e` | Electron: flat theta 5–40°, phi −180–180°, momentum 0–beam energy | The sampled electron |
+| `ep` | Proton: flat theta 5–45°, phi −180–180°, fixed momentum 1 GeV by default | Momentum = beam energy, theta 25°, sector-based phi |
+| `en` | Neutron: flat theta 5–35°, phi −180–180°, fixed momentum 1 GeV by default | Same trigger prescription |
 
-The workflow uses:
+Angles are **uniform in theta**, not in cos(theta). These are acceptance-study inputs, with no exclusive energy/momentum conservation constraint between the trigger electron and nucleon.
 
-- `Generation_files_2GeV`
-- `Generation_files_4GeV`
-- `Generation_files_6GeV`
+For `ep/en`, the trigger phi is the closest of −120, −60, 0, 60, 120, 180 degrees to the direction opposite the nucleon, plus the configured offset. Automatic offsets are 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° otherwise. This now depends on beam energy, never on the output folder name.
 
-It resolves files such as:
+Use an explicit momentum scan:
 
-- `rgm_fall2021-cv.yaml`
-- `rgm_fall2021-ai_4Gev.yaml`
-- `rgm_fall2021-ai_6Gev.yaml`
-- target-specific `gcard` files
+```bash
+build/debug/apps/clas12-uniform \
+  --config config/samples/uniform-neutron.conf \
+  --nucleon-momentum uniform --nucleon-p-min 0.3 --nucleon-p-max 3 \
+  --output runs/neutron-momentum-scan
+```
 
-## Verified Issues In This Checkout
+For the angular electron tester:
 
-- The script depends on hardcoded site-specific directories such as `/lustre24/expphy/volatile/clas12/asportes/...`.
-- `CLAS12TAGS_DIR` is hardcoded and missing in the current local environment.
-- The workflow assumes `module`, `gemc`, `recon-util`, and `sbatch` are available in the target runtime environment.
-- The script removes and recreates output subdirectories before job submission.
+```bash
+build/debug/apps/clas12-uniform \
+  --config config/samples/electron-tester.conf \
+  --output runs/angular-tester
+```
 
-## Practical Consequence
+This holds electron momentum at the beam value and fixes the vertex at the origin. `electron-momentum` affects only `1e`; the electron in `ep/en` is always the configured trigger. Nucleon settings do not affect `1e`.
 
-In this checkout, the script starts correctly when run from `GEMC-samples/`, but exits immediately when checking the missing `CLAS12TAGS_DIR`.
+## Reproducibility and diagnostics
 
-## Suggested Fixes
+`seed` controls kinematics and `vertex-seed` controls geometry. Both must be nonzero ROOT-compatible 32-bit seeds. Defaults use different seeds for the two streams; use distinct seeds to avoid correlations from identical RNG sequences. Repeating resolved settings and seeds with the same software/ROOT produces the same LUND data; output locations and file names may differ. Change seeds between independent runs or batches to avoid duplicating samples. This refactor does not promise byte equality with historical output, which used a time-dependent kinematic seed and lower output precision.
 
-- Make the external paths configurable through environment variables.
-- Add a dry-run mode that resolves inputs without deleting output directories or submitting jobs.
-- Add explicit validation for cluster-only commands before the script reaches submission.
+`monitoring.root` contains `pid_<PDG>_p_GeV`, `theta_deg`, `phi_deg`, `vx_cm`, `vy_cm`, `vz_cm`, `theta_vs_phi`, `theta_vs_p`, and `phi_vs_p` under the same PDG prefix. For 2D plots, the quantity after `vs` is the x-axis. Underflow/overflow bins retain values outside display bounds. These diagnostic names replace the old global histogram collection; see [migration](migration.md).

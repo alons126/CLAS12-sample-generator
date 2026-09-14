@@ -1,14 +1,44 @@
-# Documentation Index
+# Newcomer guide
 
-This directory contains workflow-specific notes for the current CLAS12 sample-generation setup.
+This project prepares events for CLAS12 detector simulation. It brings together two previously independent codebases under one build and one execution workflow.
 
-## Workflows
+## The stages
 
-- [GENIE-to-LUND conversion](./genie-to-lund-conversion.md)
-- [Uniform $(e,e')$, $(e,e'pFD)$, $(e,e'nFD)$ samples](./uniform-samples.md)
-- [GEMC + reconstruction batch submission](./gemc-reconstruction-batch-submission.md)
+```text
+Uniform sampling ------------------+
+                                   +--> LUND --> GEMC --> reconstructed HIPO
+Existing GENIE GST --> conversion --+
+```
 
-## Notes
+**Uniform sampling** places particles across chosen momentum and angular ranges so an analysis can measure detector acceptance. The electron–nucleon modes use an artificial trigger electron; they are not models of exclusive scattering kinematics.
 
-- These documents describe the current repository state and the issues verified in this checkout.
-- The `csh` wrappers are currently intended to be run from inside `GEMC-samples/`.
+**GENIE conversion** reads already generated physical events from a ROOT tree named `gst`, selects supported final-state particle species, and writes their momenta to LUND. It does not generate new GENIE interactions.
+
+**LUND** is the text boundary between event preparation and detector simulation. Each event has one header followed by one line per particle. **GEMC** simulates the detector response. **Reconstruction** processes the simulated HIPO into reconstructed HIPO. Acceptance-map extraction belongs to downstream analysis.
+
+## Recommended reading order
+
+1. [Build and test](building.md): dependencies, commands and troubleshooting.
+2. [Architecture](architecture.md): source layout and a run through the code.
+3. Choose [uniform generation](uniform-samples.md) or [GENIE conversion](genie-to-lund-conversion.md).
+4. [Configuration](configuration.md): units, defaults, seeds and target settings.
+5. [Simulation and Slurm](gemc-reconstruction-batch-submission.md): preview commands before execution.
+6. [Migration](migration.md): old-to-new entry points and deliberate behavioral changes.
+
+## A run directory
+
+```text
+runs/example/
+    manifest.json       # Published only after successful generation/conversion
+    lundfiles/
+        PREFIX_1.txt
+        PREFIX_2.txt
+    monitoring.root     # Per-particle diagnostic histograms
+    mchipo/             # Created when simulation executes
+    reconhipo/          # Created when reconstruction executes
+    simulation/         # Command records and detector-config hashes
+```
+
+A failed generation may leave partial files but no completed manifest. Choose a new directory after investigating the failure. The software never recursively deletes a run directory.
+
+All documented shell examples start at the repository root. Executables and scripts also work from other directories when supplied appropriate paths; relative sample configuration paths are interpreted from the caller's working directory.

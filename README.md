@@ -1,83 +1,39 @@
-# CLAS12-sample-generator
+# CLAS12 sample generator
 
-This repository contains CLAS12 GEMC sample-generation helpers for:
+One compiled project for two sources of CLAS12 simulation input:
 
-- GENIE-to-LUND conversion
-- Uniform $(e,e')$, $(e,e'pFD)$, $(e,e'nFD)$ samples
-- GEMC + reconstruction batch submission
+- **Uniform samples** for acceptance-map studies: electron, electron–proton and electron–neutron channels.
+- **Physical samples**: conversion of existing GENIE `gst` ROOT trees to LUND.
 
-## Layout
+Both write LUND files and a run manifest. The same runner sends those files through GEMC and reconstruction, locally or through Slurm. This repository does not run the GENIE event generator itself or calculate final acceptance maps.
 
-- `GEMC-samples/setup_and_submit_jobs.csh`
-  Top-level entry point for setup and submission.
-- `GEMC-samples/GENIE_to_LUND_converter.csh`
-  Wrapper for the ROOT GENIE-to-LUND converter macro.
-- `GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter.C`
-  ROOT macro that converts GENIE `gst` trees into LUND files.
-- `GEMC-samples/scripts/setup_and_submission_scripts/uniform_setup_and_submit.csh`
-  Uniform sample setup and submission flow.
-- `GEMC-samples/scripts/setup_and_submission_scripts/genie_job_submission_script.csh`
-  GENIE sample setup and submission flow.
-- `GEMC-samples/scripts/job_submission_scripts/*.sh`
-  Slurm batch payload scripts.
-- `GEMC-samples/Generation_files_*`
-  Beam-energy-specific `gcard` and YAML inputs.
+## First build and sample
 
-## Run Assumption
-
-The current `csh` wrappers assume they are launched from inside `GEMC-samples/`.
-
-Example:
+Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, and Python 3.9+ for tests and simulation scripts. GEMC and `recon-util` are needed only when executing simulation.
 
 ```bash
-cd GEMC-samples
-source setup_and_submit_jobs.csh
+cmake --preset debug
+cmake --build --preset debug --parallel 4
+ctest --preset debug
+
+build/debug/apps/clas12-uniform \
+  --config config/samples/uniform-electron.conf \
+  --events-per-file 100 \
+  --output runs/first-electron
 ```
 
-Running the wrappers from the repository root will fail because they use relative `source ./scripts/...` paths.
+The output directory must be new. Nothing runs `git clean`, deletes previous samples, or submits jobs as part of building or generating a sample.
 
-## Current Verified State
+Open `runs/first-electron/manifest.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `monitoring.root`.
 
-The shell scripts parse cleanly with `csh -n` / `bash -n`, and the YAML files parse successfully.
+## Where to start
 
-The following runtime issues were verified in this checkout:
+Read the [newcomer guide](docs/index.md), then [build instructions](docs/building.md) and the [architecture walkthrough](docs/architecture.md).
 
-- The scripts depend on hardcoded lab paths under `/lustre24/...` and `/w/hallb-scshelf2102/...`.
-- Those paths do not exist in the current local environment, so the submission scripts exit before doing useful work.
-- `GENIE_to_LUND_converter/GENIE_to_LUND_converter.C` does not compile locally because it includes absolute external headers and sources that are not present here.
-- The converter macro currently hardcodes its output path suffix to `_devGEMC_rgm_fall2021_Ar`, which is wrong for non-Ar targets.
+- [Uniform generation](docs/uniform-samples.md)
+- [GENIE conversion](docs/genie-to-lund-conversion.md)
+- [GEMC, reconstruction and Slurm](docs/gemc-reconstruction-batch-submission.md)
+- [Configuration reference](docs/configuration.md)
+- [Migration from the imported repositories](docs/migration.md)
 
-## High-Risk Behavior
-
-`GEMC-samples/scripts/update_script.csh` is destructive. It runs:
-
-- `git clean -fxd`
-- `git reset --hard`
-- `git pull`
-
-Do not run `GEMC-samples/setup_and_submit_jobs.csh` unless that behavior is intended.
-
-## Known Script Caveats
-
-- `genie_job_submission_script.csh` now correctly uses `unsetenv TARGET_VARIATION`.
-- That block still has no final fallback `else`, so unsupported beam-energy / target combinations can leave `TARGET_VARIATION` unset and later produce a bad `GCARD_FILE` path.
-
-## Inputs Present In This Repository
-
-Beam-energy directories currently present:
-
-- `GEMC-samples/Generation_files_2GeV`
-- `GEMC-samples/Generation_files_4GeV`
-- `GEMC-samples/Generation_files_6GeV`
-
-Available config families currently present:
-
-- `devGEMC5.12`
-- `5.14`
-
-## Suggested Next Fixes
-
-- Make all wrapper scripts resolve paths relative to their own file location instead of the current shell directory.
-- Replace hardcoded site-specific paths with overridable environment variables.
-- Remove or guard destructive Git operations from the default entry point.
-- Make the GENIE converter derive its output target variation instead of hardcoding `rgm_fall2021_Ar`.
+The original source trees are retained in `legacy/` for comparison. They are retired and excluded from the build; use the commands documented above. Detector cards and reconstruction YAML are retained in `config/detector/`.
