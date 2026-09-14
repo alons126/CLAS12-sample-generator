@@ -45,3 +45,5 @@ Edit site JSON for scheduler resources and executable paths. Optional site `slur
 Local automated tests use fake executables and tiny samples. Actual GEMC and reconstruction execution must be checked in the intended environment. The repository preserves imported gcard/YAML files; it does not silently assign detector versions based on output names.
 
 The [legacy launch-chain mapping](legacy-workflows.md) traces `setup_and_submit_jobs.csh` and its manual workflow selection. [Command parity tests](validation.md) execute the archived Bash payloads with fake binaries and compare their argument lists to the new runner. They never submit jobs.
+
+The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).

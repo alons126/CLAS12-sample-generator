@@ -62,7 +62,7 @@ void LundWriter::finish(std::uint64_t scanned) {
     manifest.exceptions(std::ios::badbit | std::ios::failbit);
     manifest.open(directory_ / "manifest.json.tmp");
     manifest << "{\n  \"schema_version\": 1,\n  \"workflow\": " << jsonString(workflow_) << ",\n  \"version\": " << jsonString(SAMPLE_VERSION)
-             << ",\n  \"revision\": " << jsonString(SAMPLE_REVISION) << ",\n  \"root_version\": " << jsonString(gROOT->GetVersion()) << ",\n  \"scanned_events\": " << scanned
+             << ",\n  \"revision\": " << jsonString(SAMPLE_REVISION) << ",\n  \"root_version\": " << jsonString(gROOT->GetVersion()) << ",\n  \"targets_sha256\": " << jsonString(SAMPLE_TARGETS_SHA256) << ",\n  \"scanned_events\": " << scanned
              << ",\n  \"written_events\": " << count_ << ",\n  \"config\": {";
     bool first = true;
     for (const auto& [k, v] : config_.values()) {

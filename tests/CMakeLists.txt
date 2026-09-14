@@ -33,3 +33,19 @@ if(BUILD_GENIE)
     add_test(NAME genie-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/legacy_parity.py genie $<TARGET_FILE:clas12-genie-to-lund> $<TARGET_FILE:legacy-genie-reference> $<TARGET_FILE:make-gst-fixture> $<TARGET_FILE:compare-histograms>)
 endif()
 add_test(NAME submission-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/submission_parity.py ${PROJECT_SOURCE_DIR})
+
+# Prove that replacing the external header alone changes the production adapter.
+set(REPLACEMENT_TARGETS ${CMAKE_CURRENT_BINARY_DIR}/replacement/common/targets.h)
+add_custom_command(OUTPUT ${REPLACEMENT_TARGETS}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py
+        ${PROJECT_SOURCE_DIR}/src/common/targets.h ${REPLACEMENT_TARGETS}
+    DEPENDS ${PROJECT_SOURCE_DIR}/src/common/targets.h ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py VERBATIM)
+add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/common/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
+target_include_directories(replacement-geometry PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/replacement ${PROJECT_SOURCE_DIR}/src)
+target_link_libraries(replacement-geometry PRIVATE ROOT::Core ROOT::Physics Threads::Threads)
+add_test(NAME replacement-geometry COMMAND replacement-geometry)
+find_program(TCSH_EXECUTABLE NAMES tcsh csh)
+if(TCSH_EXECUTABLE AND BUILD_UNIFORM AND BUILD_GENIE)
+    add_test(NAME ssh-launcher COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py
+        ${PROJECT_SOURCE_DIR} ${TCSH_EXECUTABLE} ${PROJECT_BINARY_DIR})
+endif()

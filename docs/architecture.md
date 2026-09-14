@@ -38,10 +38,10 @@ The converter stops at the configured output capacity or end of input. The final
 
 - Add a sampling prescription in `src/uniform/` with validated settings and an output-level test of its distribution or invariants.
 - Add another input converter as a separate library and CLI which produce `Event` values.
-- Add target geometry centrally in `TargetGeometry.cpp`, including tests for its vertex bounds. Geometry and nuclear A/Z are separate choices.
+- Replace or extend `src/common/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
 - Keep machine paths, scheduler resources and binary names in site configuration.
 
-Do not infer physics configuration from filenames or output paths. Do not add global RNGs or duplicate LUND formatting in individual workflows.
+Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 
 The complete [source/API inventory](code-reference.md) also covers tests, examples, error paths, and archived supporting utilities.

@@ -9,6 +9,7 @@ set(ROOT_COMPONENTS Core RIO Hist Physics Gpad Graf)
 if(BUILD_GENIE)
     list(APPEND ROOT_COMPONENTS Tree TreePlayer)
 endif()
+find_package(Threads REQUIRED)
 find_package(ROOT REQUIRED COMPONENTS ${ROOT_COMPONENTS})
 # Match the ABI/language configuration of the selected ROOT installation.
 if(NOT ROOT_CXX_STANDARD OR ROOT_CXX_STANDARD LESS 17)
@@ -21,6 +22,9 @@ execute_process(COMMAND git describe --always --dirty
 if(NOT SAMPLE_REVISION)
     set(SAMPLE_REVISION "unknown")
 endif()
+# Reconfigure when the replaceable geometry source changes, including its manifest hash.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/common/targets.h")
+file(SHA256 "${PROJECT_SOURCE_DIR}/src/common/targets.h" SAMPLE_TARGETS_SHA256)
 configure_file(src/common/Version.h.in generated/Version.h @ONLY)
 include(CTest)
 add_subdirectory(src)

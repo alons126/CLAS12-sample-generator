@@ -41,3 +41,5 @@ Read the [newcomer guide](docs/index.md), then [build instructions](docs/buildin
 - [Migration from the imported repositories](docs/migration.md)
 
 The original source trees are retained in `legacy/` for comparison. They are retired and excluded from the build; use the commands documented above. Detector cards and reconstruction YAML are retained in `config/detector/`.
+
+For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/ssh-workflow.md). Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/external-inputs.md).

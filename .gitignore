@@ -20,3 +20,5 @@ GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d
 __pycache__/
 *.pyc
 .DS_Store
+
+/config/run.local.json

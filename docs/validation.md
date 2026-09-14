@@ -32,7 +32,7 @@ For a focused audit:
 ctest --test-dir build/debug --output-on-failure -R 'legacy-parity|nucleon-distributions'
 ```
 
-The full suite currently registers seven tests when both workflows are enabled. Temporary directories isolate generated fixtures and output. Successful test output is the current executable evidence; rerun after changing the reference sources or production algorithms.
+The full suite currently registers nine tests when both workflows are enabled and csh/tcsh is available (eight without the shell). Temporary directories isolate generated fixtures and output. Successful test output is the current executable evidence; rerun after changing the reference sources or production algorithms.
 
 ## 4. Matrix and criteria
 
@@ -49,6 +49,8 @@ The full suite currently registers seven tests when both workflows are enabled. 
 Uniform reference seeds are kinematic 67890 and vertex 12345. Target checks cover Ar plus liquid, 4-foil, 1-foil, 1-foil-small, 1-foil-large and Ca; the tester uses a point vertex. Photon and all pion/nucleon species are included in the GENIE fixture. Comparisons use the restored archived pion constants, including π⁰=0.13957 GeV.
 
 CDF tests independently evaluate the formulas in [sampling models](sampling-models.md). The ep test checks the uniform-p subsequence, uniform-1/p subsequence and the combined mixture; the en test checks cosθ and p. A fixed numerical threshold is used as a regression criterion, not as a formal significance claim across arbitrary seeds.
+
+The `replacement-geometry` test verifies header-only geometry updates, new target names and RNG independence. The `ssh-launcher` test verifies sourced-shell survival/status, argument quoting, settings, build invocation and safe updates against a local Git fixture. Neither requires a remote server.
 
 ## 5. Intentional differences and limits
 

@@ -1,154 +1,22 @@
 #!/bin/tcsh
-
-# -------------------------------------------------------------------------------------------------
-# Interpreter declaration
-# -------------------------------------------------------------------------------------------------
-# The script is executed with the tcsh shell. This ensures that tcsh syntax such as
-# `if (...) then`, `$status`, and `set` variables works correctly regardless of the
-# user's default login shell.
-
-# ------------------------------------------------------------------------------------------
-# code_updater.sh
-# ------------------------------------------------------------------------------------------
-# Purpose
-# -------
-# Performs repository maintenance and environment setup for the 2N Analyzer.
-#
-# Steps performed
-# ---------------
-# 1. Clean untracked build artifacts.
-# 2. Reset local repository state.
-# 3. Pull latest changes from remote.
-# 4. Display commit and branch information.
-# 5. Reinitialize environment and screen helpers.
-# ------------------------------------------------------------------------------------------
-
-# -------------------------------------------------------------------------------------------------
-# Terminal color initialization
-# -------------------------------------------------------------------------------------------------
-# These variables control colored output in the terminal.  The script only defines
-# them if they were not already defined by the calling environment (for example
-# when run.csh has already set them).
-#
-# `$?VARIABLE` is a tcsh test that returns true if the variable exists.
-
-if ( ! $?COLOR_START ) then
-    set COLOR_START = "\033[35m"
+# CLAS12 sample workflow entry point. Source from the repository root, or set
+# CLAS12_SAMPLES_DIR when sourcing from elsewhere. Execution works from any cwd.
+set _clas12_invocation = "$0"
+set _clas12_root = "$cwd"
+if ("$_clas12_invocation:t" != "tcsh" && "$_clas12_invocation:t" != "csh" && "$_clas12_invocation" !~ "-*") then
+    set _clas12_root = "$_clas12_invocation:h:h"
 endif
-
-if ( ! $?COLOR_END ) then
-    set COLOR_END = "\033[0m"
+if ($?CLAS12_SAMPLES_DIR) then
+    set _clas12_root = "$CLAS12_SAMPLES_DIR"
 endif
-
-if ( ! $?COLOR_ERR ) then
-    set COLOR_ERR = "\033[31m"
+if (-f "$_clas12_root/scripts/workflow.py") then
+    python3 "$_clas12_root/scripts/workflow.py" --update-only $argv:q
+    set CLAS12_SAMPLE_STATUS = $status
+else
+    echo "Cannot find scripts/workflow.py. Source from the checkout root or set CLAS12_SAMPLES_DIR."
+    set CLAS12_SAMPLE_STATUS = 1
 endif
-
-# Print an empty line to visually separate this script's output from previous
-# terminal output.
-
-echo ""
-# Print a visible banner showing that the update script has started.  The long
-# separator lines make it easy to identify the beginning of the update stage
-# inside long logs produced on remote machines such as ifarm.
-
-echo "${COLOR_START}====================================================================================================${COLOR_END}"
-echo "${COLOR_START}= Running update script                                                                            =${COLOR_END}"
-echo "${COLOR_START}====================================================================================================${COLOR_END}"
-echo ""
-
-# -------------------------------------------------------------------------------------------------
-# Clean working tree
-# -------------------------------------------------------------------------------------------------
-# Remove leftover temporary or build files that are not tracked by git.
-# This ensures the repository is in a predictable state before pulling
-# updates or running builds.
-
-# Print a section header describing the current operation.
-
-echo "${COLOR_START}- Cleaning excessive files -------------------------------------------------------------------------${COLOR_END}"
-echo ""
-
-# Remove all untracked files and directories in the repository.
-# Flags:
-#   -f  force removal
-#   -x  also remove files listed in .gitignore
-#   -d  remove directories
-#
-# The `-e build/` exclusion prevents the build directory from being removed.
-# This allows reuse of the existing CMake build when the source code has not
-# changed, which significantly speeds up repeated runs on the SSH machine.
-
-git clean -fxd -e build/ -e build
-
-echo ""
-
-# -------------------------------------------------------------------------------------------------
-# Synchronize repository with remote
-# -------------------------------------------------------------------------------------------------
-# Reset local changes and pull the latest commits from the remote repository.
-# This guarantees the working copy matches the latest version of the dev branch
-# before building or running the analysis.
-
-# Discard any local modifications to tracked files.
-# This ensures the repository exactly matches the last committed state before
-# pulling updates.
-
-git reset --hard
-
-# Fetch new commits from the remote repository and update the local branch.
-
-git pull
-# `$status` holds the exit code of the previous command.
-# A non‑zero value means `git pull` failed (for example due to network
-# issues or merge conflicts).  In that case the script aborts immediately.
-
-if ( $status != 0 ) then
-    echo ""
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
-    echo "${COLOR_ERR}= git pull failed. Aborting update script.                                                         =${COLOR_END}"
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
-    echo ""
-    exit 1
-endif
-
-echo ""
-
-# Display the latest commit in the repository.
-# This helps verify which exact revision of the analysis code is being used.
-
-echo "${COLOR_START}HEAD:${COLOR_END}"
-git log -1 --oneline
-
-echo ""
-
-# Display the currently checked out branch.  This is particularly useful
-# when running on remote systems to confirm that the expected branch
-# (usually `dev`) is active.
-
-echo "${COLOR_START}Branch:${COLOR_END}"
-git branch --show-current
-
-echo ""
-
-# -------------------------------------------------------------------------------------------------
-# Reload environment
-# -------------------------------------------------------------------------------------------------
-# Reinitialize environment variables and helper commands that may depend
-# on the current repository state.  These scripts typically set paths,
-# analysis directories, and screen session helpers.
-
-# Source the environment setup script which defines variables such as
-# DIR_2N_ANALYSIS_CODE, IFARM_RUN, and other runtime settings.
-
-source ./scripts/environment/set_environment.csh
-# # Source the screen helper script that defines aliases and functions for
-# # launching analysis runs inside detached screen sessions.
-
-# if ( -f ./scripts/screen/setup_screen_commands.csh ) then
-#     source ./scripts/screen/setup_screen_commands.csh
-# else
-#     echo "${COLOR_ERR}Missing screen setup script: ./scripts/screen/setup_screen_commands.csh${COLOR_END}"
-# endif
-
-echo ""
+unset _clas12_invocation _clas12_root
+# Last command propagates status to both executed and sourced callers.
+# In particular, do not use exit here: it would close a sourced SSH shell.
+/bin/sh -c "exit $CLAS12_SAMPLE_STATUS"

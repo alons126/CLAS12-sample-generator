@@ -1,0 +1,16 @@
+{
+  "workflow": "uniform",
+  "git_pull": false,
+  "build": true,
+  "run": true,
+  "test": false,
+  "build_dir": "build/release",
+  "build_type": "Release",
+  "jobs": 4,
+  "arguments": {
+    "uniform": ["--config", "config/samples/uniform-electron.conf", "--output", "runs/default-uniform"],
+    "genie": ["--config", "config/samples/genie.conf"],
+    "simulate": [],
+    "submit": []
+  }
+}

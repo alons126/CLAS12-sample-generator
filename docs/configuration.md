@@ -43,6 +43,8 @@ Theta limits require 0≤min<max≤180. Fixed momentum must be positive; uniform
 
 ## Target geometry
 
+The authoritative source is the replaceable [`src/common/targets.h`](../src/common/targets.h); see [external inputs](external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
+
 All positions below are in cm in the imported GEMC coordinate convention. Except `point`, x and y are independent Gaussians with mean 0 and sigma 0.04 cm.
 
 | Name | z prescription |
@@ -60,12 +62,12 @@ Unknown geometries fail instead of writing sentinel coordinates. Geometry does n
 
 ## Manifest
 
-Schema version 1 contains `workflow`, project `version`, configure-time Git `revision` (including a dirty marker when applicable), `root_version`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
+Schema version 1 contains `workflow`, project `version`, configure-time Git `revision` (including a dirty marker when applicable), `root_version`, the compiled header hash `targets_sha256`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
 
 It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Legacy masses and all LUND fields/precision are defined in the [data contract](data-contracts.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
 
 ## Detector and site settings
 
-Gcards and reconstruction YAML live under `config/detector/Generation_files_{2,4,6}GeV/{devGEMC5.12,5.14}/`. Their contents are retained from the imported repository. Select actual files with the runner's `--gcard` and `--reconstruction` options; field scales are explicit.
+Gcards and reconstruction YAML live under `config/detector/Generation_files_{2,4,6}GeV/{devGEMC5.12,5.14}/`. Their contents are retained from the imported repository. Select actual files with the runner's `--gcard` and `--reconstruction` options; field scales are explicit. Gcards originate from JeffersonLab/clas12-config; [provenance and required field settings](external-inputs.md) specify outbending at 2 GeV and inbending at 4/6 GeV.
 
 Site JSON accepts `gemc` and `recon` executable names/paths. Optional `slurm` requires `account`, `partition`, `time`, and `mem` strings and accepts `output`/`error` log-path strings. The JLab file is an editable example of the imported resources, not a claim that those allocations suit every run. Load the necessary environment before executing/submitting.

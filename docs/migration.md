@@ -36,6 +36,6 @@ Both keep the original azimuth and trigger-electron prescription. See [sampling 
 
 ## Retained corrections
 
-The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. It propagates actual file counts to simulation, validates input/configuration, rejects existing outputs, and publishes a manifest only after success. No supported command automatically updates Git or deletes a run directory.
+The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. It propagates actual file counts to simulation, validates input/configuration, rejects existing outputs, and publishes a manifest only after success. The launcher updates Git only when explicitly requested or enabled in run settings, using a clean-checkout fast-forward pull. No supported command deletes a run directory. See the [SSH workflow](ssh-workflow.md).
 
 Full parity scope and limitations—including unknown historical random states and untested detector execution—are listed in [validation](validation.md).

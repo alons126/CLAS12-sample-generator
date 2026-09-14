@@ -101,3 +101,5 @@ The current archived selection is uniform submission. Its active loop is **en at
 Use `scripts/simulation/run.py` for a local preview/execution or `scripts/slurm/submit.py` for the corresponding array. Commands and detailed examples are in the [execution guide](gemc-reconstruction-batch-submission.md).
 
 The new software does not log into the server, set up modules, or reproduce an unspecified detector RNG state. Those are necessary external conditions for detector-level reproducibility.
+
+The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).

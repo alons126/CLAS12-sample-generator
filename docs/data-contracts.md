@@ -21,7 +21,7 @@ These types are defined in [Event.h](../src/common/Event.h). LUND serialization 
 | 9 | Per-file event index in legacy mode; run-global in precise mode | Global input entry index, including skipped entries |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
 
-The GENIE process tag and resonance metadata are historical application conventions, not a claim that field 10 is a physical cross-section weight. General format context is available in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
+The GENIE process tag and resonance metadata are historical application conventions, not a claim that field 10 is a physical cross-section weight. We produce LUND files following the format in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
 
 ## 3. Particle record: fourteen fields
 
@@ -77,6 +77,7 @@ The archived converter's short-input and near-end early termination is intention
 | `schema_version` | integer | Currently 1 |
 | `workflow` | string | `uniform` or `genie` |
 | `version`, `revision`, `root_version` | strings | Project version, configure-time Git revision/dirty marker, ROOT version |
+| `targets_sha256` | string | SHA-256 of the external targets.h used at compilation |
 | `scanned_events`, `written_events` | integers | Input scan count and output count |
 | `config` | object of strings | Fully merged/resolved settings, including RNG/output/mass/sampling modes |
 | `files` | array | Each element has relative `path` and integer `events` |

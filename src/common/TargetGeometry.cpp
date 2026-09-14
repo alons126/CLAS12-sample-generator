@@ -1,48 +1,44 @@
 #include "common/TargetGeometry.h"
 
+#include <TString.h>
+#include <cmath>
+#include <iostream>
 #include <map>
+#include <mutex>
 #include <stdexcept>
 #include <vector>
 
-#include "common/Event.h"
-namespace samples {
 namespace {
-const std::map<std::string, std::vector<double>> positions = {{"4-foil", {-4.875, -3.625, -2.375, -1.125}},
-                                                              {"1-foil", {-0.5}},
-                                                              {"1-foil-small", {-2.1}},
-                                                              {"1-foil-large", {-2.32}},
-                                                              {"Ar", {-5.75, -5.25}},
-                                                              {"Ca", {-3.0}},
-                                                              {"liquid", {-5.5, -0.5}},
-                                                              {"point", {0.0}}};
+// This external header defines globals and functions. Include it in ONE translation
+// unit, isolated from application symbols. Keep the header itself replaceable.
+namespace external_targets {
+using std::cout;
+using std::endl;
+using std::sqrt;
+using std::string;
+#include "common/targets.h"
 }
+std::mutex geometry_mutex;
+}
+
+namespace samples {
 void TargetGeometry::validate(const std::string& name) {
-    if (!positions.count(name)) throw std::runtime_error("Unknown target geometry: " + name);
+    // The point vertex is an artificial electron-tester setting, not a target.
+    if (name == "point") return;
+    const auto found = external_targets::targets.find(name);
+    if (found == external_targets::targets.end() || found->second.empty())
+        throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name);
 }
 TVector3 TargetGeometry::sample(TRandom3& random) const {
     if (name_ == "point") return {0, 0, 0};
-    const auto& z = positions.at(name_);
-    double x = random.Gaus(0, 0.04), y = random.Gaus(0, 0.04);
-    double vz = (name_ == "Ar" || name_ == "liquid") ? random.Uniform(z[0], z[1]) : z[random.Integer(z.size())];
-    return {x, y, vz};
+    // Upstream randomVertex uses a global TRandom3 named ran. Transfer the full
+    // caller-owned state, not just its seed, so streams remain reproducible and
+    // independent even when different geometry instances are interleaved.
+    std::lock_guard<std::mutex> guard(geometry_mutex);
+    external_targets::ran = random;
+    const auto vertex = external_targets::randomVertex(name_);
+    random = external_targets::ran;
+    if (!std::isfinite(vertex.Mag2())) throw std::runtime_error("Non-finite vertex from targets.h");
+    return vertex;
 }
-double particleMass(int pid, bool legacy) {
-    switch (pid) {
-        case 11:
-            return 0.000511;
-        case 2212:
-            return 0.938272;
-        case 2112:
-            return 0.93957;
-        case 211:
-        case -211:
-            return legacy ? 0.13957 : 0.13957039;
-        case 111:
-            return legacy ? 0.13957 : 0.1349768;
-        case 22:
-            return 0;
-        default:
-            throw std::runtime_error("Unsupported output PDG code: " + std::to_string(pid));
-    }
 }
-}  // namespace samples

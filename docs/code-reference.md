@@ -26,17 +26,17 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### Event and particle mass
 
-[Event.h](../src/common/Event.h) declares `Particle`, `Event` and `particleMass(pid,legacy)`. Momentum and vertex values are owned, not shared mutable pointers. `particleMass` is implemented with the geometry utilities and rejects unsupported species. Legacy/standard pion constants are listed in the [data contract](data-contracts.md).
+[Event.h](../src/common/Event.h) declares `Particle`, `Event` and `particleMass(pid,legacy)`. Momentum and vertex values are owned, not shared mutable pointers. `particleMass` is implemented in [Particle.cpp](../src/common/Particle.cpp) and rejects unsupported species. Legacy/standard pion constants are listed in the [data contract](data-contracts.md).
 
 ### TargetGeometry
 
-[TargetGeometry.h](../src/common/TargetGeometry.h) / [TargetGeometry.cpp](../src/common/TargetGeometry.cpp): the constructor validates the geometry name. `sample(TRandom3&)` consumes the caller's vertex stream and returns one vertex. `point` consumes no random draws. Continuous targets draw x/y Gaussian then z uniform; foils draw x/y Gaussian then an equal-probability foil index. The immutable position table consolidates the two archived target maps.
+[TargetGeometry.h](../src/common/TargetGeometry.h) / [TargetGeometry.cpp](../src/common/TargetGeometry.cpp): the constructor validates the geometry name. `sample(TRandom3&)` consumes the caller's vertex stream and returns one vertex. `point` consumes no random draws. Continuous targets draw x/y Gaussian then z uniform; foils draw x/y Gaussian then an equal-probability foil index. The authoritative map and sampler live in the replaceable [targets.h](../src/common/targets.h). The adapter isolates its globals and transfers the caller RNG state under a mutex; see [external inputs](external-inputs.md).
 
 ### LundWriter
 
 [LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor claims a new output directory; `full` checks capacity; `write` serializes an event and rotates files as needed; `count` returns accepted output count; `finish(scanned)` closes files and publishes the manifest. Capacity and events-per-file are cached outside the hot loop. Output-stream exceptions propagate to the application; no cleanup removes partial output.
 
-`Version.h.in` embeds project version and the configure-time Git revision into the manifest. This is build provenance, not a runtime Git dependency.
+`Version.h.in` embeds project version, target-header SHA-256 and the configure-time Git revision into the manifest. This is build provenance, not a runtime Git dependency.
 
 ### Monitoring
 
@@ -107,16 +107,8 @@ Exact test scope and acceptance criteria are in [validation](validation.md).
 
 The archived root `genie_job_submission_script.csh` is another historical submission copy. There is one supported new Slurm runner. Do not infer which historical copy was last used from its location alone.
 
-## 9. Additional analyzer helper scripts present in the working tree
+## 9. SSH checkout orchestration
 
-The following shell helpers were added separately during this work and are not integrated with the sample-generator targets. They are documented here to avoid confusing them with the supported pipeline:
+[SSH workflow](ssh-workflow.md) documents every shell wrapper, the banner helpers and `config/run.json`. `scripts/workflow.py` validates settings, merges CLI overrides, optionally performs a clean-checkout fast-forward pull, configures/builds/tests, and dispatches the selected generator, converter, simulation runner or submitter. Subprocess arguments are passed as lists. Shell wrappers preserve quoted arguments and return failures without exiting a sourced session.
 
-| File | Current behavior |
-| --- | --- |
-| `run.csh` | Analyzer orchestration template; defaults to updating, building and running, forwards arguments, invokes printer/update/build helpers |
-| `scripts/build_and_run.csh` | Builds the root project but expects `build/apps/TwoNAnalyzerReco` and analyzer configuration; that target does not exist in this project |
-| `update_only.sh` | Sources `scripts/code_updater.sh` using csh/tcsh syntax |
-| `scripts/code_updater.sh` | Performs Git cleanup/reset/pull and sources analyzer-specific environment setup, which is not part of this project |
-| `scripts/printers/print_logo.csh`, `print_stop.csh`, `print_success.csh` | Terminal banner helpers used by the analyzer template |
-
-These files are not called by the documented CMake/CLI/Python commands, are not installed, and are outside the parity-test scope. They must be adapted before use as sample-generation launchers. In particular, they are not a replacement for the archived uniform `run.sh` merely because their filenames are similar.
+`tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `tests/prepare_replacement_geometry.py` creates a changed target header; `tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
