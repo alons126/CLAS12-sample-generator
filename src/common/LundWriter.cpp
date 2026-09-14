@@ -1,6 +1,7 @@
 #include "common/LundWriter.h"
 
 #include <TROOT.h>
+#include <TString.h>
 
 #include <cmath>
 #include <iomanip>
@@ -9,7 +10,12 @@
 #include "Version.h"
 namespace samples {
 LundWriter::LundWriter(const RunConfig& c, std::string workflow)
-    : config_(c), workflow_(std::move(workflow)), directory_(c.get("output")), events_per_file_(c.integer("events-per-file")), capacity_(c.integer("files") * events_per_file_) {
+    : config_(c),
+      workflow_(std::move(workflow)),
+      directory_(c.get("output")),
+      events_per_file_(c.integer("events-per-file")),
+      capacity_(c.integer("files") * events_per_file_),
+      legacy_format_(c.get("lund-format") == "legacy") {
     // Atomic leaf creation prevents two runs from claiming the same directory.
     std::filesystem::create_directories(directory_.parent_path());
     if (!std::filesystem::create_directory(directory_)) throw std::runtime_error("Output already exists: " + directory_.string());
@@ -26,13 +32,26 @@ void LundWriter::write(const Event& e) {
         stream_.open(directory_ / files_.back().path);
         stream_ << std::setprecision(10);
     }
-    stream_ << e.particles.size() << ' ' << e.A << ' ' << e.Z << ' ' << e.resonance_id << " 0 11 " << e.beam_energy << " 1 " << e.id << ' ' << e.weight << '\n';
+    if (legacy_format_) {
+        const auto id = static_cast<unsigned long long>(workflow_ == "uniform" ? files_.back().events : e.id);
+        const bool nucleon = workflow_ == "uniform" && config_.get("channel") != "1e";
+        const bool tester = workflow_ == "uniform" && config_.get("channel") == "1e" && config_.get("electron-momentum") == "beam";
+        const char* format = nucleon || tester ? "%i \t %i \t %i \t %.3f \t %.3f \t %i \t %.1f \t %i \t %llu \t %.3f \n" : "%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %llu \t %.2f \n";
+        stream_ << TString::Format(format, static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., 11, e.beam_energy, 1, id, e.weight);
+    } else {
+        stream_ << e.particles.size() << ' ' << e.A << ' ' << e.Z << ' ' << e.resonance_id << " 0 11 " << e.beam_energy << " 1 " << e.id << ' ' << e.weight << '\n';
+    }
     int index = 0;
     for (const auto& p : e.particles) {
         const double energy = std::sqrt(p.mass * p.mass + p.momentum.Mag2());
         if (!std::isfinite(energy) || !std::isfinite(p.vertex.Mag2())) throw std::runtime_error("Non-finite particle data");
-        stream_ << ++index << " 0 1 " << p.pid << " 0 0 " << p.momentum.X() << ' ' << p.momentum.Y() << ' ' << p.momentum.Z() << ' ' << energy << ' ' << p.mass << ' ' << p.vertex.X() << ' '
-                << p.vertex.Y() << ' ' << p.vertex.Z() << '\n';
+        if (legacy_format_) {
+            stream_ << TString::Format("%i \t %.3f \t %i \t %i \t %i \t %i \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \n", ++index, 0., 1, p.pid, 0, 0, p.momentum.X(),
+                                       p.momentum.Y(), p.momentum.Z(), energy, p.mass, p.vertex.X(), p.vertex.Y(), p.vertex.Z());
+        } else {
+            stream_ << ++index << " 0 1 " << p.pid << " 0 0 " << p.momentum.X() << ' ' << p.momentum.Y() << ' ' << p.momentum.Z() << ' ' << energy << ' ' << p.mass << ' ' << p.vertex.X()
+                    << ' ' << p.vertex.Y() << ' ' << p.vertex.Z() << '\n';
+        }
     }
     ++files_.back().events;
     ++count_;

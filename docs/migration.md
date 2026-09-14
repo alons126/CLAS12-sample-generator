@@ -1,35 +1,41 @@
-# Migration from the imported repositories
+# Migration and compatibility options
 
-The old `Uniform-sample-generator/`, `GEMC-samples/`, and root GENIE submission script are archived under `legacy/`. Their source is retained for comparison, excluded from the root build, and not supported as runnable entry points. Historical scripts include hardcoded site paths and destructive cleanup; do not run them. Use the compiled applications and new runner.
+The imported sources are retained under `legacy/`. Use the root build and supported CLIs; historical launch scripts perform site-specific operations and may clean/reset repositories. Detailed provenance is in the [launch-chain reference](legacy-workflows.md).
 
 ## Entry points
 
 | Previous | Supported replacement |
 | --- | --- |
-| `Uniform-sample-generator/CMakeLists.txt` | Root `CMakeLists.txt` and presets |
-| ROOT `CodeRun.cpp` with edited production calls | `clas12-uniform --config FILE --output NEW_DIR` |
-| `Uniform_sample_generator_e_tester.C` | `electron-tester.conf` (beam momentum, point vertex) |
-| `GENIE_to_LUND_converter.csh` / ROOT macro | `clas12-genie-to-lund --input ... --config ... --output ...` |
-| Per-energy/channel GEMC submission scripts | `scripts/simulation/run.py` and `scripts/slurm/submit.py` |
-| `Generation_files_*` | `config/detector/Generation_files_*` |
-| Current-directory-based output rewrites | Explicit `--output` |
+| Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `clas12-uniform --config FILE --channel ... --output NEW_DIR` |
+| `Uniform_sample_generator_e_tester.C` | `electron-tester.conf` |
+| `GENIE_to_LUND_converter.csh` → ROOT macro | `clas12-genie-to-lund --input ... --config ... --output ...` |
+| Sourced `setup_and_submit_jobs.csh` → selected setup script | Common simulation runner or Slurm submitter consuming a manifest |
+| Per-energy detector resources | `config/detector/Generation_files_*` |
+| Current-directory-dependent output rewrites | Explicit output path |
 
-The attachment-inspired `src/` library and `apps/` executable split is now the root build. Shared libraries here mean reusable code targets; the default implementation links them statically into the applications.
+## Legacy-compatible settings
 
-## Preserved prescriptions
+The default `lund-format=legacy` restores historical whitespace, precision and uniform per-file IDs. The default `mass-convention=legacy` restores the archived pion values. `nucleon-momentum=fixed` preserves the 1 GeV mode. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
 
-Electron uniform sampling is flat in theta, phi and momentum. Electron–nucleon modes retain the fixed 1 GeV nucleon default, shared vertex, 25° trigger theta and opposite-sector trigger phi. The two imported target maps have been consolidated with their original positions and transverse spread. GENIE conversion retains electron-first ordering, supported particle species, process priority and resonance/process header conventions.
+`legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture the active archived launch settings. Their counts are production-sized; override `--files` and `--events-per-file` for local tests.
 
-## Deliberate changes
+The earlier refactor's output remains available through `--lund-format precise`, `--mass-convention standard`, and runner `--output-naming indexed`. Default runner filenames now follow the legacy `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo` convention.
 
-- Kinematic and vertex seeds are explicit, nonzero and recorded. Historical random sequences are not guaranteed.
-- LUND output uses ten significant digits and run-global uniform event IDs instead of resetting IDs in each file.
-- Target geometry and A/Z are separate explicit settings. Ar example configs use A=40/Z=18; the bare CLI retains A=Z=1 defaults.
-- GENIE filenames no longer supply energy/target/tune assumptions. The final partial file is kept, and the file limit applies to accepted events.
-- GENIE energies are recomputed from shared masses and momenta. Electron/proton/neutron constants match the imported uniform code; pion constants are explicit (charged 0.13957039, neutral 0.1349768 GeV). Review mass conventions against historical external utilities when comparing physical samples.
-- Diagnostics are a per-PDG ROOT file with consistent names. The old global histogram objects, electron–nucleon correlation collection, PDF/PNG styling and ROOT list container are archived, not part of the new output contract. Downstream scripts reading those diagnostic names need updating; LUND/GEMC remain the pipeline interface.
-- Simulation uses actual manifest counts instead of an independent hardcoded 10,000-event limit.
-- Output creation never deletes existing directories. Failures return nonzero, and manifests are published only on successful completion.
-- The normal build/run workflow contains no Git update or reset operations.
+## New requested sampling
 
-Use small samples to compare distributions before regenerating production acceptance inputs. Automated checks cover software behavior, not equivalence of full reconstructed acceptance maps.
+Disable fixed nucleon momentum with `--nucleon-momentum sampled`:
+
+- en: uniform p and uniform solid angle within the original 5–35° theta window.
+- ep: half uniform p and half uniform 1/p, retaining the original 5–45° flat-theta prescription.
+
+Both keep the original azimuth and trigger-electron prescription. See [sampling equations](sampling-models.md) and the sampled config examples.
+
+## Diagnostics
+
+`monitoring.root` retains the common per-PDG diagnostics introduced by the refactor. `legacy_histograms.root` additionally restores the original uniform names/correlations and the original GENIE electron diagnostic. `--render-plots true` creates PDF/PNG products; plot styles and names are standardized. Numerical parity is checked by independent tests.
+
+## Retained corrections
+
+The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. It propagates actual file counts to simulation, validates input/configuration, rejects existing outputs, and publishes a manifest only after success. No supported command automatically updates Git or deletes a run directory.
+
+Full parity scope and limitations—including unknown historical random states and untested detector execution—are listed in [validation](validation.md).

@@ -19,6 +19,7 @@ def parser():
     p.add_argument('--torus', type=float, required=True)
     p.add_argument('--solenoid', type=float, default=-1.0)
     p.add_argument('--file-index', type=int, help='One-based manifest index; default: all files')
+    p.add_argument('--output-naming', choices=['legacy', 'indexed'], default='legacy')
     p.add_argument('--execute', action='store_true', help='Run commands; default only prints them')
     return p
 
@@ -61,8 +62,9 @@ def load_plan(args):
         total += count
         if args.file_index is not None and index != args.file_index:
             continue
-        mc = root / 'mchipo' / f'mc_{index}.hipo'
-        reco = root / 'reconhipo' / f'recon_{index}.hipo'
+        suffix = f'{path.stem}_torus{args.torus}' if args.output_naming == 'legacy' else str(index)
+        mc = root / 'mchipo' / f'mc_{suffix}.hipo'
+        reco = root / 'reconhipo' / f'recon_{suffix}.hipo'
         record = root / 'simulation' / f'{index}.json'
         if any(p.exists() for p in (mc, reco, record, record.with_suffix(".lock"))):
             raise ValueError(f'Simulation output already exists for file {index}; use a fresh run')

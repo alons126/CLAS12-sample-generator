@@ -8,6 +8,7 @@ import tempfile
 
 
 def run(*args, ok=True):
+    args = (*args, "--lund-format", "precise") if str(args[0]) == executable and "--help" not in args else args
     result = subprocess.run([str(x) for x in args], capture_output=True, text=True)
     assert (result.returncode == 0) == ok, result.stdout + result.stderr
     return result

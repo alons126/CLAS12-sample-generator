@@ -26,7 +26,7 @@ TVector3 TargetGeometry::sample(TRandom3& random) const {
     double vz = (name_ == "Ar" || name_ == "liquid") ? random.Uniform(z[0], z[1]) : z[random.Integer(z.size())];
     return {x, y, vz};
 }
-double particleMass(int pid) {
+double particleMass(int pid, bool legacy) {
     switch (pid) {
         case 11:
             return 0.000511;
@@ -36,9 +36,9 @@ double particleMass(int pid) {
             return 0.93957;
         case 211:
         case -211:
-            return 0.13957039;
+            return legacy ? 0.13957 : 0.13957039;
         case 111:
-            return 0.1349768;
+            return legacy ? 0.13957 : 0.1349768;
         case 22:
             return 0;
         default:

@@ -19,7 +19,7 @@ This is a dry run. It validates the manifest totals, file paths and configuratio
 
 Add `--execute` to run. `--solenoid` defaults to −1. `--file-index 2` selects the second manifest file; otherwise the runner processes all files sequentially. Paths containing spaces are passed as individual subprocess arguments.
 
-The runner creates `mchipo/mc_INDEX.hipo` and `reconhipo/recon_INDEX.hipo`. It uses the manifest count for both `gemc -N` and `recon-util -n`, including partial files. Reconstruction only starts if GEMC succeeds and produces a nonempty HIPO file. A successful `simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files.
+By default the runner preserves legacy names: `mchipo/mc_LUNDSTEM_torusSCALE.hipo` and `reconhipo/recon_LUNDSTEM_torusSCALE.hipo`. `--output-naming indexed` selects the initial refactor's `mc_INDEX.hipo`/`recon_INDEX.hipo` names. It uses the manifest count for both `gemc -N` and `recon-util -n`, including partial files. Reconstruction only starts if GEMC succeeds and produces a nonempty HIPO file. A successful `simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files.
 
 Existing outputs are rejected. A per-file lock prevents two processes from executing the same task concurrently. Failed jobs retain their locks/partial output for inspection; there is no automatic cleanup or resume. Use a fresh run directory, or deliberately resolve the failed file's state before retrying. A single run directory supports one simulation configuration.
 
@@ -38,8 +38,10 @@ python3 scripts/slurm/submit.py \
 
 This previews `sbatch`. Add `--execute` to submit. One array task is created per manifest file; each invokes the same runner with `$SLURM_ARRAY_TASK_ID`. The worker environment must provide Python 3.9+, GEMC, reconstruction and access to the script/config/input paths. The submitter does not install software or source environment scripts.
 
-Edit site JSON for scheduler resources and executable paths. Slurm's normal stdout/stderr defaults apply. Use `--runner /shared/path/run.py` if the default source/install path is not the one workers should use.
+Edit site JSON for scheduler resources and executable paths. Optional site `slurm.output` and `slurm.error` select log paths. The JLab example preserves the archived `/farm_out/%u/%x-%j-%N` convention and uses 2000M memory for the single-task job. Use `--runner /shared/path/run.py` if the default source/install path is not the one workers should use.
 
 ## Scope of validation
 
 Local automated tests use fake executables and tiny samples. Actual GEMC and reconstruction execution must be checked in the intended environment. The repository preserves imported gcard/YAML files; it does not silently assign detector versions based on output names.
+
+The [legacy launch-chain mapping](legacy-workflows.md) traces `setup_and_submit_jobs.csh` and its manual workflow selection. [Command parity tests](validation.md) execute the archived Bash payloads with fake binaries and compare their argument lists to the new runner. They never submit jobs.

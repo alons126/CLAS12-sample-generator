@@ -5,6 +5,8 @@
     "account": "clas12",
     "partition": "production",
     "time": "20:00:00",
-    "mem": "2G"
+    "mem": "2000M",
+    "output": "/farm_out/%u/%x-%j-%N.out",
+    "error": "/farm_out/%u/%x-%j-%N.err"
   }
 }

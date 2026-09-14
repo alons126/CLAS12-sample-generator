@@ -17,6 +17,9 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `seed` | `67890` | Uniform kinematic RNG seed; unused in GENIE conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed |
 | `prefix` | `Uniform_sample` / `GENIE_sample` | Filename label; letters, digits, `_`, `-`, `.` |
+| `lund-format` | `legacy` | Legacy text precision/numbering, or `precise` |
+| `mass-convention` | `legacy` | Restored constants, or `standard` pion constants |
+| `render-plots` | `false` | `true` additionally writes diagnostic PDF/PNG files |
 | `input` | Required for GENIE | ROOT GST input filename or quoted glob |
 
 Counts and seeds must be integers from 1 through 4294967295. The explicit Ar example files set A=40/Z=18; bare CLI defaults retain the imported uniform header convention A=Z=1. Always select the intended metadata for production.
@@ -29,13 +32,14 @@ Counts and seeds must be integers from 1 through 4294967295. The explicit Ar exa
 | `electron-theta-min/max` | `5` / `40` | `1e` theta range, degrees |
 | `electron-momentum` | `uniform` | `uniform` in [0, beam), or `beam` |
 | `nucleon-theta-min/max` | `5` / `auto` | Theta range; auto maximum 45° for ep, 35° for en |
-| `nucleon-momentum` | `fixed` | `fixed` or `uniform` |
+| `nucleon-momentum` | `fixed` | `fixed`, `sampled`, `uniform`, `mixed`; sampled resolves by channel |
+| `nucleon-angle` | `auto` | `theta` or `isotropic`; auto is isotropic for non-fixed en, theta otherwise |
 | `nucleon-p` | `1` | Fixed momentum, GeV |
 | `nucleon-p-min/max` | `0.3` / `auto` | Uniform bounds; auto maximum is beam energy |
 | `trigger-theta` | `25` | Trigger electron theta, degrees |
 | `trigger-phi-offset` | `auto` | Offset in degrees; energy-based defaults in uniform guide |
 
-Theta limits require 0≤min<max≤180. Fixed momentum must be positive; uniform momentum bounds require 0≤min<max. All numeric values must be finite. Resolved `auto` values are written to the manifest. Settings are validated even when inactive for the selected channel.
+Theta limits require 0≤min<max≤180. Fixed momentum must be positive; uniform momentum bounds require 0≤min<max. All numeric values must be finite. `mixed` requires channel ep and a strictly positive minimum momentum; it alternates uniform-p and uniform-1/p draws. `sampled` resolves to `uniform` for en and `mixed` for ep. Resolved `auto` values are written to the manifest. Settings are validated even when inactive for the selected channel.
 
 ## Target geometry
 
@@ -58,10 +62,10 @@ Unknown geometries fail instead of writing sentinel coordinates. Geometry does n
 
 Schema version 1 contains `workflow`, project `version`, configure-time Git `revision` (including a dirty marker when applicable), `root_version`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
 
-It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
+It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Legacy masses and all LUND fields/precision are defined in the [data contract](data-contracts.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
 
 ## Detector and site settings
 
 Gcards and reconstruction YAML live under `config/detector/Generation_files_{2,4,6}GeV/{devGEMC5.12,5.14}/`. Their contents are retained from the imported repository. Select actual files with the runner's `--gcard` and `--reconstruction` options; field scales are explicit.
 
-Site JSON accepts `gemc` and `recon` executable names/paths. Optional `slurm` contains `account`, `partition`, `time`, and `mem` strings. The JLab file is an editable example of the imported resources, not a claim that those allocations suit every run. Load the necessary environment before executing/submitting.
+Site JSON accepts `gemc` and `recon` executable names/paths. Optional `slurm` requires `account`, `partition`, `time`, and `mem` strings and accepts `output`/`error` log-path strings. The JLab file is an editable example of the imported resources, not a claim that those allocations suit every run. Load the necessary environment before executing/submitting.

@@ -25,6 +25,9 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
                  {"files", "1"},
                  {"events-per-file", "10000"},
                  {"seed", "67890"},
+                 {"lund-format", "legacy"},
+                 {"mass-convention", "legacy"},
+                 {"render-plots", "false"},
                  {"vertex-seed", "12345"},
                  {"prefix", genie ? "GENIE_sample" : "Uniform_sample"}};
     if (genie)
@@ -36,6 +39,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
                           {"nucleon-theta-min", "5"},
                           {"nucleon-theta-max", "auto"},
                           {"nucleon-momentum", "fixed"},
+                          {"nucleon-angle", "auto"},
                           {"nucleon-p", "1"},
                           {"nucleon-p-min", "0.3"},
                           {"nucleon-p-max", "auto"},
@@ -85,6 +89,10 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
             c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
         }
     }
+    if (!genie) {
+        if (c.get("nucleon-momentum") == "sampled") c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform";
+        if (c.get("nucleon-angle") == "auto") c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta";
+    }
     c.validate(genie);
     if (genie && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
     c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
@@ -112,6 +120,9 @@ void RunConfig::validate(bool genie) const {
     if (integer("A") < 1 || integer("A") > 300 || integer("Z") > integer("A")) throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A");
     if (get("prefix").empty() || get("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos)
         throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
+    if (get("lund-format") != "legacy" && get("lund-format") != "precise") throw std::runtime_error("lund-format must be legacy or precise");
+    if (get("mass-convention") != "legacy" && get("mass-convention") != "standard") throw std::runtime_error("mass-convention must be legacy or standard");
+    if (get("render-plots") != "true" && get("render-plots") != "false") throw std::runtime_error("render-plots must be true or false");
     TargetGeometry::validate(get("target"));
     if (genie) {
         if (get("input").empty()) throw std::runtime_error("--input GST ROOT file or glob is required");
@@ -122,7 +133,10 @@ void RunConfig::validate(bool genie) const {
         double lo = number(std::string(stem) + "-theta-min"), hi = number(std::string(stem) + "-theta-max");
         if (!(0 <= lo && lo < hi && hi <= 180)) throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180");
     }
-    if (get("nucleon-momentum") != "fixed" && get("nucleon-momentum") != "uniform") throw std::runtime_error("nucleon-momentum must be fixed or uniform");
+    if (get("nucleon-momentum") != "fixed" && get("nucleon-momentum") != "uniform" && get("nucleon-momentum") != "mixed")
+        throw std::runtime_error("nucleon-momentum must be fixed, sampled, uniform or mixed");
+    if (get("nucleon-momentum") == "mixed" && (get("channel") != "ep" || number("nucleon-p-min") <= 0)) throw std::runtime_error("mixed requires ep and strictly positive nucleon-p-min");
+    if (get("nucleon-angle") != "theta" && get("nucleon-angle") != "isotropic") throw std::runtime_error("nucleon-angle must be auto, theta or isotropic");
     if (get("electron-momentum") != "uniform" && get("electron-momentum") != "beam") throw std::runtime_error("electron-momentum must be uniform or beam");
     if (number("nucleon-p") <= 0 || number("nucleon-p-min") < 0 || number("nucleon-p-max") <= number("nucleon-p-min")) throw std::runtime_error("Invalid nucleon momentum bounds");
     if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) throw std::runtime_error("Invalid trigger angle");
@@ -145,13 +159,14 @@ std::string help(bool genie) {
     std::string result = genie ? "clas12-genie-to-lund --input 'gst*.root' --output NEW_DIRECTORY\n" : "clas12-uniform --channel 1e|ep|en --output NEW_DIRECTORY\n";
     result +=
         "Settings: --config FILE, --beam-energy GeV, --target GEOMETRY, --A N, --Z N,\n"
-        "--files N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME.\n"
+        "--files N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
+        "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
         "Files use key = value; CLI values override file settings. No automatic overwrite.\n";
     if (!genie)
         result +=
             "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
-            "--electron-momentum uniform|beam, --nucleon-momentum fixed|uniform,\n"
-            "--nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
+            "--electron-momentum uniform|beam, --nucleon-momentum fixed|sampled|uniform|mixed,\n"
+            "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
     return result;
 }
 }  // namespace samples

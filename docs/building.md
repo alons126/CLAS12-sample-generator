@@ -3,7 +3,7 @@
 ## Dependencies
 
 - CMake 3.20 or later and a C++ compiler compatible with ROOT.
-- ROOT with Core, Physics, RIO and Hist; GENIE conversion additionally uses Tree and TreePlayer.
+- ROOT with Core, Physics, RIO, Hist, Graf and Gpad; GENIE conversion additionally uses Tree and TreePlayer.
 - Python 3.9+ for CTest integration checks and the simulation/submission scripts.
 - At simulation runtime only: GEMC and `recon-util` in the configured environment.
 - At submission runtime only: Slurm `sbatch` and access to the shared input/output paths.
@@ -60,5 +60,7 @@ The executables, `clas12-simulate` and `clas12-submit` are installed under `bin/
 ## What tests establish
 
 CTest generates small temporary samples and checks LUND header/particle counts, mass-shell energies, target vertices, channel prescriptions, deterministic seeds, configuration rejection, overwrite protection, and GENIE process selection/file splitting. A synthetic GST fixture exercises all retained species and a skipped process. Simulation tests use executable stubs to verify argument handling, exact per-file counts, dry runs, and stopping after GEMC failure.
+
+Independent adapters also execute archived kernels/conversion and compare LUND bytes, original histogram bins and errors, and legacy job-command arguments. The sampling tests compare generated output to analytic CDFs for neutron isotropy and both proton mixture components. See the [validation matrix](validation.md).
 
 These are local software checks. They do not establish detector-card suitability or replace running GEMC/reconstruction and validating acceptance maps at JLab.

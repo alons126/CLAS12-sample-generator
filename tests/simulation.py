@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     card=root/'detector.gcard'; card.write_text('<gcard/>')
     yaml=root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner=project/'scripts/simulation/run.py'
-    options=['--manifest',output/'manifest.json','--gcard',card,'--reconstruction',yaml,'--torus','-1']
+    options=['--manifest',output/'manifest.json','--gcard',card,'--reconstruction',yaml,'--torus','-1','--output-naming','indexed']
     result=call(sys.executable,runner,*options)
     assert result.stdout.count('-N=7')==2 and result.stdout.count('-n 7')==2
     assert not (output/'mchipo').exists()

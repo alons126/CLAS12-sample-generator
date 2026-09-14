@@ -24,17 +24,29 @@ int main(int argc, char** argv) {
     tree.Branch("pzf", pzf, "pzf[nf]/D");
     tree.Branch("pxl", &pxl, "pxl/D");
     tree.Branch("pyl", &pyl, "pyl/D");
+    Double_t El = 2.1, Ef[320] = {};
+    tree.Branch("El", &El, "El/D");
+    tree.Branch("Ef", Ef, "Ef[nf]/D");
     Float_t wrong_pzl = 2;
     if (mode == "wrong-type")
         tree.Branch("pzl", &wrong_pzl, "pzl/F");
     else if (mode != "missing")
         tree.Branch("pzl", &pzl, "pzl/D");
     // Four supported processes plus a skipped event and a final partial file.
-    for (int i = 0; i < (mode == "empty" ? 0 : 7); ++i) {
+    for (int i = 0; i < (mode == "empty" ? 0 : mode == "parity" ? 24000 : 7); ++i) {
         qel = (i == 0 || i >= 5);
         mec = i == 1;
         res = i == 2;
         dis = i == 3;
+        if (mode == "parity") {
+            qel = i % 5 == 0;
+            mec = i % 5 == 1;
+            res = i % 5 == 2;
+            dis = i % 5 == 3;
+            pxl = 0.2 + (i % 71) * 0.013;
+            pyl = -0.1 + (i % 13) * 0.01;
+            pzl = 1 + (i % 17) * 0.03;
+        }
         if (mode == "unsupported") qel = mec = res = dis = false;
         tree.Fill();
     }

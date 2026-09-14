@@ -16,5 +16,5 @@ struct Event {
     double beam_energy = 0, resonance_id = 0, weight = 1;
     std::vector<Particle> particles;
 };
-double particleMass(int pid);
+double particleMass(int pid, bool legacy = true);
 }  // namespace samples

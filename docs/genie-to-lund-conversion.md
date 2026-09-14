@@ -31,7 +31,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
-Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV, mass in GeV, vertex in cm. Shared masses are listed in `src/common/TargetGeometry.cpp`.
+Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV, mass in GeV, vertex in cm. Shared masses are listed in `src/common/TargetGeometry.cpp`. The default `mass-convention=legacy` preserves the restored converter's 0.13957 GeV for all pion species, including pi-zero. `standard` explicitly selects different charged/neutral pion constants; see the [data contract](data-contracts.md).
 
 ## Splitting and completion
 
@@ -39,4 +39,8 @@ Field 10 is a legacy process tag, **not a generator cross-section weight**. Do n
 
 For six accepted events with `--files 3 --events-per-file 4`, output contains two files with counts 4 and 2. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
 
-Use a new output directory for each conversion. `monitoring.root` contains per-PDG diagnostics for written particles. The converter does not generate the old PDF report.
+Use a new output directory for each conversion. `monitoring.root` contains per-PDG diagnostics for written particles. The additional `legacy_histograms.root` contains the original electron theta-versus-phi diagnostic, filled before process selection. `--render-plots true` adds PDF/PNG output. Rendering filenames/styles are standardized; histogram contents are tested against the archived converter.
+
+## Reproduce the legacy wrapper settings
+
+Use `config/samples/legacy-genie-wrapper.conf` to reproduce the active C12 / 2.07052 GeV / small-foil settings in the archived csh wrapper. The [launch-chain reference](legacy-workflows.md) lists the former input-path convention and maps every launch stage to a current command.

@@ -26,5 +26,6 @@ class LundWriter {
     std::vector<Output> files_;
     std::uint64_t count_ = 0;
     std::uint64_t events_per_file_, capacity_;
+    bool legacy_format_;
 };
 }  // namespace samples

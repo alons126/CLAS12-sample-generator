@@ -10,7 +10,7 @@
 | `clas12-uniform` | `apps/uniform_main.cpp` | Parse CLI, call generator, report errors |
 | `clas12-genie-to-lund` | `apps/genie_to_lund_main.cpp` | Parse CLI, call converter, report errors |
 
-The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. `apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded.
+The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. The test targets alone compile archived reference code; production libraries do not include archived implementations. `apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
 
 ## Following a uniform run
 
@@ -19,7 +19,8 @@ The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt`
 3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
 5. `Monitoring` owns detached ROOT histograms. It fills per-PDG momentum, angles, vertices and angular/momentum correlations.
-6. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
+6. `LegacyMonitoring` writes the original channel histogram names and binning to a separate ROOT file, with optional rendered plots.
+7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
 
 ## Following a GENIE run
 
@@ -42,3 +43,5 @@ The converter stops at the configured output capacity or end of input. The final
 - Keep machine paths, scheduler resources and binary names in site configuration.
 
 Do not infer physics configuration from filenames or output paths. Do not add global RNGs or duplicate LUND formatting in individual workflows.
+
+The complete [source/API inventory](code-reference.md) also covers tests, examples, error paths, and archived supporting utilities.

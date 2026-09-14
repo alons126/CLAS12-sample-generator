@@ -22,6 +22,7 @@ def main():
     p.add_argument('--torus', type=float, required=True)
     p.add_argument('--solenoid', type=float, default=-1)
     p.add_argument('--runner', type=Path, default=default_runner)
+    p.add_argument('--output-naming', choices=['legacy', 'indexed'], default='legacy')
     p.add_argument('--execute', action='store_true', help='Submit to Slurm')
     args = p.parse_args()
     # Use the runner's identical manifest/config validation without running GEMC.
@@ -32,11 +33,11 @@ def main():
     plan, site = module['load_plan'](check)
     slurm = site.get('slurm', {})
     required = {'account', 'partition', 'time', 'mem'}
-    if set(slurm) != required or not all(isinstance(v, str) and v for v in slurm.values()):
+    if not required.issubset(slurm) or set(slurm) - required - {'output', 'error'} or not all(isinstance(v, str) and v for v in slurm.values()):
         raise ValueError('Site slurm must specify account, partition, time and mem strings')
     command = ['python3', str(args.runner.resolve()), '--manifest', str(args.manifest.resolve()),
                '--gcard', str(args.gcard.resolve()), '--reconstruction', str(args.reconstruction.resolve()),
-               '--site', str(args.site.resolve()), '--torus', str(args.torus), '--solenoid', str(args.solenoid), '--execute']
+               '--site', str(args.site.resolve()), '--output-naming', args.output_naming, '--torus', str(args.torus), '--solenoid', str(args.solenoid), '--execute']
     wrap = shlex.join(command) + ' --file-index "$SLURM_ARRAY_TASK_ID"'
     sbatch = ['sbatch', '--nodes=1', '--ntasks=1', '--job-name=clas12-samples', f'--array=1-{len(plan)}']
     sbatch += [f'--{key}={value}' for key, value in slurm.items()]

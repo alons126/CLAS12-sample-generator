@@ -25,6 +25,8 @@ Existing GENIE GST --> conversion --+
 5. [Simulation and Slurm](gemc-reconstruction-batch-submission.md): preview commands before execution.
 6. [Migration](migration.md): old-to-new entry points and deliberate behavioral changes.
 
+For the scientific and implementation reference, start at the [technical-note outline](technical-note.md). It links the sampling equations, data contracts, source inventory, legacy launch-chain mapping, and validation evidence.
+
 ## A run directory
 
 ```text
@@ -34,6 +36,8 @@ runs/example/
         PREFIX_1.txt
         PREFIX_2.txt
     monitoring.root     # Per-particle diagnostic histograms
+    legacy_histograms.root # Original named diagnostics and correlations
+    monitoring_plots/   # Optional PDF/PNG rendering (--render-plots true)
     mchipo/             # Created when simulation executes
     reconhipo/          # Created when reconstruction executes
     simulation/         # Command records and detector-config hashes

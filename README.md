@@ -24,6 +24,8 @@ build/debug/apps/clas12-uniform \
 
 The output directory must be new. Nothing runs `git clean`, deletes previous samples, or submits jobs as part of building or generating a sample.
 
+The default LUND format preserves legacy text conventions; use `--lund-format precise` for higher precision. Fixed nucleon momentum is optional: `--nucleon-momentum sampled` selects the requested neutron/proton distributions.
+
 Open `runs/first-electron/manifest.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `monitoring.root`.
 
 ## Where to start
@@ -34,6 +36,8 @@ Read the [newcomer guide](docs/index.md), then [build instructions](docs/buildin
 - [GENIE conversion](docs/genie-to-lund-conversion.md)
 - [GEMC, reconstruction and Slurm](docs/gemc-reconstruction-batch-submission.md)
 - [Configuration reference](docs/configuration.md)
+- [Technical note and complete reference](docs/technical-note.md)
+- [Legacy parity and validation](docs/validation.md)
 - [Migration from the imported repositories](docs/migration.md)
 
 The original source trees are retained in `legacy/` for comparison. They are retired and excluded from the build; use the commands documented above. Detector cards and reconstruction YAML are retained in `config/detector/`.
