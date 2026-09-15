@@ -18,6 +18,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import sys
+import os
 
 # Launcher configuration objects -----------------------------------------------
 # region Launcher configuration objects
@@ -35,6 +36,9 @@ DEFAULTS = {
 # Allowed dispatcher keys, used both by argparse and JSON validation.
 WORKFLOWS = ('uniform', 'genie', 'simulate', 'submit')
 # endregion
+
+COLOR_START = os.environ.get("COLOR_START", "")
+COLOR_END = os.environ.get("COLOR_END", "")
 
 
 # boolean --------------------------------------------------------------------
@@ -342,6 +346,11 @@ def main():
     build = build.resolve()
     arguments = forwarded_arguments(config['arguments'].get(workflow, []), forwarded)
     
+    print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+    print(f"{COLOR_START}= Compiling applications                                                                           ={COLOR_END}")
+    print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+    print()
+
     # Compile both sample applications before selecting which workflow to execute.
     if config['build']:
         # Always let CMake check dependencies, including an uncommitted/replaced
