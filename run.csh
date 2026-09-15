@@ -22,8 +22,6 @@
 # CLAS12 sample workflow entry point. Source from the repository root, or set
 # CLAS12_SAMPLES_DIR when sourcing from elsewhere. Execution works from any cwd.
 
-# Initial setup ----------------------------------------------------------------
-
 # Checkout discovery -----------------------------------------------------------
 set _clas12_invocation = "$0"
 set _clas12_root = "$cwd"
