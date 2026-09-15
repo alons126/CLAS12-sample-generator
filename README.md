@@ -18,7 +18,7 @@ ctest --preset debug
 
 build/debug/apps/clas12-uniform \
   --config config/samples/uniform-electron.conf \
-  --events 100 \
+  --events-per-file 100 \
   --output runs/first-electron
 ```
 

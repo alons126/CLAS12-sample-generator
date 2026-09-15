@@ -31,7 +31,7 @@ using std::cout;
 using std::endl;
 using std::sqrt;
 using std::string;
-#include "common/targets.h"
+#include "common/external/targets.h"
 }
 std::mutex geometry_mutex;
 }

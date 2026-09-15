@@ -48,7 +48,7 @@ Copy `config/run.json` to the Git-ignored `config/run.local.json` for server-spe
 | `jobs` | `4` | `--jobs 8`: positive build parallelism |
 | `arguments` | Per-workflow lists | Forwarded CLI options replace matching list options |
 
-Building always invokes CMake dependency checking, so replacing an uncommitted `src/common/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
+Building always invokes CMake dependency checking, so replacing an uncommitted `src/common/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
 
 After transferring committed changes to the remote, an optional server update/build/test is:
 
@@ -78,4 +78,4 @@ Select the actual reconstruction YAML path from your checkout. Use `--workflow s
 
 `run.csh` forwards to `scripts/workflow.py`. `scripts/build_and_run.csh` uses the same driver with Git pulling disabled. `update_only.sh` and `scripts/code_updater.sh` are csh/tcsh wrappers despite the `.sh` suffix; sourcing either performs only the checked fast-forward update. `scripts/printers/` supplies project start/success/failure banners. These replace the copied analyzer paths, destructive Git cleanup and unrelated environment setup. They are source-checkout helpers, not installed commands.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/common/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

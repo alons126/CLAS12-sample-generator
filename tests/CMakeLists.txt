@@ -70,11 +70,11 @@ add_test(NAME submission-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CUR
 # region Isolated geometry fixture
 # Purpose: Read the protected header into a separate test fixture; compile the actual adapter against that fixture.
 # Prove that replacing the external header alone changes the production adapter.
-set(REPLACEMENT_TARGETS ${CMAKE_CURRENT_BINARY_DIR}/replacement/common/targets.h)
+set(REPLACEMENT_TARGETS ${CMAKE_CURRENT_BINARY_DIR}/replacement/common/external/targets.h)
 add_custom_command(OUTPUT ${REPLACEMENT_TARGETS}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py
-        ${PROJECT_SOURCE_DIR}/src/common/targets.h ${REPLACEMENT_TARGETS}
-    DEPENDS ${PROJECT_SOURCE_DIR}/src/common/targets.h ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py VERBATIM)
+        ${PROJECT_SOURCE_DIR}/src/common/external/targets.h ${REPLACEMENT_TARGETS}
+    DEPENDS ${PROJECT_SOURCE_DIR}/src/common/external/targets.h ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py VERBATIM)
 add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/common/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
 target_include_directories(replacement-geometry PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/replacement ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(replacement-geometry PRIVATE ROOT::Core ROOT::Physics Threads::Threads)

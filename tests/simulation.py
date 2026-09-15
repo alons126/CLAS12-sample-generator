@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     card = root/'detector.gcard'; card.write_text('<gcard/>')
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner = project/'scripts/simulation/run.py'
-    payload = project/'src/common/submit_GEMC_sample.sh'
+    payload = project/'src/common/external/submit_GEMC_sample.sh'
     options = ['--manifest', output/'manifest.json', '--gcard', card, '--reconstruction', yaml, '--torus', '-1']
     preview = call(sys.executable, runner, *options)
     assert preview.stdout.count('-N=10000') == 2

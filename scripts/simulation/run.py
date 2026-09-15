@@ -31,7 +31,7 @@ def payload_path(args):
     An explicit --payload overrides discovery. Missing payloads fail before execution.
     """
     supplied = getattr(args, 'payload', None)
-    source = Path(__file__).resolve().parents[2] / 'src/common/submit_GEMC_sample.sh'
+    source = Path(__file__).resolve().parents[2] / 'src/common/external/submit_GEMC_sample.sh'
     installed = Path(__file__).resolve().with_name('submit_GEMC_sample.sh')
     return Path(supplied or (source if source.is_file() else installed)).resolve(strict=True)
 

@@ -18,7 +18,7 @@ import tempfile
 
 project=Path(sys.argv[1])
 legacy_payload=(project/'legacy/GEMC-samples/scripts/job_submission_scripts/submit_GEMC_GENIE_sample.sh').read_bytes()
-unified_payload=(project/'src/common/submit_GEMC_sample.sh').read_bytes()
+unified_payload=(project/'src/common/external/submit_GEMC_sample.sh').read_bytes()
 assert unified_payload.split(b'JOB_TARGET=')[0] == legacy_payload.split(b'JOB_TARGET=')[0]
 assert unified_payload[unified_payload.index(b'NEVENTS=10000'):] == legacy_payload[legacy_payload.index(b'NEVENTS=10000'):]
 

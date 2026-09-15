@@ -1,6 +1,6 @@
 # Unified legacy GEMC payload
 
-`src/common/submit_GEMC_sample.sh` follows the structure of the external `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` scripts under `legacy/GEMC-samples/scripts/job_submission_scripts/`. The archived originals remain untouched. The unified script is also protected from routine edits.
+`src/common/external/submit_GEMC_sample.sh` follows the structure of the external `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` scripts under `legacy/GEMC-samples/scripts/job_submission_scripts/`. The archived originals remain untouched. The unified script is also protected from routine edits; only minimal integration changes outside the payload should be needed when updating the external source.
 
 ## What is generalized
 

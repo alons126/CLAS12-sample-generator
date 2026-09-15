@@ -42,7 +42,7 @@ Theta limits require 0≤min<max≤180. Fixed momentum must be positive; uniform
 
 ## Target geometry
 
-The authoritative source is the replaceable [`src/common/targets.h`](../src/common/targets.h); see [external inputs](external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
+The authoritative source is the replaceable [`src/common/external/targets.h`](../src/common/external/targets.h); see [external inputs](external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
 
 All positions below are in cm in the imported GEMC coordinate convention. Except `point`, x and y are independent Gaussians with mean 0 and sigma 0.04 cm.
 

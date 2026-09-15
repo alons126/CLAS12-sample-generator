@@ -50,8 +50,8 @@ if(NOT SAMPLE_REVISION)
     set(SAMPLE_REVISION "unknown")
 endif()
 # Reconfigure when the replaceable geometry source changes, including its manifest hash.
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/common/targets.h")
-file(SHA256 "${PROJECT_SOURCE_DIR}/src/common/targets.h" SAMPLE_TARGETS_SHA256)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/common/external/targets.h")
+file(SHA256 "${PROJECT_SOURCE_DIR}/src/common/external/targets.h" SAMPLE_TARGETS_SHA256)
 configure_file(src/common/Version.h.in generated/Version.h @ONLY)
 # endregion
 
@@ -70,7 +70,7 @@ endif()
 # region Installation
 # Purpose: Install resources and Python runners; application installation is declared in apps/.
 install(DIRECTORY config/ DESTINATION share/clas12-samples/config)
-install(PROGRAMS src/common/submit_GEMC_sample.sh DESTINATION bin)
+install(PROGRAMS src/common/external/submit_GEMC_sample.sh DESTINATION bin)
 install(PROGRAMS scripts/simulation/run.py DESTINATION bin RENAME clas12-simulate)
 install(PROGRAMS scripts/slurm/submit.py DESTINATION bin RENAME clas12-submit)
 # endregion

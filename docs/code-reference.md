@@ -30,7 +30,7 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### TargetGeometry
 
-[TargetGeometry.h](../src/common/TargetGeometry.h) / [TargetGeometry.cpp](../src/common/TargetGeometry.cpp): the constructor validates the geometry name. `sample(TRandom3&)` consumes the caller's vertex stream and returns one vertex. `point` consumes no random draws. Continuous targets draw x/y Gaussian then z uniform; foils draw x/y Gaussian then an equal-probability foil index. The authoritative map and sampler live in the replaceable [targets.h](../src/common/targets.h). The adapter isolates its globals and transfers the caller RNG state under a mutex; see [external inputs](external-inputs.md).
+[TargetGeometry.h](../src/common/TargetGeometry.h) / [TargetGeometry.cpp](../src/common/TargetGeometry.cpp): the constructor validates the geometry name. `sample(TRandom3&)` consumes the caller's vertex stream and returns one vertex. `point` consumes no random draws. Continuous targets draw x/y Gaussian then z uniform; foils draw x/y Gaussian then an equal-probability foil index. The authoritative map and sampler live in the replaceable [targets.h](../src/common/external/targets.h). The adapter isolates its globals and transfers the caller RNG state under a mutex; see [external inputs](external-inputs.md).
 
 ### LundWriter
 
@@ -69,7 +69,7 @@ The reader arrays replace the archived fixed 250-element buffers. Input errors, 
 | `run.py: main` | Prints a dry run, or acquires a per-file exclusive lock, invokes submit_GEMC_sample.sh and records command/config/payload hashes |
 | `scripts/slurm/submit.py: main` | Reuses runner validation, validates site scheduler fields, constructs a one-task-per-file Slurm array and quotes the worker invocation; submits only with --execute |
 
-The runner calls the external `src/common/submit_GEMC_sample.sh` Bash payload with resolved environment values. The payload retains the original GEMC/reconstruction command lines. Python prepares a preview and invokes the script for actual execution. Slurm's `--wrap` needs a shell command; fixed arguments are shell-quoted and only the task-index environment variable is expanded by the worker. Scripts do not send SSH commands, clean repositories or source environment modules. On failure, lock/partial outputs remain for inspection; successful file records are stored by manifest index.
+The runner calls the external `src/common/external/submit_GEMC_sample.sh` Bash payload with resolved environment values. The payload retains the original GEMC/reconstruction command lines. Python prepares a preview and invokes the script for actual execution. Slurm's `--wrap` needs a shell command; fixed arguments are shell-quoted and only the task-index environment variable is expanded by the worker. Scripts do not send SSH commands, clean repositories or source environment modules. On failure, lock/partial outputs remain for inspection; successful file records are stored by manifest index.
 
 ## 6. Configuration and resources
 
@@ -115,4 +115,4 @@ The archived root `genie_job_submission_script.csh` is another historical submis
 
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/common/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

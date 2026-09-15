@@ -58,7 +58,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     sourced(args)
     m=json.loads((output/'manifest.json').read_text())
     assert m['written_events']==4
-    assert m['targets_sha256'] == hashlib.sha256((project/'src/common/targets.h').read_bytes()).hexdigest()
+    assert m['targets_sha256'] == hashlib.sha256((project/'src/common/external/targets.h').read_bytes()).hexdigest()
     sourced(args,success=False)  # existing output rejects, but the SSH shell lives
     sourced(['--build','false','--run','false','--jobs','0'],success=False)
     sourced(['--build','false','--run','false','--build-dir',root/'missing-build'])
