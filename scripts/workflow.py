@@ -321,7 +321,7 @@ def main():
         forwarded = forwarded[1:]
     
     config = settings(args)
-    banner('logo')
+    # banner('logo')
     
     if args.update_only:
         update_repository()
