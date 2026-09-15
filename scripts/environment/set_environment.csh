@@ -13,7 +13,7 @@
 # Main responsibilities
 # ---------------------
 # 1. Define colored output for terminal messages.
-# 2. Set DIR_2N_ANALYSIS_CODE to the project root directory.
+# 2. Set DIR_CLAS12_SAMPLE_GENERATOR_CODE to the project root directory.
 # 3. Detect the machine hostname.
 # 4. Determine whether the code is running on Jefferson Lab infrastructure (ifarm).
 # 5. Export IFARM_RUN so downstream scripts can adapt their behaviour.
@@ -44,14 +44,14 @@ echo ""
 # ------------------------------------------------------------------------------------------
 
 # Remove previous value if present
-unset DIR_2N_ANALYSIS_CODE
+unset DIR_CLAS12_SAMPLE_GENERATOR_CODE
 
 # Set the variable to the current working directory
 # Backticks execute the command and capture the output
-setenv DIR_2N_ANALYSIS_CODE `pwd`
+setenv DIR_CLAS12_SAMPLE_GENERATOR_CODE `pwd`
 
 # Print value for verification
-echo "${COLOR_START}DIR_2N_ANALYSIS_CODE:${COLOR_END} ${DIR_2N_ANALYSIS_CODE}"
+echo "${COLOR_START}DIR_CLAS12_SAMPLE_GENERATOR_CODE:${COLOR_END} ${DIR_CLAS12_SAMPLE_GENERATOR_CODE}"
 echo ""
 
 # ------------------------------------------------------------------------------------------

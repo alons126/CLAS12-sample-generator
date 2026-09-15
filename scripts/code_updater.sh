@@ -139,7 +139,7 @@ echo ""
 # analysis directories, and screen session helpers.
 
 # Source the environment setup script which defines variables such as
-# DIR_2N_ANALYSIS_CODE, IFARM_RUN, and other runtime settings.
+# DIR_CLAS12_SAMPLE_GENERATOR_CODE, IFARM_RUN, and other runtime settings.
 
 source ./scripts/environment/set_environment.csh
 # # Source the screen helper script that defines aliases and functions for
