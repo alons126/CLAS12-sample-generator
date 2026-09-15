@@ -376,19 +376,27 @@ def main():
     # Dispatch exactly one workflow; generation does not automatically launch GEMC.
     if config['run']:
         if workflow in ('uniform', 'genie'):
-            executable = build / 'apps' / ('clas12-uniform' if workflow == 'uniform' else 'clas12-genie-to-lund')
-        
+            app = 'clas12-uniform' if workflow == 'uniform' else 'clas12-genie-to-lund'
+
+            print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+            print(f"{COLOR_START}= Generating LUND files in {app:<75}={COLOR_END}")
+            print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+            print()
+
+            executable = build / 'apps' / app
+
             if not executable.is_file():
                 raise RuntimeError(f'Executable missing: {executable}; enable --build true')
-        
+
             command = [str(executable)]
         else:
             script = 'scripts/simulation/run.py' if workflow == 'simulate' else 'scripts/slurm/submit.py'
             command = [sys.executable, str(ROOT / script)]
-        
+
         execute(command + arguments)
+
     banner('success')
-    
+
     return 0
 # endregion
 
