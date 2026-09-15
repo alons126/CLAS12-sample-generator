@@ -258,6 +258,8 @@ def execute(command):
     # print(f"{COLOR_INFO}Executing command:{COLOR_END} " + shlex.join([str(arg) for arg in command]), flush=True)
     
     subprocess.run(command, cwd=ROOT, check=True)
+    
+    print()
 # endregion
 
 
