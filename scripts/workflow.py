@@ -346,13 +346,13 @@ def main():
     build = build.resolve()
     arguments = forwarded_arguments(config['arguments'].get(workflow, []), forwarded)
     
-    print(f"{COLOR_START}===================================================================================================={COLOR_END}")
-    print(f"{COLOR_START}= Compiling applications                                                                           ={COLOR_END}")
-    print(f"{COLOR_START}===================================================================================================={COLOR_END}")
-    print()
-
     # Compile both sample applications before selecting which workflow to execute.
     if config['build']:
+        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+        print(f"{COLOR_START}= Compiling applications                                                                           ={COLOR_END}")
+        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+        print()
+
         # Always let CMake check dependencies, including an uncommitted/replaced
         # targets.h. Git commit stamps cannot detect those edits.
         execute(['cmake', '-S', str(ROOT), '-B', str(build), '-DCMAKE_BUILD_TYPE='+config['build_type'],
@@ -361,6 +361,11 @@ def main():
     
     # Tests must succeed before the selected workflow can run.
     if config['test']:
+        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+        print(f"{COLOR_START}= Running tests                                                                                    ={COLOR_END}")
+        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+        print()
+
         cache = (build / 'CMakeCache.txt').read_text()
         
         if 'BUILD_TESTING:BOOL=ON' not in cache:
@@ -370,7 +375,6 @@ def main():
     
     # Dispatch exactly one workflow; generation does not automatically launch GEMC.
     if config['run']:
-        
         if workflow in ('uniform', 'genie'):
             executable = build / 'apps' / ('clas12-uniform' if workflow == 'uniform' else 'clas12-genie-to-lund')
         
