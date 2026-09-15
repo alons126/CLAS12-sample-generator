@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULTS = {
     # Workflow and CMake output configuration; names must agree with dispatch below.
     'workflow': 'uniform', 'build_dir': 'build/release', 'build_type': 'Release',
-    'jobs': 4, 'git_pull': True, 'build': True, 'run': True, 'test': False,
+    'jobs': 4, 'git_pull': False, 'build': True, 'run': True, 'test': False, # TODO: Remove 'git_pull' from the options. I'll be done in [run.csh](/Users/alon/Projects/CLAS12-sample-generator/run.csh) by default
     # Per-workflow argv lists come from the selected profile; no shell evaluation is performed.
     'arguments': {},
 }
