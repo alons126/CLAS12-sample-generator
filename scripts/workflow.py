@@ -243,7 +243,8 @@ def execute(command):
     """Run a checked command from the checkout root.
 
     Algorithm:
-        Print the quoted command for inspection, then execute its argument list.
+        Format the command with option-value pairs on separate lines,
+        print it for inspection, then execute its argument list.
 
     Args:
         command: Executable and arguments; never evaluated as shell source.
@@ -251,11 +252,20 @@ def execute(command):
     Returns:
         None; subprocess failure propagates to the launcher error handler.
     """
-    
-    formatted_command = " \\\n    ".join(shlex.quote(str(arg)) for arg in command)
+
+    lines = [shlex.quote(str(command[0]))]
+
+    for arg in command[1:]:
+        quoted_arg = shlex.quote(str(arg))
+
+        if str(arg).startswith("-"):
+            lines.append(quoted_arg)
+        else:
+            lines[-1] += f" {quoted_arg}"
+
+    formatted_command = " \\\n    ".join(lines)
 
     print(f"{COLOR_INFO}Executing command:{COLOR_END}\n{formatted_command}", flush=True)
-    # print(f"{COLOR_INFO}Executing command:{COLOR_END} " + shlex.join([str(arg) for arg in command]), flush=True)
     
     subprocess.run(command, cwd=ROOT, check=True)
     
