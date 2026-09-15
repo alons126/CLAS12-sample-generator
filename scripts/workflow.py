@@ -269,6 +269,7 @@ def execute(command):
     print()
 
     subprocess.run(command, cwd=ROOT, check=True)
+    print()
 # endregion
 
 
