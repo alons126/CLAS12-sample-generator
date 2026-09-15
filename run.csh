@@ -24,32 +24,6 @@
 
 # Initial setup ----------------------------------------------------------------
 
-# Terminal color escape sequences used for formatted output messages.
-set COLOR_START = "\033[35m"
-set COLOR_ERR = "\033[31m"
-set COLOR_OK = "\033[32m"
-set COLOR_END = "\033[0m"
-
-# Print the project ASCII logo banner.
-# The banner script lives under scripts/printers/.
-set PRINT_LOGO_FILE = ./scripts/printers/print_logo.csh
-if (-f ${PRINT_LOGO_FILE}) then
-    source ${PRINT_LOGO_FILE}
-else
-    printf "${COLOR_START}-->${COLOR_END} %s%s%s\n" "${COLOR_ERROR_START}Error:${COLOR_END}" " the following file does not exist: ${PRINT_LOGO_FILE}"
-    exit 1
-endif
-
-# Run optional repository update helper script.
-# This typically performs git cleanup/reset and other maintenance steps.
-set UPDATE_ONLY_FILE = ./update_only.sh
-if (-f ${UPDATE_ONLY_FILE}) then
-    source ${UPDATE_ONLY_FILE}
-else
-    printf "${COLOR_START}-->${COLOR_END} %s%s%s\n" "${COLOR_ERROR_START}Error:${COLOR_END}" " the following file does not exist: ${UPDATE_ONLY_FILE}"
-    exit 1
-endif
-
 # Checkout discovery -----------------------------------------------------------
 set _clas12_invocation = "$0"
 set _clas12_root = "$cwd"
