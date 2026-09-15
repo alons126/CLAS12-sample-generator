@@ -252,7 +252,9 @@ def execute(command):
         None; subprocess failure propagates to the launcher error handler.
     """
     
-    print(f"{COLOR_INFO}Executing command:{COLOR_END}\n" + shlex.join([(str(arg) + " \ \n") for arg in command]), flush=True)
+    formatted_command = " \\\n    ".join(shlex.quote(str(arg)) for arg in command)
+
+    print(f"{COLOR_INFO}Executing command:{COLOR_END}\n{formatted_command}", flush=True)
     # print(f"{COLOR_INFO}Executing command:{COLOR_END} " + shlex.join([str(arg) for arg in command]), flush=True)
     
     subprocess.run(command, cwd=ROOT, check=True)
