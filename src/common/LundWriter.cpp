@@ -19,7 +19,9 @@
 #include <TString.h>
 
 #include <cmath>
+#include <filesystem>
 #include <iomanip>
+#include <iostream>
 #include <stdexcept>
 
 #include "Version.h"
@@ -42,12 +44,51 @@ namespace samples {
 void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned, std::uint64_t written, bool final) {
     const auto output = std::filesystem::path(config.get("output"));
     const auto lund_dir = output / "lundfiles";
+    const auto mchipo_dir = output / "mchipo";
+    const auto recon_dir = output / "reconhipo";
+    const auto rootfiles_dir = output / "rootfiles";
+    const auto monitoring_dir = output / "monitoring_plots";
     const bool uniform = workflow == "uniform";
 
     std::cout << "\033[33m\n=============================================================\n\033[0m";
     std::cout << "\033[33m\n= " << (uniform ? "Uniform sample generation" : "GENIE to LUND conversion") << " summary" << "\n\033[0m";
     std::cout << "\033[33m=============================================================\n\033[0m";
-    std::cout << "\033[33m\nOutput directory:\033[0m " << output << '\n';
+
+    if (uniform) {
+        std::cout << "\033[33m\nOutputFileNamePrefix:\033[0m " << config.get("prefix") << '\n';
+        std::cout << "\033[33mnFiles:\033[0m " << config.get("files") << "  \033[33mnEvents:\033[0m " << config.get("events-per-file") << '\n';
+        std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
+        std::cout << "\033[33mGenerateLundFiles:\033[0m true\n";
+        std::cout << "\033[33mnParticles:\033[0m 2\n";
+        std::cout << "\033[33mmass_e [GeV]:\033[0m " << 0.511e-3 << "  \033[33mmass_p [GeV]:\033[0m " << 0.938272 << "  \033[33mmass_n [GeV]:\033[0m " << 0.93957 << '\n';
+        std::cout << "\033[33mOutPutFolder:\033[0m " << output << '\n';
+        std::cout << "\033[33mlundPath:\033[0m " << lund_dir << '\n';
+        std::cout << "\033[33mmchipoPath:\033[0m " << mchipo_dir << '\n';
+        std::cout << "\033[33mreconhipoPath:\033[0m " << recon_dir << '\n';
+        std::cout << "\033[33mrootfilesPath:\033[0m " << rootfiles_dir << '\n';
+        std::cout << "\033[33mMonitoringPlotsPath:\033[0m " << monitoring_dir << '\n';
+        std::cout << "\033[33mPlot list path:\033[0m " << output / (config.get("prefix") + "_plots.root") << '\n';
+        std::cout << "\033[33mChannel:\033[0m " << config.get("channel") << "  \033[33mElectron momentum:\033[0m " << config.get("electron-momentum")
+                  << "  \033[33mNucleon momentum:\033[0m " << config.get("nucleon-momentum") << '\n';
+        std::cout << "\033[33mtargP:\033[0m 0  \033[33mbeamP:\033[0m 0  \033[33minteractN:\033[0m 1  \033[33mbeamType:\033[0m 11\n";
+        std::cout << "\033[33mbeamE_in_lundfiles:\033[0m " << config.get("beam-energy") << "\n";
+        std::cout << "\033[33mweight:\033[0m 1\n";
+        std::cout << "\033[33mCreating plot directories...\033[0m\n";
+    } else {
+        std::cout << "\033[33m\nProceeding input arguments...\033[0m\n";
+        std::cout << "\033[33mInputFiles:\033[0m " << config.get("input") << '\n';
+        std::cout << "\033[33mLUND file prefix:\033[0m " << config.get("prefix") << '\n';
+        std::cout << "\033[33mOutput directory:\033[0m " << output << '\n';
+        std::cout << "\033[33mGenerating lundfiles directory:\033[0m " << lund_dir << '\n';
+        std::cout << "\033[33mGenerating mchipo directory:\033[0m " << mchipo_dir << '\n';
+        std::cout << "\033[33mGenerating reconhipo directory:\033[0m " << recon_dir << '\n';
+        std::cout << "\033[33mGenerating monitoring plots directory:\033[0m " << monitoring_dir << '\n';
+        std::cout << "\033[33mSaving lundfiles into\033[0m " << lund_dir << '\n';
+        std::cout << "\033[33mNumber of events\033[0m " << config.integer("files") * config.integer("events-per-file") << '\n';
+        std::cout << "\033[33mMaximum number of output files allowed:\033[0m " << config.get("files") << '\n';
+    }
+
+    std::cout << "\033[33mOutput directory:\033[0m " << output << '\n';
     std::cout << "\033[33mLUND directory:\033[0m " << lund_dir << '\n';
     std::cout << "\033[33mOutput prefix:\033[0m " << config.get("prefix") << '\n';
     std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
@@ -55,18 +96,12 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     std::cout << "\033[33mFiles:\033[0m " << config.get("files") << "  \033[33mEvents per file:\033[0m " << config.get("events-per-file") << '\n';
     std::cout << "\033[33mLUND format:\033[0m " << config.get("lund-format") << "  \033[33mMass convention:\033[0m " << config.get("mass-convention") << '\n';
 
-    if (uniform) {
-        std::cout << "\033[33mChannel:\033[0m " << config.get("channel") << "  \033[33mElectron momentum:\033[0m " << config.get("electron-momentum")
-                  << "  \033[33mNucleon momentum:\033[0m " << config.get("nucleon-momentum") << '\n';
-    } else {
-        std::cout << "\033[33mInput GST:\033[0m " << config.get("input") << '\n';
-    }
-
     if (final) {
         std::cout << "\033[33m\n- Completion summary ----------------------------------------\n\033[0m";
-        std::cout << "\033[33mScanned entries:\033[0m " << scanned << '\n';
-        std::cout << "\033[33mEvents written:\033[0m " << written << '\n';
+        std::cout << "\033[33mTotal entries scanned:\033[0m " << scanned << '\n';
+        std::cout << "\033[33mEvents passing cuts:\033[0m " << written << '\n';
         std::cout << "\033[33mOutput files written:\033[0m " << config.integer("files") << '\n';
+        std::cout << "\033[33m\nOperation finished!\033[0m\n";
     }
 
     std::cout << '\n';

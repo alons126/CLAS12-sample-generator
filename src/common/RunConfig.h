@@ -64,7 +64,7 @@ class RunConfig {
 #pragma endregion
 
 /** @brief Return the selected application usage text without executing a run. */
-std::string help(bool genie);
+std::string help(bool uniform);
 
 /** @brief Escape text and enclose it in quotes for JSON serialization. */
 std::string jsonString(const std::string& text);

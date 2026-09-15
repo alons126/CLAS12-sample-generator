@@ -106,7 +106,7 @@ double triggerPhi(double phi, double offset) {
 void generateUniform(const RunConfig& c) {
 #pragma region /* Run preparation */
     // Prepare validated settings and independent random streams for this run.
-    c.validate(false);
+    c.validate(true);
     LundWriter::printWorkflowSummary(c, "uniform");
     const UniformConfig settings(c);
     const auto channel = settings.channel;
