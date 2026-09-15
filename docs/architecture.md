@@ -30,7 +30,7 @@ The converter stops at the configured output capacity or end of input. The final
 
 ## Simulation boundary
 
-`scripts/simulation/run.py` consumes `manifest.json` and explicit detector/site settings. It constructs argument lists for GEMC and `recon-util`; it does not invoke a shell to construct those commands. Dry runs print the commands without creating simulation directories. Execution checks return codes and output files and writes one record per completed file.
+`scripts/simulation/run.py` consumes `manifest.json` and explicit detector/site settings. It delegates detector execution to the protected Bash payload `src/common/submit_GEMC_sample.sh`, adapted from the two legacy job scripts. Python validates the manifest and owns locks/provenance; the payload owns sample monitoring and the GEMC/reconstruction sequence. Dry runs print the commands without creating simulation directories. Execution checks return codes and output files and writes one record per completed file.
 
 `scripts/slurm/submit.py` uses the same planning validation and submits an array with one task per manifest file. Each task invokes the runner with its one-based index. CMake never submits jobs.
 

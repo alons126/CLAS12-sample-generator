@@ -17,6 +17,11 @@ import sys
 import tempfile
 
 project=Path(sys.argv[1])
+legacy_payload=(project/'legacy/GEMC-samples/scripts/job_submission_scripts/submit_GEMC_GENIE_sample.sh').read_bytes()
+unified_payload=(project/'src/common/submit_GEMC_sample.sh').read_bytes()
+assert unified_payload.split(b'JOB_TARGET=')[0] == legacy_payload.split(b'JOB_TARGET=')[0]
+assert unified_payload[unified_payload.index(b'NEVENTS=10000'):] == legacy_payload[legacy_payload.index(b'NEVENTS=10000'):]
+
 # Test execution ------------------------------------------------
 # region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-job-parity-') as tmp:
@@ -55,6 +60,10 @@ pathlib.Path(path).write_text('stub output')
                     cmd=[sys.executable,str(project/'scripts/simulation/run.py'),'--manifest',str(run/'manifest.json'),'--gcard',str(card),'--reconstruction',str(reco),'--torus',torus,'--execute']
                 result=subprocess.run(cmd,env=env,capture_output=True,text=True)
                 assert result.returncode==0,result.stdout+result.stderr
+                if implementation=='new':
+                    assert 'JOB_TARGET = C12' in result.stdout and 'GEMC_DATA_DIR =' in result.stdout
+                    assert 'JOB_GENERATOR_TUNE = GEM21_11a_00_000' in result.stdout
+                    assert f'JOB_BEAM_E = {label}' in result.stdout
                 logs.append([[arg.replace(str(run),'<RUN>') for arg in json.loads(line)] for line in log.read_text().splitlines()])
             assert logs[0]==logs[1],(workflow,label,logs)
 print('Legacy/new GEMC and reconstruction argv match for both workflows and all three energies.')

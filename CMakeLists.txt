@@ -70,6 +70,7 @@ endif()
 # region Installation
 # Purpose: Install resources and Python runners; application installation is declared in apps/.
 install(DIRECTORY config/ DESTINATION share/clas12-samples/config)
+install(PROGRAMS src/common/submit_GEMC_sample.sh DESTINATION bin)
 install(PROGRAMS scripts/simulation/run.py DESTINATION bin RENAME clas12-simulate)
 install(PROGRAMS scripts/slurm/submit.py DESTINATION bin RENAME clas12-submit)
 # endregion

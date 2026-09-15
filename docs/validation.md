@@ -65,3 +65,7 @@ The `replacement-geometry` test verifies header-only geometry updates, new targe
 ## 6. Server validation for a technical note
 
 Use a small matched legacy/current LUND sample, identical GEMC/reconstruction versions, identical card/YAML/database resources and explicit detector RNG control if supported by the production setup. Compare event counts, generated banks, reconstructed particle yields and acceptance distributions, retaining logs and resource hashes. Document tolerances and statistical uncertainties. No server jobs are submitted by the repository's tests.
+
+The simulation integration test also checks external-payload monitoring, its recorded hash, installed discovery, a non-GENIE generator and explicit rejection of partial files or incompatible settings. Submission parity compares detector argv to both protected originals at all three beam energies, including their monitoring labels. No real jobs are submitted.
+
+The restored unified payload is checked byte-for-byte against the legacy GENIE script for its Slurm header and the entire NEVENTS=10000-through-reconstruction section. Only monitoring and prefix selection may differ.

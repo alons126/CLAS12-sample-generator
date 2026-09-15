@@ -65,11 +65,11 @@ The reader arrays replace the archived fixed 250-element buffers. Input errors, 
 | File/function | Contract |
 | --- | --- |
 | `scripts/simulation/run.py: parser` | CLI for manifest, detector files, site, field scales, file index, naming and execution |
-| `run.py: load_plan` | Validates manifest schema/counts/paths, finite field scales, existing configuration files, output conflicts, site executable names; constructs two argv arrays per selected file |
-| `run.py: main` | Prints a dry run, or acquires a per-file exclusive lock, executes GEMC then reconstruction, checks outputs and records command/config hashes |
+| `run.py: load_plan` | Validates manifest schema/counts/paths, finite field scales, existing configuration files, output conflicts, site executable names; prepares a preview of the fixed legacy commands and validates compatible inputs |
+| `run.py: main` | Prints a dry run, or acquires a per-file exclusive lock, invokes submit_GEMC_sample.sh and records command/config/payload hashes |
 | `scripts/slurm/submit.py: main` | Reuses runner validation, validates site scheduler fields, constructs a one-task-per-file Slurm array and quotes the worker invocation; submits only with --execute |
 
-The runner executes argv lists without a shell. Slurm's `--wrap` needs a shell command; fixed arguments are shell-quoted and only the task-index environment variable is expanded by the worker. Scripts do not send SSH commands, clean repositories or source environment modules. On failure, lock/partial outputs remain for inspection; successful file records are stored by manifest index.
+The runner calls the external `src/common/submit_GEMC_sample.sh` Bash payload with resolved environment values. The payload retains the original GEMC/reconstruction command lines. Python prepares a preview and invokes the script for actual execution. Slurm's `--wrap` needs a shell command; fixed arguments are shell-quoted and only the task-index environment variable is expanded by the worker. Scripts do not send SSH commands, clean repositories or source environment modules. On failure, lock/partial outputs remain for inspection; successful file records are stored by manifest index.
 
 ## 6. Configuration and resources
 
@@ -114,3 +114,5 @@ The archived root `genie_job_submission_script.csh` is another historical submis
 `tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `tests/prepare_replacement_geometry.py` creates a changed target header; `tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
 
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
+
+The [unified external GEMC payload](gemc-payload.md) documents `src/common/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

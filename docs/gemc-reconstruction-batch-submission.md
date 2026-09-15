@@ -17,9 +17,9 @@ python3 scripts/simulation/run.py \
 
 This is a dry run. It validates the manifest totals, file paths and configuration-file existence and prints the exact GEMC/reconstruction commands. It creates no simulation output and does not require installed GEMC binaries. It does not inspect the physical compatibility of detector-card contents; select cards, energy, geometry and field settings consistently.
 
-Add `--execute` to run. `--solenoid` defaults to −1. `--file-index 2` selects the second manifest file; otherwise the runner processes all files sequentially. Paths containing spaces are passed as individual subprocess arguments.
+Add `--execute` to run. `--solenoid` defaults to −1. `--file-index 2` selects the second manifest file; otherwise the runner processes all files sequentially. The preserved unquoted legacy command paths require paths without whitespace or glob characters.
 
-By default the runner preserves legacy names: `mchipo/mc_LUNDSTEM_torusSCALE.hipo` and `reconhipo/recon_LUNDSTEM_torusSCALE.hipo`. `--output-naming indexed` selects the initial refactor's `mc_INDEX.hipo`/`recon_INDEX.hipo` names. It uses the manifest count for both `gemc -N` and `recon-util -n`, including partial files. Reconstruction only starts if GEMC succeeds and produces a nonempty HIPO file. A successful `simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files.
+By default the runner preserves legacy names: `mchipo/mc_LUNDSTEM_torusSCALE.hipo` and `reconhipo/recon_LUNDSTEM_torusSCALE.hipo`. The restored payload fixes 10000 events per file and solenoid -1; the coordinator rejects partial files, indexed naming and whitespace/glob-containing paths. Bash -e stops the coordinator-launched payload on command failure; the coordinator then checks both outputs. A successful `simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files and `payload_sha256` for the executed Bash payload.
 
 Existing outputs are rejected. A per-file lock prevents two processes from executing the same task concurrently. Failed jobs retain their locks/partial output for inspection; there is no automatic cleanup or resume. Use a fresh run directory, or deliberately resolve the failed file's state before retrying. A single run directory supports one simulation configuration.
 
@@ -47,3 +47,5 @@ Local automated tests use fake executables and tiny samples. Actual GEMC and rec
 The [legacy launch-chain mapping](legacy-workflows.md) traces `setup_and_submit_jobs.csh` and its manual workflow selection. [Command parity tests](validation.md) execute the archived Bash payloads with fake binaries and compare their argument lists to the new runner. They never submit jobs.
 
 The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).
+
+The [unified external GEMC payload](gemc-payload.md) documents `src/common/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

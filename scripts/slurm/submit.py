@@ -51,6 +51,7 @@ def main():
     p.add_argument('--site', type=Path, required=True)
     p.add_argument('--torus', type=float, required=True)
     p.add_argument('--solenoid', type=float, default=-1)
+    p.add_argument('--payload', type=Path, help='External submit_GEMC_sample.sh path visible to workers')
     p.add_argument('--runner', type=Path, default=default_runner)
     p.add_argument('--output-naming', choices=['legacy', 'indexed'], default='legacy')
     p.add_argument('--execute', action='store_true', help='Submit to Slurm')
@@ -73,6 +74,7 @@ def main():
                '--gcard', str(args.gcard.resolve()), '--reconstruction', str(args.reconstruction.resolve()),
                '--site', str(args.site.resolve()), '--output-naming', args.output_naming, '--torus', str(args.torus), '--solenoid', str(args.solenoid), '--execute']
     
+    command += ['--payload', str(module['payload_path'](check))]
     wrap = shlex.join(command) + ' --file-index "$SLURM_ARRAY_TASK_ID"'
     sbatch = ['sbatch', '--nodes=1', '--ntasks=1', '--job-name=clas12-samples', f'--array=1-{len(plan)}']
     sbatch += [f'--{key}={value}' for key, value in slurm.items()]

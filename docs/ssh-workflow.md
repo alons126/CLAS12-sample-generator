@@ -77,3 +77,5 @@ Select the actual reconstruction YAML path from your checkout. Use `--workflow s
 ## Supporting shell files
 
 `run.csh` forwards to `scripts/workflow.py`. `scripts/build_and_run.csh` uses the same driver with Git pulling disabled. `update_only.sh` and `scripts/code_updater.sh` are csh/tcsh wrappers despite the `.sh` suffix; sourcing either performs only the checked fast-forward update. `scripts/printers/` supplies project start/success/failure banners. These replace the copied analyzer paths, destructive Git cleanup and unrelated environment setup. They are source-checkout helpers, not installed commands.
+
+The [unified external GEMC payload](gemc-payload.md) documents `src/common/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

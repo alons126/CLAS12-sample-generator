@@ -47,3 +47,5 @@ For 4 and 6 GeV:
 ```
 
 The checked-in gcards already contain these scales. The simulation runner also passes field scales on the command line: use `--torus 0.5 --solenoid -1` at 2 GeV and `--torus -1 --solenoid -1` at 4/6 GeV, including when launching through Slurm. These explicit settings must agree with the selected campaign; the runner does not infer them from beam energy or the card filename.
+
+The [unified external GEMC payload](gemc-payload.md) documents `src/common/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

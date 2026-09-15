@@ -30,3 +30,5 @@ Generated build-tree JSON and protected external/legacy configurations are exclu
 The same layers apply to structs, classes, enums, private implementation records, constants and configuration containers. An object description explains its purpose, producers/consumers, ownership and lifetime; member comments explain units, defaults, allowed values and relationships. Named object regions make nested definitions navigable. Passive records need a usage/lifecycle explanation rather than an invented algorithm. For example, `Particle` and `Event` document the generator-to-writer data contract, while diagnostic storage records explain ownership of detached ROOT histograms.
 
 Every file under `config/detector/` is classified as external and read-only for the assistant, recursively and regardless of extension. This includes current and future files, not only recognized gcard/YAML resources.
+
+The unified `src/common/submit_GEMC_sample.sh` and its two archived source payloads are protected external code, including their monitoring modifications. Skip them in routine source-documentation passes; their interface is described in [the GEMC payload guide](gemc-payload.md).
