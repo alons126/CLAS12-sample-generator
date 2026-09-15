@@ -107,6 +107,7 @@ void generateUniform(const RunConfig& c) {
 #pragma region /* Run preparation */
     // Prepare validated settings and independent random streams for this run.
     c.validate(false);
+    LundWriter::printWorkflowSummary(c, "uniform");
     const UniformConfig settings(c);
     const auto channel = settings.channel;
     TRandom3 random(c.integer("seed")), vertex_random(c.integer("vertex-seed"));
@@ -164,7 +165,8 @@ void generateUniform(const RunConfig& c) {
     monitoring.save(std::filesystem::path(c.get("output")) / "monitoring.root");
     legacy_monitoring.save(std::filesystem::path(c.get("output")) / "legacy_histograms.root", c.get("render-plots") == "true");
     writer.finish(writer.count());
-    std::cout << "Wrote " << writer.count() << " events to " << c.get("output") << '\n';
+    LundWriter::printWorkflowSummary(c, "uniform", 0, writer.count(), true);
+    std::cout << "\033[33mWrote " << writer.count() << " events to \033[0m" << c.get("output") << '\n';
 }
 #pragma endregion
 

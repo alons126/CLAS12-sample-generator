@@ -48,6 +48,9 @@ class LundWriter {
     /** @brief Return the number of events successfully serialized so far. */
     std::uint64_t count() const { return count_; }
 
+    /** @brief Print a legacy-style workflow summary before and after generation. */
+    static void printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned = 0, std::uint64_t written = 0, bool final = false);
+
     // Owned state --------------------------------------------------------------
    private:
     // Output object ------------------------------------------------

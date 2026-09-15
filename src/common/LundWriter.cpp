@@ -24,6 +24,55 @@
 
 #include "Version.h"
 namespace samples {
+// LundWriter::printWorkflowSummary ----------------------------------------------------------------------
+
+#pragma region /* LundWriter::printWorkflowSummary */
+/**
+ * @brief Print the legacy-style setup and completion summary for a LUND run.
+ *
+ * Algorithm:
+ *   Print the shared output metadata, followed by workflow-specific settings and per-run totals.
+ *
+ * @param config Resolved workflow configuration.
+ * @param workflow Workflow label, uniform or genie.
+ * @param scanned Number of input entries scanned for the final summary.
+ * @param written Number of accepted/written events in the final summary.
+ * @param final True when printing the completion report; false for setup information.
+ */
+void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned, std::uint64_t written, bool final) {
+    const auto output = std::filesystem::path(config.get("output"));
+    const auto lund_dir = output / "lundfiles";
+    const bool uniform = workflow == "uniform";
+
+    std::cout << "\033[33m\n=============================================================\n\033[0m";
+    std::cout << "\033[33m\n= " << (uniform ? "Uniform sample generation" : "GENIE to LUND conversion") << " summary" << "\n\033[0m";
+    std::cout << "\033[33m=============================================================\n\033[0m";
+    std::cout << "\033[33m\nOutput directory:\033[0m " << output << '\n';
+    std::cout << "\033[33mLUND directory:\033[0m " << lund_dir << '\n';
+    std::cout << "\033[33mOutput prefix:\033[0m " << config.get("prefix") << '\n';
+    std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
+    std::cout << "\033[33mTarget:\033[0m " << config.get("target") << "  \033[33mA:\033[0m " << config.get("A") << "  \033[33mZ:\033[0m " << config.get("Z") << '\n';
+    std::cout << "\033[33mFiles:\033[0m " << config.get("files") << "  \033[33mEvents per file:\033[0m " << config.get("events-per-file") << '\n';
+    std::cout << "\033[33mLUND format:\033[0m " << config.get("lund-format") << "  \033[33mMass convention:\033[0m " << config.get("mass-convention") << '\n';
+
+    if (uniform) {
+        std::cout << "\033[33mChannel:\033[0m " << config.get("channel") << "  \033[33mElectron momentum:\033[0m " << config.get("electron-momentum")
+                  << "  \033[33mNucleon momentum:\033[0m " << config.get("nucleon-momentum") << '\n';
+    } else {
+        std::cout << "\033[33mInput GST:\033[0m " << config.get("input") << '\n';
+    }
+
+    if (final) {
+        std::cout << "\033[33m\n- Completion summary ----------------------------------------\n\033[0m";
+        std::cout << "\033[33mScanned entries:\033[0m " << scanned << '\n';
+        std::cout << "\033[33mEvents written:\033[0m " << written << '\n';
+        std::cout << "\033[33mOutput files written:\033[0m " << config.integer("files") << '\n';
+    }
+
+    std::cout << '\n';
+}
+#pragma endregion
+
 // LundWriter::LundWriter ----------------------------------------------------------------------
 
 #pragma region /* LundWriter::LundWriter */

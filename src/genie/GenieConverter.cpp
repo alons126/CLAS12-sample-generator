@@ -55,6 +55,7 @@ namespace samples {
  */
 void convertGenie(const RunConfig& c) {
     c.validate(true);
+    LundWriter::printWorkflowSummary(c, "genie");
 #pragma region /* GST input preparation */
     // Validate the input chain before constructing any output products.
     TChain chain("gst");
@@ -136,7 +137,8 @@ void convertGenie(const RunConfig& c) {
         canvas.Print((output / "monitoring_plots/theta_e_VS_phi_e.png").string().c_str());
     }
     writer.finish(scanned);
-    std::cout << "Scanned " << scanned << ", wrote " << writer.count() << " events to " << c.get("output") << '\n';
+    LundWriter::printWorkflowSummary(c, "genie", scanned, writer.count(), true);
+    std::cout << "\033[33mScanned " << scanned << ", wrote " << writer.count() << " events to \033[0m" << c.get("output") << '\n';
 }
 #pragma endregion
 
