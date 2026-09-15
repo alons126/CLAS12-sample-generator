@@ -402,7 +402,7 @@ def main():
             app = 'clas12-uniform' if workflow == 'uniform' else 'clas12-genie-to-lund'
 
             print(f"{COLOR_START}===================================================================================================={COLOR_END}")
-            print(f"{COLOR_START}= Generating LUND files in {app:<72}={COLOR_END}")
+            print(f"{COLOR_START}= Generating LUND files in {app:<72} mode ={COLOR_END}")
             print(f"{COLOR_START}===================================================================================================={COLOR_END}")
             print()
 
