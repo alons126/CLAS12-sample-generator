@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 26/02/2026.
+//
+
 /**
  * @file genie_to_lund_main.cpp
  * @brief GENIE-converter command-line entry point.
@@ -14,6 +18,10 @@
 #include <string>
 
 #include "genie/GenieConverter.h"
+#include "common/environment.h"
+
+namespace env = environment;
+
 // main ----------------------------------------------------------------------
 
 #pragma region /* main */

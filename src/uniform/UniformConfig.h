@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 26/02/2026.
+//
+
 /**
  * @file UniformConfig.h
  * @brief Typed uniform sampling configuration.

@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 14/09/2026.
+//
+
 /**
  * @file RunConfig.cpp
  * @brief Sample option parsing, validation and JSON escaping.
@@ -41,6 +45,7 @@ std::string trim(std::string s) {
 #pragma endregion
 
 }  // namespace
+
 // RunConfig::parse ----------------------------------------------------------------------
 
 #pragma region /* RunConfig::parse */
@@ -79,9 +84,10 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
                  {"render-plots", "false"},
                  {"vertex-seed", "12345"},
                  {"prefix", genie ? "GENIE_sample" : "Uniform_sample"}};
-    if (genie)
+
+    if (genie) {
         c.values_.insert({{"input", ""}});
-    else
+    } else {
         c.values_.insert({{"channel", "1e"},
                           {"electron-theta-min", "5"},
                           {"electron-theta-max", "40"},
@@ -95,8 +101,11 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
                           {"electron-momentum", "uniform"},
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
+    }
+
     auto assign = [&](const std::string& k, const std::string& v) {
-        if (!c.values_.count(k)) throw std::runtime_error("Unknown setting: " + k);
+        if (!c.values_.count(k)) { throw std::runtime_error("Unknown setting: " + k); }
+
         c.values_[k] = v;
     };
 #pragma endregion
@@ -105,32 +114,48 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
     // Collect CLI overrides separately so their precedence is independent of argument order.
     std::map<std::string, std::string> overrides;
     std::string config;
+
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg.rfind("--", 0) != 0 || i + 1 == argc) throw std::runtime_error("Expected --key value: " + arg);
+
+        if (arg.rfind("--", 0) != 0 || i + 1 == argc) { throw std::runtime_error("Expected --key value: " + arg); }
+
         auto key = arg.substr(2);
         std::string value = argv[++i];
+
         if (key == "config") {
-            if (!config.empty()) throw std::runtime_error("Use only one --config file");
+            if (!config.empty()) { throw std::runtime_error("Use only one --config file"); }
+
             config = value;
         } else {
-            if (!overrides.emplace(key, value).second) throw std::runtime_error("Repeated option: " + key);
+            if (!overrides.emplace(key, value).second) { throw std::runtime_error("Repeated option: " + key); }
         }
     }
+
     // Read one profile, rejecting duplicate keys instead of silently replacing values.
     if (!config.empty()) {
         std::ifstream in(config);
-        if (!in) throw std::runtime_error("Cannot open config: " + config);
+
+        if (!in) { throw std::runtime_error("Cannot open config: " + config); }
+
         std::string line;
         std::map<std::string, bool> seen;
+
         while (std::getline(in, line)) {
             line = trim(line);
+
             if (line.empty() || line[0] == '#') continue;
+
             auto eq = line.find('=');
-            if (eq == std::string::npos) throw std::runtime_error("Expected key = value: " + line);
+
+            if (eq == std::string::npos) { throw std::runtime_error("Expected key = value: " + line); }
+
             auto key = trim(line.substr(0, eq));
-            if (seen[key]) throw std::runtime_error("Repeated config key: " + key);
+
+            if (seen[key]) { throw std::runtime_error("Repeated config key: " + key); }
+
             seen[key] = true;
+
             assign(key, trim(line.substr(eq + 1)));
         }
     }
@@ -138,6 +163,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
 
     // Apply explicit options last, then resolve channel and beam dependent defaults.
     for (const auto& [k, v] : overrides) assign(k, v);
+
     if (!genie) {
         if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
         if (c.get("nucleon-p-max") == "auto") c.values_["nucleon-p-max"] = c.get("beam-energy");
@@ -146,14 +172,19 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
             c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
         }
     }
+
     if (!genie) {
         if (c.get("nucleon-momentum") == "sampled") c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform";
         if (c.get("nucleon-angle") == "auto") c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta";
     }
+
     // Validate before normalizing paths or allowing downstream output creation.
     c.validate(genie);
+
     if (genie && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
+
     c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
+
     return c;
 }
 #pragma endregion
@@ -190,7 +221,9 @@ std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
 double RunConfig::number(const std::string& k) const {
     std::size_t used = 0;
     double value = std::stod(get(k), &used);
-    if (used != get(k).size() || !std::isfinite(value)) throw std::runtime_error("Invalid number: " + k);
+
+    if (used != get(k).size() || !std::isfinite(value)) { throw std::runtime_error("Invalid number: " + k); }
+
     return value;
 }
 #pragma endregion
@@ -210,7 +243,9 @@ double RunConfig::number(const std::string& k) const {
  */
 std::uint64_t RunConfig::integer(const std::string& k) const {
     const auto s = get(k);
-    if (s.empty() || s.find_first_not_of("0123456789") != std::string::npos) throw std::runtime_error("Expected unsigned integer: " + k);
+
+    if (s.empty() || s.find_first_not_of("0123456789") != std::string::npos) { throw std::runtime_error("Expected unsigned integer: " + k); }
+
     return std::stoull(s);
 }
 #pragma endregion
@@ -231,35 +266,42 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
  * @note No value; throws with the invalid setting or constraint.
  */
 void RunConfig::validate(bool genie) const {
-    if (get("output").empty()) throw std::runtime_error("--output is required; use a new run directory");
-    if (number("beam-energy") <= 0) throw std::runtime_error("beam-energy must be positive");
+    if (get("output").empty()) { throw std::runtime_error("--output is required; use a new run directory"); }
+    if (number("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
     for (auto k : {"files", "events-per-file", "seed", "vertex-seed"}) {
         auto n = integer(k);
-        if (!n || n > std::numeric_limits<unsigned int>::max()) throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]");
+        if (!n || n > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
     }
-    if (integer("A") < 1 || integer("A") > 300 || integer("Z") > integer("A")) throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A");
-    if (get("prefix").empty() || get("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos)
+    if (integer("A") < 1 || integer("A") > 300 || integer("Z") > integer("A")) { throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A"); }
+    if (get("prefix").empty() || get("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos) {
         throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
-    if (get("lund-format") != "legacy" && get("lund-format") != "precise") throw std::runtime_error("lund-format must be legacy or precise");
-    if (get("mass-convention") != "legacy" && get("mass-convention") != "standard") throw std::runtime_error("mass-convention must be legacy or standard");
-    if (get("render-plots") != "true" && get("render-plots") != "false") throw std::runtime_error("render-plots must be true or false");
+    }
+    if (get("lund-format") != "legacy" && get("lund-format") != "precise") { throw std::runtime_error("lund-format must be legacy or precise"); }
+    if (get("mass-convention") != "legacy" && get("mass-convention") != "standard") { throw std::runtime_error("mass-convention must be legacy or standard"); }
+    if (get("render-plots") != "true" && get("render-plots") != "false") { throw std::runtime_error("render-plots must be true or false"); }
+
     TargetGeometry::validate(get("target"));
+
     if (genie) {
-        if (get("input").empty()) throw std::runtime_error("--input GST ROOT file or glob is required");
+        if (get("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
         return;
     }
-    if (get("channel") != "1e" && get("channel") != "ep" && get("channel") != "en") throw std::runtime_error("channel must be 1e, ep or en");
+
+    if (get("channel") != "1e" && get("channel") != "ep" && get("channel") != "en") { throw std::runtime_error("channel must be 1e, ep or en"); }
+
     for (auto stem : {"electron", "nucleon"}) {
         double lo = number(std::string(stem) + "-theta-min"), hi = number(std::string(stem) + "-theta-max");
-        if (!(0 <= lo && lo < hi && hi <= 180)) throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180");
+        if (!(0 <= lo && lo < hi && hi <= 180)) { throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180"); }
     }
-    if (get("nucleon-momentum") != "fixed" && get("nucleon-momentum") != "uniform" && get("nucleon-momentum") != "mixed")
+
+    if (get("nucleon-momentum") != "fixed" && get("nucleon-momentum") != "uniform" && get("nucleon-momentum") != "mixed") {
         throw std::runtime_error("nucleon-momentum must be fixed, sampled, uniform or mixed");
-    if (get("nucleon-momentum") == "mixed" && (get("channel") != "ep" || number("nucleon-p-min") <= 0)) throw std::runtime_error("mixed requires ep and strictly positive nucleon-p-min");
-    if (get("nucleon-angle") != "theta" && get("nucleon-angle") != "isotropic") throw std::runtime_error("nucleon-angle must be auto, theta or isotropic");
-    if (get("electron-momentum") != "uniform" && get("electron-momentum") != "beam") throw std::runtime_error("electron-momentum must be uniform or beam");
-    if (number("nucleon-p") <= 0 || number("nucleon-p-min") < 0 || number("nucleon-p-max") <= number("nucleon-p-min")) throw std::runtime_error("Invalid nucleon momentum bounds");
-    if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) throw std::runtime_error("Invalid trigger angle");
+    }
+    if (get("nucleon-momentum") == "mixed" && (get("channel") != "ep" || number("nucleon-p-min") <= 0)) { throw std::runtime_error("mixed requires ep and strictly positive nucleon-p-min"); }
+    if (get("nucleon-angle") != "theta" && get("nucleon-angle") != "isotropic") { throw std::runtime_error("nucleon-angle must be auto, theta or isotropic"); }
+    if (get("electron-momentum") != "uniform" && get("electron-momentum") != "beam") { throw std::runtime_error("electron-momentum must be uniform or beam"); }
+    if (number("nucleon-p") <= 0 || number("nucleon-p-min") < 0 || number("nucleon-p-max") <= number("nucleon-p-min")) { throw std::runtime_error("Invalid nucleon momentum bounds"); }
+    if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) { throw std::runtime_error("Invalid trigger angle"); }
 }
 #pragma endregion
 
@@ -279,6 +321,7 @@ void RunConfig::validate(bool genie) const {
 std::string jsonString(const std::string& s) {
     std::ostringstream out;
     out << '"';
+
     for (unsigned char ch : s) {
         if (ch == '"' || ch == '\\')
             out << '\\' << ch;
@@ -287,7 +330,9 @@ std::string jsonString(const std::string& s) {
         else
             out << ch;
     }
+
     out << '"';
+
     return out.str();
 }
 #pragma endregion
@@ -312,11 +357,14 @@ std::string help(bool genie) {
         "--files N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
         "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
         "Files use key = value; CLI values override file settings. No automatic overwrite.\n";
-    if (!genie)
+
+    if (!genie) {
         result +=
             "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
             "--electron-momentum uniform|beam, --nucleon-momentum fixed|sampled|uniform|mixed,\n"
             "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
+    }
+
     return result;
 }
 #pragma endregion

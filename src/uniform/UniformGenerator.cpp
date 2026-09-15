@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 26/02/2026.
+//
+
 /**
  * @file UniformGenerator.cpp
  * @brief Electron and electron-nucleon acceptance-sample generation.

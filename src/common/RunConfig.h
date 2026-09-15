@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 14/09/2026.
+//
+
 /**
  * @file RunConfig.h
  * @brief Public sample-configuration interface.
@@ -14,6 +18,7 @@
 #include <filesystem>
 #include <map>
 #include <string>
+
 namespace samples {
 
 // Public interface -------------------------------------------------------------
@@ -52,8 +57,10 @@ class RunConfig {
     std::map<std::string, std::string> values_;
 };
 #pragma endregion
+
 /** @brief Return the selected application usage text without executing a run. */
 std::string help(bool genie);
+
 /** @brief Escape text and enclose it in quotes for JSON serialization. */
 std::string jsonString(const std::string& text);
 #pragma endregion

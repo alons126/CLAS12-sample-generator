@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 26/02/2026.
+//
+
 /**
  * @file uniform_main.cpp
  * @brief Uniform-generator command-line entry point.
@@ -13,7 +17,11 @@
 #include <iostream>
 #include <string>
 
+#include "common/environment.h"
 #include "uniform/UniformGenerator.h"
+
+namespace env = environment;
+
 // main ----------------------------------------------------------------------
 
 #pragma region /* main */
@@ -30,15 +38,19 @@
  */
 int main(int argc, char** argv) {
     constexpr bool genie = false;
+
     try {
         if (argc == 2 && std::string(argv[1]) == "--help") {
             std::cout << samples::help(genie);
             return 0;
         }
+
         samples::generateUniform(samples::RunConfig::parse(argc, argv, genie));
+
         return 0;
     } catch (const std::exception& error) {
-        std::cerr << "Error: " << error.what() << '\n';
+        std::cerr << env::ERROR_COLOR << "Error: " << env::RESET_COLOR << error.what() << '\n';
+
         return 1;
     }
 }
