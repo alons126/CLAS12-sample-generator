@@ -25,10 +25,12 @@
 # Initial setup ----------------------------------------------------------------
 
 # Terminal color escape sequences used for formatted output messages.
-set COLOR_START = "\033[35m"
-set COLOR_ERR = "\033[31m"
-set COLOR_OK = "\033[32m"
-set COLOR_END = "\033[0m"
+set COLOR_START = "\033[33m"      # Yellow
+set COLOR_ERR = "\033[31m"   	  # Red
+set COLOR_COMPLETION = "\033[32m" # Green
+set COLOR_INFO = "\033[35m"       # Magenta
+set COLOR_WARNING = "\033[36m"    # Cyan
+set COLOR_END = "\033[0m"         # Reset color
 
 # Print the project ASCII logo banner.
 # The banner script lives under scripts/printers/.

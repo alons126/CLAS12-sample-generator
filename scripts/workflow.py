@@ -38,6 +38,10 @@ WORKFLOWS = ('uniform', 'genie', 'simulate', 'submit')
 # endregion
 
 COLOR_START = os.environ.get("COLOR_START", "").replace(r"\033", "\033")
+COLOR_ERR = os.environ.get("COLOR_ERR", "").replace(r"\033", "\033")
+COLOR_COMPLETION = os.environ.get("COLOR_COMPLETION", "").replace(r"\033", "\033")
+COLOR_INFO = os.environ.get("COLOR_INFO", "").replace(r"\033", "\033")
+COLOR_WARNING = os.environ.get("COLOR_WARNING", "").replace(r"\033", "\033")
 COLOR_END = os.environ.get("COLOR_END", "").replace(r"\033", "\033")
 
 
@@ -248,7 +252,7 @@ def execute(command):
         None; subprocess failure propagates to the launcher error handler.
     """
     
-    print('+ ' + shlex.join([str(arg) for arg in command]), flush=True)
+    print(f"{COLOR_INFO}executing: {COLOR_END}" + shlex.join([str(arg) for arg in command]), flush=True)
     
     subprocess.run(command, cwd=ROOT, check=True)
 # endregion
