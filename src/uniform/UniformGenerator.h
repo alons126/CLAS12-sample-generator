@@ -15,6 +15,7 @@
 
 #pragma once
 #include "common/RunConfig.h"
+
 namespace samples {
 
 // Public interface -------------------------------------------------------------

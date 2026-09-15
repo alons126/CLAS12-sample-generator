@@ -25,6 +25,7 @@
 #include "common/Monitoring.h"
 #include "common/TargetGeometry.h"
 #include "uniform/UniformConfig.h"
+
 namespace samples {
 namespace {
 // momentum ----------------------------------------------------------------------
@@ -45,6 +46,7 @@ namespace {
 TVector3 momentum(double p, double theta, double phi) {
     TVector3 v;
     v.SetMagThetaPhi(p, theta * TMath::DegToRad(), phi * TMath::DegToRad());
+
     return v;
 }
 #pragma endregion
@@ -67,13 +69,16 @@ double triggerPhi(double phi, double offset) {
     auto wrap = [](double angle) { return angle > 180 ? angle - 360 : angle < -180 ? angle + 360 : angle; };
     const double target = wrap(phi + 180);
     double closest = -120, difference = std::abs(wrap(target - closest));
+
     for (double angle : {-60., 0., 60., 120., 180.}) {
         double d = std::abs(wrap(target - angle));
+
         if (d < difference) {
             difference = d;
             closest = angle;
         }
     }
+
     return closest + offset;
 }
 #pragma endregion
@@ -120,8 +125,10 @@ void generateUniform(const RunConfig& c) {
         event.A = settings.A;
         event.Z = settings.Z;
         event.beam_energy = beam;
+
         // All particles in one event share the sampled interaction vertex.
         const auto vertex = geometry.sample(vertex_random);
+
         // Choose the electron-only or artificial trigger-electron plus nucleon prescription.
         if (channel == UniformChannel::Electron) {
             double theta = random.Uniform(settings.electron_theta_min, settings.electron_theta_max);
@@ -135,14 +142,17 @@ void generateUniform(const RunConfig& c) {
                     : random.Uniform(settings.nucleon_theta_min, settings.nucleon_theta_max);
             double phi = random.Uniform(-180, 180);
             double p = settings.uniform_nucleon_momentum ? random.Uniform(settings.nucleon_p_min, settings.nucleon_p_max) : settings.nucleon_p;
+
             if (settings.mixed_nucleon_momentum) {
                 // Alternate components: exactly half each for an even run, one extra p draw for an odd run.
                 p = event.id % 2 == 0 ? random.Uniform(settings.nucleon_p_min, settings.nucleon_p_max) : 1.0 / random.Uniform(1.0 / settings.nucleon_p_max, 1.0 / settings.nucleon_p_min);
             }
+
             int pid = channel == UniformChannel::ElectronProton ? 2212 : 2112;
             event.particles.push_back({11, particleMass(11), momentum(beam, settings.trigger_theta, triggerPhi(phi, settings.trigger_phi_offset)), vertex});
             event.particles.push_back({pid, particleMass(pid), momentum(p, theta, phi), vertex});
         }
+
         // Monitor only events that were successfully serialized.
         writer.write(event);
         monitoring.fill(event);
