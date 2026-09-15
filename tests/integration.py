@@ -105,9 +105,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
     run(executable, '--help')
     if mode == 'uniform':
         for channel, pid in [('1e',11),('ep',2212),('en',2112)]:
-            output = root / channel
+            output_root = root / channel
+            output = output_root / f'Uniform_sample_{channel}_5986MeV'
             settings = ['--channel', channel, '--events', '10001', '--seed', '17', '--vertex-seed', '23']
-            run(executable, *settings, '--output', output)
+            run(executable, *settings, '--output', output_root)
             manifest, events = read_run(output)
             assert [f['events'] for f in manifest['files']] == [10000,1]
             assert [int(h[8]) for h,p in events] == list(range(10001))
@@ -126,25 +127,29 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             mean = sum(angles(p[-1])[1] for h,p in events)/len(events)
             hi = 40 if channel == '1e' else 45 if channel == 'ep' else 35
             assert abs(mean - (5+hi)/2) < 2
-            second = root / (channel+'-repeat')
-            run(executable, *settings, '--output', second)
+            second = root / (channel+'-repeat') / f'Uniform_sample_{channel}_5986MeV'
+            run(executable, *settings, '--output', second.parent)
             for file in manifest['files']:
                 assert (output/file['path']).read_bytes() == (second/file['path']).read_bytes()
             sentinel = output/'keep.txt'
             sentinel.write_text('keep')
-            run(executable, *settings, '--output', output, ok=False)
-            assert sentinel.read_text() == 'keep'
+            rerun = run(executable, *settings, '--output', output_root)
+            assert '\x1b[36mWarning: removing existing output directory:' in rerun.stdout
+            assert not sentinel.exists()
         config = root/'sample.conf'
         config.write_text('# test precedence\nchannel = en\nevents = 3\nbeam-energy = 2.07052\n')
-        run(executable, '--config', config, '--events', '5', '--output', root/'configured')
-        m,_ = read_run(root/'configured')
+        configured = root/'configured'/ 'Uniform_sample_en_2071MeV'
+        run(executable, '--config', config, '--events', '5', '--output', configured.parent)
+        m,_ = read_run(configured)
         assert m['written_events'] == 5 and m['config']['trigger-phi-offset'] == '16'
-        run(executable, '--channel', 'ep', '--nucleon-momentum', 'uniform', '--events', '100', '--output', root/'variable')
-        _,events=read_run(root/'variable')
+        variable = root/'variable'/ 'Uniform_sample_ep_5986MeV'
+        run(executable, '--channel', 'ep', '--nucleon-momentum', 'uniform', '--events', '100', '--output', variable.parent)
+        _,events=read_run(variable)
         momenta=[angles(p[-1])[0] for h,p in events]
         assert min(momenta)>=0.3 and max(momenta)<=5.98636 and max(momenta)-min(momenta)>1
-        run(executable, '--electron-momentum', 'beam', '--target', 'point', '--events', '5', '--output', root/'tester')
-        _,events=read_run(root/'tester')
+        tester = root/'tester'/ 'Uniform_sample_1e_5986MeV'
+        run(executable, '--electron-momentum', 'beam', '--target', 'point', '--events', '5', '--output', tester.parent)
+        _,events=read_run(tester)
         assert all(p[0][11:]==[0,0,0] and math.isclose(angles(p[0])[0],5.98636,abs_tol=1e-8) for h,p in events)
         for key,value in [('channel','bad'),('seed','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
             output=root/('invalid-'+key)

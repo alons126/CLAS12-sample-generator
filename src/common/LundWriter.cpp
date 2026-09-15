@@ -7,7 +7,7 @@
  * @brief LUND serialization and completed-run manifests.
  *
  * Purpose:
- *   Write shared event records in legacy or precise format without overwriting existing runs.
+ *   Write shared event records in legacy or precise format, replacing stale output directories on rerun.
  *
  * Workflow:
  *   Claim directory -> rotate files as needed -> write particles -> close -> publish manifest.
@@ -24,6 +24,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "common/environment.h"
 #include "Version.h"
 namespace samples {
 // LundWriter::printWorkflowSummary ----------------------------------------------------------------------
@@ -113,15 +114,15 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 
 #pragma region /* LundWriter::LundWriter */
 /**
- * @brief Claim a new run directory and cache output limits.
+ * @brief Prepare the run directory and cache output limits.
  *
  * Algorithm:
- *   Cache settings, create parent directories, then exclusively create the run and LUND directory.
+ *   Cache settings, warn before removing an existing run directory, then create the run and LUND directory.
  *
  * @param c Validated configuration; must outlive this writer.
  * @param workflow Manifest workflow label, uniform or genie.
  *
- * @note Constructor; existing run directories and filesystem failures throw.
+ * @note Constructor; previous output is intentionally removed before the new run starts.
  */
 LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     : config_(c),
@@ -130,10 +131,12 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     events_per_file_(10000),
     capacity_(c.integer("events")),
       legacy_format_(c.get("lund-format") == "legacy") {
-    // Atomic leaf creation prevents two runs from claiming the same directory.
     std::filesystem::create_directories(directory_.parent_path());
-    if (!std::filesystem::create_directory(directory_)) throw std::runtime_error("Output already exists: " + directory_.string());
-    std::filesystem::create_directory(directory_ / "lundfiles");
+    if (std::filesystem::exists(directory_)) {
+        std::cout << environment::WARNING_COLOR << "Warning: removing existing output directory: " << directory_ << environment::RESET_COLOR << '\n';
+        std::filesystem::remove_all(directory_);
+    }
+    std::filesystem::create_directories(directory_ / "lundfiles");
 }
 #pragma endregion
 
@@ -144,7 +147,7 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
  * @brief Test whether the configured event capacity has been reached.
  *
  * Algorithm:
- *   Compare the written count with files multiplied by events per file.
+ *   Compare the written count with the requested total event count.
  *
  * @return True when no further event may be written.
  */
