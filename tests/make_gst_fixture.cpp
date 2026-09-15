@@ -1,7 +1,32 @@
+/**
+ * @file make_gst_fixture.cpp
+ * @brief Create synthetic GST inputs for converter tests.
+ *
+ * Purpose:
+ *   Provide normal, parity and malformed-input cases without external event datasets.
+ *
+ * Workflow:
+ *   CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+ */
+
 #include <TFile.h>
 #include <TTree.h>
 
 #include <string>
+// main ----------------------------------------------------------------------
+
+#pragma region /* main */
+/**
+ * @brief Create synthetic GST inputs for converter tests.
+ *
+ * Algorithm:
+ *   Provide normal, parity and malformed-input cases without external event datasets.
+ *
+ * @param argc Number of executable arguments.
+ * @param argv Paths and options supplied by the caller.
+ *
+ * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ */
 int main(int argc, char** argv) {
     if (argc < 2) return 1;
     TFile file(argv[1], "RECREATE");
@@ -53,3 +78,4 @@ int main(int argc, char** argv) {
     tree.Write();
     return file.IsZombie() ? 1 : 0;
 }
+#pragma endregion

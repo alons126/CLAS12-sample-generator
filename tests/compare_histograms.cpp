@@ -1,3 +1,14 @@
+/**
+ * @file compare_histograms.cpp
+ * @brief Compare numerical ROOT histograms.
+ *
+ * Purpose:
+ *   Check names, axes, entries, cell contents and errors rather than ROOT container bytes.
+ *
+ * Workflow:
+ *   CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+ */
+
 #include <TFile.h>
 #include <TH1.h>
 #include <TKey.h>
@@ -5,6 +16,20 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+// main ----------------------------------------------------------------------
+
+#pragma region /* main */
+/**
+ * @brief Compare numerical ROOT histograms.
+ *
+ * Algorithm:
+ *   Check names, axes, entries, cell contents and errors rather than ROOT container bytes.
+ *
+ * @param argc Number of executable arguments.
+ * @param argv Paths and options supplied by the caller.
+ *
+ * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ */
 int main(int argc, char** argv) {
     if (argc != 3) return 2;
     try {
@@ -30,3 +55,4 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+#pragma endregion

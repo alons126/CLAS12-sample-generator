@@ -1,9 +1,21 @@
-"""Generate a test-only adapter; preserve the archived converter's event loop verbatim."""
+"""Generate a maintained test adapter around the archived converter.
+
+Purpose:
+    Read the protected archive and write a separate build-tree reference with redirected output setup.
+
+Workflow:
+    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+
+Notes:
+    Test fixtures are isolated; protected external and legacy sources are read-only.
+"""
 from pathlib import Path
 import sys
 source, destination = map(Path, sys.argv[1:])
 text = source.read_text()
 # Redirect only external includes and output setup. Physics and rollover code are unchanged.
+# Test execution ------------------------------------------------
+# region Execution
 for relative in ['../include/targets.h', '../framework/namespaces/general_utilities/utilities.h', '../framework/classes/DSCuts/DSCuts.h']:
     text = text.replace('"'+relative+'"', '"'+str((source.parent/relative).resolve())+'"')
 start = text.index('    TString OutputFileBase =')
@@ -42,3 +54,5 @@ int main(int argc, char** argv) {
 '''
 # Macro in restored utility header only bridges the legacy namespace; do not export it to main.
 destination.write_text(prelude+text+'\n#undef targets\n'+postlude)
+
+# endregion

@@ -112,3 +112,5 @@ The archived root `genie_job_submission_script.csh` is another historical submis
 [SSH workflow](ssh-workflow.md) documents every shell wrapper, the banner helpers and `config/run.json`. `scripts/workflow.py` validates settings, merges CLI overrides, optionally performs a clean-checkout fast-forward pull, configures/builds/tests, and dispatches the selected generator, converter, simulation runner or submitter. Subprocess arguments are passed as lists. Shell wrappers preserve quoted arguments and return failures without exiting a sourced session.
 
 `tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `tests/prepare_replacement_geometry.py` creates a changed target header; `tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
+
+See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.

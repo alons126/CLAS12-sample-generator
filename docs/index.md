@@ -48,3 +48,5 @@ A failed generation may leave partial files but no completed manifest. Choose a 
 All documented shell examples start at the repository root. Executables and scripts also work from other directories when supplied appropriate paths; relative sample configuration paths are interpreted from the caller's working directory.
 
 For local editing and server execution via `source run.csh`, read the [SSH workflow](ssh-workflow.md). Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](external-inputs.md).
+
+See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.

@@ -1,7 +1,29 @@
+/**
+ * @file replacement_geometry.cpp
+ * @brief Check the adapter against a test-only replacement header.
+ *
+ * Purpose:
+ *   Verify shifted vertices, new target discovery and independent interleaved RNG streams.
+ *
+ * Workflow:
+ *   CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+ */
+
 #include "common/TargetGeometry.h"
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+// main ----------------------------------------------------------------------
+
+#pragma region /* main */
+/**
+ * @brief Check the adapter against a test-only replacement header.
+ *
+ * Algorithm:
+ *   Verify shifted vertices, new target discovery and independent interleaved RNG streams.
+ *
+ * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ */
 int main() {
     try {
         samples::TargetGeometry argon("Ar"), added("replacement-only");
@@ -17,3 +39,4 @@ int main() {
         std::cout << "Replacing only targets.h changes target positions, beamspot and accepted target names.\n";
     } catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }
 }
+#pragma endregion

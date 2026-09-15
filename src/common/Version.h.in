@@ -1,3 +1,11 @@
+/**
+ * @file Version.h.in
+ * @brief CMake template for compiled run provenance.
+ *
+ * Workflow: CMake substitutes revision, project version and protected target-header hash;
+ * LundWriter records those constants in each completed manifest. Reconfigure after updates.
+ */
+
 #pragma once
 #define SAMPLE_REVISION "@SAMPLE_REVISION@"
 #define SAMPLE_VERSION "@PROJECT_VERSION@"

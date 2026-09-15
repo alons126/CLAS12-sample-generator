@@ -1,3 +1,14 @@
+/**
+ * @file RunConfig.cpp
+ * @brief Sample option parsing, validation and JSON escaping.
+ *
+ * Purpose:
+ *   Keep invalid settings out of the generation loop and record resolved configuration.
+ *
+ * Workflow:
+ *   Defaults -> profile -> CLI overrides -> automatic values -> validation -> absolute paths.
+ */
+
 #include "common/RunConfig.h"
 
 #include <cmath>
@@ -10,12 +21,50 @@
 #include "common/TargetGeometry.h"
 namespace samples {
 namespace {
+// trim ----------------------------------------------------------------------
+
+#pragma region /* trim */
+/**
+ * @brief Remove surrounding configuration whitespace.
+ *
+ * Algorithm:
+ *   Find the first and last non-whitespace characters; retain the enclosed text.
+ *
+ * @param s Text from a configuration line.
+ *
+ * @return Trimmed text, or an empty string for whitespace-only input.
+ */
 std::string trim(std::string s) {
     auto first = s.find_first_not_of(" \t\r\n");
     return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
 }
+#pragma endregion
+
 }  // namespace
+// RunConfig::parse ----------------------------------------------------------------------
+
+#pragma region /* RunConfig::parse */
+/**
+ * @brief Resolve one complete sample configuration.
+ *
+ * Purpose:
+ *   Make both executables use the same precedence and validation contract before creating outputs.
+ *
+ * Algorithm:
+ *   1. Install defaults and collect CLI overrides.
+ *   2. Read one optional profile, rejecting unknown or repeated keys.
+ *   3. Apply overrides and resolve channel-dependent automatic settings.
+ *   4. Validate values and normalize local input/output paths.
+ *
+ * @param argc Number of CLI tokens.
+ * @param argv CLI tokens including executable name.
+ * @param genie True for GST conversion, false for uniform generation.
+ *
+ * @return Validated settings; throws on malformed options or invalid physical bounds.
+ */
 RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
+#pragma region /* Default settings */
+    // Install shared defaults before workflow-specific options.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
                  {"target", "Ar"},
@@ -50,6 +99,10 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
         if (!c.values_.count(k)) throw std::runtime_error("Unknown setting: " + k);
         c.values_[k] = v;
     };
+#pragma endregion
+
+#pragma region /* Profile and CLI input */
+    // Collect CLI overrides separately so their precedence is independent of argument order.
     std::map<std::string, std::string> overrides;
     std::string config;
     for (int i = 1; i < argc; ++i) {
@@ -64,6 +117,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
             if (!overrides.emplace(key, value).second) throw std::runtime_error("Repeated option: " + key);
         }
     }
+    // Read one profile, rejecting duplicate keys instead of silently replacing values.
     if (!config.empty()) {
         std::ifstream in(config);
         if (!in) throw std::runtime_error("Cannot open config: " + config);
@@ -80,6 +134,9 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
             assign(key, trim(line.substr(eq + 1)));
         }
     }
+#pragma endregion
+
+    // Apply explicit options last, then resolve channel and beam dependent defaults.
     for (const auto& [k, v] : overrides) assign(k, v);
     if (!genie) {
         if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
@@ -93,23 +150,86 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
         if (c.get("nucleon-momentum") == "sampled") c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform";
         if (c.get("nucleon-angle") == "auto") c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta";
     }
+    // Validate before normalizing paths or allowing downstream output creation.
     c.validate(genie);
     if (genie && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
     c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
     return c;
 }
+#pragma endregion
+
+// RunConfig::get ----------------------------------------------------------------------
+
+#pragma region /* RunConfig::get */
+/**
+ * @brief Read a resolved setting as text.
+ *
+ * Algorithm:
+ *   Look up the key in the validated configuration map.
+ *
+ * @param k Known configuration key.
+ *
+ * @return Stored string; a missing key throws.
+ */
 std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
+#pragma endregion
+
+// RunConfig::number ----------------------------------------------------------------------
+
+#pragma region /* RunConfig::number */
+/**
+ * @brief Read a finite floating-point setting.
+ *
+ * Algorithm:
+ *   Convert the string and reject trailing characters or non-finite values.
+ *
+ * @param k Numeric configuration key.
+ *
+ * @return Finite double; throws on invalid numeric input.
+ */
 double RunConfig::number(const std::string& k) const {
     std::size_t used = 0;
     double value = std::stod(get(k), &used);
     if (used != get(k).size() || !std::isfinite(value)) throw std::runtime_error("Invalid number: " + k);
     return value;
 }
+#pragma endregion
+
+// RunConfig::integer ----------------------------------------------------------------------
+
+#pragma region /* RunConfig::integer */
+/**
+ * @brief Read an unsigned integer setting.
+ *
+ * Algorithm:
+ *   Require decimal digits only, then convert with overflow checking.
+ *
+ * @param k Integer configuration key.
+ *
+ * @return Unsigned value; throws on malformed or out-of-range input.
+ */
 std::uint64_t RunConfig::integer(const std::string& k) const {
     const auto s = get(k);
     if (s.empty() || s.find_first_not_of("0123456789") != std::string::npos) throw std::runtime_error("Expected unsigned integer: " + k);
     return std::stoull(s);
 }
+#pragma endregion
+
+// RunConfig::validate ----------------------------------------------------------------------
+
+#pragma region /* RunConfig::validate */
+/**
+ * @brief Reject incompatible or invalid run settings before output creation.
+ *
+ * Algorithm:
+ *   1. Check output, counts, seeds, metadata and shared output options.
+ *   2. Validate the target against the external geometry map.
+ *   3. Require GST input or check channel-specific momentum and angular bounds.
+ *
+ * @param genie Select conversion-specific validation when true.
+ *
+ * @note No value; throws with the invalid setting or constraint.
+ */
 void RunConfig::validate(bool genie) const {
     if (get("output").empty()) throw std::runtime_error("--output is required; use a new run directory");
     if (number("beam-energy") <= 0) throw std::runtime_error("beam-energy must be positive");
@@ -141,6 +261,21 @@ void RunConfig::validate(bool genie) const {
     if (number("nucleon-p") <= 0 || number("nucleon-p-min") < 0 || number("nucleon-p-max") <= number("nucleon-p-min")) throw std::runtime_error("Invalid nucleon momentum bounds");
     if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) throw std::runtime_error("Invalid trigger angle");
 }
+#pragma endregion
+
+// jsonString ----------------------------------------------------------------------
+
+#pragma region /* jsonString */
+/**
+ * @brief Encode a string as a JSON string literal.
+ *
+ * Algorithm:
+ *   Escape quotes, backslashes and control characters, then enclose in quotes.
+ *
+ * @param s Unescaped configuration or provenance text.
+ *
+ * @return JSON-safe text including surrounding quotes.
+ */
 std::string jsonString(const std::string& s) {
     std::ostringstream out;
     out << '"';
@@ -155,6 +290,21 @@ std::string jsonString(const std::string& s) {
     out << '"';
     return out.str();
 }
+#pragma endregion
+
+// help ----------------------------------------------------------------------
+
+#pragma region /* help */
+/**
+ * @brief Describe CLI options for the selected application.
+ *
+ * Algorithm:
+ *   Combine shared option descriptions with workflow-specific usage.
+ *
+ * @param genie True for the conversion help page.
+ *
+ * @return Usage text; does not print or execute a workflow.
+ */
 std::string help(bool genie) {
     std::string result = genie ? "clas12-genie-to-lund --input 'gst*.root' --output NEW_DIRECTORY\n" : "clas12-uniform --channel 1e|ep|en --output NEW_DIRECTORY\n";
     result +=
@@ -169,4 +319,6 @@ std::string help(bool genie) {
             "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
     return result;
 }
+#pragma endregion
+
 }  // namespace samples

@@ -1,3 +1,14 @@
+/**
+ * @file legacy_uniform_driver.cpp
+ * @brief Maintained test adapter for archived uniform kernels.
+ *
+ * Purpose:
+ *   Supply controlled streams and seeds to the read-only archive; never invoke its cleanup launchers.
+ *
+ * Workflow:
+ *   CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+ */
+
 // Test-only adapter: execute the archived event kernels, never the launch/cleanup scripts.
 #include <TFile.h>
 #include <TRandom3.h>
@@ -14,6 +25,20 @@ using namespace std;
 #include "legacy/Uniform-sample-generator/Generate_uniform_event.C"
 #include "legacy/Uniform-sample-generator/Generate_uniform_event_e_tester.C"
 #include "legacy/Uniform-sample-generator/Histograms.cpp"
+// main ----------------------------------------------------------------------
+
+#pragma region /* main */
+/**
+ * @brief Maintained test adapter for archived uniform kernels.
+ *
+ * Algorithm:
+ *   Supply controlled streams and seeds to the read-only archive; never invoke its cleanup launchers.
+ *
+ * @param argc Number of executable arguments.
+ * @param argv Paths and options supplied by the caller.
+ *
+ * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ */
 int main(int argc, char** argv) {
     if (argc != 9) return 2;
     const string channel = argv[1], output = argv[2], target = argv[8];
@@ -49,3 +74,4 @@ int main(int argc, char** argv) {
         h->Write();
     }
 }
+#pragma endregion

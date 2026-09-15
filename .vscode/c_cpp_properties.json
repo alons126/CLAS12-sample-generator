@@ -1,4 +1,13 @@
+// c_cpp_properties.json -------------------------------------------------------
+// Description: Configure C/C++ editor navigation for this checkout.
+// Purpose: Read the actual Debug compiler flags and include paths from CMake.
+// Workflow: Configure/build Debug -> CMake emits compile_commands.json -> the editor reads it.
+// Inputs: The workspace folder and build/debug/compile_commands.json.
+// Outputs: Editor IntelliSense/navigation settings; no compiler or runtime behavior changes.
+// Notes: This VS Code configuration accepts comments. Schema version 4 belongs to this file format.
 {
+    // region CMake-backed editor configuration
+    // compileCommands supplies per-file build settings; includePath supplies the project include root.
     "configurations": [
         {
             "name": "CMake",
@@ -6,5 +15,8 @@
             "includePath": ["${workspaceFolder}/src"]
         }
     ],
+    // endregion
+
+    // Configuration-file schema version (not the project version).
     "version": 4
 }

@@ -1,4 +1,14 @@
-"""Validate dry runs, exact event counts, Slurm planning and failure propagation."""
+"""Test simulation and submission planning with executable stubs.
+
+Purpose:
+    Check exact event counts, dry runs, quoting and failure propagation without real detector software.
+
+Workflow:
+    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+
+Notes:
+    Test fixtures are isolated; protected external and legacy sources are read-only.
+"""
 import json
 import os
 from pathlib import Path
@@ -7,13 +17,30 @@ import sys
 import tempfile
 
 
+# call --------------------------------------------------------------------
+# region call
 def call(*args, ok=True):
+    """Execute a simulation-test command and check its status.
+
+    Algorithm:
+        Capture output and compare the return code with the expected success flag.
+
+    Args:
+        args: Executable and arguments.
+        ok: Whether zero exit is expected.
+
+    Returns:
+        Captured subprocess result.
+    """
     r = subprocess.run([str(a) for a in args], text=True, capture_output=True)
     assert (r.returncode==0)==ok, r.stdout+r.stderr
     return r
+# endregion
 
 
 exe, project = sys.argv[1], Path(sys.argv[2])
+# Test execution ------------------------------------------------
+# region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     root=Path(tmp)
     output=root/'run with spaces'
@@ -46,3 +73,5 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     assert not (output/'reconhipo/recon_2.hipo').exists()
     assert (output/'simulation/2.lock').exists()
 print('simulation integration passed')
+
+# endregion

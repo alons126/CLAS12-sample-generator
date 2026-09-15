@@ -1,4 +1,14 @@
-"""Check the sourced SSH launcher without contacting a remote or running GEMC."""
+"""Check sourced and executed SSH launcher behavior.
+
+Purpose:
+    Exercise quoting, shell survival, settings, build calls and updates using isolated local fixtures.
+
+Workflow:
+    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+
+Notes:
+    Test fixtures are isolated; protected external and legacy sources are read-only.
+"""
 import hashlib
 import json
 import os
@@ -11,16 +21,36 @@ import tempfile
 project, shell, build = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
 
 
+# sourced --------------------------------------------------------------------
+# region sourced
 def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
     # Values are argv entries to tcsh, not interpolated shell source text.
+    """Exercise a wrapper inside a sourced tcsh session.
+
+    Algorithm:
+        Pass arguments through shell argv, source the wrapper, then check shell survival and exit status.
+
+    Args:
+        args: Launcher argument list.
+        cwd: Invocation directory.
+        env: Optional subprocess environment.
+        success: Expected success flag.
+        entry: Checkout-relative wrapper path.
+
+    Returns:
+        Captured result; quoting, shell-exit or status mismatches raise an assertion.
+    """
     program = 'source "$argv[1]" $argv[2-]:q; set result=$status; echo "RESULT=$result"; echo SHELL_ALIVE; /bin/sh -c "exit $result"'
     result = subprocess.run([shell, '-f', '-c', program, str(project/entry), *map(str,args)], cwd=cwd,
                             env=env, text=True, capture_output=True)
     assert ('SHELL_ALIVE' in result.stdout), result.stdout+result.stderr
     assert (result.returncode==0)==success, result.stdout+result.stderr
     return result
+# endregion
 
 
+# Test execution ------------------------------------------------
+# region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     root=Path(tmp).resolve()
     output=root/'output with spaces'
@@ -67,3 +97,5 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     assert result.returncode!=0 and sentinel.read_text()=='keep'
     assert 'local changes' in result.stderr
 print('Sourced/executed SSH launchers, shell survival, profiles, build commands and safe update passed.')
+
+# endregion

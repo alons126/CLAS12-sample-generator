@@ -1,4 +1,14 @@
-"""Compare executable legacy output against the production CLIs with controlled inputs."""
+"""Compare new outputs to controlled archived reference runs.
+
+Purpose:
+    Check exact LUND bytes and numerical histograms while identifying the short-input correction.
+
+Workflow:
+    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+
+Notes:
+    Test fixtures are isolated; protected external and legacy sources are read-only.
+"""
 import json
 from pathlib import Path
 import subprocess
@@ -6,22 +16,53 @@ import sys
 import tempfile
 
 
+# run --------------------------------------------------------------------
+# region run
 def run(*args):
+    """Run a parity-test command with captured diagnostics.
+
+    Algorithm:
+        Execute the supplied argv list and require success.
+
+    Args:
+        args: Executable and arguments.
+
+    Returns:
+        Captured subprocess result; failure raises an assertion.
+    """
     result = subprocess.run([str(a) for a in args], capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr
     return result
+# endregion
 
 
+# compare --------------------------------------------------------------------
+# region compare
 def compare(actual, expected):
+    """Require byte-identical new and reference LUND files.
+
+    Algorithm:
+        Compare bytes; on disagreement identify the first differing line or line-count mismatch.
+
+    Args:
+        actual: New output path.
+        expected: Archived-reference output path.
+
+    Returns:
+        None; mismatches raise an assertion with file context.
+    """
     a, e = actual.read_bytes(), expected.read_bytes()
     if a != e:
         al, el = a.decode().splitlines(), e.decode().splitlines()
         for i, (x,y) in enumerate(zip(al,el),1):
             assert x == y, f'{actual.name}, line {i}: new={x!r}; legacy={y!r}'
         raise AssertionError(f'{actual}: new {len(al)} lines vs legacy {len(el)} lines')
+# endregion
 
 
 mode, current, legacy = sys.argv[1:4]
+# Test execution ------------------------------------------------
+# region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
     root = Path(temp)
     if mode == 'uniform':
@@ -68,3 +109,5 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         assert len(old)==8 and m['written_events']==6
         print('Confirmed intentional difference: legacy short-input truncation writes 1 event; new writes all 6 accepted events.')
 print(mode+' legacy LUND parity passed')
+
+# endregion

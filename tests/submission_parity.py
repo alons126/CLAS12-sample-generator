@@ -1,4 +1,14 @@
-"""Execute legacy Bash payloads only with fake GEMC/reconstruction, compare argv."""
+"""Compare archived and current detector-job arguments.
+
+Purpose:
+    Run historical payloads with fake executables in temporary directories; never submit real jobs.
+
+Workflow:
+    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+
+Notes:
+    Test fixtures are isolated; protected external and legacy sources are read-only.
+"""
 import json
 import os
 from pathlib import Path
@@ -7,6 +17,8 @@ import sys
 import tempfile
 
 project=Path(sys.argv[1])
+# Test execution ------------------------------------------------
+# region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-job-parity-') as tmp:
     root=Path(tmp).resolve()
     fake=root/'bin';fake.mkdir()
@@ -46,3 +58,5 @@ pathlib.Path(path).write_text('stub output')
                 logs.append([[arg.replace(str(run),'<RUN>') for arg in json.loads(line)] for line in log.read_text().splitlines()])
             assert logs[0]==logs[1],(workflow,label,logs)
 print('Legacy/new GEMC and reconstruction argv match for both workflows and all three energies.')
+
+# endregion

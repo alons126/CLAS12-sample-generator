@@ -1,8 +1,33 @@
+/**
+ * @file uniform_main.cpp
+ * @brief Uniform-generator command-line entry point.
+ *
+ * Purpose:
+ *   Translate CLI settings into one generation call and a process exit status.
+ *
+ * Workflow:
+ *   Help returns immediately; otherwise parse -> generateUniform -> report success or caught failure.
+ */
+
 #include <exception>
 #include <iostream>
 #include <string>
 
 #include "uniform/UniformGenerator.h"
+// main ----------------------------------------------------------------------
+
+#pragma region /* main */
+/**
+ * @brief Uniform-generator command-line entry point.
+ *
+ * Algorithm:
+ *   Translate CLI settings into one generation call and a process exit status.
+ *
+ * @param argc Number of executable arguments.
+ * @param argv Paths and options supplied by the caller.
+ *
+ * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ */
 int main(int argc, char** argv) {
     constexpr bool genie = false;
     try {
@@ -17,3 +42,4 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+#pragma endregion

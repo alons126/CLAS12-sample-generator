@@ -1,4 +1,15 @@
+// settings.json ---------------------------------------------------------------
+// Description: Workspace editor presentation, language detection and highlighting.
+// Purpose: Make the maintained source and its named regions easier to read in VS Code.
+// Workflow: VS Code opens the workspace and applies these settings locally.
+// Inputs: Filename patterns, language identifiers and installed editor extensions.
+// Outputs: Editor behavior only; these values do not configure CMake targets or sample physics.
+// Notes: This is JSONC (comments/trailing commas supported). Extension-specific keys
+//        take effect only when the corresponding extension is installed.
 {
+    // Language associations ----------------------------------------------------
+    // region Language associations
+    // Preserve the existing filename-to-language map, including inherited analyzer labels.
     "files.associations": {
         "*.gcard": "xml",
         "*.cpp": "cpp",
@@ -204,17 +215,24 @@
         "*.csh": "shellscript",
         "*.tcsh": "shellscript"
     },
+    // endregion
+
+    // Formatting and navigation ------------------------------------------------
+    // region Formatting and navigation
+    // JSONC uses the built-in formatter; shell formatting on save is disabled.
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
     "[shellscript]": {
         "editor.formatOnSave": false,
     },
+    // Wrap long source lines; control fold markers and tree indentation.
     "editor.wordWrapColumn": 200,
     "editor.wordWrap": "on",
     "betterFolding.foldClosingBrackets": true,
     "betterFolding.showFoldedBrackets": true,
     "workbench.tree.indent": 20,
+    // Preserve disabled squiggles and opt-in CMake configure behavior.
     "C_Cpp.errorSquiggles": "disabled",
     "cmake.configureOnEdit": false,
     "cmake.configureOnOpen": false,
@@ -223,6 +241,11 @@
     // "shellformat.flag": "-i 4",
     // "betterFolding.showFoldedBodyLinesCount": false,
     // "betterFolding.showFoldedBrackets": true
+    // endregion
+
+    // Source explanation highlights --------------------------------------------
+    // region Source explanation highlights
+    // Each entry selects a literal token and its foreground/background/border colors.
     "todohighlight.keywords": [
         {
             "text": "// TODO:",
@@ -233,17 +256,21 @@
         {
             "text": "db::CodeDebugger",
             "color": "#FFFFFF",
-            "backgroundColor": "#00B0F0""border": "0.5px solid #FFFFFF"
+            "backgroundColor": "#00B0F0",
+            "border": "0.5px solid #FFFFFF"
         },
         {
             "text": "#pragma region",
             "color": "#FFFFFF",
-            "backgroundColor": "#008000""border": "0.5px solid #FFFFFF"
+            "backgroundColor": "#008000",
+            "border": "0.5px solid #FFFFFF"
         },
         {
             "text": "#pragma endregion",
             "color": "#FFFFFF",
-            "backgroundColor": "#EE6B6E""border": "0.5px solid #FFFFFF"
+            "backgroundColor": "#EE6B6E",
+            "border": "0.5px solid #FFFFFF"
         }
     ]
+    // endregion
 }

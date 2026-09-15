@@ -1,3 +1,14 @@
+/**
+ * @file LundWriter.cpp
+ * @brief LUND serialization and completed-run manifests.
+ *
+ * Purpose:
+ *   Write shared event records in legacy or precise format without overwriting existing runs.
+ *
+ * Workflow:
+ *   Claim directory -> rotate files as needed -> write particles -> close -> publish manifest.
+ */
+
 #include "common/LundWriter.h"
 
 #include <TROOT.h>
@@ -9,6 +20,20 @@
 
 #include "Version.h"
 namespace samples {
+// LundWriter::LundWriter ----------------------------------------------------------------------
+
+#pragma region /* LundWriter::LundWriter */
+/**
+ * @brief Claim a new run directory and cache output limits.
+ *
+ * Algorithm:
+ *   Cache settings, create parent directories, then exclusively create the run and LUND directory.
+ *
+ * @param c Validated configuration; must outlive this writer.
+ * @param workflow Manifest workflow label, uniform or genie.
+ *
+ * @note Constructor; existing run directories and filesystem failures throw.
+ */
 LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     : config_(c),
       workflow_(std::move(workflow)),
@@ -21,10 +46,45 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     if (!std::filesystem::create_directory(directory_)) throw std::runtime_error("Output already exists: " + directory_.string());
     std::filesystem::create_directory(directory_ / "lundfiles");
 }
+#pragma endregion
+
+// LundWriter::full ----------------------------------------------------------------------
+
+#pragma region /* LundWriter::full */
+/**
+ * @brief Test whether the configured event capacity has been reached.
+ *
+ * Algorithm:
+ *   Compare the written count with files multiplied by events per file.
+ *
+ * @return True when no further event may be written.
+ */
 bool LundWriter::full() const { return count_ >= capacity_; }
+#pragma endregion
+
+// LundWriter::write ----------------------------------------------------------------------
+
+#pragma region /* LundWriter::write */
+/**
+ * @brief Serialize one event and advance file and run counts.
+ *
+ * Purpose:
+ *   Keep both generation workflows on one LUND serialization and file-splitting contract.
+ *
+ * Algorithm:
+ *   1. Reject capacity overflow and empty events.
+ *   2. Rotate to a new file only when needed.
+ *   3. Write the selected header format and mass-shell particle records.
+ *   4. Advance counts after successful serialization.
+ *
+ * @param e Event containing metadata and particles in GeV and cm.
+ *
+ * @note No value; output failures leave partial files for inspection.
+ */
 void LundWriter::write(const Event& e) {
     if (full()) throw std::runtime_error("Run file limit reached");
     if (e.particles.empty()) throw std::runtime_error("Cannot write an empty event");
+    // Open a new file only when the next event actually needs one.
     if (files_.empty() || files_.back().events == events_per_file_) {
         if (stream_.is_open()) stream_.close();
         files_.push_back({"lundfiles/" + config_.get("prefix") + "_" + std::to_string(files_.size() + 1) + ".txt", 0});
@@ -32,6 +92,7 @@ void LundWriter::write(const Event& e) {
         stream_.open(directory_ / files_.back().path);
         stream_ << std::setprecision(10);
     }
+    // Preserve archived header precision and numbering when legacy output is selected.
     if (legacy_format_) {
         const auto id = static_cast<unsigned long long>(workflow_ == "uniform" ? files_.back().events : e.id);
         const bool nucleon = workflow_ == "uniform" && config_.get("channel") != "1e";
@@ -41,6 +102,7 @@ void LundWriter::write(const Event& e) {
     } else {
         stream_ << e.particles.size() << ' ' << e.A << ' ' << e.Z << ' ' << e.resonance_id << " 0 11 " << e.beam_energy << " 1 " << e.id << ' ' << e.weight << '\n';
     }
+    // Derive mass-shell energies and emit fourteen fields per particle.
     int index = 0;
     for (const auto& p : e.particles) {
         const double energy = std::sqrt(p.mass * p.mass + p.momentum.Mag2());
@@ -56,8 +118,24 @@ void LundWriter::write(const Event& e) {
     ++files_.back().events;
     ++count_;
 }
+#pragma endregion
+
+// LundWriter::finish ----------------------------------------------------------------------
+
+#pragma region /* LundWriter::finish */
+/**
+ * @brief Publish the completed-run manifest.
+ *
+ * Algorithm:
+ *   Close LUND output; write settings, provenance and counts to a temporary manifest; rename it into place.
+ *
+ * @param scanned Number of input events examined, including events rejected by conversion.
+ *
+ * @note No value; call only after diagnostic outputs have succeeded.
+ */
 void LundWriter::finish(std::uint64_t scanned) {
     if (stream_.is_open()) stream_.close();
+    // Write completion metadata to a temporary file so consumers never see a partial manifest.
     std::ofstream manifest;
     manifest.exceptions(std::ios::badbit | std::ios::failbit);
     manifest.open(directory_ / "manifest.json.tmp");
@@ -79,4 +157,6 @@ void LundWriter::finish(std::uint64_t scanned) {
     manifest.close();
     std::filesystem::rename(directory_ / "manifest.json.tmp", directory_ / "manifest.json");
 }
+#pragma endregion
+
 }  // namespace samples

@@ -1,3 +1,14 @@
+/**
+ * @file Monitoring.cpp
+ * @brief Common momentum, angle and vertex diagnostics.
+ *
+ * Purpose:
+ *   Allocate per-PDG ROOT histograms on first use and persist their numerical contents.
+ *
+ * Workflow:
+ *   Create detached histograms -> fill particle quantities -> write a new ROOT file.
+ */
+
 #include "common/Monitoring.h"
 
 #include <TFile.h>
@@ -9,20 +20,77 @@
 #include <map>
 #include <stdexcept>
 namespace samples {
+// Monitoring::Impl object ------------------------------------------------
+#pragma region /* Monitoring::Impl object */
+/**
+ * @struct Monitoring::Impl
+ * @brief Private run-local storage for common diagnostic histograms.
+ *
+ * Purpose: keep ROOT implementation details out of the public Monitoring header.
+ * Lifecycle: constructor stores beam; fill lazily inserts a Plots record per PDG; save reads
+ * all records. Monitoring owns this object and releases the detached histograms at destruction.
+ */
 struct Monitoring::Impl {
-    double beam;
+    double beam;  ///< Beam energy in GeV, used to choose momentum-axis ranges.
+    // Plots object ------------------------------------------------
+#pragma region /* Plots object */
+    /**
+     * @struct Plots
+     * @brief Owned histogram family for one PDG species.
+     *
+     * Usage: fill allocates every pointer together when the species first appears.
+     * Histograms are detached from ROOT directories; unique_ptr controls their lifetime.
+     * Momentum is in GeV, theta/phi in degrees, and vertex coordinates in cm.
+     */
     struct Plots {
-        std::unique_ptr<TH1D> p, theta, phi, vx, vy, vz;
+        std::unique_ptr<TH1D> p, theta, phi, vx, vy, vz;  ///< One-dimensional particle quantities.
+        // Names are y_vs_x: e.g. theta_phi is filled with (phi, theta).
         std::unique_ptr<TH2D> theta_phi, theta_p, phi_p;
     };
-    std::map<int, Plots> plots;
+#pragma endregion
+    std::map<int, Plots> plots;  ///< PDG-keyed families, allocated only for observed species.
 };
+#pragma endregion
+// Monitoring::Monitoring ----------------------------------------------------------------------
+
+#pragma region /* Monitoring::Monitoring */
+/**
+ * @brief Initialize run-local diagnostic storage.
+ *
+ * Algorithm:
+ *   Allocate an implementation object and store the beam scale for histogram axes.
+ *
+ * @param beam Beam energy in GeV.
+ *
+ * @note Constructor; histograms are allocated when each PDG is first observed.
+ */
 Monitoring::Monitoring(double beam) : impl_(std::make_unique<Impl>()) { impl_->beam = beam; }
+#pragma endregion
+
+// Monitoring destruction ------------------------------------------------------
+#pragma region /* Histogram destruction */
+/** @brief Release the run-owned diagnostic implementation and its detached ROOT objects. */
 Monitoring::~Monitoring() = default;
+#pragma endregion
+
+// Monitoring::fill ----------------------------------------------------------------------
+
+#pragma region /* Monitoring::fill */
+/**
+ * @brief Record every written particle in common diagnostics.
+ *
+ * Algorithm:
+ *   Create detached histograms for new PDGs, then fill momenta, angles, vertices and correlations.
+ *
+ * @param event Successfully written event.
+ *
+ * @note No value; histogram contents accumulate within this run.
+ */
 void Monitoring::fill(const Event& event) {
     for (const auto& particle : event.particles) {
         auto [it, inserted] = impl_->plots.try_emplace(particle.pid);
         auto& h = it->second;
+        // Allocate detached ROOT histograms only when this PDG first appears.
         if (inserted) {
             const auto prefix = "pid_" + std::to_string(particle.pid) + "_";
             auto one = [&](const char* name, double lo, double hi) {
@@ -45,6 +113,7 @@ void Monitoring::fill(const Event& event) {
             h.theta_p = two("theta_vs_p", 0, impl_->beam * 1.1, 0, 180);
             h.phi_p = two("phi_vs_p", 0, impl_->beam * 1.1, -180, 180);
         }
+        // Convert angles to degrees and retain momentum/vertex units from the event.
         double p = particle.momentum.Mag(), theta = particle.momentum.Theta() * TMath::RadToDeg(), phi = particle.momentum.Phi() * TMath::RadToDeg();
         h.p->Fill(p);
         h.theta->Fill(theta);
@@ -57,6 +126,21 @@ void Monitoring::fill(const Event& event) {
         h.phi_p->Fill(p, phi);
     }
 }
+#pragma endregion
+
+// Monitoring::save ----------------------------------------------------------------------
+
+#pragma region /* Monitoring::save */
+/**
+ * @brief Write the common diagnostic ROOT file.
+ *
+ * Algorithm:
+ *   Create a new file, write every owned histogram, check write status, and close.
+ *
+ * @param path Destination ROOT file.
+ *
+ * @note No value; creation or histogram write failures throw.
+ */
 void Monitoring::save(const std::filesystem::path& path) {
     TFile out(path.string().c_str(), "CREATE");
     if (out.IsZombie()) throw std::runtime_error("Cannot create monitoring ROOT file");
@@ -68,4 +152,6 @@ void Monitoring::save(const std::filesystem::path& path) {
     }
     out.Close();
 }
+#pragma endregion
+
 }  // namespace samples

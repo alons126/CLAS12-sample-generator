@@ -1,4 +1,14 @@
-"""End-to-end checks of emitted LUND data, not generator internals."""
+"""Check generator and converter output contracts.
+
+Purpose:
+    Inspect emitted LUND records, manifests, deterministic seeds and rejected inputs.
+
+Workflow:
+    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+
+Notes:
+    Test fixtures are isolated; protected external and legacy sources are read-only.
+"""
 import json
 import math
 from pathlib import Path
@@ -7,14 +17,42 @@ import sys
 import tempfile
 
 
+# run --------------------------------------------------------------------
+# region run
 def run(*args, ok=True):
+    """Run a test command and check its expected status.
+
+    Algorithm:
+        Enable precise output for normal generator calls, capture diagnostics, and assert the expected result.
+
+    Args:
+        args: Executable and arguments.
+        ok: Whether successful exit is expected.
+
+    Returns:
+        Captured subprocess result.
+    """
     args = (*args, "--lund-format", "precise") if str(args[0]) == executable and "--help" not in args else args
     result = subprocess.run([str(x) for x in args], capture_output=True, text=True)
     assert (result.returncode == 0) == ok, result.stdout + result.stderr
     return result
+# endregion
 
 
+# read_run --------------------------------------------------------------------
+# region read_run
 def read_run(directory):
+    """Read a completed run and verify LUND structural invariants.
+
+    Algorithm:
+        Read the manifest, parse every header and particle record, and check counts and particle energies.
+
+    Args:
+        directory: Generated run directory.
+
+    Returns:
+        Manifest and parsed event collection; malformed output raises an assertion.
+    """
     manifest = json.loads((directory / 'manifest.json').read_text())
     events = []
     for entry in manifest['files']:
@@ -36,15 +74,32 @@ def read_run(directory):
     assert len(events) == manifest['written_events']
     assert (directory / 'monitoring.root').stat().st_size > 0
     return manifest, events
+# endregion
 
 
+# angles --------------------------------------------------------------------
+# region angles
 def angles(particle):
+    """Recover polar and azimuthal angles from a particle record.
+
+    Algorithm:
+        Convert the Cartesian momentum to degrees using polar and azimuthal formulas.
+
+    Args:
+        particle: Parsed fourteen-field LUND particle record.
+
+    Returns:
+        Polar and azimuthal angles in degrees.
+    """
     x,y,z = particle[6:9]
     p = math.sqrt(x*x+y*y+z*z)
     return p, math.degrees(math.acos(z/p)), math.degrees(math.atan2(y,x))
+# endregion
 
 
 mode, executable = sys.argv[1:3]
+# Test execution ------------------------------------------------
+# region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
     root = Path(temp)
     run(executable, '--help')
@@ -132,3 +187,5 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert not (root/'chain-output/manifest.json').exists()
 
 print(mode+' integration passed')
+
+# endregion
