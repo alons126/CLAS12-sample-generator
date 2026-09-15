@@ -400,7 +400,7 @@ def main():
     if config['run']:
         if workflow in ('uniform', 'genie'):
             app = 'clas12-uniform' if workflow == 'uniform' else 'clas12-genie-to-lund'
-            message = f"Generating LUND files in {app} mode"
+            message = f"Generating LUND files in '{COLOR_END}{app}{COLOR_START}' mode"
 
             print(f"{COLOR_START}===================================================================================================={COLOR_END}")
             print(f"{COLOR_START}= {message:<96} ={COLOR_END}")
