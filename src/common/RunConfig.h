@@ -40,14 +40,19 @@ class RunConfig {
    public:
     /** @brief Merge and validate options; genie selects the conversion option set. */
     static RunConfig parse(int argc, char** argv, bool genie);
+
     /** @brief Return a known setting as text; a missing key throws. */
     std::string get(const std::string& key) const;
+
     /** @brief Convert a setting to a finite double, rejecting trailing text. */
     double number(const std::string& key) const;
+
     /** @brief Convert decimal digits to an unsigned integer with overflow checks. */
     std::uint64_t integer(const std::string& key) const;
+
     /** @brief Expose resolved settings by const reference for provenance serialization. */
     const std::map<std::string, std::string>& values() const { return values_; }
+    
     /** @brief Check shared and workflow-specific constraints; throw before output creation. */
     void validate(bool genie) const;
 
