@@ -2,7 +2,7 @@
 
 One compiled project for two sources of CLAS12 simulation input:
 
-- **Uniform samples** for acceptance-map studies: electron, electron–proton and electron–neutron channels.
+- **Uniform samples** for acceptance-map studies: $(e,e')$, $(e,e'pFD)$, $(e,e'nFD)$ samples.
 - **Physical samples**: conversion of existing GENIE `gst` ROOT trees to LUND.
 
 Both write LUND files and a run manifest. The same runner sends those files through GEMC and reconstruction, locally or through Slurm. This repository does not run the GENIE event generator itself or calculate final acceptance maps.

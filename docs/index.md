@@ -5,8 +5,8 @@ This project prepares events for CLAS12 detector simulation. It brings together 
 ## The stages
 
 ```text
-Uniform sampling ------------------+
-                                   +--> LUND --> GEMC --> reconstructed HIPO
+Uniform sampling -------------------+
+                                    +--> LUND --> GEMC (Slurm) --> COATJAVA reconstruction (Slurm) --> reconstructed HIPO files for analyses
 Existing GENIE GST --> conversion --+
 ```
 
