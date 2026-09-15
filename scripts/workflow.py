@@ -358,6 +358,8 @@ def main():
         execute(['cmake', '-S', str(ROOT), '-B', str(build), '-DCMAKE_BUILD_TYPE='+config['build_type'],
                  '-DBUILD_UNIFORM=ON', '-DBUILD_GENIE=ON', '-DBUILD_TESTING='+('ON' if config['test'] else 'OFF')])
         execute(['cmake', '--build', str(build), '--parallel', str(config['jobs'])])
+
+        print()
     
     # Tests must succeed before the selected workflow can run.
     if config['test']:
@@ -372,6 +374,8 @@ def main():
             raise RuntimeError('Tests are not configured; use --build true --test true')
         
         execute(['ctest', '--test-dir', str(build), '--output-on-failure'])
+        
+        print()
     
     # Dispatch exactly one workflow; generation does not automatically launch GEMC.
     if config['run']:
