@@ -27,7 +27,7 @@ echo "${COLOR_START}= Updating environment                                      
 echo "${COLOR_START}====================================================================================================${COLOR_END}"
 echo ""
 
-source set_colors.csh
+source ./scripts/environment/set_colors.csh
 
 # Section header
 

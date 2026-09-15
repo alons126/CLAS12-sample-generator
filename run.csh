@@ -24,12 +24,12 @@
 
 # Initial setup ----------------------------------------------------------------
 
-# Terminal color escape sequences used for formatted output messages.
-set SET_COLORS_FILE = ./scripts/environment/set_environment.csh
-if (-f ${SET_COLORS_FILE}) then
-    source ${SET_COLORS_FILE}
+# Set environment.
+set SET_ENVIRONMENT_FILE = ./scripts/environment/set_environment.csh
+if (-f ${SET_ENVIRONMENT_FILE}) then
+    source ${SET_ENVIRONMENT_FILE}
 else
-    printf "${COLOR_START}-->${COLOR_END} %s%s%s\n" "${COLOR_ERROR_START}Error:${COLOR_END}" " the following file does not exist: ${SET_COLORS_FILE}"
+    printf "${COLOR_START}-->${COLOR_END} %s%s%s\n" "${COLOR_ERROR_START}Error:${COLOR_END}" " the following file does not exist: ${SET_ENVIRONMENT_FILE}"
     exit 1
 endif
 
