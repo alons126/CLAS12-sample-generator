@@ -37,8 +37,8 @@ DEFAULTS = {
 WORKFLOWS = ('uniform', 'genie', 'simulate', 'submit')
 # endregion
 
-COLOR_START = os.environ.get("COLOR_START", "")
-COLOR_END = os.environ.get("COLOR_END", "")
+COLOR_START = os.environ.get("COLOR_START", "").replace(r"\033", "\033")
+COLOR_END = os.environ.get("COLOR_END", "").replace(r"\033", "\033")
 
 
 # boolean --------------------------------------------------------------------
