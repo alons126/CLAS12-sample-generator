@@ -266,10 +266,9 @@ def execute(command):
     formatted_command = " \\\n    ".join(lines)
 
     print(f"{COLOR_INFO}Executing command:{COLOR_END}\n{formatted_command}", flush=True)
-    
-    subprocess.run(command, cwd=ROOT, check=True)
-    
     print()
+
+    subprocess.run(command, cwd=ROOT, check=True)
 # endregion
 
 
