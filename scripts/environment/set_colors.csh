@@ -1,4 +1,3 @@
-
 #!/bin/tcsh
 
 # Reset color variables to ensure predictable behavior
