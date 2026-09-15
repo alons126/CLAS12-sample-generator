@@ -8,7 +8,8 @@
   "build_type": "Release",
   "jobs": 4,
   "arguments": {
-    "uniform": ["--config", "config/samples/uniform-electron.conf", "--output", "runs"],
+    "uniform": ["--config", "config/samples/uniform-electron.conf", "--output", "/lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples"],
+    // "uniform": ["--config", "config/samples/uniform-electron.conf", "--output", "runs"],
     "genie": ["--config", "config/samples/genie.conf"],
     "simulate": [],
     "submit": []
