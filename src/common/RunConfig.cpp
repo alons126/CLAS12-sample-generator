@@ -63,11 +63,11 @@ std::string trim(std::string s) {
  *
  * @param argc Number of CLI tokens.
  * @param argv CLI tokens including executable name.
- * @param genie True for GST conversion, false for uniform generation.
+ * @param uniform True for uniform generation, false for a conversion workflow.
  *
  * @return Validated settings; throws on malformed options or invalid physical bounds.
  */
-RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
+RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */
     // Install shared defaults before workflow-specific options.
     RunConfig c;
@@ -83,11 +83,9 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
                  {"mass-convention", "legacy"},
                  {"render-plots", "false"},
                  {"vertex-seed", "12345"},
-                 {"prefix", genie ? "GENIE_sample" : "Uniform_sample"}};
+                 {"prefix", uniform ? "Uniform_sample" : "GENIE_sample"}};
 
-    if (genie) {
-        c.values_.insert({{"input", ""}});
-    } else {
+    if (uniform) {
         c.values_.insert({{"channel", "1e"},
                           {"electron-theta-min", "5"},
                           {"electron-theta-max", "40"},
@@ -101,6 +99,8 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
                           {"electron-momentum", "uniform"},
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
+    } else {
+        c.values_.insert({{"input", ""}});
     }
 
     auto assign = [&](const std::string& k, const std::string& v) {
@@ -164,7 +164,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
     // Apply explicit options last, then resolve channel and beam dependent defaults.
     for (const auto& [k, v] : overrides) assign(k, v);
 
-    if (!genie) {
+    if (uniform) {
         if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
         if (c.get("nucleon-p-max") == "auto") c.values_["nucleon-p-max"] = c.get("beam-energy");
         if (c.get("trigger-phi-offset") == "auto") {
@@ -173,15 +173,21 @@ RunConfig RunConfig::parse(int argc, char** argv, bool genie) {
         }
     }
 
-    if (!genie) {
+    if (uniform) {
         if (c.get("nucleon-momentum") == "sampled") c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform";
         if (c.get("nucleon-angle") == "auto") c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta";
     }
 
     // Validate before normalizing paths or allowing downstream output creation.
-    c.validate(genie);
+    c.validate(uniform);
 
-    if (genie && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
+    if (!uniform && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
+
+    if (uniform) {
+        std::ostringstream directory;
+        directory << "Uniform_sample_" << c.get("channel") << '_' << std::setw(4) << std::setfill('0') << std::llround(c.number("beam-energy") * 1000.0) << "MeV";
+        c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
+    }
 
     c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
 
@@ -261,11 +267,11 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
  *   2. Validate the target against the external geometry map.
  *   3. Require GST input or check channel-specific momentum and angular bounds.
  *
- * @param genie Select conversion-specific validation when true.
+ * @param uniform Select uniform-generation validation when true.
  *
  * @note No value; throws with the invalid setting or constraint.
  */
-void RunConfig::validate(bool genie) const {
+void RunConfig::validate(bool uniform) const {
     if (get("output").empty()) { throw std::runtime_error("--output is required; use a new run directory"); }
     if (number("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
     for (auto k : {"files", "events-per-file", "seed", "vertex-seed"}) {
@@ -282,7 +288,7 @@ void RunConfig::validate(bool genie) const {
 
     TargetGeometry::validate(get("target"));
 
-    if (genie) {
+    if (!uniform) {
         if (get("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
         return;
     }
@@ -346,19 +352,19 @@ std::string jsonString(const std::string& s) {
  * Algorithm:
  *   Combine shared option descriptions with workflow-specific usage.
  *
- * @param genie True for the conversion help page.
+ * @param uniform True for the uniform-generation help page.
  *
  * @return Usage text; does not print or execute a workflow.
  */
-std::string help(bool genie) {
-    std::string result = genie ? "clas12-genie-to-lund --input 'gst*.root' --output NEW_DIRECTORY\n" : "clas12-uniform --channel 1e|ep|en --output NEW_DIRECTORY\n";
+std::string help(bool uniform) {
+    std::string result = uniform ? "clas12-uniform --channel 1e|ep|en --output NEW_DIRECTORY\n" : "clas12-genie-to-lund --input 'gst*.root' --output NEW_DIRECTORY\n";
     result +=
         "Settings: --config FILE, --beam-energy GeV, --target GEOMETRY, --A N, --Z N,\n"
         "--files N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
         "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
         "Files use key = value; CLI values override file settings. No automatic overwrite.\n";
 
-    if (!genie) {
+    if (uniform) {
         result +=
             "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
             "--electron-momentum uniform|beam, --nucleon-momentum fixed|sampled|uniform|mixed,\n"

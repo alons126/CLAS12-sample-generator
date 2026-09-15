@@ -5,8 +5,10 @@
 ```bash
 build/debug/apps/clas12-uniform \
   --config config/samples/uniform-electron.conf \
-  --events-per-file 100 --output runs/electron-example
+  --events-per-file 100 --output runs
 ```
+
+Uniform generation creates `Uniform_sample_<channel>_<beam-energy in MeV>`, padded to four MeV digits, below the supplied output directory. For example, this produces `runs/Uniform_sample_1e_5986MeV/lundfiles/`.
 
 Use `uniform-proton.conf` or `uniform-neutron.conf` for the two-particle modes. The file prefix is a label; the manifest carries the actual channel, energy and file counts.
 
@@ -30,7 +32,7 @@ Use an explicit neutron momentum scan:
 build/debug/apps/clas12-uniform \
   --config config/samples/uniform-neutron.conf \
   --nucleon-momentum sampled --nucleon-p-min 0.3 --nucleon-p-max 3 \
-  --output runs/neutron-momentum-scan
+  --output runs
 ```
 
 For the angular electron tester:
@@ -38,7 +40,7 @@ For the angular electron tester:
 ```bash
 build/debug/apps/clas12-uniform \
   --config config/samples/electron-tester.conf \
-  --output runs/angular-tester
+  --output runs
 ```
 
 This holds electron momentum at the beam value and fixes the vertex at the origin. `electron-momentum` affects only `1e`; the electron in `ep/en` is always the configured trigger. Nucleon settings do not affect `1e`.

@@ -37,13 +37,13 @@ namespace env = environment;
  * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
  */
 int main(int argc, char** argv) {
-    constexpr bool genie = true;
+    constexpr bool uniform = false;
     try {
         if (argc == 2 && std::string(argv[1]) == "--help") {
-            std::cout << samples::help(genie);
+            std::cout << samples::help(uniform);
             return 0;
         }
-        samples::convertGenie(samples::RunConfig::parse(argc, argv, genie));
+        samples::convertGenie(samples::RunConfig::parse(argc, argv, uniform));
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "Error: " << error.what() << '\n';

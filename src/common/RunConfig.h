@@ -38,8 +38,8 @@ namespace samples {
  */
 class RunConfig {
    public:
-    /** @brief Merge and validate options; genie selects the conversion option set. */
-    static RunConfig parse(int argc, char** argv, bool genie);
+    /** @brief Merge and validate options; uniform selects the uniform-generation option set. */
+    static RunConfig parse(int argc, char** argv, bool uniform);
 
     /** @brief Return a known setting as text; a missing key throws. */
     std::string get(const std::string& key) const;
@@ -54,7 +54,7 @@ class RunConfig {
     const std::map<std::string, std::string>& values() const { return values_; }
     
     /** @brief Check shared and workflow-specific constraints; throw before output creation. */
-    void validate(bool genie) const;
+    void validate(bool uniform) const;
 
     // Owned state --------------------------------------------------------------
    private:
