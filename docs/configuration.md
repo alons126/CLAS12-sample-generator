@@ -8,7 +8,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `output` | Required | New run directory; existing directories are rejected |
+| `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
 | `target` | `Ar` | Vertex geometry name, independent of A/Z |
 | `A`, `Z` | `1`, `1` | LUND nuclear metadata; require 1≤A≤300, 0≤Z≤A |

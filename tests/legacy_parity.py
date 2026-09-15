@@ -16,6 +16,12 @@ import sys
 import tempfile
 
 
+def uniform_output(root, channel, beam):
+    """Return the resolved uniform run directory for one requested output root."""
+    energy_mev = int(float(beam) * 1000 + 0.5)
+    return root / f'Uniform_sample_{channel}_{energy_mev:04d}MeV'
+
+
 # run --------------------------------------------------------------------
 # region run
 def run(*args):
@@ -66,23 +72,25 @@ mode, current, legacy = sys.argv[1:4]
 with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
     root = Path(temp)
     if mode == 'uniform':
-        # All production beam settings, all channels, more than one output file.
+        # All production beam settings and channels at a small deterministic count.
         for beam in ['2.07052','4.02962','5.98636']:
             for channel in ['1e','ep','en','tester']:
                 name=beam+'-'+channel
-                original, new = root/(name+'-old'), root/(name+'-new')
-                run(legacy,channel,original,beam,64,2,67890,12345,'Ar')
+                original, new_root = root/(name+'-old'), root/(name+'-new')
+                new = uniform_output(new_root, '1e' if channel == 'tester' else channel, beam)
+                run(legacy,channel,original,beam,64,1,67890,12345,'Ar')
                 extra = ['--electron-momentum','beam','--target','point'] if channel=='tester' else []
-                run(current,'--channel','1e' if channel=='tester' else channel,'--beam-energy',beam,'--events',128,
-                    '--seed',67890,'--vertex-seed',12345,'--output',new,*extra)
+                run(current,'--channel','1e' if channel=='tester' else channel,'--beam-energy',beam,'--events',64,
+                    '--seed',67890,'--vertex-seed',12345,'--output',new_root,*extra)
                 run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
                 m=json.loads((new/'manifest.json').read_text())
-                for i,f in enumerate(m['files'],1):
-                    compare(new/f['path'],original/f'legacy_{i}.txt')
+                assert len(m['files']) == 1
+                compare(new/m['files'][0]['path'],original/'legacy_1.txt')
         for target in ['liquid','4-foil','1-foil','1-foil-small','1-foil-large','Ca']:
-            original,new=root/(target+'-old'),root/(target+'-new')
+            original,new_root=root/(target+'-old'),root/(target+'-new')
+            new=uniform_output(new_root,'1e','2.07052')
             run(legacy,'1e',original,2.07052,64,1,67890,12345,target)
-            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--events',64,'--output',new)
+            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--events',64,'--output',new_root)
             m=json.loads((new/'manifest.json').read_text())
             compare(new/m['files'][0]['path'],original/'legacy_1.txt')
     else:

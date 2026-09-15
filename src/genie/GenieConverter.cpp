@@ -54,7 +54,7 @@ namespace samples {
  * @note No value; schema/read/output failures throw. Accepted partial final files are retained.
  */
 void convertGenie(const RunConfig& c) {
-    c.validate(true);
+    c.validate(false);
     LundWriter::printWorkflowSummary(c, "genie");
 #pragma region /* GST input preparation */
     // Validate the input chain before constructing any output products.

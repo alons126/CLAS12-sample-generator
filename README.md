@@ -18,15 +18,15 @@ ctest --preset debug
 
 build/debug/apps/clas12-uniform \
   --config config/samples/uniform-electron.conf \
-  --events-per-file 100 \
+  --events 100 \
   --output runs/first-electron
 ```
 
-The output directory must be new. Nothing runs `git clean`, deletes previous samples, or submits jobs as part of building or generating a sample.
+The resolved uniform run is written below `runs/first-electron/Uniform_sample_1e_5986MeV`. If that directory already exists, generation prints a warning, removes its previous contents and recreates it. Building and generation do not run `git clean` or submit jobs.
 
 The default LUND format preserves legacy text conventions; use `--lund-format precise` for higher precision. Fixed nucleon momentum is optional: `--nucleon-momentum sampled` selects the requested neutron/proton distributions.
 
-Open `runs/first-electron/manifest.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `monitoring.root`.
+Open `runs/first-electron/Uniform_sample_1e_5986MeV/manifest.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `monitoring.root`.
 
 ## Where to start
 

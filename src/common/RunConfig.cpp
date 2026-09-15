@@ -362,7 +362,7 @@ std::string help(bool uniform) {
         "Settings: --config FILE, --beam-energy GeV, --target GEOMETRY, --A N, --Z N,\n"
         "--events N, --seed N, --vertex-seed N, --prefix NAME,\n"
         "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
-        "Files use key = value; CLI values override file settings. No automatic overwrite.\n";
+        "Files use key = value; CLI values override file settings. Existing output is replaced after a warning.\n";
 
     if (uniform) {
         result +=
