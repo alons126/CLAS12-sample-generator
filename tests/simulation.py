@@ -29,7 +29,7 @@ exe, project = sys.argv[1], Path(sys.argv[2])
 with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     root = Path(tmp)
     output = root/'run'
-    call(exe, '--output', output, '--events-per-file', '10000', '--files', '2')
+    call(exe, '--output', output, '--events', '20000')
     card = root/'detector.gcard'; card.write_text('<gcard/>')
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner = project/'scripts/simulation/run.py'

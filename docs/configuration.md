@@ -12,8 +12,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
 | `target` | `Ar` | Vertex geometry name, independent of A/Z |
 | `A`, `Z` | `1`, `1` | LUND nuclear metadata; require 1≤A≤300, 0≤Z≤A |
-| `files` | `1` | Number of uniform files / maximum GENIE files |
-| `events-per-file` | `10000` | Output events in each full file |
+| `events` | Required | Total number of accepted events to write; files split automatically at 10,000 events |
 | `seed` | `67890` | Uniform kinematic RNG seed; unused in GENIE conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed |
 | `prefix` | `Uniform_sample` / `GENIE_sample` | Filename label; letters, digits, `_`, `-`, `.` |

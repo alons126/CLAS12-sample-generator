@@ -35,9 +35,9 @@ Field 10 is a legacy process tag, **not a generator cross-section weight**. Do n
 
 ## Splitting and completion
 
-`files × events-per-file` is the maximum number of **written** events. Skipped processes do not count toward it. Conversion retains a final partial file instead of stopping early when fewer than 10,000 input entries remain.
+`events` is the maximum number of **written** events. Skipped processes do not count toward it. Output files are split automatically at 10,000 events, and conversion retains a final partial file instead of stopping early when fewer than 10,000 input entries remain.
 
-For six accepted events with `--files 3 --events-per-file 4`, output contains two files with counts 4 and 2. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
+For six accepted events with `--events 6`, output contains one file with count 6. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
 
 Use a new output directory for each conversion. `monitoring.root` contains per-PDG diagnostics for written particles. The additional `legacy_histograms.root` contains the original electron theta-versus-phi diagnostic, filled before process selection. `--render-plots true` adds PDF/PNG output. Rendering filenames/styles are standardized; histogram contents are tested against the archived converter.
 

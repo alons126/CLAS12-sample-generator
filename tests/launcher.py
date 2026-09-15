@@ -54,7 +54,7 @@ def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
 with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     root=Path(tmp).resolve()
     output=root/'output with spaces'
-    args=['--build','false','--build-dir',build,'--events-per-file','4','--output',output]
+    args=['--build','false','--build-dir',build,'--events','4','--output',output]
     sourced(args)
     m=json.loads((output/'manifest.json').read_text())
     assert m['written_events']==4

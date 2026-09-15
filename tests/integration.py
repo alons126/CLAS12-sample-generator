@@ -106,11 +106,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
     if mode == 'uniform':
         for channel, pid in [('1e',11),('ep',2212),('en',2112)]:
             output = root / channel
-            settings = ['--channel', channel, '--files', '2', '--events-per-file', '250', '--seed', '17', '--vertex-seed', '23']
+            settings = ['--channel', channel, '--events', '10001', '--seed', '17', '--vertex-seed', '23']
             run(executable, *settings, '--output', output)
             manifest, events = read_run(output)
-            assert [f['events'] for f in manifest['files']] == [250,250]
-            assert [int(h[8]) for h,p in events] == list(range(500))
+            assert [f['events'] for f in manifest['files']] == [10000,1]
+            assert [int(h[8]) for h,p in events] == list(range(10001))
             for header, particles in events:
                 assert len(particles) == (1 if channel == '1e' else 2)
                 assert particles[-1][3] == pid
@@ -135,15 +135,15 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             run(executable, *settings, '--output', output, ok=False)
             assert sentinel.read_text() == 'keep'
         config = root/'sample.conf'
-        config.write_text('# test precedence\nchannel = en\nevents-per-file = 3\nbeam-energy = 2.07052\n')
-        run(executable, '--config', config, '--events-per-file', '5', '--output', root/'configured')
+        config.write_text('# test precedence\nchannel = en\nevents = 3\nbeam-energy = 2.07052\n')
+        run(executable, '--config', config, '--events', '5', '--output', root/'configured')
         m,_ = read_run(root/'configured')
         assert m['written_events'] == 5 and m['config']['trigger-phi-offset'] == '16'
-        run(executable, '--channel', 'ep', '--nucleon-momentum', 'uniform', '--events-per-file', '100', '--output', root/'variable')
+        run(executable, '--channel', 'ep', '--nucleon-momentum', 'uniform', '--events', '100', '--output', root/'variable')
         _,events=read_run(root/'variable')
         momenta=[angles(p[-1])[0] for h,p in events]
         assert min(momenta)>=0.3 and max(momenta)<=5.98636 and max(momenta)-min(momenta)>1
-        run(executable, '--electron-momentum', 'beam', '--target', 'point', '--events-per-file', '5', '--output', root/'tester')
+        run(executable, '--electron-momentum', 'beam', '--target', 'point', '--events', '5', '--output', root/'tester')
         _,events=read_run(root/'tester')
         assert all(p[0][11:]==[0,0,0] and math.isclose(angles(p[0])[0],5.98636,abs_tol=1e-8) for h,p in events)
         for key,value in [('channel','bad'),('seed','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
@@ -155,17 +155,17 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         gst = root/'gst.root'
         run(fixture, gst)
         output = root/'converted'
-        run(executable, '--input', gst, '--output', output, '--files', '3', '--events-per-file', '4', '--A','40','--Z','18')
+        run(executable, '--input', gst, '--output', output, '--events', '6', '--A','40','--Z','18')
         m,events=read_run(output)
         assert m['scanned_events']==7 and m['written_events']==6
-        assert [f['events'] for f in m['files']]==[4,2]
+        assert [f['events'] for f in m['files']]==[6]
         assert [int(h[9]) for h,p in events]==[1,2,3,4,1,1]
         assert [int(h[8]) for h,p in events]==[0,1,2,3,5,6]
         for h,p in events:
             assert h[1:4]==['40','18','7']
             assert [int(x[3]) for x in p]==[11,2212,2112,211,-211,111,22]
             assert p[0][6:9]==[0.5,0.1,2]
-        run(executable,'--input',gst,'--output',root/'limited','--files','1','--events-per-file','2')
+        run(executable,'--input',gst,'--output',root/'limited','--events','2')
         m,_=read_run(root/'limited')
         assert m['written_events']==2 and m['scanned_events']==2 and len(m['files'])==1
         run(fixture,root/'missing.root','missing')
@@ -178,7 +178,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             run(executable,'--input',root/(kind+'.root'),'--output',bad,ok=False)
             assert not (bad/'manifest.json').exists()
         run(fixture,root/'large.root','large')
-        run(executable,'--input',root/'large.root','--output',root/'large-output','--events-per-file','4')
+        run(executable,'--input',root/'large.root','--output',root/'large-output','--events','4')
         m,e=read_run(root/'large-output')
         assert m['written_events']==4 and all(len(p)==7 for h,p in e)
         run(fixture,root/'chain-a.root')

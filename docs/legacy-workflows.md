@@ -19,7 +19,7 @@ Current equivalent with small counts:
 ```bash
 build/debug/apps/clas12-uniform \
   --config config/samples/legacy-coderun.conf \
-  --files 1 --events-per-file 100 \
+  --events 100 \
   --output runs/legacy-coderun-smoke
 ```
 

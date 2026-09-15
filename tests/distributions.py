@@ -45,7 +45,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-distributions-') as temp:
     for channel in ['en','ep']:
         out=Path(temp)/channel
         subprocess.run([sys.argv[1],'--channel',channel,'--nucleon-momentum','sampled','--nucleon-p-min','0.3','--nucleon-p-max','3',
-                        '--events-per-file','20000','--lund-format','precise','--output',str(out)],check=True,capture_output=True)
+                        '--events','20000','--lund-format','precise','--output',str(out)],check=True,capture_output=True)
         m=json.loads((out/'manifest.json').read_text())
         lines=(out/m['files'][0]['path']).read_text().splitlines()
         momenta,cosines,phis=[],[],[]

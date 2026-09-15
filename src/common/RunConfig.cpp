@@ -76,8 +76,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"A", "1"},
                  {"Z", "1"},
                  {"output", ""},
-                 {"files", "1"},
-                 {"events-per-file", "10000"},
+                 {"events", ""},
                  {"seed", "67890"},
                  {"lund-format", "legacy"},
                  {"mass-convention", "legacy"},
@@ -273,8 +272,9 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
  */
 void RunConfig::validate(bool uniform) const {
     if (get("output").empty()) { throw std::runtime_error("--output is required; use a new run directory"); }
+    if (get("events").empty()) { throw std::runtime_error("--events is required; provide the total number of events to write"); }
     if (number("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
-    for (auto k : {"files", "events-per-file", "seed", "vertex-seed"}) {
+    for (auto k : {"events", "seed", "vertex-seed"}) {
         auto n = integer(k);
         if (!n || n > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
     }
@@ -360,7 +360,7 @@ std::string help(bool uniform) {
     std::string result = uniform ? "clas12-uniform --channel 1e|ep|en --output NEW_DIRECTORY\n" : "clas12-genie-to-lund --input 'gst*.root' --output NEW_DIRECTORY\n";
     result +=
         "Settings: --config FILE, --beam-energy GeV, --target GEOMETRY, --A N, --Z N,\n"
-        "--files N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
+        "--events N, --seed N, --vertex-seed N, --prefix NAME,\n"
         "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
         "Files use key = value; CLI values override file settings. No automatic overwrite.\n";
 

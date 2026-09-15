@@ -34,7 +34,7 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### LundWriter
 
-[LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor claims a new output directory; `full` checks capacity; `write` serializes an event and rotates files as needed; `count` returns accepted output count; `finish(scanned)` closes files and publishes the manifest. Capacity and events-per-file are cached outside the hot loop. Output-stream exceptions propagate to the application; no cleanup removes partial output.
+[LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor claims a new output directory; `full` checks the requested event capacity; `write` serializes an event and automatically rotates files at 10,000 events; `count` returns accepted output count; `finish(scanned)` closes files and publishes the manifest. Capacity and the file-splitting limit are cached outside the hot loop. Output-stream exceptions propagate to the application; no cleanup removes partial output.
 
 `Version.h.in` embeds project version, target-header SHA-256 and the configure-time Git revision into the manifest. This is build provenance, not a runtime Git dependency.
 

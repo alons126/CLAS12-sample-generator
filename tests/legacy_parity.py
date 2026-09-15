@@ -73,8 +73,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
                 original, new = root/(name+'-old'), root/(name+'-new')
                 run(legacy,channel,original,beam,64,2,67890,12345,'Ar')
                 extra = ['--electron-momentum','beam','--target','point'] if channel=='tester' else []
-                run(current,'--channel','1e' if channel=='tester' else channel,'--beam-energy',beam,'--files',2,
-                    '--events-per-file',64,'--seed',67890,'--vertex-seed',12345,'--output',new,*extra)
+                run(current,'--channel','1e' if channel=='tester' else channel,'--beam-energy',beam,'--events',128,
+                    '--seed',67890,'--vertex-seed',12345,'--output',new,*extra)
                 run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
                 m=json.loads((new/'manifest.json').read_text())
                 for i,f in enumerate(m['files'],1):
@@ -82,7 +82,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         for target in ['liquid','4-foil','1-foil','1-foil-small','1-foil-large','Ca']:
             original,new=root/(target+'-old'),root/(target+'-new')
             run(legacy,'1e',original,2.07052,64,1,67890,12345,target)
-            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--events-per-file',64,'--output',new)
+            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--events',64,'--output',new)
             m=json.loads((new/'manifest.json').read_text())
             compare(new/m['files'][0]['path'],original/'legacy_1.txt')
     else:
@@ -92,7 +92,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             run(fixture,gst,'parity')
             original,new=root/(label+'-old'),root/(label+'-new')
             run(legacy,gst,original,1,target,A,Z)
-            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--files',1,'--events-per-file',10000,'--output',new)
+            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--output',new)
             m=json.loads((new/'manifest.json').read_text())
             run(sys.argv[5], original/'histograms.root', new/'legacy_histograms.root')
             old=list((original/'lundfiles').glob('*.txt'))
@@ -103,7 +103,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         run(fixture,gst)
         original,new=root/'short-old',root/'short-new'
         run(legacy,gst,original,1,'1-foil-small',12,6)
-        run(current,'--input',gst,'--beam-energy',2.07052,'--target','1-foil-small','--A',12,'--Z',6,'--output',new)
+        run(current,'--input',gst,'--beam-energy',2.07052,'--target','1-foil-small','--A',12,'--Z',6,'--events',10000,'--output',new)
         old=next((original/'lundfiles').glob('*.txt')).read_text().splitlines()
         m=json.loads((new/'manifest.json').read_text())
         assert len(old)==8 and m['written_events']==6

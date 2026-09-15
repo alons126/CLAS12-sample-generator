@@ -56,7 +56,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 
     if (uniform) {
         std::cout << "\033[33m\nOutputFileNamePrefix:\033[0m " << config.get("prefix") << '\n';
-        std::cout << "\033[33mnFiles:\033[0m " << config.get("files") << "  \033[33mnEvents:\033[0m " << config.get("events-per-file") << '\n';
+        std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m 10000\n";
         std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
         std::cout << "\033[33mGenerateLundFiles:\033[0m true\n";
         std::cout << "\033[33mnParticles:\033[0m 2\n";
@@ -84,8 +84,8 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << "\033[33mGenerating reconhipo directory:\033[0m " << recon_dir << '\n';
         std::cout << "\033[33mGenerating monitoring plots directory:\033[0m " << monitoring_dir << '\n';
         std::cout << "\033[33mSaving lundfiles into\033[0m " << lund_dir << '\n';
-        std::cout << "\033[33mNumber of events\033[0m " << config.integer("files") * config.integer("events-per-file") << '\n';
-        std::cout << "\033[33mMaximum number of output files allowed:\033[0m " << config.get("files") << '\n';
+        std::cout << "\033[33mNumber of events\033[0m " << config.get("events") << '\n';
+        std::cout << "\033[33mEvents per output file:\033[0m 10000\n";
     }
 
     std::cout << "\033[33mOutput directory:\033[0m " << output << '\n';
@@ -93,14 +93,15 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     std::cout << "\033[33mOutput prefix:\033[0m " << config.get("prefix") << '\n';
     std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
     std::cout << "\033[33mTarget:\033[0m " << config.get("target") << "  \033[33mA:\033[0m " << config.get("A") << "  \033[33mZ:\033[0m " << config.get("Z") << '\n';
-    std::cout << "\033[33mFiles:\033[0m " << config.get("files") << "  \033[33mEvents per file:\033[0m " << config.get("events-per-file") << '\n';
+    std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m 10000\n";
     std::cout << "\033[33mLUND format:\033[0m " << config.get("lund-format") << "  \033[33mMass convention:\033[0m " << config.get("mass-convention") << '\n';
 
     if (final) {
         std::cout << "\033[33m\n- Completion summary ----------------------------------------\n\033[0m";
         std::cout << "\033[33mTotal entries scanned:\033[0m " << scanned << '\n';
         std::cout << "\033[33mEvents passing cuts:\033[0m " << written << '\n';
-        std::cout << "\033[33mOutput files written:\033[0m " << config.integer("files") << '\n';
+        const auto output_files = (config.integer("events") + 9999) / 10000;
+        std::cout << "\033[33mOutput files allowed:\033[0m " << output_files << '\n';
         std::cout << "\033[33m\nOperation finished!\033[0m\n";
     }
 
@@ -126,8 +127,8 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     : config_(c),
       workflow_(std::move(workflow)),
       directory_(c.get("output")),
-      events_per_file_(c.integer("events-per-file")),
-      capacity_(c.integer("files") * events_per_file_),
+    events_per_file_(10000),
+    capacity_(c.integer("events")),
       legacy_format_(c.get("lund-format") == "legacy") {
     // Atomic leaf creation prevents two runs from claiming the same directory.
     std::filesystem::create_directories(directory_.parent_path());

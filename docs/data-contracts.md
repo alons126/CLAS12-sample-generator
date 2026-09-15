@@ -64,7 +64,7 @@ The legacy π⁰ value is the one in the restored [converter utilities](../legac
 
 ## 6. File splitting and completion
 
-Uniform generation writes exactly `files × events-per-file` events. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available.
+Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. The writer automatically splits output after 10,000 events per file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available.
 
 The writer creates a previously nonexistent run directory. It writes `manifest.json.tmp` only after LUND and diagnostics finish, then renames it to `manifest.json`. Failure leaves partial output for inspection without publishing a completed manifest. There is no resume/overwrite operation.
 

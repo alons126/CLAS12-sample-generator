@@ -5,7 +5,7 @@
 ```bash
 build/debug/apps/clas12-uniform \
   --config config/samples/uniform-electron.conf \
-  --events-per-file 100 --output runs
+  --events 100 --output runs
 ```
 
 Uniform generation creates `Uniform_sample_<channel>_<beam-energy in MeV>`, padded to four MeV digits, below the supplied output directory. For example, this produces `runs/Uniform_sample_1e_5986MeV/lundfiles/`.
