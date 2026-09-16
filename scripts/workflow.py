@@ -336,7 +336,6 @@ def main():
         forwarded = forwarded[1:]
     
     config = settings(args)
-    # banner('logo')
     
     workflow = config['workflow']
     source = config['source']

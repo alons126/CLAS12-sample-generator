@@ -270,6 +270,18 @@
             "color": "#FFFFFF",
             "backgroundColor": "#EE6B6E",
             "border": "0.5px solid #FFFFFF"
+        },
+        {
+            "text": "# region",
+            "color": "#FFFFFF",
+            "backgroundColor": "#008000",
+            "border": "0.5px solid #FFFFFF"
+        },
+        {
+            "text": "# endregion",
+            "color": "#FFFFFF",
+            "backgroundColor": "#EE6B6E",
+            "border": "0.5px solid #FFFFFF"
         }
     ]
     // endregion
