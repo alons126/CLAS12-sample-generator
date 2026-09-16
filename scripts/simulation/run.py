@@ -24,6 +24,7 @@ import sys
 
 
 # External payload interface ---------------------------------------------------
+
 # region External payload interface
 def payload_path(args):
     """Locate the protected Bash payload in a checkout or installed bin directory.
@@ -71,6 +72,7 @@ def payload_environment(data, index, path, count, mc, reco, gcard, reconstructio
 
 
 # parser --------------------------------------------------------------------
+
 # region parser
 def parser():
     """Define manifest-driven detector-processing options.
@@ -98,6 +100,7 @@ def parser():
 
 
 # load_plan --------------------------------------------------------------------
+
 # region load_plan
 def load_plan(args):
     """Validate inputs and construct GEMC/reconstruction commands.
@@ -198,6 +201,7 @@ def load_plan(args):
 
 
 # main --------------------------------------------------------------------
+
 # region main
 def main():
     """Preview or execute the detector-processing plan.
@@ -254,6 +258,7 @@ def main():
 
 
 # Command-line entry point ------------------------------------------------
+
 # region Execution
 if __name__ == '__main__':
     try:

@@ -13,6 +13,7 @@
 #   Defining or building a target does not generate samples or submit detector jobs.
 
 # Uniform CLI -------------------------------------------------------
+
 # region Uniform CLI
 # Purpose: Link the uniform entry point to the implementation library and install its executable.
 if(BUILD_UNIFORM)
@@ -23,6 +24,7 @@ endif()
 # endregion
 
 # Physical conversion CLI -------------------------------------------------------
+
 # region Physical conversion CLI
 # Purpose: Link the selected event-generator adapter and install its generator-independent executable.
 if(BUILD_GENIE)

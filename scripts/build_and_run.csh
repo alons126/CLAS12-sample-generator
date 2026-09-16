@@ -21,6 +21,7 @@
 # CLAS12 sample workflow entry point. Source from the repository root, or set
 # CLAS12_SAMPLES_DIR when sourcing from elsewhere. Execution works from any cwd.
 # Checkout discovery -----------------------------------------------------------
+
 # region Checkout discovery
 set _clas12_invocation = "$0"
 set _clas12_root = "$cwd"
@@ -33,6 +34,7 @@ endif
 # endregion
 
 # Driver invocation ------------------------------------------------------------
+
 # region Driver invocation
 if (-f "$_clas12_root/scripts/workflow.py") then
     python3 "$_clas12_root/scripts/workflow.py" $argv:q
@@ -44,6 +46,7 @@ endif
 # endregion
 
 # Caller status ---------------------------------------------------------------
+
 # region Caller status
 unset _clas12_invocation _clas12_root
 # Last command propagates status to both executed and sourced callers.

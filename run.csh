@@ -23,6 +23,7 @@
 #   clone before sourcing this file. The updater resets tracked changes and cleans untracked files.
 
 # Checkout discovery ----------------------------------------------------------
+
 # region Checkout discovery
 set _clas12_invocation = "$0"
 set _clas12_root = "$cwd"
@@ -43,6 +44,7 @@ endif
 # endregion
 
 # Server mirror update --------------------------------------------------------
+
 # region Server mirror update
 pushd "$_clas12_root" > /dev/null
 if (-f scripts/environment/set_colors.csh) source scripts/environment/set_colors.csh
@@ -69,6 +71,7 @@ endif
 # endregion
 
 # Workflow dispatch -----------------------------------------------------------
+
 # region Workflow dispatch
 if ($CLAS12_SAMPLE_STATUS == 0) then
     python3 scripts/workflow.py $argv:q
@@ -78,6 +81,7 @@ popd > /dev/null
 # endregion
 
 # Caller status ---------------------------------------------------------------
+
 # region Caller status
 unset _clas12_invocation _clas12_root _clas12_skip_server_sync
 # Do not use exit: this file is normally sourced into the user's SSH shell.

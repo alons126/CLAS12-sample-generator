@@ -13,6 +13,7 @@
 #   ROOT must declare a C++ standard of at least 17. Configuration fails when required dependencies are unavailable.
 
 # Project and workflow options -------------------------------------------------------
+
 # region Project and workflow options
 # Purpose: Select which compiled sample workflows are available.
 cmake_minimum_required(VERSION 3.20)
@@ -22,6 +23,7 @@ option(BUILD_GENIE "Build GENIE GST conversion" ON)
 # endregion
 
 # Compiler and dependency requirements -------------------------------------------------------
+
 # region Compiler and dependency requirements
 # Purpose: Match the selected ROOT language standard and propagate required imported targets.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -41,6 +43,7 @@ set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 # endregion
 
 # Compiled provenance -------------------------------------------------------
+
 # region Compiled provenance
 # Purpose: Read the Git revision and target-header hash; configure a maintained header template. Protected inputs are never modified.
 execute_process(COMMAND git describe --always --dirty
@@ -56,6 +59,7 @@ configure_file(src/common/Version.h.in generated/Version.h @ONLY)
 # endregion
 
 # Build graph and tests -------------------------------------------------------
+
 # region Build graph and tests
 # Purpose: Order subdirectories so libraries exist before applications and tests reference them.
 include(CTest)
@@ -67,6 +71,7 @@ endif()
 # endregion
 
 # Installation -------------------------------------------------------
+
 # region Installation
 # Purpose: Install resources and Python runners; application installation is declared in apps/.
 install(DIRECTORY config/ DESTINATION share/clas12-samples/config)

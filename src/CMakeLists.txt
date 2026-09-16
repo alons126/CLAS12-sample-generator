@@ -13,6 +13,7 @@
 #   PUBLIC dependencies propagate to consumers; PRIVATE dependencies belong to library implementation.
 
 # Shared infrastructure -------------------------------------------------------
+
 # region Shared infrastructure
 # Purpose: Own configuration, target adapter, particle masses, output and diagnostics in one static library.
 add_library(SampleCommon STATIC common/RunConfig.cpp common/RgmTarget.cpp common/TargetGeometry.cpp common/Particle.cpp common/LundWriter.cpp common/Monitoring.cpp common/LegacyMonitoring.cpp)
@@ -21,6 +22,7 @@ target_link_libraries(SampleCommon PUBLIC ROOT::Core ROOT::Physics PRIVATE Threa
 # endregion
 
 # Uniform generation -------------------------------------------------------
+
 # region Uniform generation
 # Purpose: Expose the acceptance-sample implementation through UniformGeneration.
 if(BUILD_UNIFORM)
@@ -30,6 +32,7 @@ endif()
 # endregion
 
 # Physical-event conversion -------------------------------------------------------
+
 # region Physical-event conversion
 # Purpose: Add GST tree-reading dependencies only to the GENIE conversion implementation.
 if(BUILD_GENIE)

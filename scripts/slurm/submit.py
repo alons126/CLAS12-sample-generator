@@ -21,6 +21,7 @@ import sys
 
 
 # main --------------------------------------------------------------------
+
 # region main
 def main():
     """Preview or submit a manifest-sized Slurm array.
@@ -90,6 +91,7 @@ def main():
 
 
 # Command-line entry point ------------------------------------------------
+
 # region Execution
 if __name__ == '__main__':
     try:
