@@ -48,7 +48,12 @@ pushd "$_clas12_root" > /dev/null
 if (-f scripts/environment/set_colors.csh) source scripts/environment/set_colors.csh
 if (-f scripts/printers/print_logo.csh) source scripts/printers/print_logo.csh
 
-if ($?CLAS12_SKIP_SERVER_SYNC && "$CLAS12_SKIP_SERVER_SYNC" == "1") then
+set _clas12_skip_server_sync = 0
+if ($?CLAS12_SKIP_SERVER_SYNC) then
+    if ("$CLAS12_SKIP_SERVER_SYNC" == "1") set _clas12_skip_server_sync = 1
+endif
+
+if ($_clas12_skip_server_sync == 1) then
     echo "Skipping ifarm checkout replacement (explicit local/test override)."
     set CLAS12_SAMPLE_STATUS = 0
 else
@@ -74,7 +79,7 @@ popd > /dev/null
 
 # Caller status ---------------------------------------------------------------
 # region Caller status
-unset _clas12_invocation _clas12_root
+unset _clas12_invocation _clas12_root _clas12_skip_server_sync
 # Do not use exit: this file is normally sourced into the user's SSH shell.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
 # endregion
