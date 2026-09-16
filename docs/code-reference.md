@@ -20,9 +20,9 @@ Production sources compile once into conventional targets. References to archive
 
 ### RunConfig
 
-[RunConfig.h](../src/common/RunConfig.h) / [RunConfig.cpp](../src/common/RunConfig.cpp): `parse` merges defaults, one optional config file, and CLI overrides; resolves the RG-M target catalog, automatic sampling settings, provenance-based output name, and paths; then validates. Typed readers expose settings and `values` supplies manifest provenance.
+[RunConfig.h](../src/common/RunConfig.h) declares the shared, read-only handoff from each C++ command-line entry point to its generator/converter and writer. [RunConfig.cpp](../src/common/RunConfig.cpp) implements the accepted common and source-specific key sets, strict `--key value` and `key = value` parsing, precedence, RG-M target lookup, automatic sampling/provenance settings, output naming, path normalization, and validation. Typed readers expose checked values and `values` supplies the exact resolved strings for manifest provenance.
 
-Configuration is parsed once; `UniformConfig` converts frequently used settings to typed values before the event loop. Unknown/duplicate keys and invalid ranges fail before output creation. Config syntax and defaults are in [configuration](configuration.md).
+Configuration is parsed once; `UniformConfig` converts frequently used settings to typed values before the event loop. `RunConfig` does not inspect event data, own RNGs, mutate output directories, serialize LUND, monitor events, or submit simulation. Unknown/duplicate keys and invalid ranges fail before those operations can begin. Config syntax and defaults are in [configuration](configuration.md).
 
 ### Event and particle mass
 

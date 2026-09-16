@@ -35,6 +35,18 @@ namespace samples {
  *   generation and physical event conversion. Keeping the resolved strings together ensures physics
  *   code and manifest provenance observe the same final settings.
  *
+ * Architectural role:
+ *   RunConfig is the handoff between the command-line applications and the LUND workflows. It owns
+ *   policy for accepted setting names, precedence, automatic-value resolution, validation, and final
+ *   path/name construction. UniformGenerator, physical adapters, and LundWriter consume the resulting
+ *   read-only value object instead of reparsing arguments or independently deriving configuration.
+ *
+ * Non-responsibilities:
+ *   This object does not sample or convert events, own random-number generators, inspect GST trees,
+ *   serialize LUND records, create or replace output directories, render monitoring, or submit detector
+ *   jobs. Those effects begin only after parse() has returned successfully and belong to the selected
+ *   generator/converter and writer.
+ *
  * Creation and workflow:
  *   1. parse() installs shared and source-specific defaults.
  *   2. It applies one optional profile, followed by command-line overrides.
@@ -68,7 +80,8 @@ class RunConfig {
      * @param uniform Select uniform-generation keys and defaults when true, or physical-conversion
      *                keys and defaults when false.
      *
-     * @return An owning configuration ready for generator and writer consumption.
+     * @return An owning, read-only configuration ready for generator, adapter, and writer consumption;
+     *         all stored `auto` values have been resolved and local operational paths normalized.
      *
      * @throws std::exception For malformed/repeated/unknown options, unreadable profiles, invalid
      *         values, unsupported source settings, path failures, or unsafe/incomplete run metadata.

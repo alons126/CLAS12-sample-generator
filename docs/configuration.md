@@ -2,6 +2,10 @@
 
 Sample settings use UTF-8 text with one `key = value` per line. Blank lines and lines beginning with `#` are ignored. There are no sections, inline comments, quoting rules or environment-variable expansion. Values may contain spaces. Unknown/duplicate keys are rejected. Command-line `--key value` settings override the file regardless of where `--config` appears.
 
+The two C++ LUND applications pass these settings through the shared `RunConfig` layer. It installs common and source-specific defaults, applies the optional profile and CLI overrides, resolves every `auto` value, validates the complete result, and constructs normalized paths before event processing starts. Uniform-only keys are unavailable to physical conversion and physical-only keys are unavailable to uniform generation.
+
+`RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `manifest.json`.
+
 The launcher does not select a sample profile implicitly. Pass `--config config/samples/NAME.conf` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build/test defaults only.
 
 Relative paths are interpreted from the caller's working directory. The output path and local GENIE input pattern are resolved to absolute paths in the manifest. ROOT-supported remote URLs remain unchanged.

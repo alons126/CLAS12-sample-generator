@@ -7,10 +7,18 @@
  * @brief Sample option parsing, validation and JSON escaping.
  *
  * Purpose:
- *   Keep invalid settings out of the generation loop and record resolved configuration.
+ *   Implement the shared configuration boundary for uniform generation and physical conversion: keep
+ *   invalid settings out of event processing and preserve the exact resolved configuration for the
+ *   run manifest.
  *
  * Workflow:
  *   Defaults -> profile -> CLI overrides -> automatic values -> validation -> absolute paths.
+ *
+ * Boundary:
+ *   This translation unit resolves configuration only. It performs no event generation/conversion,
+ *   input-tree inspection, random sampling, output-directory replacement, LUND serialization,
+ *   monitoring, or simulation submission. Downstream workflow objects perform those operations only
+ *   after RunConfig::parse() returns successfully.
  */
 
 #include "common/RunConfig.h"
@@ -141,7 +149,8 @@ long long beamMeV(double energy) {
  * @brief Resolve one complete sample configuration.
  *
  * Purpose:
- *   Make both executables use the same precedence and validation contract before creating outputs.
+ *   Make both executables use the same precedence, automatic-resolution, naming, and validation
+ *   contract before any workflow creates outputs.
  *
  * Workflow:
  *   1. Install shared defaults plus exactly one source-specific key set.
@@ -162,8 +171,9 @@ long long beamMeV(double energy) {
  * @throws std::exception For malformed or repeated input, unknown keys, unreadable profiles, invalid
  *         target/source metadata, invalid numeric or physical bounds, and path conversion failures.
  *
- * @note This function computes paths and names only. Downstream generators report and safely replace
- *       the resolved output directory immediately before writing a run.
+ * @note This function reads arguments and an optional profile, then computes paths and names. It does
+ *       not inspect physical event input or mutate the output filesystem. Downstream workflows report
+ *       and safely replace the resolved output directory immediately before writing a run.
  */
 RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */

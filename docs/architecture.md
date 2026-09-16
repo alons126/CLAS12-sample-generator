@@ -45,6 +45,25 @@ The configuration files remain separate because they have different owners and l
 
 This separation keeps the selected action visible in the command and prevents scheduler or build settings from changing the scientific definition of a sample.
 
+## Sample configuration boundary
+
+`RunConfig.h` declares the read-only configuration object shared by uniform generation, physical conversion, and `LundWriter`; `RunConfig.cpp` implements its construction and validation. Each LUND executable calls `RunConfig::parse(argc, argv, uniform)` exactly once. The boolean selects the accepted source-specific vocabulary: uniform sampling keys when true, or physical-input provenance keys when false.
+
+Resolution follows one fixed sequence:
+
+```text
+shared + source-specific built-in defaults
+    -> optional key = value sample profile
+    -> command-line overrides
+    -> target/channel/beam-dependent auto values
+    -> shared and source-specific validation
+    -> normalized input path and final absolute run-directory path
+```
+
+The object retains values as strings so the spelling actually used by the run can be written to `manifest.json`. Consumers use `get`, `number`, and `integer` for checked access; the writer uses `values` to serialize the full resolved configuration. Target identity may supply automatic geometry, A/Z, and GEMC variation values, but explicit overrides remain independent. Source-specific options are rejected in the wrong mode rather than accepted and ignored.
+
+This boundary is intentionally side-effect-free with respect to run products: parsing may read the selected profile, but it does not inspect GST event contents, sample kinematics or vertices, create or replace the run directory, write LUND or monitoring files, or submit simulation. Those responsibilities begin only after parsing succeeds and remain with the uniform generator, physical adapter, writer, and submission workflow respectively.
+
 ## Following a uniform run
 
 1. The application calls `RunConfig::parse`. Built-in defaults are merged with a `key = value` file and then command-line overrides. Unknown, repeated and invalid settings fail before opening an output directory.
