@@ -18,7 +18,7 @@ cmake --build --preset debug --parallel 4
 ctest --preset debug
 ```
 
-Executables are `build/debug/apps/clas12-uniform` and `build/debug/apps/clas12-genie-to-lund`. Both support `--help` and return nonzero on failure.
+Executables are `build/debug/apps/clas12-uniform` and `build/debug/apps/clas12-generator-to-lund`. Both support `--help` and return nonzero on failure.
 
 For production:
 

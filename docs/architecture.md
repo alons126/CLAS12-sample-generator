@@ -6,9 +6,10 @@
 | --- | --- | --- |
 | `SampleCommon` | `src/common/` | Configuration, event representation, vertices, LUND output, monitoring |
 | `UniformGeneration` | `src/uniform/` | Uniform sampling prescriptions |
-| `GenieConversion` | `src/genie/` | Read GST and convert supported events |
+| `GenieConversion` | `src/genie/` | GENIE GST input adapter |
+| `PhysicalConversion` | `src/physical/` | Select the configured physical event-generator adapter |
 | `clas12-uniform` | `apps/uniform_main.cpp` | Parse CLI, call generator, report errors |
-| `clas12-genie-to-lund` | `apps/genie_to_lund_main.cpp` | Parse CLI, call converter, report errors |
+| `clas12-generator-to-lund` | `apps/genie_to_lund_main.cpp` | Parse physical input settings and dispatch an adapter |
 
 The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. The test targets alone compile archived reference code; production libraries do not include archived implementations. `apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
 
@@ -22,9 +23,9 @@ The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt`
 6. `LegacyMonitoring` writes the original channel histogram names and binning to a separate ROOT file, with optional rendered plots.
 7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
 
-## Following a GENIE run
+## Following a physical run
 
-`convertGenie` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and dynamically sized `TTreeReaderArray` objects avoid the imported fixed arrays of 250 particles. The converter assigns the legacy process code, filters supported PDG codes, creates an `Event`, and calls the same writer and monitoring code.
+`convertPhysical` selects the `event-generator` adapter; GENIE is the implemented default. `convertGenie` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and dynamically sized `TTreeReaderArray` objects avoid the imported fixed arrays of 250 particles. The adapter assigns the legacy process code, filters supported PDG codes, creates an `Event`, and calls the same writer and monitoring code.
 
 The converter stops at the configured output capacity or end of input. The final partial file is retained. No empty rollover file is opened. Errors reading later chain entries prevent publication of a completed manifest.
 
@@ -37,7 +38,7 @@ The converter stops at the configured output capacity or end of input. The final
 ## Adding functionality
 
 - Add a sampling prescription in `src/uniform/` with validated settings and an output-level test of its distribution or invariants.
-- Add another input converter as a separate library and CLI which produce `Event` values.
+- Add another physical adapter behind `convertPhysical`; keep the public executable and manifest contract unchanged.
 - Replace or extend `src/common/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
 - Keep machine paths, scheduler resources and binary names in site configuration.

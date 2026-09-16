@@ -31,7 +31,7 @@ namespace samples {
  * @brief Bridge between a run-owned vertex stream and protected targets.h.
  *
  * Usage order: validate a name at construction, then sample once per event.
- * Physical geometry comes from the external header; point is an artificial origin.
+ * Physical geometry comes from the external header; point is the legacy fixed Hall B center.
  * The adapter isolates the external global RNG and preserves each caller's state.
  */
 class TargetGeometry {

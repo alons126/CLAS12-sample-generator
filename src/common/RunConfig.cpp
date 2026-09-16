@@ -16,6 +16,7 @@
 #include "common/RunConfig.h"
 
 #include <cmath>
+#include <cctype>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -23,6 +24,7 @@
 #include <stdexcept>
 
 #include "common/TargetGeometry.h"
+#include "common/RgmTarget.h"
 namespace samples {
 namespace {
 // trim ----------------------------------------------------------------------
@@ -43,6 +45,25 @@ std::string trim(std::string s) {
     return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
 }
 #pragma endregion
+
+// pathToken ------------------------------------------------------------------
+#pragma region /* pathToken */
+/** @brief Convert explicit provenance text into one portable filename component. */
+std::string pathToken(std::string value) {
+    for (char& ch : value)
+        if (!(std::isalnum(static_cast<unsigned char>(ch)) || ch == '.' || ch == '_' || ch == '-')) ch = '-';
+    if (value.empty() || value == "." || value == "..") throw std::runtime_error("Invalid empty output-name component");
+    return value;
+}
+#pragma endregion
+
+/** @brief Return established RG-M beam labels, falling back to nearest MeV for other energies. */
+long long beamMeV(double energy) {
+    if (std::abs(energy - 2.07052) < 1e-6) return 2070;
+    if (std::abs(energy - 4.02962) < 1e-6) return 4029;
+    if (std::abs(energy - 5.98636) < 1e-6) return 5986;
+    return std::llround(energy * 1000.0);
+}
 
 }  // namespace
 
@@ -72,9 +93,15 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // Install shared defaults before workflow-specific options.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
-                 {"target", "Ar"},
-                 {"A", "1"},
-                 {"Z", "1"},
+                 {"rgm-target", "Ar40"},
+                 {"target", "auto"},
+                 {"A", "auto"},
+                 {"Z", "auto"},
+                 {"gemc-target-variation", "auto"},
+                 {"vertex-mode", "target"},
+                 {"vertex-x", "0"},
+                 {"vertex-y", "0"},
+                 {"vertex-z", "-3"},
                  {"output", ""},
                  {"events", ""},
                  {"seed", "67890"},
@@ -82,7 +109,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"mass-convention", "legacy"},
                  {"render-plots", "false"},
                  {"vertex-seed", "12345"},
-                 {"prefix", uniform ? "Uniform_sample" : "GENIE_sample"}};
+                 {"prefix", "auto"}};
 
     if (uniform) {
         c.values_.insert({{"channel", "1e"},
@@ -99,7 +126,12 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
     } else {
-        c.values_.insert({{"input", ""}});
+        c.values_.insert({{"input", ""},
+                          {"event-generator", "genie"},
+                          {"event-generator-version", "unknown"},
+                          {"tune", "unknown"},
+                          {"q2-cut", "auto"},
+                          {"gemc-version", "unknown"}});
     }
 
     auto assign = [&](const std::string& k, const std::string& v) {
@@ -160,8 +192,14 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     }
 #pragma endregion
 
-    // Apply explicit options last, then resolve channel and beam dependent defaults.
+    // Apply explicit options last, then resolve target, channel and beam dependent defaults.
     for (const auto& [k, v] : overrides) assign(k, v);
+
+    const auto& rgm_target = findRgmTarget(c.get("rgm-target"));
+    if (c.get("target") == "auto") c.values_["target"] = rgm_target.geometry;
+    if (c.get("A") == "auto") c.values_["A"] = std::to_string(rgm_target.A);
+    if (c.get("Z") == "auto") c.values_["Z"] = std::to_string(rgm_target.Z);
+    if (c.get("gemc-target-variation") == "auto") c.values_["gemc-target-variation"] = rgm_target.gemc_variation;
 
     if (uniform) {
         if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
@@ -169,6 +207,21 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         if (c.get("trigger-phi-offset") == "auto") {
             double e = c.number("beam-energy");
             c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
+        }
+    }
+
+    if (!uniform && c.get("q2-cut") == "auto") {
+        const double e = c.number("beam-energy");
+        c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2_0_02" : std::abs(e - 4.02962) < 1e-6 ? "Q2_0_25" : std::abs(e - 5.98636) < 1e-6 ? "Q2_0_40" : "none";
+    }
+
+    if (c.get("prefix") == "auto") {
+        if (uniform) {
+            std::ostringstream prefix;
+            prefix << "Uniform_sample_" << c.get("channel") << '_' << beamMeV(c.number("beam-energy")) << "MeV";
+            c.values_["prefix"] = prefix.str();
+        } else {
+            c.values_["prefix"] = pathToken(c.get("rgm-target")) + '_' + pathToken(c.get("event-generator")) + '_' + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
         }
     }
 
@@ -184,7 +237,13 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 
     if (uniform) {
         std::ostringstream directory;
-        directory << "Uniform_sample_" << c.get("channel") << '_' << std::setw(4) << std::setfill('0') << std::llround(c.number("beam-energy") * 1000.0) << "MeV";
+        directory << "Uniform_sample_" << c.get("channel") << '_' << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
+        c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
+    } else {
+        std::ostringstream directory;
+        directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << '-' << pathToken(c.get("event-generator-version")) << "__"
+                  << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV_GEMC-"
+                  << pathToken(c.get("gemc-version"));
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     }
 
@@ -286,10 +345,15 @@ void RunConfig::validate(bool uniform) const {
     if (get("mass-convention") != "legacy" && get("mass-convention") != "standard") { throw std::runtime_error("mass-convention must be legacy or standard"); }
     if (get("render-plots") != "true" && get("render-plots") != "false") { throw std::runtime_error("render-plots must be true or false"); }
 
-    TargetGeometry::validate(get("target"));
+    if (get("vertex-mode") != "target" && get("vertex-mode") != "fixed") throw std::runtime_error("vertex-mode must be target or fixed");
+    for (auto k : {"vertex-x", "vertex-y", "vertex-z"}) number(k);
+    if (get("vertex-mode") == "target") TargetGeometry::validate(get("target"));
 
     if (!uniform) {
         if (get("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
+        if (get("event-generator") != "genie") throw std::runtime_error("Only --event-generator genie is currently implemented");
+        for (auto k : {"event-generator-version", "tune", "q2-cut", "gemc-version", "gemc-target-variation"})
+            if (get(k).empty()) throw std::runtime_error(std::string(k) + " must not be empty");
         return;
     }
 
@@ -357,10 +421,11 @@ std::string jsonString(const std::string& s) {
  * @return Usage text; does not print or execute a workflow.
  */
 std::string help(bool uniform) {
-    std::string result = uniform ? "clas12-uniform --channel 1e|ep|en --output NEW_DIRECTORY\n" : "clas12-genie-to-lund --input 'gst*.root' --output NEW_DIRECTORY\n";
+    std::string result = uniform ? "clas12-uniform --channel 1e|ep|en --output PARENT_DIRECTORY\n" : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
     result +=
-        "Settings: --config FILE, --beam-energy GeV, --target GEOMETRY, --A N, --Z N,\n"
+        "Settings: --config FILE, --beam-energy GeV, --rgm-target ID, --target GEOMETRY, --A N, --Z N,\n"
         "--events N, --seed N, --vertex-seed N, --prefix NAME,\n"
+        "--vertex-mode target|fixed, --vertex-x/y/z CM,\n"
         "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
         "Files use key = value; CLI values override file settings. Existing output is replaced after a warning.\n";
 
@@ -369,7 +434,12 @@ std::string help(bool uniform) {
             "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
             "--electron-momentum uniform|beam, --nucleon-momentum fixed|sampled|uniform|mixed,\n"
             "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
+    } else {
+        result += "Physical: --event-generator genie (default), --event-generator-version VERSION, --tune NAME,\n"
+                  "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n";
     }
+
+    result += "RG-M targets: " + rgmTargetNames() + "\n";
 
     return result;
 }

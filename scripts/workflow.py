@@ -28,13 +28,14 @@ import os
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULTS = {
     # Workflow and CMake output configuration; names must agree with dispatch below.
-    'workflow': 'uniform', 'build_dir': 'build/release', 'build_type': 'Release',
+    'workflow': 'create-lund', 'source': 'uniform', 'build_dir': 'build/release', 'build_type': 'Release',
     'jobs': 4, 'git_pull': False, 'build': True, 'run': True, 'test': False, # TODO: Remove 'git_pull' from the options. I'll be done in [run.csh](/Users/alon/Projects/CLAS12-sample-generator/run.csh) by default
     # Per-workflow argv lists come from the selected profile; no shell evaluation is performed.
     'arguments': {},
 }
 # Allowed dispatcher keys, used both by argparse and JSON validation.
-WORKFLOWS = ('uniform', 'genie', 'simulate', 'submit')
+WORKFLOWS = ('create-lund', 'submit')
+SOURCES = ('uniform', 'physical')
 # endregion
 
 COLOR_START = os.environ.get("COLOR_START", "").replace(r"\033", "\033")
@@ -85,6 +86,7 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__, epilog='Unrecognized options are forwarded to the selected workflow. Use -- --help for its help.')
     p.add_argument('--run-settings', type=Path, help='JSON settings; defaults to config/run.local.json if present, otherwise config/run.json')
     p.add_argument('--workflow', choices=WORKFLOWS)
+    p.add_argument('--source', choices=SOURCES, help='LUND source mode for create-lund')
     p.add_argument('--git-pull', type=boolean)
     p.add_argument('--build', type=boolean)
     p.add_argument('--run', type=boolean)
@@ -138,6 +140,9 @@ def settings(args):
     
     if result['workflow'] not in WORKFLOWS:
         raise ValueError('Invalid workflow in run settings')
+
+    if result['source'] not in SOURCES:
+        raise ValueError('Invalid LUND source in run settings')
     
     for key in ('git_pull', 'build', 'run', 'test'):
         if type(result[key]) is not bool:
@@ -152,7 +157,7 @@ def settings(args):
     if not isinstance(result['build_dir'], str) or not result['build_dir']:
         raise ValueError('build_dir must be a nonempty path')
     
-    if not isinstance(result['arguments'], dict) or set(result['arguments']) - set(WORKFLOWS):
+    if not isinstance(result['arguments'], dict) or set(result['arguments']) - (set(SOURCES) | {'submit'}):
         raise ValueError('arguments must map workflow names to argument lists')
     
     for name, values in result['arguments'].items():
@@ -358,12 +363,14 @@ def main():
         config = settings(args)
     
     workflow = config['workflow']
+    source = config['source']
     build = Path(config['build_dir'])
     
     if not build.is_absolute():
         build = ROOT / build
     build = build.resolve()
-    arguments = forwarded_arguments(config['arguments'].get(workflow, []), forwarded)
+    argument_key = source if workflow == 'create-lund' else workflow
+    arguments = forwarded_arguments(config['arguments'].get(argument_key, []), forwarded)
     
     # Compile both sample applications before selecting which workflow to execute.
     if config['build']:
@@ -398,10 +405,10 @@ def main():
     
     # Dispatch exactly one workflow; generation does not automatically launch GEMC.
     if config['run']:
-        if workflow in ('uniform', 'genie'):
-            app = 'clas12-uniform' if workflow == 'uniform' else 'clas12-genie-to-lund'
-            message = f"Generating LUND files in '{COLOR_END}{app}{COLOR_START}' mode"
-            visible_length = len(f"Generating LUND files in '{app}' mode")
+        if workflow == 'create-lund':
+            app = 'clas12-uniform' if source == 'uniform' else 'clas12-generator-to-lund'
+            message = f"Creating LUND files from '{COLOR_END}{source}{COLOR_START}' input"
+            visible_length = len(f"Creating LUND files from '{source}' input")
             padding = 96 - visible_length
 
             print(f"{COLOR_START}===================================================================================================={COLOR_END}")
@@ -416,8 +423,7 @@ def main():
 
             command = [str(executable)]
         else:
-            script = 'scripts/simulation/run.py' if workflow == 'simulate' else 'scripts/slurm/submit.py'
-            command = [sys.executable, str(ROOT / script)]
+            command = [sys.executable, str(ROOT / 'scripts/slurm/submit.py')]
 
         execute(command + arguments)
 

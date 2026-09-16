@@ -15,7 +15,7 @@
 # Shared infrastructure -------------------------------------------------------
 # region Shared infrastructure
 # Purpose: Own configuration, target adapter, particle masses, output and diagnostics in one static library.
-add_library(SampleCommon STATIC common/RunConfig.cpp common/TargetGeometry.cpp common/Particle.cpp common/LundWriter.cpp common/Monitoring.cpp common/LegacyMonitoring.cpp)
+add_library(SampleCommon STATIC common/RunConfig.cpp common/RgmTarget.cpp common/TargetGeometry.cpp common/Particle.cpp common/LundWriter.cpp common/Monitoring.cpp common/LegacyMonitoring.cpp)
 target_include_directories(SampleCommon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${PROJECT_BINARY_DIR}/generated)
 target_link_libraries(SampleCommon PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
 # endregion
@@ -35,5 +35,7 @@ endif()
 if(BUILD_GENIE)
     add_library(GenieConversion STATIC genie/GenieConverter.cpp)
     target_link_libraries(GenieConversion PUBLIC SampleCommon PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)
+    add_library(PhysicalConversion STATIC physical/PhysicalConverter.cpp)
+    target_link_libraries(PhysicalConversion PUBLIC SampleCommon PRIVATE GenieConversion)
 endif()
 # endregion

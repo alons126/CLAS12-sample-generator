@@ -22,7 +22,7 @@ Keep the project centered on exactly two user-facing workflows:
 
 Keep these workflows separate: creating LUND files does not automatically submit simulation, and submission consumes already completed LUND output. Avoid extra workflow modes, abstraction layers, or orchestration features unless they directly support one of these two responsibilities.
 
-At the user interface, uniform generation and physical-event conversion are source modes of the single LUND-creation workflow, not separate top-level workflows. Likewise, the per-array-task GEMC/reconstruction runner is an internal worker of ifarm submission, not a third user-facing workflow. Maintained executables and scripts may remain separate internally when that keeps dependencies and code simple.
+At the user interface, uniform generation and physical-event conversion are `--source uniform` and `--source physical` modes of the single `create-lund` workflow, not separate top-level workflows. The physical executable is named `clas12-generator-to-lund`; it accepts `--event-generator`, defaulting to `genie`. Do not expose `--source genie` or the retired `clas12-genie-to-lund` name. Likewise, the per-array-task GEMC/reconstruction runner is an internal worker of ifarm submission, not a third user-facing workflow. Maintained executables and scripts may remain separate internally when that keeps dependencies and code simple.
 
 # Legacy design sources
 

@@ -111,7 +111,7 @@ void generateUniform(const RunConfig& c) {
     const UniformConfig settings(c);
     const auto channel = settings.channel;
     TRandom3 random(c.integer("seed")), vertex_random(c.integer("vertex-seed"));
-    TargetGeometry geometry(c.get("target"));
+    TargetGeometry geometry(c.get("vertex-mode") == "target" ? c.get("target") : "point");
     LundWriter writer(c, "uniform");
     const double beam = settings.beam;
     Monitoring monitoring(beam);
@@ -128,7 +128,7 @@ void generateUniform(const RunConfig& c) {
         event.beam_energy = beam;
 
         // All particles in one event share the sampled interaction vertex.
-        const auto vertex = geometry.sample(vertex_random);
+        const auto vertex = c.get("vertex-mode") == "fixed" ? TVector3(c.number("vertex-x"), c.number("vertex-y"), c.number("vertex-z")) : geometry.sample(vertex_random);
 
         // Choose the electron-only or artificial trigger-electron plus nucleon prescription.
         if (channel == UniformChannel::Electron) {

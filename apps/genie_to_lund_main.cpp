@@ -4,10 +4,10 @@
 
 /**
  * @file genie_to_lund_main.cpp
- * @brief GENIE-converter command-line entry point.
+ * @brief Physical event-generator conversion command-line entry point.
  *
  * Purpose:
- *   Translate CLI settings into one conversion call and a process exit status.
+ *   Select the configured physical event-generator adapter and return its process status.
  *
  * Workflow:
  *   Help returns immediately; otherwise parse -> convertGenie -> report success or caught failure.
@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 
-#include "genie/GenieConverter.h"
+#include "physical/PhysicalConverter.h"
 #include "common/environment.h"
 
 namespace env = environment;
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
             std::cout << samples::help(uniform);
             return 0;
         }
-        samples::convertGenie(samples::RunConfig::parse(argc, argv, uniform));
+        samples::convertPhysical(samples::RunConfig::parse(argc, argv, uniform));
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "Error: " << error.what() << '\n';

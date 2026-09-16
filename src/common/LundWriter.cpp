@@ -19,6 +19,7 @@
 #include <TString.h>
 
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
@@ -37,7 +38,7 @@ namespace samples {
  *   Print the shared output metadata, followed by workflow-specific settings and per-run totals.
  *
  * @param config Resolved workflow configuration.
- * @param workflow Workflow label, uniform or genie.
+ * @param workflow Manifest workflow label, uniform or physical.
  * @param scanned Number of input entries scanned for the final summary.
  * @param written Number of accepted/written events in the final summary.
  * @param final True when printing the completion report; false for setup information.
@@ -52,7 +53,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const bool uniform = workflow == "uniform";
 
     std::cout << "\033[33m\n=============================================================\n\033[0m";
-    std::cout << "\033[33m\n= " << (uniform ? "Uniform sample generation" : "GENIE to LUND conversion") << " summary" << "\n\033[0m";
+    std::cout << "\033[33m\n= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << " summary" << "\n\033[0m";
     std::cout << "\033[33m=============================================================\n\033[0m";
 
     if (uniform) {
@@ -77,6 +78,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << "\033[33mCreating plot directories...\033[0m\n";
     } else {
         std::cout << "\033[33m\nProceeding input arguments...\033[0m\n";
+        std::cout << "\033[33mEvent generator:\033[0m " << config.get("event-generator") << " " << config.get("event-generator-version") << '\n';
         std::cout << "\033[33mInputFiles:\033[0m " << config.get("input") << '\n';
         std::cout << "\033[33mLUND file prefix:\033[0m " << config.get("prefix") << '\n';
         std::cout << "\033[33mOutput directory:\033[0m " << output << '\n';
@@ -101,8 +103,8 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << "\033[33m\n- Completion summary ----------------------------------------\n\033[0m";
         std::cout << "\033[33mTotal entries scanned:\033[0m " << scanned << '\n';
         std::cout << "\033[33mEvents passing cuts:\033[0m " << written << '\n';
-        const auto output_files = (config.integer("events") + 9999) / 10000;
-        std::cout << "\033[33mOutput files allowed:\033[0m " << output_files << '\n';
+        const auto output_files = (written + 9999) / 10000;
+        std::cout << "\033[33mOutput files written:\033[0m " << output_files << '\n';
         std::cout << "\033[33m\nOperation finished!\033[0m\n";
     }
 
@@ -120,7 +122,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
  *   Cache settings, warn before removing an existing run directory, then create the run and LUND directory.
  *
  * @param c Validated configuration; must outlive this writer.
- * @param workflow Manifest workflow label, uniform or genie.
+ * @param workflow Manifest workflow label, uniform or physical.
  *
  * @note Constructor; previous output is intentionally removed before the new run starts.
  */
@@ -131,9 +133,18 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     events_per_file_(10000),
     capacity_(c.integer("events")),
       legacy_format_(c.get("lund-format") == "legacy") {
+    directory_ = std::filesystem::absolute(directory_).lexically_normal();
+    const auto root = directory_.root_path();
+    const auto source = std::filesystem::path(SAMPLE_SOURCE_DIR).lexically_normal();
+    const char* home_value = std::getenv("HOME");
+    const auto home = home_value ? std::filesystem::path(home_value).lexically_normal() : std::filesystem::path();
+    const auto directory_text = directory_.string() + std::filesystem::path::preferred_separator;
+    const bool contains_checkout = source == directory_ || source.string().rfind(directory_text, 0) == 0;
+    if (directory_.empty() || directory_ == root || (!home.empty() && directory_ == home) || directory_.filename().empty() || directory_ == std::filesystem::current_path() || contains_checkout)
+        throw std::runtime_error("Refusing unsafe output-directory replacement: " + directory_.string());
     std::filesystem::create_directories(directory_.parent_path());
     if (std::filesystem::exists(directory_)) {
-        std::cout << environment::WARNING_COLOR << "Warning: removing existing output directory: " << directory_ << environment::RESET_COLOR << '\n';
+        std::cout << environment::WARNING_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << environment::RESET_COLOR << '\n';
         std::filesystem::remove_all(directory_);
     }
     std::filesystem::create_directories(directory_ / "lundfiles");

@@ -55,7 +55,7 @@ namespace samples {
  */
 void convertGenie(const RunConfig& c) {
     c.validate(false);
-    LundWriter::printWorkflowSummary(c, "genie");
+    LundWriter::printWorkflowSummary(c, "physical");
 #pragma region /* GST input preparation */
     // Validate the input chain before constructing any output products.
     TChain chain("gst");
@@ -73,14 +73,14 @@ void convertGenie(const RunConfig& c) {
 #pragma endregion
 
     TRandom3 random(c.integer("vertex-seed"));
-    TargetGeometry geometry(c.get("target"));
+    TargetGeometry geometry(c.get("vertex-mode") == "target" ? c.get("target") : "point");
     const double beam = c.number("beam-energy");
     const int A = static_cast<int>(c.integer("A")), Z = static_cast<int>(c.integer("Z"));
     const bool legacy_mass = c.get("mass-convention") == "legacy";
     Monitoring monitoring(beam);
     TH2D legacy_electron("theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}", 100, -180., 180., 100, 0., 50.);
     legacy_electron.SetDirectory(nullptr);
-    LundWriter writer(c, "genie");
+    LundWriter writer(c, "physical");
     std::uint64_t scanned = 0;
 #pragma region /* Event conversion */
     // Scan until output capacity or input exhaustion; counts distinguish scanned and accepted events.
@@ -106,7 +106,7 @@ void convertGenie(const RunConfig& c) {
         event.beam_energy = beam;
         event.resonance_id = *resid;
         event.weight = code;
-        auto vertex = geometry.sample(random);
+        auto vertex = c.get("vertex-mode") == "fixed" ? TVector3(c.number("vertex-x"), c.number("vertex-y"), c.number("vertex-z")) : geometry.sample(random);
         event.particles.push_back({11, particleMass(11, legacy_mass), {*pxl, *pyl, *pzl}, vertex});
         // Copy only supported final-state species while preserving the input momenta.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
@@ -137,7 +137,7 @@ void convertGenie(const RunConfig& c) {
         canvas.Print((output / "monitoring_plots/theta_e_VS_phi_e.png").string().c_str());
     }
     writer.finish(scanned);
-    LundWriter::printWorkflowSummary(c, "genie", scanned, writer.count(), true);
+    LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);
     std::cout << "\033[33mScanned " << scanned << ", wrote " << writer.count() << " events to \033[0m" << c.get("output") << '\n';
 }
 #pragma endregion

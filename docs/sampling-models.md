@@ -25,7 +25,7 @@ Settings expose these limits for explicit studies; no mode automatically expands
 
 The ordinary `1e` mode draws θ uniformly in its angular interval, φ uniformly over azimuth and p uniformly from 0 to the beam value. Its density in θ is constant, so it is not uniform solid angle. This prescription matches the archived generator.
 
-`electron-momentum=beam` fixes p to the beam value while retaining the same angular draws. The angular-tester example additionally selects `target=point`, fixing the vertex at the origin. The electron tester does not consume vertex random numbers.
+`electron-momentum=beam` fixes p to the beam value while retaining the same angular draws. The angular-tester profile uses `vertex-mode=fixed` at `(0,0,-3 cm)`. It does not consume vertex random numbers.
 
 ## 3. Fixed nucleon mode
 

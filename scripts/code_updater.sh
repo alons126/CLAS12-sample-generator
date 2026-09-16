@@ -12,7 +12,7 @@
 # ------------------------------------------------------------------------------------------
 # Purpose
 # -------
-# Performs repository maintenance and environment setup for the 2N Analyzer.
+# Replaces the disposable ifarm checkout with the pushed CLAS12 sample-generator revision.
 #
 # Steps performed
 # ---------------
@@ -20,7 +20,7 @@
 # 2. Reset local repository state.
 # 3. Pull latest changes from remote.
 # 4. Display commit and branch information.
-# 5. Reinitialize environment and screen helpers.
+# 5. Return status to run.csh; environment loading happens there after the update.
 # ------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------------
@@ -79,7 +79,11 @@ echo ""
 # This allows reuse of the existing CMake build when the source code has not
 # changed, which significantly speeds up repeated runs on the SSH machine.
 
+git rev-parse --show-toplevel
+if ( $status != 0 ) exit 1
+
 git clean -fxd -e build/ -e build
+if ( $status != 0 ) exit 1
 
 echo ""
 
@@ -95,6 +99,7 @@ echo ""
 # pulling updates.
 
 git reset --hard
+if ( $status != 0 ) exit 1
 
 # Fetch new commits from the remote repository and update the local branch.
 
@@ -141,7 +146,7 @@ echo ""
 # Source the environment setup script which defines variables such as
 # DIR_CLAS12_SAMPLE_GENERATOR_CODE, IFARM_RUN, and other runtime settings.
 
-source ./scripts/environment/set_environment.csh
+# run.csh sources the environment after this child process succeeds.
 # # Source the screen helper script that defines aliases and functions for
 # # launching analysis runs inside detached screen sessions.
 

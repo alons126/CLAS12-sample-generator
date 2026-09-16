@@ -10,18 +10,26 @@ Relative paths are interpreted from the caller's working directory. The output p
 | --- | --- | --- |
 | `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
-| `target` | `Ar` | Vertex geometry name, independent of A/Z |
-| `A`, `Z` | `1`, `1` | LUND nuclear metadata; require 1≤A≤300, 0≤Z≤A |
+| `rgm-target` | `Ar40` | Catalog identity resolving nucleus, vertex geometry and GEMC variation |
+| `target` | `auto` | Protected `targets.h` geometry key; normally resolved from `rgm-target` |
+| `A`, `Z` | `auto` | LUND nuclear metadata resolved from `rgm-target`; require 1≤A≤300, 0≤Z≤A |
+| `gemc-target-variation` | `auto` | GCARD target variation resolved from `rgm-target` |
+| `vertex-mode` | `target` | Sample the selected target or use explicit `fixed` coordinates |
+| `vertex-x/y/z` | `0` / `0` / `-3` | Fixed-vertex coordinates in cm |
 | `events` | Required | Total number of accepted events to write; files split automatically at 10,000 events |
 | `seed` | `67890` | Uniform kinematic RNG seed; unused in GENIE conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed |
-| `prefix` | `Uniform_sample` / `GENIE_sample` | Filename label; letters, digits, `_`, `-`, `.` |
+| `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
 | `lund-format` | `legacy` | Legacy text precision/numbering, or `precise` |
 | `mass-convention` | `legacy` | Restored constants, or `standard` pion constants |
 | `render-plots` | `false` | `true` additionally writes diagnostic PDF/PNG files |
-| `input` | Required for GENIE | ROOT GST input filename or quoted glob |
+| `input` | Required for physical input | Event-generator input filename or quoted glob |
+| `event-generator` | `genie` | Physical adapter name; GENIE is currently implemented |
+| `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |
+| `tune`, `q2-cut` | `unknown` / energy-based | Generator provenance and naming components |
+| `gemc-version` | `unknown` | Planned detector-simulation version and naming component |
 
-Counts and seeds must be integers from 1 through 4294967295. The explicit Ar example files set A=40/Z=18; bare CLI defaults retain the imported uniform header convention A=Z=1. Always select the intended metadata for production.
+Counts and seeds must be integers from 1 through 4294967295. Production Ar defaults resolve to A=40/Z=18. Legacy parity tests explicitly request the archived A=1/Z=1 uniform headers.
 
 ## Uniform settings
 
@@ -44,7 +52,7 @@ Theta limits require 0≤min<max≤180. Fixed momentum must be positive; uniform
 
 The authoritative source is the replaceable [`src/common/external/targets.h`](../src/common/external/targets.h); see [external inputs](external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
 
-All positions below are in cm in the imported GEMC coordinate convention. Except `point`, x and y are independent Gaussians with mean 0 and sigma 0.04 cm.
+All positions below are in cm in the imported GEMC coordinate convention. Target-sampled x and y are independent Gaussians with mean 0 and sigma 0.04 cm.
 
 | Name | z prescription |
 | --- | --- |
@@ -55,9 +63,27 @@ All positions below are in cm in the imported GEMC coordinate convention. Except
 | `1-foil-small` | −2.1 |
 | `1-foil-large` | −2.32 |
 | `Ca` | −3.0 |
-| `point` | x=y=z=0 |
+| `point` | compatibility alias for fixed x=y=0, z=−3 |
 
 Unknown geometries fail instead of writing sentinel coordinates. Geometry does not automatically select a matching detector card.
+
+## RG-M target catalog
+
+The maintained catalog maps target identity onto the protected geometry source and official GEMC variation. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
+
+| Identifier | A/Z | Vertex geometry | GEMC target variation |
+| --- | --- | --- | --- |
+| `H1` | 1/1 | `liquid` | `rga_spring2019` |
+| `D2` | 2/1 | `liquid` | `rgb_fall2019` |
+| `He4` | 4/2 | `liquid` | `rgm_fall2021_He` |
+| `C12-four-foil` | 12/6 | `4-foil` | `rgm_fall2021_Cx4` |
+| `Sn-nat-four-foil` | 119/50 | `4-foil` | `rgm_fall2021_Snx4` |
+| `Ca40`, `Ca48` | 40/20, 48/20 | `Ca` | `rgm_fall2021_Ca` |
+| `C12-small` | 12/6 | `1-foil-small` | `rgm_fall2021_C_S` |
+| `C12-large` | 12/6 | `1-foil-large` | `rgm_fall2021_C_L` |
+| `Ar40` | 40/18 | `Ar` | `rgm_fall2021_Ar` |
+| `Sn120-large` | 120/50 | `1-foil-large` | `rgm_fall2021_Sn_L` |
+| `C12-legacy`, `Sn120-legacy` | 12/6, 120/50 | `1-foil` | Removed legacy variations retained for reproduction |
 
 ## Manifest
 

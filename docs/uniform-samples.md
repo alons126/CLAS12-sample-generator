@@ -43,7 +43,9 @@ build/debug/apps/clas12-uniform \
   --output runs
 ```
 
-This holds electron momentum at the beam value and fixes the vertex at the origin. `electron-momentum` affects only `1e`; the electron in `ep/en` is always the configured trigger. Nucleon settings do not affect `1e`.
+This holds electron momentum at the beam value and fixes the vertex at `(0,0,-3 cm)`, matching the legacy Hall B engineering-center tester. `electron-momentum` affects only `1e`; the electron in `ep/en` is always the configured trigger. Nucleon settings do not affect `1e`.
+
+Select an RG-M material/assembly with `--rgm-target`. The catalog resolves its LUND `A/Z`, protected `targets.h` geometry key, and GEMC variation. Available identifiers are `H1`, `D2`, `He4`, `C12-four-foil`, `Sn-nat-four-foil`, `Ca40`, `Ca48`, `C12-small`, `C12-large`, `Ar40`, `Sn120-large`, plus the archived `C12-legacy` and `Sn120-legacy` configurations. Geometry and metadata remain individually overridable for controlled compatibility studies.
 
 ## Reproducibility and diagnostics
 

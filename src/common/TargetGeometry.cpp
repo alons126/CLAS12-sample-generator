@@ -69,7 +69,7 @@ void TargetGeometry::validate(const std::string& name) {
  *   Use the external geometry algorithm without coupling otherwise independent run RNG streams.
  *
  * Algorithm:
- *   1. Return the origin directly for point mode.
+ *   1. Return the Hall B engineering center directly for compatibility point mode.
  *   2. Lock the external RNG and copy in the caller state.
  *   3. Call randomVertex, copy the advanced state back, and check the vertex.
  *
@@ -78,7 +78,7 @@ void TargetGeometry::validate(const std::string& name) {
  * @return Vertex in cm; throws if the external sampler returns non-finite coordinates.
  */
 TVector3 TargetGeometry::sample(TRandom3& random) const {
-    if (name_ == "point") return {0, 0, 0};
+    if (name_ == "point") return {0, 0, -3};
     // Upstream randomVertex uses a global TRandom3 named ran. Transfer the full
     // caller-owned state, not just its seed, so streams remain reproducible and
     // independent even when different geometry instances are interleaved.

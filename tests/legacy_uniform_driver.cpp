@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     for (int i = 1; i <= files; ++i) {
         ofstream out(output + "/legacy_" + to_string(i) + ".txt");
         if (tester)
-            Generate_uniform_event_e_tester(TVector3(0, 0, 0), h1, h2, out, "", "", kinematics, events, 0, 0, 1, 11, beam, beam, 1, mass_e, 5, 40);
+            Generate_uniform_event_e_tester(TVector3(0, 0, -3), h1, h2, out, "", "", kinematics, events, 0, 0, 1, 11, beam, beam, 1, mass_e, 5, 40);
         else if (channel == "1e")
             Generate_uniform_event(target, h1, h2, out, "", "", kinematics, events, 0, 0, 1, 11, beam, beam, 1, mass_e, 5, 40);
         else

@@ -1,13 +1,16 @@
-# GENIE GST to LUND conversion
+# Physical event-generator input to LUND
 
 ```bash
-build/debug/apps/clas12-genie-to-lund \
+build/debug/apps/clas12-generator-to-lund \
+  --event-generator genie \
   --config config/samples/genie.conf \
   --input '/path/to/truth/gst*.root' \
   --output runs/genie-example
 ```
 
-Quote globs so ROOT receives the pattern. Inputs must contain a tree named `gst`. Beam energy, target geometry and nuclear A/Z are explicit settings; the converter no longer guesses them from input filenames. The sample config uses Ar geometry and A=40/Z=18. Check these values against the actual input and selected detector card.
+`event-generator` defaults to `genie`; other values are rejected until their adapter is implemented. Quote globs so ROOT receives the pattern. GENIE inputs must contain a tree named `gst`. Select `--rgm-target` to resolve target geometry, nuclear A/Z, and the GEMC target variation together; explicit overrides remain available. The converter never guesses scientific metadata from input filenames.
+
+Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>_GEMC-<version>` below the supplied output parent. For example, `C12-small`, GENIE 3.2.2, tune `GEM21_11a_00_000`, and GEMC 5.14 produce `rgm_fall2021_C_S__genie-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14`. Every component is also stored separately in the manifest.
 
 ## Required schema
 
@@ -39,7 +42,7 @@ Field 10 is a legacy process tag, **not a generator cross-section weight**. Do n
 
 For six accepted events with `--events 6`, output contains one file with count 6. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
 
-Use a new output directory for each conversion. `monitoring.root` contains per-PDG diagnostics for written particles. The additional `legacy_histograms.root` contains the original electron theta-versus-phi diagnostic, filled before process selection. `--render-plots true` adds PDF/PNG output. Rendering filenames/styles are standardized; histogram contents are tested against the archived converter.
+The resolved metadata-named run directory is recreated when it already exists, matching the legacy lifecycle. `monitoring.root` contains per-PDG diagnostics for written particles. The additional `legacy_histograms.root` contains the original electron theta-versus-phi diagnostic, filled before process selection. `--render-plots true` adds PDF/PNG output. Rendering filenames/styles are standardized; histogram contents are tested against the archived converter.
 
 ## Reproduce the legacy wrapper settings
 

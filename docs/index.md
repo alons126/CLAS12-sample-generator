@@ -1,6 +1,6 @@
 # Newcomer guide
 
-This project prepares events for CLAS12 detector simulation. It brings together two previously independent codebases under one build and one execution workflow.
+This project has two user-facing workflows: create LUND files, and submit completed LUND files to ifarm Slurm for GEMC plus reconstruction. LUND creation accepts uniform or physical input sources.
 
 ## The stages
 
@@ -20,7 +20,7 @@ Existing GENIE GST --> conversion --+
 
 1. [Build and test](building.md): dependencies, commands and troubleshooting.
 2. [Architecture](architecture.md): source layout and a run through the code.
-3. Choose [uniform generation](uniform-samples.md) or [GENIE conversion](genie-to-lund-conversion.md).
+3. Choose [uniform generation](uniform-samples.md) or [physical event-generator conversion](genie-to-lund-conversion.md).
 4. [Configuration](configuration.md): units, defaults, seeds and target settings.
 5. [Simulation and Slurm](gemc-reconstruction-batch-submission.md): preview commands before execution.
 6. [Migration](migration.md): old-to-new entry points and deliberate behavioral changes.
@@ -43,7 +43,7 @@ runs/example/
     simulation/         # Command records and detector-config hashes
 ```
 
-A failed generation may leave partial files but no completed manifest. Choose a new directory after investigating the failure. The software never recursively deletes a run directory.
+A failed generation may leave partial files but no completed manifest. On rerun, the resolved run directory is validated, reported, recursively removed, and recreated, preserving the legacy generator lifecycle.
 
 All documented shell examples start at the repository root. Executables and scripts also work from other directories when supplied appropriate paths; relative sample configuration paths are interpreted from the caller's working directory.
 
@@ -52,9 +52,3 @@ For local editing and server execution via `source run.csh`, read the [SSH workf
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
 The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
-
-## Remaining TODOs
-
-- Finish adding monitoring printouts to new code
-- remove git_pull: false
-- Make sure that the genie converter does not use uniform kinematics

@@ -61,7 +61,7 @@ def payload_environment(data, index, path, count, mc, reco, gcard, reconstructio
     env.update(GCARD_FILE=str(gcard), YAML_FILE=str(reconstruction), TORUS_FIELD=str(args.torus),
                OUTPATH=str(mc.parent.parent), SLURM_ARRAY_TASK_ID=str(index),
                SAMPLE_FILE_PREFIX=path.name[:-len(suffix)],
-               SAMPLE_GENERATOR=env.get('SAMPLE_GENERATOR', str(data.get('workflow', ''))),
+               SAMPLE_GENERATOR=env.get('SAMPLE_GENERATOR', str(config.get('event-generator', data.get('workflow', '')))),
                GENERATOR_TUNE=env.get('GENERATOR_TUNE', env.get('GENIE_TUNE', '')),
                SAMPLE_TARGET_NUCLEUS=env.get('SAMPLE_TARGET_NUCLEUS', str(config.get('target', ''))),
                TEMP_BEAM_E=env.get('TEMP_BEAM_E', str(config.get('beam-energy', ''))),

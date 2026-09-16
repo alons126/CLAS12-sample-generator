@@ -18,7 +18,7 @@ import tempfile
 
 def uniform_output(root, channel, beam):
     """Return the resolved uniform run directory for one requested output root."""
-    energy_mev = int(float(beam) * 1000 + 0.5)
+    energy_mev = {'2.07052':2070, '4.02962':4029, '5.98636':5986}.get(str(beam), int(float(beam) * 1000 + 0.5))
     return root / f'Uniform_sample_{channel}_{energy_mev:04d}MeV'
 
 
@@ -81,7 +81,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
                 run(legacy,channel,original,beam,64,1,67890,12345,'Ar')
                 extra = ['--electron-momentum','beam','--target','point'] if channel=='tester' else []
                 run(current,'--channel','1e' if channel=='tester' else channel,'--beam-energy',beam,'--events',64,
-                    '--seed',67890,'--vertex-seed',12345,'--output',new_root,*extra)
+                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--output',new_root,*extra)
                 run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
                 m=json.loads((new/'manifest.json').read_text())
                 assert len(m['files']) == 1
@@ -90,7 +90,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             original,new_root=root/(target+'-old'),root/(target+'-new')
             new=uniform_output(new_root,'1e','2.07052')
             run(legacy,'1e',original,2.07052,64,1,67890,12345,target)
-            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--events',64,'--output',new_root)
+            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--A',1,'--Z',1,'--events',64,'--output',new_root)
             m=json.loads((new/'manifest.json').read_text())
             compare(new/m['files'][0]['path'],original/'legacy_1.txt')
     else:
@@ -98,9 +98,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         for beam,label,target,A,Z in [('2.07052','2070MeV','1-foil-small',12,6),('4.02962','4029MeV','1-foil-large',12,6),('5.98636','5986MeV','4-foil',12,6)]:
             gst=root/f'C12_GEM21_11a_00_000_{label}.root'
             run(fixture,gst,'parity')
-            original,new=root/(label+'-old'),root/(label+'-new')
+            original,new_root=root/(label+'-old'),root/(label+'-new')
             run(legacy,gst,original,1,target,A,Z)
-            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--output',new)
+            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--output',new_root)
+            q2={'2.07052':'Q2_0_02','4.02962':'Q2_0_25','5.98636':'Q2_0_40'}[beam]
+            new=new_root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{label}_GEMC-unknown'
             m=json.loads((new/'manifest.json').read_text())
             run(sys.argv[5], original/'histograms.root', new/'legacy_histograms.root')
             old=list((original/'lundfiles').glob('*.txt'))
@@ -109,9 +111,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         # Expose rather than reproduce the archived early-termination defect.
         gst=root/'C12_GEM21_11a_00_000_2070MeV_short.root'
         run(fixture,gst)
-        original,new=root/'short-old',root/'short-new'
+        original,new_root=root/'short-old',root/'short-new'
         run(legacy,gst,original,1,'1-foil-small',12,6)
-        run(current,'--input',gst,'--beam-energy',2.07052,'--target','1-foil-small','--A',12,'--Z',6,'--events',10000,'--output',new)
+        run(current,'--input',gst,'--beam-energy',2.07052,'--target','1-foil-small','--A',12,'--Z',6,'--events',10000,'--output',new_root)
+        new=new_root/'rgm_fall2021_Ar__genie-unknown__unknown__Q2_0_02__2070MeV_GEMC-unknown'
         old=next((original/'lundfiles').glob('*.txt')).read_text().splitlines()
         m=json.loads((new/'manifest.json').read_text())
         assert len(old)==8 and m['written_events']==6

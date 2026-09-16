@@ -2,58 +2,28 @@
 
 # run.csh --------------------------------------------------------------------
 # Description:
-#   Main sourced checkout entry point.
+#   Authoritative ifarm checkout entry point.
 # Purpose:
-#   Locate the checkout and delegate configured update/build/test/run stages to workflow.py.
+#   Replace the disposable server clone with the remote revision, load its environment, then build
+#   and run one configured CLAS12 sample workflow.
 # Workflow:
-#   1. Resolve the checkout from invocation, cwd or CLAS12_SAMPLES_DIR.
-#   2. Forward quoted arguments to the shared Python driver.
-#   3. Return its status without exiting the sourced parent shell.
-# Usage (csh/tcsh, including files named .sh):
-#   source run.csh --test true --run false
+#   1. Resolve and verify the checkout before running Git commands.
+#   2. Run the intentionally destructive server-mirror updater in a child shell.
+#   3. Load the updated environment and delegate build/test/run stages to workflow.py.
+# Usage:
+#   source run.csh --workflow create-lund --source uniform [sample options]
+#   source run.csh --workflow create-lund --source physical --event-generator genie [sample options]
+#   source run.csh --workflow submit [submission options]
 # Inputs:
-#   $argv carries launcher/child options; CLAS12_SAMPLES_DIR overrides the root.
+#   $argv carries launcher and child options; CLAS12_SAMPLES_DIR overrides checkout discovery.
 # Outputs:
-#   CLAS12_SAMPLE_STATUS and immediate $status report the driver result.
+#   CLAS12_SAMPLE_STATUS and immediate $status report the complete update/build/run result.
 # Notes:
-#   Source from the repository root unless CLAS12_SAMPLES_DIR is set.
-#   The Python driver inherits the already-loaded server software environment.
+#   The ifarm checkout is disposable. Commit and push valuable changes from the local development
+#   clone before sourcing this file. The updater resets tracked changes and cleans untracked files.
 
-# CLAS12 sample workflow entry point. Source from the repository root, or set
-# CLAS12_SAMPLES_DIR when sourcing from elsewhere. Execution works from any cwd.
-
-# Initial setup ----------------------------------------------------------------
-
-# Set environment.
-set SET_COLORS_FILE = ./scripts/environment/set_colors.csh
-if (-f ${SET_COLORS_FILE}) then
-    source ${SET_COLORS_FILE}
-else
-    printf "${COLOR_START}-->${COLOR_END} %s%s%s\n" "${COLOR_ERROR_START}Error:${COLOR_END}" " the following file does not exist: ${SET_COLORS_FILE}"
-    exit 1
-endif
-
-# Print the project ASCII logo banner.
-# The banner script lives under scripts/printers/.
-set PRINT_LOGO_FILE = ./scripts/printers/print_logo.csh
-if (-f ${PRINT_LOGO_FILE}) then
-    source ${PRINT_LOGO_FILE}
-else
-    printf "${COLOR_START}-->${COLOR_END} %s%s%s\n" "${COLOR_ERROR_START}Error:${COLOR_END}" " the following file does not exist: ${PRINT_LOGO_FILE}"
-    exit 1
-endif
-
-# Run optional repository update helper script.
-# This typically performs git cleanup/reset and other maintenance steps.
-set UPDATE_ONLY_FILE = ./update_only.sh
-if (-f ${UPDATE_ONLY_FILE}) then
-    source ${UPDATE_ONLY_FILE}
-else
-    printf "${COLOR_START}-->${COLOR_END} %s%s%s\n" "${COLOR_ERROR_START}Error:${COLOR_END}" " the following file does not exist: ${UPDATE_ONLY_FILE}"
-    exit 1
-endif
-
-# Checkout discovery -----------------------------------------------------------
+# Checkout discovery ----------------------------------------------------------
+# region Checkout discovery
 set _clas12_invocation = "$0"
 set _clas12_root = "$cwd"
 if ("$_clas12_invocation:t" != "tcsh" && "$_clas12_invocation:t" != "csh" && "$_clas12_invocation" !~ "-*") then
@@ -62,18 +32,49 @@ endif
 if ($?CLAS12_SAMPLES_DIR) then
     set _clas12_root = "$CLAS12_SAMPLES_DIR"
 endif
+set _clas12_root = `cd "$_clas12_root" && pwd`
 
-# Driver invocation ------------------------------------------------------------
-if (-f "$_clas12_root/scripts/workflow.py") then
-    python3 "$_clas12_root/scripts/workflow.py"  $argv:q
-    set CLAS12_SAMPLE_STATUS = $status
-else
-    echo "Cannot find scripts/workflow.py. Source from the checkout root or set CLAS12_SAMPLES_DIR."
+if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/scripts/workflow.py") then
+    echo "Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
     set CLAS12_SAMPLE_STATUS = 1
+    unset _clas12_invocation _clas12_root
+    /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
+endif
+# endregion
+
+# Server mirror update --------------------------------------------------------
+# region Server mirror update
+pushd "$_clas12_root" > /dev/null
+if (-f scripts/environment/set_colors.csh) source scripts/environment/set_colors.csh
+if (-f scripts/printers/print_logo.csh) source scripts/printers/print_logo.csh
+
+if ($?CLAS12_SKIP_SERVER_SYNC && "$CLAS12_SKIP_SERVER_SYNC" == "1") then
+    echo "Skipping ifarm checkout replacement (explicit local/test override)."
+    set CLAS12_SAMPLE_STATUS = 0
+else
+    echo "Updating disposable ifarm checkout at $_clas12_root"
+    tcsh -f scripts/code_updater.sh
+    set CLAS12_SAMPLE_STATUS = $status
 endif
 
+if ($CLAS12_SAMPLE_STATUS == 0 && -f scripts/environment/set_environment.csh) then
+    source scripts/environment/set_environment.csh
+    set CLAS12_SAMPLE_STATUS = $status
+endif
+# endregion
+
+# Workflow dispatch -----------------------------------------------------------
+# region Workflow dispatch
+if ($CLAS12_SAMPLE_STATUS == 0) then
+    python3 scripts/workflow.py --git-pull false $argv:q
+    set CLAS12_SAMPLE_STATUS = $status
+endif
+popd > /dev/null
+# endregion
+
 # Caller status ---------------------------------------------------------------
+# region Caller status
 unset _clas12_invocation _clas12_root
-# Last command propagates status to both executed and sourced callers.
-# In particular, do not use exit here: it would close a sourced SSH shell.
+# Do not use exit: this file is normally sourced into the user's SSH shell.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
+# endregion

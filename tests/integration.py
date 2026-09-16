@@ -77,6 +77,13 @@ def read_run(directory):
 # endregion
 
 
+def physical_output(root, beam='5.98636'):
+    """Return the default metadata-derived physical run directory."""
+    q2 = {'2.07052':'Q2_0_02', '4.02962':'Q2_0_25', '5.98636':'Q2_0_40'}.get(str(beam), 'none')
+    mev = int(float(beam) * 1000 + 0.5)
+    return root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{mev}MeV_GEMC-unknown'
+
+
 # angles --------------------------------------------------------------------
 # region angles
 def angles(particle):
@@ -134,11 +141,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             sentinel = output/'keep.txt'
             sentinel.write_text('keep')
             rerun = run(executable, *settings, '--output', output_root)
-            assert '\x1b[36mWarning: removing existing output directory:' in rerun.stdout
+            assert 'Replacing existing run directory (legacy behavior):' in rerun.stdout
             assert not sentinel.exists()
         config = root/'sample.conf'
         config.write_text('# test precedence\nchannel = en\nevents = 3\nbeam-energy = 2.07052\n')
-        configured = root/'configured'/ 'Uniform_sample_en_2071MeV'
+        configured = root/'configured'/ 'Uniform_sample_en_2070MeV'
         run(executable, '--config', config, '--events', '5', '--output', configured.parent)
         m,_ = read_run(configured)
         assert m['written_events'] == 5 and m['config']['trigger-phi-offset'] == '16'
@@ -150,7 +157,22 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         tester = root/'tester'/ 'Uniform_sample_1e_5986MeV'
         run(executable, '--electron-momentum', 'beam', '--target', 'point', '--events', '5', '--output', tester.parent)
         _,events=read_run(tester)
-        assert all(p[0][11:]==[0,0,0] and math.isclose(angles(p[0])[0],5.98636,abs_tol=1e-8) for h,p in events)
+        assert all(p[0][11:]==[0,0,-3] and math.isclose(angles(p[0])[0],5.98636,abs_tol=1e-8) for h,p in events)
+        # Every material-bearing RG-M target resolves nuclear metadata and one external geometry key.
+        targets = {
+            'H1':(1,1,'liquid'), 'D2':(2,1,'liquid'), 'He4':(4,2,'liquid'),
+            'C12-four-foil':(12,6,'4-foil'), 'Sn-nat-four-foil':(119,50,'4-foil'),
+            'Ca40':(40,20,'Ca'), 'Ca48':(48,20,'Ca'), 'C12-small':(12,6,'1-foil-small'),
+            'C12-large':(12,6,'1-foil-large'), 'Ar40':(40,18,'Ar'),
+            'Sn120-large':(120,50,'1-foil-large'), 'C12-legacy':(12,6,'1-foil'),
+            'Sn120-legacy':(120,50,'1-foil'),
+        }
+        for name,(A,Z,geometry) in targets.items():
+            parent=root/'targets'/name
+            run(executable,'--rgm-target',name,'--events','1','--output',parent)
+            manifest,_=read_run(parent/'Uniform_sample_1e_5986MeV')
+            assert manifest['config']['A']==str(A) and manifest['config']['Z']==str(Z)
+            assert manifest['config']['target']==geometry
         for key,value in [('channel','bad'),('seed','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
             output=root/('invalid-'+key)
             run(executable, '--'+key, value, '--output', output, ok=False)
@@ -159,9 +181,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         fixture = sys.argv[3]
         gst = root/'gst.root'
         run(fixture, gst)
-        output = root/'converted'
-        run(executable, '--input', gst, '--output', output, '--events', '6', '--A','40','--Z','18')
+        output_root = root/'converted'; output = physical_output(output_root)
+        run(executable, '--input', gst, '--output', output_root, '--events', '6', '--A','40','--Z','18')
         m,events=read_run(output)
+        assert m['workflow']=='physical' and m['config']['event-generator']=='genie'
         assert m['scanned_events']==7 and m['written_events']==6
         assert [f['events'] for f in m['files']]==[6]
         assert [int(h[9]) for h,p in events]==[1,2,3,4,1,1]
@@ -170,26 +193,33 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             assert h[1:4]==['40','18','7']
             assert [int(x[3]) for x in p]==[11,2212,2112,211,-211,111,22]
             assert p[0][6:9]==[0.5,0.1,2]
-        run(executable,'--input',gst,'--output',root/'limited','--events','2')
-        m,_=read_run(root/'limited')
+        named_root=root/'named'
+        run(executable,'--input',gst,'--output',named_root,'--events','1','--rgm-target','C12-small',
+            '--event-generator-version','3.2.2','--tune','GEM21_11a_00_000','--q2-cut','Q2_0_40','--gemc-version','5.14')
+        named=named_root/'rgm_fall2021_C_S__genie-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14'
+        nm,_=read_run(named)
+        assert nm['config']['A']=='12' and nm['config']['Z']=='6' and nm['config']['target']=='1-foil-small'
+        limited_root=root/'limited'
+        run(executable,'--input',gst,'--output',limited_root,'--events','2')
+        m,_=read_run(physical_output(limited_root))
         assert m['written_events']==2 and m['scanned_events']==2 and len(m['files'])==1
         run(fixture,root/'missing.root','missing')
         run(executable,'--input',root/'missing.root','--output',root/'bad',ok=False)
-        assert not (root/'bad').exists()
         run(executable,'--input',root/'absent.root','--output',root/'absent',ok=False)
         for kind in ['wrong-type','empty','unsupported']:
             run(fixture,root/(kind+'.root'),kind)
             bad=root/(kind+'-output')
             run(executable,'--input',root/(kind+'.root'),'--output',bad,ok=False)
-            assert not (bad/'manifest.json').exists()
+            assert not (physical_output(bad)/'manifest.json').exists()
         run(fixture,root/'large.root','large')
-        run(executable,'--input',root/'large.root','--output',root/'large-output','--events','4')
-        m,e=read_run(root/'large-output')
+        large_root=root/'large-output'
+        run(executable,'--input',root/'large.root','--output',large_root,'--events','4')
+        m,e=read_run(physical_output(large_root))
         assert m['written_events']==4 and all(len(p)==7 for h,p in e)
         run(fixture,root/'chain-a.root')
         run(fixture,root/'chain-b.root','missing')
         run(executable,'--input',root/'chain-*.root','--output',root/'chain-output',ok=False)
-        assert not (root/'chain-output/manifest.json').exists()
+        assert not (physical_output(root/'chain-output')/'manifest.json').exists()
 
 print(mode+' integration passed')
 

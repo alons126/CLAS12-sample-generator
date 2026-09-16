@@ -41,8 +41,11 @@ def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
         Captured result; quoting, shell-exit or status mismatches raise an assertion.
     """
     program = 'source "$argv[1]" $argv[2-]:q; set result=$status; echo "RESULT=$result"; echo SHELL_ALIVE; /bin/sh -c "exit $result"'
+    effective_env = dict(os.environ, CLAS12_SKIP_SERVER_SYNC='1')
+    if env:
+        effective_env.update(env)
     result = subprocess.run([shell, '-f', '-c', program, str(project/entry), *map(str,args)], cwd=cwd,
-                            env=env, text=True, capture_output=True)
+                            env=effective_env, text=True, capture_output=True)
     assert ('SHELL_ALIVE' in result.stdout), result.stdout+result.stderr
     assert (result.returncode==0)==success, result.stdout+result.stderr
     return result
@@ -56,19 +59,20 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     output=root/'output with spaces'
     args=['--build','false','--build-dir',build,'--events','4','--output',output]
     sourced(args)
+    output = output/'Uniform_sample_1e_5986MeV'
     m=json.loads((output/'manifest.json').read_text())
     assert m['written_events']==4
     assert m['targets_sha256'] == hashlib.sha256((project/'src/common/external/targets.h').read_bytes()).hexdigest()
-    sourced(args,success=False)  # existing output rejects, but the SSH shell lives
+    sourced(args)  # legacy behavior replaces the resolved run directory
     sourced(['--build','false','--run','false','--jobs','0'],success=False)
     sourced(['--build','false','--run','false','--build-dir',root/'missing-build'])
-    sourced(['--build','false','--workflow','genie','--build-dir',build,'--','--help'])
+    sourced(['--build','false','--workflow','create-lund','--source','physical','--build-dir',build,'--','--help'])
     # From another directory, the documented environment variable identifies the checkout.
     env=dict(os.environ,CLAS12_SAMPLES_DIR=str(project))
     sourced(['--build','false','--run','false'],cwd=root,env=env)
     sourced(['--build','false','--run','false'],entry='scripts/build_and_run.csh')
     # Direct execution also resolves the entry location.
-    subprocess.run([str(project/'run.csh'),'--build','false','--run','false'],cwd=root,check=True,capture_output=True)
+    subprocess.run([str(project/'run.csh'),'--build','false','--run','false'],cwd=root,env=dict(os.environ,CLAS12_SKIP_SERVER_SYNC='1'),check=True,capture_output=True)
     # Verify profile/CLI precedence and argv preservation using isolated fake build tools.
     checkout=root/'checkout'
     shutil.copytree(project/'scripts',checkout/'scripts')

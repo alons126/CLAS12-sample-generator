@@ -5,7 +5,7 @@ One compiled project for two sources of CLAS12 simulation input:
 - **Uniform samples** for acceptance-map studies: $(e,e')$, $(e,e'pFD)$, $(e,e'nFD)$ samples.
 - **Physical samples**: conversion of existing GENIE `gst` ROOT trees to LUND.
 
-Both write LUND files and a run manifest. The same runner sends those files through GEMC and reconstruction, locally or through Slurm. This repository does not run the GENIE event generator itself or calculate final acceptance maps.
+Both write LUND files and a run manifest. The submission workflow sends completed files through GEMC and reconstruction on ifarm Slurm. This repository does not run the physical event generator itself or calculate final acceptance maps.
 
 ## First build and sample
 
@@ -33,7 +33,7 @@ Open `runs/first-electron/Uniform_sample_1e_5986MeV/manifest.json` to see the re
 Read the [newcomer guide](docs/index.md), then [build instructions](docs/building.md) and the [architecture walkthrough](docs/architecture.md).
 
 - [Uniform generation](docs/uniform-samples.md)
-- [GENIE conversion](docs/genie-to-lund-conversion.md)
+- [Physical event-generator conversion](docs/genie-to-lund-conversion.md)
 - [GEMC, reconstruction and Slurm](docs/gemc-reconstruction-batch-submission.md)
 - [Configuration reference](docs/configuration.md)
 - [Technical note and complete reference](docs/technical-note.md)

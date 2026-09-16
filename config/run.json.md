@@ -20,7 +20,8 @@ Paths passed through the launcher are interpreted from the checkout root. Server
 
 | Key | Checked-in value | Meaning / CLI override |
 | --- | --- | --- |
-| `workflow` | `uniform` | One of uniform, genie, simulate, submit; `--workflow` |
+| `workflow` | `create-lund` | Create LUND files or submit completed files; `--workflow create-lund|submit` |
+| `source` | `uniform` | LUND input mode; `--source uniform|physical` |
 | `git_pull` | `false` | Request a clean-checkout `git pull --ff-only`; `--git-pull true` |
 | `build` | `true` | Configure and incrementally build both applications; `--build false` reuses binaries |
 | `run` | `true` | Execute the selected workflow after preceding stages; `--run false` stops after build/tests |
@@ -36,8 +37,7 @@ Paths passed through the launcher are interpreted from the checkout root. Server
 | Entry | Checked-in behavior |
 | --- | --- |
 | `arguments.uniform` | Use the electron sample profile and write to `runs/default-uniform` |
-| `arguments.genie` | Use `config/samples/genie.conf`; supply the actual GST input/output as needed |
-| `arguments.simulate` | Empty; supply manifest, gcard, reconstruction YAML and field options |
+| `arguments.physical` | Use `config/samples/genie.conf`; supply the actual event-generator input/output as needed |
 | `arguments.submit` | Empty; supply simulation inputs and a Slurm site profile |
 
 For example, from csh/tcsh at the checkout root:
@@ -49,4 +49,4 @@ source run.csh --output runs/electron-next
 
 ## Outputs and failure behavior
 
-The default generates 1,000 electron events in a new output directory. Reusing that directory fails rather than overwriting. Failed builds/tests stop execution; a sourced shell remains open and receives a failure status. Simulation and submission preview commands until `--execute` is forwarded. Git updates refuse local tracked/untracked changes and never reset or clean the checkout. See [SSH workflow](../docs/ssh-workflow.md) for full usage.
+The default creates a uniform electron LUND run. A validated existing run directory is removed and recreated, preserving legacy behavior. Failed builds/tests stop execution; a sourced shell remains open and receives a failure status. Submission previews until `--execute` is forwarded. `run.csh` intentionally cleans, resets, and pulls the disposable ifarm clone before dispatch; see [SSH workflow](../docs/ssh-workflow.md).

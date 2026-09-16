@@ -8,10 +8,10 @@ This chapter inventories the supported code and the archived support code so a f
 | --- | --- |
 | `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds libraries/apps/tests and installation |
 | `CMakePresets.json` | Debug and Release configure/build presets; Debug CTest preset |
-| `src/CMakeLists.txt` | Static `SampleCommon`, `UniformGeneration`, `GenieConversion` targets and their include/link dependencies |
+| `src/CMakeLists.txt` | Static `SampleCommon`, `UniformGeneration`, `GenieConversion`, and `PhysicalConversion` targets |
 | `apps/CMakeLists.txt` | Defines and installs the two application targets |
 | `apps/uniform_main.cpp` | Handles `--help`, parses uniform settings, invokes generation; returns 1 on caught exceptions |
-| `apps/genie_to_lund_main.cpp` | Corresponding GENIE entry point and error reporting |
+| `apps/genie_to_lund_main.cpp` | Generator-independent physical entry point and error reporting |
 | `.vscode/c_cpp_properties.json` | Uses Debug compile_commands.json for editor compiler/include settings |
 
 Production sources compile once into conventional targets. References to archived implementation files appear only in test adapters. Test executables are not installed.
@@ -20,7 +20,7 @@ Production sources compile once into conventional targets. References to archive
 
 ### RunConfig
 
-[RunConfig.h](../src/common/RunConfig.h) / [RunConfig.cpp](../src/common/RunConfig.cpp): `parse(argc,argv,genie)` merges defaults, one optional config file, and CLI overrides; resolves automatic sampling/angle options and paths; then validates. `get`, `number`, `integer` return settings with strict conversion, while `values` exposes resolved settings for provenance. `validate` enforces counts, finite values, supported modes, geometry and bounds. `help` generates CLI usage; `jsonString` escapes manifest strings including control characters.
+[RunConfig.h](../src/common/RunConfig.h) / [RunConfig.cpp](../src/common/RunConfig.cpp): `parse` merges defaults, one optional config file, and CLI overrides; resolves the RG-M target catalog, automatic sampling settings, provenance-based output name, and paths; then validates. Typed readers expose settings and `values` supplies manifest provenance.
 
 Configuration is parsed once; `UniformConfig` converts frequently used settings to typed values before the event loop. Unknown/duplicate keys and invalid ranges fail before output creation. Config syntax and defaults are in [configuration](configuration.md).
 
@@ -30,11 +30,11 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### TargetGeometry
 
-[TargetGeometry.h](../src/common/TargetGeometry.h) / [TargetGeometry.cpp](../src/common/TargetGeometry.cpp): the constructor validates the geometry name. `sample(TRandom3&)` consumes the caller's vertex stream and returns one vertex. `point` consumes no random draws. Continuous targets draw x/y Gaussian then z uniform; foils draw x/y Gaussian then an equal-probability foil index. The authoritative map and sampler live in the replaceable [targets.h](../src/common/external/targets.h). The adapter isolates its globals and transfers the caller RNG state under a mutex; see [external inputs](external-inputs.md).
+[RgmTarget.h](../src/common/RgmTarget.h) / [RgmTarget.cpp](../src/common/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/common/TargetGeometry.h) / [TargetGeometry.cpp](../src/common/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock. Fixed tester coordinates bypass target sampling.
 
 ### LundWriter
 
-[LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor claims a new output directory; `full` checks the requested event capacity; `write` serializes an event and automatically rotates files at 10,000 events; `count` returns accepted output count; `finish(scanned)` closes files and publishes the manifest. Capacity and the file-splitting limit are cached outside the hot loop. Output-stream exceptions propagate to the application; no cleanup removes partial output.
+[LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at 10,000 events; `finish(scanned)` publishes the manifest. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
 `Version.h.in` embeds project version, target-header SHA-256 and the configure-time Git revision into the manifest. This is build provenance, not a runtime Git dependency.
 
@@ -54,7 +54,9 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 The sampled ep branch alternates momentum components using the run-global index, independent of output-format numbering. Mathematical definitions are in [sampling models](sampling-models.md).
 
-## 4. GENIE code
+## 4. Physical input code
+
+[PhysicalConverter.h](../src/physical/PhysicalConverter.h) / [PhysicalConverter.cpp](../src/physical/PhysicalConverter.cpp) provide the stable physical-source dispatch. `event-generator=genie` selects the current adapter; future adapters join here without changing the public executable.
 
 [GenieConverter.h](../src/genie/GenieConverter.h) / [GenieConverter.cpp](../src/genie/GenieConverter.cpp) expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, fills the original pre-selection electron diagnostic, selects process/species, and writes an `Event`. It also fills the common written-particle diagnostics.
 
@@ -75,7 +77,7 @@ The runner calls the external `src/common/external/submit_GEMC_sample.sh` Bash p
 
 - `config/samples/uniform-{electron,proton,neutron}.conf`: small default/fixed examples with explicit Ar metadata.
 - `uniform-{proton,neutron}-sampled.conf`: requested non-fixed modes with legacy angular windows.
-- `electron-tester.conf`: fixed beam momentum, point vertex.
+- `electron-tester.conf`: fixed beam momentum and fixed `(0,0,-3 cm)` vertex.
 - `genie.conf`: an explicit Ar conversion example.
 - `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
 - `config/sites/local.json`: executable names for local processing.
@@ -109,7 +111,7 @@ The archived root `genie_job_submission_script.csh` is another historical submis
 
 ## 9. SSH checkout orchestration
 
-[SSH workflow](ssh-workflow.md) documents every shell wrapper, the banner helpers and `config/run.json`. `scripts/workflow.py` validates settings, merges CLI overrides, optionally performs a clean-checkout fast-forward pull, configures/builds/tests, and dispatches the selected generator, converter, simulation runner or submitter. Subprocess arguments are passed as lists. Shell wrappers preserve quoted arguments and return failures without exiting a sourced session.
+[SSH workflow](ssh-workflow.md) documents the disposable ifarm checkout refresh and `config/run.json`. `scripts/workflow.py` validates settings, builds/tests, and dispatches either LUND creation or Slurm submission. Uniform/physical are LUND source modes; the simulation runner is an internal array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
 
 `tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `tests/prepare_replacement_geometry.py` creates a changed target header; `tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
 

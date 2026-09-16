@@ -8,7 +8,7 @@
 # Inputs:
 #   BUILD_UNIFORM and BUILD_GENIE, plus the libraries defined in src/.
 # Outputs:
-#   clas12-uniform and/or clas12-genie-to-lund in the build apps/ directory.
+#   clas12-uniform and/or clas12-generator-to-lund in the build apps/ directory.
 # Notes:
 #   Defining or building a target does not generate samples or submit detector jobs.
 
@@ -22,12 +22,12 @@ if(BUILD_UNIFORM)
 endif()
 # endregion
 
-# GENIE conversion CLI -------------------------------------------------------
-# region GENIE conversion CLI
-# Purpose: Link the GST conversion entry point and install its executable.
+# Physical conversion CLI -------------------------------------------------------
+# region Physical conversion CLI
+# Purpose: Link the selected event-generator adapter and install its generator-independent executable.
 if(BUILD_GENIE)
-    add_executable(clas12-genie-to-lund genie_to_lund_main.cpp)
-    target_link_libraries(clas12-genie-to-lund PRIVATE GenieConversion)
-    install(TARGETS clas12-genie-to-lund RUNTIME DESTINATION bin)
+    add_executable(clas12-generator-to-lund genie_to_lund_main.cpp)
+    target_link_libraries(clas12-generator-to-lund PRIVATE PhysicalConversion)
+    install(TARGETS clas12-generator-to-lund RUNTIME DESTINATION bin)
 endif()
 # endregion

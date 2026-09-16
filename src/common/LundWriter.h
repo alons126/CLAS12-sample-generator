@@ -32,7 +32,8 @@ namespace samples {
  * @brief Own split LUND files and the completed-run manifest.
  *
  * Usage order: construct -> write until full -> save diagnostics externally -> finish.
- * The configuration must outlive the writer. Existing output directories are rejected.
+ * The configuration must outlive the writer. A validated existing run directory is replaced,
+ * preserving the legacy generator lifecycle.
  * Failure may leave partial output; only finish publishes manifest.json.
  */
 class LundWriter {

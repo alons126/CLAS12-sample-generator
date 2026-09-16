@@ -75,7 +75,7 @@ The archived converter's short-input and near-end early termination is intention
 | Member | Type | Meaning |
 | --- | --- | --- |
 | `schema_version` | integer | Currently 1 |
-| `workflow` | string | `uniform` or `genie` |
+| `workflow` | string | `uniform` or `physical`; physical generator identity is in `config.event-generator` |
 | `version`, `revision`, `root_version` | strings | Project version, configure-time Git revision/dirty marker, ROOT version |
 | `targets_sha256` | string | SHA-256 of the external targets.h used at compilation |
 | `scanned_events`, `written_events` | integers | Input scan count and output count |

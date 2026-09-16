@@ -8,7 +8,7 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 | --- | --- |
 | Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `clas12-uniform --config FILE --channel ... --output NEW_DIR` |
 | `Uniform_sample_generator_e_tester.C` | `electron-tester.conf` |
-| `GENIE_to_LUND_converter.csh` → ROOT macro | `clas12-genie-to-lund --input ... --config ... --output ...` |
+| `GENIE_to_LUND_converter.csh` → ROOT macro | `clas12-generator-to-lund --event-generator genie --input ... --config ... --output ...` |
 | Sourced `setup_and_submit_jobs.csh` → selected setup script | Common simulation runner or Slurm submitter consuming a manifest |
 | Per-energy detector resources | `config/detector/Generation_files_*` |
 | Current-directory-dependent output rewrites | Explicit output path |

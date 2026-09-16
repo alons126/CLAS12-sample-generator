@@ -10,13 +10,14 @@ In a **csh/tcsh** session on the server, from the repository root:
 source run.csh
 ```
 
-This reads `config/run.local.json` if present, otherwise `config/run.json`; configures and incrementally builds Release in `build/release`; then generates the default 1000-event electron sample in `runs/default-uniform`. Git updates and tests are off by default. The output directory must be new, so choose another output for subsequent runs:
+The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, and pulls the remote revision. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads `config/run.local.json` if present, otherwise `config/run.json`, builds, and dispatches the selected workflow. Existing resolved run directories are recreated as in the legacy generators.
 
 ```tcsh
 source run.csh --output runs/electron-002
 source run.csh --test true --run false
-source run.csh --workflow uniform --config config/samples/uniform-neutron-sampled.conf --output runs/en-001
-source run.csh --workflow genie --input '/data/genie/*.root' --output runs/genie-001
+source run.csh --workflow create-lund --source uniform --config config/samples/uniform-neutron-sampled.conf --output runs/en-001
+source run.csh --workflow create-lund --source physical --event-generator genie \
+  --input '/data/genie/*.root' --output runs/physical
 ```
 
 GENIE glob patterns must be quoted so they reach ROOT unchanged. Sample options override the selected sample configuration; launcher arguments also override matching defaults in the JSON argument list. All workflow paths are interpreted from the repository root, including when the wrapper is launched elsewhere. This differs from directly invoking the C++ executables, which use the caller's directory.
@@ -30,15 +31,16 @@ setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
 source "$CLAS12_SAMPLES_DIR/run.csh" --output runs/electron-003
 ```
 
-A failed command stops subsequent stages and returns a nonzero `$status` without exiting the sourced parent shell. `CLAS12_SAMPLE_STATUS` also retains the wrapper's result. Read `$status` immediately because the next shell command replaces it. Interrupted child execution reports failure too. Existing sample outputs are preserved for inspection.
+A failed command stops subsequent stages and returns a nonzero `$status` without exiting the sourced parent shell. `CLAS12_SAMPLE_STATUS` also retains the wrapper's result. Read `$status` immediately because the next shell command replaces it. `CLAS12_SKIP_SERVER_SYNC=1` is reserved for local tests and launcher development; routine ifarm use must keep synchronization enabled.
 
 ## Run settings and build controls
 
-Copy `config/run.json` to the Git-ignored `config/run.local.json` for server-specific defaults. Alternatively pass `--run-settings path/to/settings.json`. Keep each option and its value as separate strings in `arguments.uniform`, `arguments.genie`, `arguments.simulate`, or `arguments.submit`; values containing spaces remain one string. These are argv lists, not shell commands. Use `--key value` syntax, not `--key=value`.
+Copy `config/run.json` to the Git-ignored `config/run.local.json` for server-specific defaults. Alternatively pass `--run-settings path/to/settings.json`. Keep each option and its value as separate strings in `arguments.uniform`, `arguments.physical`, or `arguments.submit`; values containing spaces remain one string. These are argv lists, not shell commands. Use `--key value` syntax, not `--key=value`.
 
 | JSON key | Default | CLI override and purpose |
 | --- | --- | --- |
-| `workflow` | `uniform` | `--workflow uniform|genie|simulate|submit` |
+| `workflow` | `create-lund` | `--workflow create-lund|submit` |
+| `source` | `uniform` | `--source uniform|physical` for LUND creation |
 | `git_pull` | `false` | `--git-pull true`: require a clean checkout, then `git pull --ff-only` |
 | `build` | `true` | `--build false`: reuse existing binaries or skip compilation for simulation |
 | `run` | `true` | `--run false`: build/test only |
@@ -50,32 +52,32 @@ Copy `config/run.json` to the Git-ignored `config/run.local.json` for server-spe
 
 Building always invokes CMake dependency checking, so replacing an uncommitted `src/common/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
 
-After transferring committed changes to the remote, an optional server update/build/test is:
+After transferring committed changes to the remote, a server refresh/build/test is:
 
 ```tcsh
-source run.csh --git-pull true --test true --run false
+source run.csh --test true --run false
 ```
 
-The update requires a configured Git upstream and refuses tracked or untracked local changes. It never resets or cleans files, and divergent history fails the fast-forward operation. Ignored local settings and generated output remain in place. With the default `--git-pull false`, locally edited code builds directly.
+The refresh requires a configured Git upstream and intentionally discards server-side edits and untracked files, retaining the updater's documented build exclusions. It stops before building if cleanup, reset, or pull fails.
 
 ## Detector processing and submission
 
 For example, generate a 2 GeV sample, then preview outbending processing:
 
 ```tcsh
-source run.csh --workflow uniform --beam-energy 2.07052 \
+source run.csh --workflow create-lund --source uniform --beam-energy 2.07052 \
   --prefix Uniform_1e_sample_2070MeV --output runs/electron-2gev
-source run.csh --workflow simulate --build false \
-  --manifest runs/electron-2gev/manifest.json \
+source run.csh --workflow submit --build false \
+  --manifest runs/electron-2gev/Uniform_sample_1e_2070MeV/manifest.json \
   --gcard config/detector/Generation_files_2GeV/5.14/rgm_fall2021_Ar_2GeV.gcard \
   --reconstruction config/detector/Generation_files_2GeV/5.14/rgm_fall2021-cv.yaml \
   --site config/sites/local.json --torus 0.5 --solenoid -1
 ```
 
-Select the actual reconstruction YAML path from your checkout. Use `--workflow submit` and the server's site JSON to preview a Slurm array. Both workflows remain dry runs until `--execute` is supplied. See [simulation and Slurm](gemc-reconstruction-batch-submission.md) for complete options and [external inputs](external-inputs.md) for the required 2/4/6 GeV fields.
+Select the actual reconstruction YAML path from your checkout. Submission previews the Slurm array until `--execute` is supplied. The local simulation runner is an internal array-worker/validation component, not a third user-facing workflow. See [simulation and Slurm](gemc-reconstruction-batch-submission.md) for complete options and [external inputs](external-inputs.md) for the required 2/4/6 GeV fields.
 
 ## Supporting shell files
 
-`run.csh` forwards to `scripts/workflow.py`. `scripts/build_and_run.csh` uses the same driver with Git pulling disabled. `update_only.sh` and `scripts/code_updater.sh` are csh/tcsh wrappers despite the `.sh` suffix; sourcing either performs only the checked fast-forward update. `scripts/printers/` supplies project start/success/failure banners. These replace the copied analyzer paths, destructive Git cleanup and unrelated environment setup. They are source-checkout helpers, not installed commands.
+`run.csh` owns the intentional disposable-clone refresh and forwards to `scripts/workflow.py`. `scripts/build_and_run.csh` uses the same driver without the refresh. `scripts/code_updater.sh` performs the checked clean/reset/pull sequence in a child shell. `scripts/printers/` supplies project start/success/failure banners.
 
 The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
