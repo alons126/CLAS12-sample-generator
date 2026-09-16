@@ -12,7 +12,7 @@ To update geometry:
 
 1. Replace only `src/common/external/targets.h` with the reviewed external version. Keep `legacy/` unchanged as the comparison baseline.
 2. Preserve the external API: `targets` maps names to nonempty position vectors, `ran` is a `TRandom3`, and `randomVertex(std::string)` returns a `TVector3` in cm. If upstream changes this API, adapt `TargetGeometry.cpp` as well. New target names are discovered from the map; their sampling prescription comes from the replacement function.
-3. Build and test with `source run.csh --build true --test true --run false` in tcsh, or the CMake commands in the build guide. CMake detects header changes and recalculates its SHA-256; each generated manifest records `targets_sha256` for the compiled header, including uncommitted replacements.
+3. Build and test with `source run.csh --workflow create-lund --source uniform --build true --test true --run false` in tcsh, or the CMake commands in the build guide. CMake detects header changes and recalculates its SHA-256; each generated manifest records `targets_sha256` for the compiled header, including uncommitted replacements.
 4. Review changed vertex bounds and any legacy-parity failures. Geometry updates can intentionally invalidate comparisons to the frozen archive; record the reason and revised scientific validation. Update the snapshot table in the configuration guide and choose matching detector geometry and A/Z.
 5. Commit the header and documentation, recording the upstream revision or download origin. Rebuild the server checkout before producing samples.
 

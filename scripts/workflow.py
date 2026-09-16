@@ -9,8 +9,8 @@ Purpose:
 
 Workflow:
     1. Parse launcher-owned options while retaining child-workflow options for later forwarding.
-    2. Load ``config/run.local.json`` when present, otherwise ``config/run.json``, and apply explicit
-       command-line overrides.
+    2. Load build/test defaults from ``config/run.json`` (or an explicit ``--run-settings`` file) and
+       apply explicit command-line overrides. Workflow, source, and sample profile stay explicit.
     3. Optionally configure and build the maintained C++ applications.
     4. Optionally run CTest against that build.
     5. Dispatch exactly one user-facing workflow:
@@ -19,7 +19,7 @@ Workflow:
        - ``submit`` sends existing LUND, GCARD, and YAML inputs to ifarm Slurm jobs.
 
 Inputs:
-    Launcher arguments, one strict JSON run profile, optional terminal-color environment variables,
+    Launcher arguments, one strict JSON build profile, optional terminal-color environment variables,
     and the selected child workflow's own files and forwarded options.
 
 Outputs:
@@ -60,28 +60,25 @@ import os
 #     DEFAULTS before overlaying one selected JSON profile and explicit command-line controls; no
 #     workflow should mutate DEFAULTS itself.
 # Scope:
-#     These values control launching and presentation. Physics parameters and target selections
-#     remain in the workflow profile and are forwarded through its `arguments` list.
+#     These values control build/test execution and presentation. Workflow, source, physics parameters,
+#     target selections, input, output, and sample profile remain explicit command-line arguments.
 
 # Absolute repository root derived from this file's stable scripts/ location. All maintained helper,
 # build, executable, and profile paths are resolved from this anchor, independent of the caller's
 # current working directory.
 ROOT = Path(__file__).resolve().parents[1]
 
-# Complete fallback launcher configuration used when a profile or command-line option does not
-# override a field. `arguments` maps workflow/source selections to literal argv lists; subprocesses
-# receive those lists directly, so their contents are never evaluated by a shell.
+# Complete fallback build/test configuration used when the JSON profile or command line does not
+# override a field. Child-workflow argv is intentionally absent from this object.
 DEFAULTS = {
-    # Workflow and CMake output configuration; names must agree with dispatch below.
-    'workflow': 'create-lund', 'source': 'uniform', 'build_dir': 'build/release', 'build_type': 'Release',
+    # CMake and execution-stage defaults. Workflow/source are deliberately required on the CLI.
+    'build_dir': 'build/release', 'build_type': 'Release',
     'jobs': 4, 'build': True, 'run': True, 'test': False,
-    # Per-workflow argv lists come from the selected profile; no shell evaluation is performed.
-    'arguments': {},
 }
 
 # Public workflow and LUND-source vocabularies. argparse uses these tuples for user-facing choices,
-# and profile validation uses the same objects so configuration files cannot select an undispatched
-# mode. `SOURCES` applies to create-lund; submission consumes LUND output already created earlier.
+# while settings() uses them to validate the explicit dispatch selection. `SOURCES` applies to
+# create-lund; submission consumes LUND output already created earlier.
 WORKFLOWS = ('create-lund', 'submit')
 SOURCES = ('uniform', 'physical')
 
@@ -201,7 +198,7 @@ def parser():
         unchanged to the selected child workflow.
 
     Workflow:
-        Register profile selection, workflow dispatch, build/test controls, and build-resource
+        Register build-profile selection, explicit workflow dispatch, build/test controls, and build-resource
         settings. ``main()`` later calls ``parse_known_args()`` so these known options become the
         launcher namespace while the remaining argv tokens become child-workflow overrides.
 
@@ -219,8 +216,8 @@ def parser():
 
     # Profile and dispatch controls select one of the project's two user-facing workflows and, for
     # create-lund, whether its event content comes from uniform sampling or physical generator data.
-    p.add_argument('--run-settings', type=Path, help='JSON settings; defaults to config/run.local.json if present, otherwise config/run.json')
-    p.add_argument('--workflow', choices=WORKFLOWS)
+    p.add_argument('--run-settings', type=Path, help='build/test JSON settings; defaults to config/run.json')
+    p.add_argument('--workflow', choices=WORKFLOWS, required=True)
     p.add_argument('--source', choices=SOURCES, help='LUND source mode for create-lund')
 
     # Execution-stage switches override matching JSON booleans. The custom converter accepts explicit
@@ -250,11 +247,10 @@ def settings(args):
         single trusted configuration before any build, test, generation, or submission command runs.
 
     Workflow:
-        1. Use ``--run-settings`` when supplied; otherwise prefer the untracked local profile and fall
-           back to the checked-in profile.
+        1. Use ``--run-settings`` when supplied; otherwise read checked-in ``config/run.json``.
         2. Resolve relative profile paths from the repository root and parse the JSON object.
         3. Apply values in increasing precedence: ``DEFAULTS`` < JSON profile < explicit CLI options.
-        4. Validate dispatcher names, build controls, and child-workflow argument lists.
+        4. Add the explicitly selected workflow/source and validate build controls.
 
     Args:
         args: Launcher namespace returned by ``parser()``. Attributes left unspecified by the user
@@ -265,8 +261,8 @@ def settings(args):
         defaults and the parsed JSON object are not mutated.
 
     Assumptions:
-        The profile is strict JSON. Its ``arguments`` values are literal argv arrays, not shell text,
-        and their keys are limited to ``uniform``, ``physical``, and ``submit``.
+        The profile is strict JSON and owns only stable build/test execution defaults. Workflow,
+        source, sample configuration, and child options are explicit command-line input.
 
     Raises:
         OSError: If the selected profile cannot be read.
@@ -275,13 +271,9 @@ def settings(args):
         All diagnostics are given the shared colored ``Error:`` prefix before reaching the user.
     """
 
-    # An explicit profile always wins. Without one, allow a developer- or server-specific local file
-    # to override the versioned default without requiring edits to config/run.json.
-    path = args.run_settings
-
-    if path is None:
-        local = ROOT / 'config/run.local.json'
-        path = local if local.is_file() else ROOT / 'config/run.json'
+    # An explicit build profile wins; otherwise use the checked-in stable defaults. The disposable
+    # ifarm synchronization removes untracked files, so no implicit run.local.json is advertised.
+    path = args.run_settings if args.run_settings is not None else ROOT / 'config/run.json'
 
     # Interpret relative paths from the checkout rather than the directory from which run.csh or this
     # module was invoked. read_text and json.loads deliberately propagate I/O and syntax failures.
@@ -295,8 +287,7 @@ def settings(args):
     if not isinstance(provided, dict) or set(provided) - DEFAULTS.keys():
         raise ValueError(error_message('Run settings contain unknown keys or are not an object'))
 
-    # This is a shallow overlay by design. In particular, a profile-provided `arguments` object is
-    # the complete per-workflow argument mapping for that profile rather than a partial nested merge.
+    # This is a shallow overlay because every allowed key is a scalar build/execution control.
     result = {**DEFAULTS, **provided}
 
     # argparse stores omitted launcher controls as None. Copy only explicit values so command-line
@@ -306,12 +297,14 @@ def settings(args):
         if override is not None:
             result[key] = override
 
-    # Validate the two dispatch axes against the same constants used to build argparse choices.
-    if result['workflow'] not in WORKFLOWS:
-        raise ValueError(error_message('Invalid workflow in run settings'))
-
-    if result['source'] not in SOURCES:
-        raise ValueError(error_message('Invalid LUND source in run settings'))
+    # Workflow is required by argparse. Source is required only for LUND creation and rejected for
+    # submission so every command states exactly the inputs relevant to its selected workflow.
+    result['workflow'] = args.workflow
+    result['source'] = args.source
+    if result['workflow'] == 'create-lund' and result['source'] is None:
+        raise ValueError(error_message('--source uniform|physical is required for create-lund'))
+    if result['workflow'] == 'submit' and result['source'] is not None:
+        raise ValueError(error_message('--source applies only to create-lund'))
 
     # Require real JSON booleans. Python considers bool a subclass of int, so exact type checks keep
     # values such as 0 and 1 from silently acting as false and true in a profile.
@@ -331,144 +324,7 @@ def settings(args):
     if not isinstance(result['build_dir'], str) or not result['build_dir']:
         raise ValueError(error_message('build_dir must be a nonempty path'))
 
-    # Each key supplies defaults for one create-lund source or for the submit workflow. Additional
-    # keys would have no valid dispatch target and are rejected rather than ignored.
-    if not isinstance(result['arguments'], dict) or set(result['arguments']) - (set(SOURCES) | {'submit'}):
-        raise ValueError(error_message('arguments must map workflow names to argument lists'))
-
-    for name, values in result['arguments'].items():
-        # Preserve argv boundaries exactly: every item must already be a string, including numeric
-        # values that will be interpreted later by the selected executable.
-        if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
-            raise ValueError(error_message(f'arguments.{name} must be a list of strings'))
-
-        # Keep forwarding predictable: settings contain --key value pairs or a
-        # workflow boolean switch. Never evaluate these values as shell text.
-        parse_options(values)
-
     return result
-# endregion
-
-
-# parse_options ---------------------------------------------------------------------------------------------------------------------------------------------------------
-
-# region parse_options
-def parse_options(values):
-    """Group workflow arguments without evaluating shell text.
-
-    Purpose:
-        Convert a flat child-workflow argv list into option groups that can be validated and merged by
-        option name. This lets explicit command-line options replace matching profile defaults without
-        parsing, expanding, or executing their values as shell source.
-
-    Workflow:
-        1. Read a token that must use the ``--key`` form.
-        2. Reject the separator token, ``--key=value`` syntax, and repeated option names.
-        3. Attach the next token as the option value unless it begins another ``--key`` group.
-        4. Append the one- or two-token group and continue until the input is consumed.
-
-    Args:
-        values: Ordered list of argument strings from a JSON profile or explicit child-workflow
-            overrides. Negative numbers such as ``-1`` are values because only ``--`` begins a new
-            option group.
-
-    Returns:
-        A new ordered list of groups. Each group contains one ``--key`` and, when present, its single
-        following value. The input list and string contents are unchanged.
-
-    Assumptions:
-        Child interfaces use long options with zero or one following value. Positional arguments,
-        multiple values after one key, a bare ``--`` separator, and equals syntax are outside this
-        launcher's profile contract. Whether a key is recognized belongs to the selected child.
-
-    Raises:
-        ValueError: If a group does not begin with a valid long-option token or if an option appears
-        more than once. The exception includes the shared colored ``Error:`` prefix.
-    """
-
-    # Preserve group order for predictable command printouts and execution. `seen` enforces one value
-    # source per option within each list, while the index allows a consumed value token to be skipped.
-    options = []
-    seen = set()
-    i = 0
-
-    while i < len(values):
-        key = values[i]
-
-        # Accept only the separate `--key [value]` representation. A bare separator has no child argv
-        # on either side inside a stored profile, and equals syntax would complicate key replacement.
-        if not key.startswith('--') or key == '--' or '=' in key:
-            raise ValueError(error_message(f'Expected --key value or a workflow switch, got {key}'))
-
-        # Repetition within one source is ambiguous. Cross-source replacement is handled later by
-        # forwarded_arguments(), after defaults and explicit overrides have been parsed separately.
-        if key in seen:
-            raise ValueError(error_message(f'Repeated workflow option: {key}'))
-
-        seen.add(key)
-        group = [key]
-
-        # Any following token that does not start with `--` is the single value. This intentionally
-        # accepts negative numeric strings and paths beginning with one dash.
-        if i+1 < len(values) and not values[i+1].startswith('--'):
-            i += 1
-            group.append(values[i])
-
-        options.append(group)
-        i += 1
-
-    return options
-# endregion
-
-
-# forwarded_arguments ---------------------------------------------------------------------------------------------------------------------------------------------------
-
-# region forwarded_arguments
-def forwarded_arguments(defaults, overrides):
-    """Merge workflow defaults with explicit CLI options.
-
-    Purpose:
-        Combine the selected run profile's child-workflow arguments with options written after the
-        launcher arguments, giving the user's explicit command line final precedence by option name.
-
-    Workflow:
-        1. If the only override is ``--help``, return it alone so the child can display help without
-           receiving profile-specific required inputs or starting normal work.
-        2. Parse explicit overrides into ``--key [value]`` groups and collect their keys.
-        3. Parse profile defaults, discard groups whose keys are explicitly replaced, flatten the
-           retained groups, and append the original overrides in their supplied order.
-
-    Args:
-        defaults: Literal argv list from the JSON profile's selected ``arguments`` entry.
-        overrides: Literal child-workflow argv tokens left by ``parse_known_args()``. A leading bare
-            ``--`` has already been removed by ``main()``.
-
-    Returns:
-        A new flat argv list containing unreplaced profile groups followed by explicit overrides.
-        Token boundaries and value text are preserved, and neither input list is mutated.
-
-    Assumptions:
-        Both inputs follow the grammar enforced by ``parse_options()``. Replacement compares exact
-        long-option names; this function does not interpret aliases or inspect option values.
-
-    Raises:
-        ValueError: If either list contains invalid syntax or repeats a key within that list. The
-        exception carries the shared colored ``Error:`` prefix from ``parse_options()``.
-    """
-
-    # Child help is a complete command in its own right. Profile arguments could hide the requested
-    # help behind missing-file checks or otherwise make the displayed interface profile-dependent.
-    if overrides == ['--help']:
-        return overrides
-
-    # Parsing validates the override grammar and supplies the exact keys that take precedence.
-    groups = parse_options(overrides)
-    replaced = {group[0] for group in groups}
-
-    # `--config` therefore replaces the default sample profile, while every other explicit key uses
-    # the same predictable replacement rule. Keeping overrides last also makes the printed command
-    # reflect their final precedence clearly.
-    return [word for group in parse_options(defaults) if group[0] not in replaced for word in group] + overrides
 # endregion
 
 
@@ -596,8 +452,8 @@ def main():
         use.
 
     Workflow:
-        1. Separate launcher options from child-workflow overrides and load the effective run profile.
-        2. Resolve the build directory and merge profile arguments with explicit child overrides.
+        1. Separate launcher options from child-workflow arguments and load build/test defaults.
+        2. Resolve the build directory while preserving explicit child arguments unchanged.
         3. When enabled, configure CMake and build both LUND applications.
         4. When enabled, verify that testing was configured and require CTest to succeed.
         5. When enabled, run one create-lund source executable or the ifarm submission coordinator.
@@ -638,10 +494,10 @@ def main():
         build = ROOT / build
     build = build.resolve()
 
-    # create-lund profiles store separate defaults for uniform and physical inputs; submission uses
-    # its own entry. Explicit forwarded options replace matching defaults in the chosen entry only.
-    argument_key = source if workflow == 'create-lund' else workflow
-    arguments = forwarded_arguments(config['arguments'].get(argument_key, []), forwarded)
+    # Sample and submission options are explicit on the command line. In particular, create-lund users
+    # select a reviewed `--config config/samples/NAME.conf` or spell out every child option themselves.
+    # The launcher preserves argv boundaries and does not inject hidden per-source defaults.
+    arguments = forwarded
 
     # Compile both sample applications before selecting which workflow to execute.
     if config['build']:

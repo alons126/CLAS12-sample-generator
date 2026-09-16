@@ -111,7 +111,7 @@ The archived root `genie_job_submission_script.csh` is another historical submis
 
 ## 9. SSH checkout orchestration
 
-[SSH workflow](ssh-workflow.md) documents the disposable ifarm checkout refresh and `config/run.json`. `scripts/workflow.py` validates settings, builds/tests, and dispatches either LUND creation or Slurm submission. Uniform/physical are LUND source modes; the simulation runner is an internal array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
+[SSH workflow](ssh-workflow.md) documents the disposable ifarm checkout refresh and `config/run.json`. `scripts/workflow.py` reads build/test defaults, requires an explicit workflow and LUND source, builds/tests, and dispatches either LUND creation or Slurm submission. Sample profiles and child arguments are explicit; the simulation runner is an internal array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
 
 `tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `tests/prepare_replacement_geometry.py` creates a changed target header; `tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
 

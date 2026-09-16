@@ -49,6 +49,8 @@ All documented shell examples start at the repository root. Executables and scri
 
 For local editing and server execution via `source run.csh`, read the [SSH workflow](ssh-workflow.md). Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](external-inputs.md).
 
+Every LUND-creation command explicitly selects `--workflow create-lund`, `--source uniform|physical`, and either a reviewed [sample profile](../config/samples/README.md) or the complete set of sample options. `config/run.json` supplies build/test defaults only.
+
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
 The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

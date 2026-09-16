@@ -1,23 +1,8 @@
 {
-    "workflow": "create-lund",
-    "source": "uniform",
     "build": true,
     "run": true,
     "test": false,
     "build_dir": "build/release",
     "build_type": "Release",
-    "jobs": 4,
-    "arguments": {
-        "uniform": [
-            "--config",
-            "config/samples/uniform-electron.conf",
-            "--output",
-            "/lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples"
-        ],
-        "physical": [
-            "--config",
-            "config/samples/genie.conf"
-        ],
-        "submit": []
-    }
+    "jobs": 4
 }

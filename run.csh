@@ -19,8 +19,10 @@
 #   5. Restore the caller's directory and return the captured result as both CLAS12_SAMPLE_STATUS and
 #      immediate tcsh `$status`, without using `exit` in this normally sourced launcher.
 # Usage:
-#   source run.csh --workflow create-lund --source uniform [sample options]
-#   source run.csh --workflow create-lund --source physical --event-generator genie [sample options]
+#   source run.csh --workflow create-lund --source uniform \
+#     --config config/samples/uniform-electron.conf --output OUTPUT_PARENT
+#   source run.csh --workflow create-lund --source physical \
+#     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 #   source run.csh --workflow submit [submission options]
 # Inputs:
 #   $argv carries launcher and child options. CLAS12_SAMPLES_DIR is an optional environment variable
