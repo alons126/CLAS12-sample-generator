@@ -15,19 +15,29 @@
 
 #include "common/RunConfig.h"
 
-#include <cmath>
 #include <cctype>
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
 
-#include "common/TargetGeometry.h"
 #include "common/RgmTarget.h"
+#include "common/TargetGeometry.h"
 
 namespace samples {
 
+// Translation-unit helpers ---------------------------------------------------
+
+#pragma region /* Translation-unit helpers */
+/**
+ * @namespace samples::<anonymous>
+ * @brief Private text and naming helpers used only while resolving RunConfig values.
+ *
+ * These functions have internal linkage: they support profile parsing and deterministic output-name
+ * construction without becoming part of the public configuration API.
+ */
 namespace {
 // trim ----------------------------------------------------------------------
 
@@ -35,39 +45,94 @@ namespace {
 /**
  * @brief Remove surrounding configuration whitespace.
  *
+ * Purpose:
+ *   Normalize profile lines, keys, and values while preserving whitespace inside the meaningful text.
+ *
  * Algorithm:
- *   Find the first and last non-whitespace characters; retain the enclosed text.
+ *   Find the first and last character outside the supported ASCII whitespace set and return the text
+ *   between them. Return an empty string when no such character exists.
  *
- * @param s Text from a configuration line.
+ * @param s Configuration text copied into the helper so the caller's string is not modified.
  *
- * @return Trimmed text, or an empty string for whitespace-only input.
+ * @return Text without leading/trailing spaces, tabs, carriage returns, or newlines; empty for an
+ *         empty or whitespace-only input.
+ *
+ * @note Internal spaces and all other characters are retained exactly.
  */
 std::string trim(std::string s) {
+    // A missing first non-whitespace character covers both empty and whitespace-only strings.
     auto first = s.find_first_not_of(" \t\r\n");
+
+    // Once `first` exists, a last non-whitespace character also exists and bounds the retained span.
     return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
 }
 #pragma endregion
 
 // pathToken ------------------------------------------------------------------
 #pragma region /* pathToken */
-/** @brief Convert explicit provenance text into one portable filename component. */
+/**
+ * @brief Convert explicit provenance text into one portable output-directory component.
+ *
+ * Purpose:
+ *   Preserve recognizable target, generator, tune, cut, and GEMC metadata in a single path component
+ *   while preventing separators, whitespace, and punctuation from changing the directory structure.
+ *
+ * Algorithm:
+ *   Keep characters accepted by std::isalnum plus `.`, `_`, and `-`; replace every other byte with
+ *   `-`; then reject components that are empty or have the special filesystem meanings `.` and `..`.
+ *
+ * @param value Unsanitized metadata copied from the fully resolved configuration.
+ *
+ * @return Sanitized component suitable for composition into an output directory name.
+ *
+ * @throws std::runtime_error If the resulting component is empty, `.` or `..`.
+ *
+ * @note Sanitization is deterministic but not reversible or collision-free. The manifest retains the
+ *       original unsanitized metadata for provenance.
+ */
 std::string pathToken(std::string value) {
+    // Cast through unsigned char before the cctype call to avoid undefined behavior for negative char
+    // values. The three explicit punctuation characters are the only non-alphanumerics retained.
     for (char& ch : value)
         if (!(std::isalnum(static_cast<unsigned char>(ch)) || ch == '.' || ch == '_' || ch == '-')) ch = '-';
+
+    // Exclude empty and navigation-like names even though ordinary punctuation has been normalized.
     if (value.empty() || value == "." || value == "..") throw std::runtime_error("Invalid empty output-name component");
     return value;
 }
 #pragma endregion
 
-/** @brief Return established RG-M beam labels, falling back to nearest MeV for other energies. */
+// beamMeV --------------------------------------------------------------------
+
+#pragma region /* beamMeV */
+/**
+ * @brief Convert beam energy in GeV to the established integer label in MeV.
+ *
+ * Purpose:
+ *   Keep output names compatible with the RG-M 2070, 4029, and 5986 MeV conventions while still
+ *   supporting other configured energies through a deterministic rounded label.
+ *
+ * Algorithm:
+ *   Match each established GeV setting within `1e-6` GeV and return its fixed label. Otherwise,
+ *   multiply by 1000 and round to the nearest integer using std::llround.
+ *
+ * @param energy Finite beam energy in GeV, obtained through RunConfig::number().
+ *
+ * @return Beam-energy label in MeV for filenames and directory names.
+ *
+ * @note The fixed 2.07052 GeV mapping intentionally yields the historical `2070` label rather than
+ *       the generic rounded value `2071`.
+ */
 long long beamMeV(double energy) {
     if (std::abs(energy - 2.07052) < 1e-6) return 2070;
     if (std::abs(energy - 4.02962) < 1e-6) return 4029;
     if (std::abs(energy - 5.98636) < 1e-6) return 5986;
     return std::llround(energy * 1000.0);
 }
+#pragma endregion
 
 }  // namespace
+#pragma endregion
 
 // RunConfig::parse ----------------------------------------------------------------------
 
@@ -78,21 +143,33 @@ long long beamMeV(double energy) {
  * Purpose:
  *   Make both executables use the same precedence and validation contract before creating outputs.
  *
- * Algorithm:
- *   1. Install defaults and collect CLI overrides.
- *   2. Read one optional profile, rejecting unknown or repeated keys.
- *   3. Apply overrides and resolve channel-dependent automatic settings.
- *   4. Validate values and normalize local input/output paths.
+ * Workflow:
+ *   1. Install shared defaults plus exactly one source-specific key set.
+ *   2. Parse strict `--key value` CLI pairs, retaining them as final-precedence overrides.
+ *   3. Read one optional `key = value` profile over the defaults.
+ *   4. Apply CLI overrides and resolve target-, channel-, and beam-dependent `auto` values.
+ *   5. Validate the complete scientific and output contract before filesystem mutation is possible.
+ *   6. Build the source-specific run-directory name and normalize input/output paths.
  *
- * @param argc Number of CLI tokens.
- * @param argv CLI tokens including executable name.
- * @param uniform True for uniform generation, false for a conversion workflow.
+ * @param argc Number of argv entries, including the executable name.
+ * @param argv Borrowed CLI tokens read during this call; their storage is neither retained nor changed.
+ * @param uniform Select uniform sampling when true or physical event conversion when false. This
+ *                choice defines the accepted keys, defaults, automatic values, and validation branch.
  *
- * @return Validated settings; throws on malformed options or invalid physical bounds.
+ * @return Owning, fully resolved configuration. Local paths are absolute and lexically normalized;
+ *         the output value names the final source-specific run directory beneath the requested parent.
+ *
+ * @throws std::exception For malformed or repeated input, unknown keys, unreadable profiles, invalid
+ *         target/source metadata, invalid numeric or physical bounds, and path conversion failures.
+ *
+ * @note This function computes paths and names only. Downstream generators report and safely replace
+ *       the resolved output directory immediately before writing a run.
  */
 RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */
-    // Install shared defaults before workflow-specific options.
+    // Store all settings as text so the exact resolved values used by generation can also be written
+    // to provenance. Shared defaults preserve the established RG-M beam/Ar setup, separate vertex and
+    // kinematic seeds, and legacy LUND/mass output unless the user chooses documented alternatives.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
                  {"rgm-target", "Ar40"},
@@ -113,7 +190,11 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"vertex-seed", "12345"},
                  {"prefix", "auto"}};
 
+    // Add only the keys meaningful to the selected source. This makes a physical-only option invalid
+    // for uniform generation and vice versa instead of silently accepting an unused setting.
     if (uniform) {
+        // Angles are degrees and momenta are GeV. `auto` values are resolved only after profile and CLI
+        // precedence is complete; fixed 1 GeV nucleons retain the legacy default behavior.
         c.values_.insert({{"channel", "1e"},
                           {"electron-theta-min", "5"},
                           {"electron-theta-max", "40"},
@@ -128,14 +209,13 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
     } else {
-        c.values_.insert({{"input", ""},
-                          {"event-generator", "genie"},
-                          {"event-generator-version", "unknown"},
-                          {"tune", "unknown"},
-                          {"q2-cut", "auto"},
-                          {"gemc-version", "unknown"}});
+        // Physical mode describes existing event-generator truth and its output provenance. It does
+        // not run GENIE; the current adapter reads GENIE GST input selected below by event-generator.
+        c.values_.insert({{"input", ""}, {"event-generator", "genie"}, {"event-generator-version", "unknown"}, {"tune", "unknown"}, {"q2-cut", "auto"}, {"gemc-version", "unknown"}});
     }
 
+    // Centralize assignment so profiles and CLI overrides share the same strict known-key policy.
+    // Capturing `c` by reference mutates only the configuration being constructed in this call.
     auto assign = [&](const std::string& k, const std::string& v) {
         if (!c.values_.count(k)) { throw std::runtime_error("Unknown setting: " + k); }
 
@@ -144,10 +224,13 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma endregion
 
 #pragma region /* Profile and CLI input */
-    // Collect CLI overrides separately so their precedence is independent of argument order.
+    // Collect CLI overrides separately so they always apply after the profile, regardless of where
+    // `--config` appears in argv. Maps also provide deterministic duplicate detection and traversal.
     std::map<std::string, std::string> overrides;
     std::string config;
 
+    // Every application option is a two-token `--key value` pair. Booleans therefore use explicit
+    // text values, and negative numbers remain ordinary value tokens consumed with their key.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
 
@@ -156,6 +239,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         auto key = arg.substr(2);
         std::string value = argv[++i];
 
+        // `config` selects the profile itself and is not a stored run setting or manifest field.
         if (key == "config") {
             if (!config.empty()) { throw std::runtime_error("Use only one --config file"); }
 
@@ -165,7 +249,9 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         }
     }
 
-    // Read one profile, rejecting duplicate keys instead of silently replacing values.
+    // Read one profile, rejecting duplicate keys instead of silently replacing values. Relative
+    // profile paths follow the executable's current working directory, which workflow.py anchors to
+    // the repository root for maintained launches.
     if (!config.empty()) {
         std::ifstream in(config);
 
@@ -177,8 +263,10 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         while (std::getline(in, line)) {
             line = trim(line);
 
+            // Empty lines and full-line comments are ignored. Inline `#` remains part of the value.
             if (line.empty() || line[0] == '#') continue;
 
+            // Split at the first equals sign so later equals characters remain available in the value.
             auto eq = line.find('=');
 
             if (eq == std::string::npos) { throw std::runtime_error("Expected key = value: " + line); }
@@ -189,14 +277,21 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 
             seen[key] = true;
 
+            // Assignment checks the source-specific key vocabulary; value semantics are validated only
+            // after CLI overrides and automatic-value resolution are complete.
             assign(key, trim(line.substr(eq + 1)));
         }
     }
 #pragma endregion
 
-    // Apply explicit options last, then resolve target, channel and beam dependent defaults.
+#pragma region /* Automatic-value resolution */
+    // Apply explicit options last. A CLI value may itself be `auto`, in which case the resolution below
+    // treats that as an explicit request to recompute the context-dependent value.
     for (const auto& [k, v] : overrides) assign(k, v);
 
+    // Resolve target identity through the maintained RG-M table. Geometry and nuclear A/Z metadata
+    // remain independent: each inherits from the identity only when its own value is `auto`, allowing
+    // documented unusual studies to override them separately.
     const auto& rgm_target = findRgmTarget(c.get("rgm-target"));
     if (c.get("target") == "auto") c.values_["target"] = rgm_target.geometry;
     if (c.get("A") == "auto") c.values_["A"] = std::to_string(rgm_target.A);
@@ -204,19 +299,28 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     if (c.get("gemc-target-variation") == "auto") c.values_["gemc-target-variation"] = rgm_target.gemc_variation;
 
     if (uniform) {
+        // Preserve legacy channel acceptance: neutron theta ends at 35 degrees; proton/other uniform
+        // channel defaults end at 45 degrees. Sampled momentum may extend to the beam energy in GeV.
         if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
         if (c.get("nucleon-p-max") == "auto") c.values_["nucleon-p-max"] = c.get("beam-energy");
+
+        // Trigger-electron sector offsets are legacy beam-setting values in degrees. Unknown beam
+        // energies receive zero offset rather than an inferred experimental configuration.
         if (c.get("trigger-phi-offset") == "auto") {
             double e = c.number("beam-energy");
             c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
         }
     }
 
+    // Physical directory provenance uses the established analysis Q2-cut label for each RG-M beam;
+    // other energies explicitly record that no known automatic label applies.
     if (!uniform && c.get("q2-cut") == "auto") {
         const double e = c.number("beam-energy");
         c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2_0_02" : std::abs(e - 4.02962) < 1e-6 ? "Q2_0_25" : std::abs(e - 5.98636) < 1e-6 ? "Q2_0_40" : "none";
     }
 
+    // The file prefix stays concise and recognizable. Physical run-directory naming below retains the
+    // fuller target-variation, generator-version, tune, Q2-cut, beam, and GEMC provenance contract.
     if (c.get("prefix") == "auto") {
         if (uniform) {
             std::ostringstream prefix;
@@ -228,28 +332,43 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     }
 
     if (uniform) {
+        // `sampled` is a user-facing convenience profile: ep selects the required 50/50 momentum/
+        // inverse-momentum mixture, while en selects uniform momentum. Non-fixed en directions default
+        // to isotropic sampling within the separately resolved legacy angular acceptance.
         if (c.get("nucleon-momentum") == "sampled") c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform";
         if (c.get("nucleon-angle") == "auto") c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta";
     }
+#pragma endregion
 
-    // Validate before normalizing paths or allowing downstream output creation.
+#pragma region /* Validation and path resolution */
+    // Validate while `output` still names the requested parent and local `input` retains the supplied
+    // spelling. Validation performs no output creation or replacement.
     c.validate(uniform);
 
+    // Preserve URI-like physical inputs for adapters that understand them. Normalize local files and
+    // glob patterns against the current directory so downstream behavior is independent of later cwd.
     if (!uniform && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
 
     if (uniform) {
+        // Uniform output keeps the legacy recognizable channel/beam directory below the user-selected
+        // parent. Width four provides labels such as 2070, 4029, and 5986 without truncating others.
         std::ostringstream directory;
         directory << "Uniform_sample_" << c.get("channel") << '_' << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     } else {
+        // Physical output encodes explicit simulation provenance in the documented order. Each field
+        // is sanitized only for this path; its unsanitized resolved value remains in values_ and is
+        // therefore available to the manifest writer.
         std::ostringstream directory;
         directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << '-' << pathToken(c.get("event-generator-version")) << "__"
-                  << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV_GEMC-"
-                  << pathToken(c.get("gemc-version"));
+                  << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV_GEMC-" << pathToken(c.get("gemc-version"));
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     }
 
+    // Expose one absolute, lexically normalized final run directory to every downstream consumer.
+    // Filesystem creation and guarded replacement remain the generator/writer's responsibility.
     c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
+#pragma endregion
 
     return c;
 }
@@ -261,12 +380,15 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 /**
  * @brief Read a resolved setting as text.
  *
- * Algorithm:
- *   Look up the key in the validated configuration map.
+ * Purpose:
+ *   Give generators and provenance writers a read-only copy of one value without exposing mutable
+ *   access to the configuration map.
  *
- * @param k Known configuration key.
+ * @param k Known shared or selected-source configuration key.
  *
- * @return Stored string; a missing key throws.
+ * @return Copy of the stored resolved string, preserving its manifest representation.
+ *
+ * @throws std::out_of_range If the key does not exist in this configuration's source-specific map.
  */
 std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
 #pragma endregion
@@ -277,17 +399,29 @@ std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
 /**
  * @brief Read a finite floating-point setting.
  *
+ * Purpose:
+ *   Convert a resolved numeric setting at the point of use while retaining its original string for
+ *   provenance. The key's contract supplies the unit, such as GeV, degrees, or cm.
+ *
  * Algorithm:
- *   Convert the string and reject trailing characters or non-finite values.
+ *   Use std::stod while recording the consumed character count, then require the entire string to be
+ *   consumed and the result to be finite.
  *
- * @param k Numeric configuration key.
+ * @param k Key whose resolved value must represent one floating-point number.
  *
- * @return Finite double; throws on invalid numeric input.
+ * @return Finite double in the unit documented for the selected key.
+ *
+ * @throws std::out_of_range If the key is absent or the number exceeds double range.
+ * @throws std::invalid_argument If std::stod cannot begin a conversion.
+ * @throws std::runtime_error If trailing text remains or the converted value is non-finite.
  */
 double RunConfig::number(const std::string& k) const {
+    // `used` distinguishes a complete value such as "5.98636" from a numeric prefix such as "5 GeV".
     std::size_t used = 0;
     double value = std::stod(get(k), &used);
 
+    // NaN and infinity are syntactically accepted by stod on some libraries but are never valid run
+    // configuration values, so reject them explicitly along with partially parsed strings.
     if (used != get(k).size() || !std::isfinite(value)) { throw std::runtime_error("Invalid number: " + k); }
 
     return value;
@@ -300,18 +434,29 @@ double RunConfig::number(const std::string& k) const {
 /**
  * @brief Read an unsigned integer setting.
  *
+ * Purpose:
+ *   Parse counts, seeds, and nuclear metadata without accepting signs, whitespace, fractional text,
+ *   or implementation-dependent integer prefixes.
+ *
  * Algorithm:
- *   Require decimal digits only, then convert with overflow checking.
+ *   Copy the resolved string, require at least one ASCII decimal digit and no other character, then
+ *   convert it with std::stoull's range checking.
  *
- * @param k Integer configuration key.
+ * @param k Key whose resolved value must contain unsigned decimal digits only.
  *
- * @return Unsigned value; throws on malformed or out-of-range input.
+ * @return Parsed 64-bit unsigned integer. Per-key limits are enforced separately by validate().
+ *
+ * @throws std::out_of_range If the key is absent or the digits exceed std::uint64_t range.
+ * @throws std::runtime_error If the stored value is empty or contains a non-digit.
  */
 std::uint64_t RunConfig::integer(const std::string& k) const {
+    // Validate spelling before conversion so signs and surrounding whitespace cannot be accepted by
+    // stoull even when they would otherwise produce a numeric result.
     const auto s = get(k);
 
     if (s.empty() || s.find_first_not_of("0123456789") != std::string::npos) { throw std::runtime_error("Expected unsigned integer: " + k); }
 
+    // stoull supplies the final overflow check after the lexical digit-only contract is satisfied.
     return std::stoull(s);
 }
 #pragma endregion
@@ -322,58 +467,118 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
 /**
  * @brief Reject incompatible or invalid run settings before output creation.
  *
- * Algorithm:
- *   1. Check output, counts, seeds, metadata and shared output options.
- *   2. Validate the target against the external geometry map.
- *   3. Require GST input or check channel-specific momentum and angular bounds.
+ * Purpose:
+ *   Establish the complete configuration invariant relied upon by event sources, target-vertex
+ *   sampling, LUND serialization, monitoring, naming, and provenance. Validation is deliberately
+ *   read-only and runs before a generator may replace or create the resolved output directory.
  *
- * @param uniform Select uniform-generation validation when true.
+ * Workflow:
+ *   1. Check required shared values, beam energy, counts/seeds, nuclear metadata, filename prefix,
+ *      LUND/mass conventions, and monitoring selection.
+ *   2. Validate fixed-vertex coordinates and, for target sampling, the external geometry key.
+ *   3. For physical conversion, require current GENIE GST input and complete naming provenance.
+ *   4. For uniform generation, validate the channel, angular acceptance, momentum/angle modes,
+ *      momentum bounds, and trigger-electron angles.
  *
- * @note No value; throws with the invalid setting or constraint.
+ * @param uniform Select uniform-generation constraints when true or physical-conversion constraints
+ *                when false. It must match the source mode used by parse().
+ *
+ * @return Nothing. Normal return means every applicable check succeeded.
+ *
+ * @throws std::exception If a key is missing, a stored numeric value cannot be converted, a target
+ *         geometry is unknown, or any shared/source-specific constraint fails.
+ *
+ * @note Numeric units follow the configuration contract: beam energy and momentum are GeV, angles
+ *       are degrees, and fixed vertex coordinates are cm.
  */
 void RunConfig::validate(bool uniform) const {
+#pragma region /* Shared run and output contract */
+    // Output is still the caller-selected parent at this stage; parse() appends the final run name only
+    // after validation. Events is mandatory for both generated and converted LUND workflows.
     if (get("output").empty()) { throw std::runtime_error("--output is required; use a new run directory"); }
     if (get("events").empty()) { throw std::runtime_error("--events is required; provide the total number of events to write"); }
+
+    // Beam energy must be a finite, strictly positive GeV value. number() owns lexical/finite checks.
     if (number("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
+
+    // Event count and the two independent RNG seeds must fit the unsigned type used downstream and be
+    // nonzero. Separate kinematic and vertex seeds preserve deliberate reproducibility boundaries.
     for (auto k : {"events", "seed", "vertex-seed"}) {
         auto n = integer(k);
         if (!n || n > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
     }
+
+    // A and Z are LUND header metadata, independently configurable from target geometry. integer()
+    // already enforces Z >= 0; these relationships keep the requested nuclide internally consistent.
     if (integer("A") < 1 || integer("A") > 300 || integer("Z") > integer("A")) { throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A"); }
+
+    // Prefix becomes part of every output filename, so accept one nonempty portable component only.
     if (get("prefix").empty() || get("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos) {
         throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
     }
+
+    // These enums select concrete writer/monitor behavior; unknown strings must not silently fall back.
     if (get("lund-format") != "legacy" && get("lund-format") != "precise") { throw std::runtime_error("lund-format must be legacy or precise"); }
     if (get("mass-convention") != "legacy" && get("mass-convention") != "standard") { throw std::runtime_error("mass-convention must be legacy or standard"); }
     if (get("render-plots") != "true" && get("render-plots") != "false") { throw std::runtime_error("render-plots must be true or false"); }
+#pragma endregion
 
-    if (get("vertex-mode") != "target" && get("vertex-mode") != "fixed") throw std::runtime_error("vertex-mode must be target or fixed");
+#pragma region /* Vertex contract */
+    // Both modes require finite coordinates because fixed mode consumes all three and retaining valid
+    // inactive values keeps the resolved manifest reusable. Target mode additionally requires a key
+    // implemented by the protected external geometry source.
+    if (get("vertex-mode") != "target" && get("vertex-mode") != "fixed") { throw std::runtime_error("vertex-mode must be target or fixed"); }
     for (auto k : {"vertex-x", "vertex-y", "vertex-z"}) number(k);
     if (get("vertex-mode") == "target") TargetGeometry::validate(get("target"));
+#pragma endregion
 
+#pragma region /* Source-specific contract */
     if (!uniform) {
+        // Physical mode currently has one adapter: GENIE GST ROOT input. A nonempty path/glob is
+        // required here; adapter opening and tree/schema checks occur when conversion begins.
         if (get("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
-        if (get("event-generator") != "genie") throw std::runtime_error("Only --event-generator genie is currently implemented");
+        if (get("event-generator") != "genie") { throw std::runtime_error("Only --event-generator genie is currently implemented"); }
+
+        // These fields form the physical output-directory contract and manifest provenance. Tokens
+        // such as `unknown` or `none` remain explicit valid values; omission is not allowed.
         for (auto k : {"event-generator-version", "tune", "q2-cut", "gemc-version", "gemc-target-variation"})
-            if (get(k).empty()) throw std::runtime_error(std::string(k) + " must not be empty");
+            if (get(k).empty()) { throw std::runtime_error(std::string(k) + " must not be empty"); }
+
+        // Physical configurations do not contain uniform-only keys, so finish after their own branch.
         return;
     }
 
+    // Uniform source selection fixes event multiplicity/content to electron-only, electron-proton, or
+    // electron-neutron generation; it never represents a physical interaction model.
     if (get("channel") != "1e" && get("channel") != "ep" && get("channel") != "en") { throw std::runtime_error("channel must be 1e, ep or en"); }
 
+    // Require ordered polar-angle bounds inside the full geometric domain. The resolved defaults carry
+    // the legacy per-particle acceptance, while explicit profiles may narrow those ranges.
     for (auto stem : {"electron", "nucleon"}) {
         double lo = number(std::string(stem) + "-theta-min"), hi = number(std::string(stem) + "-theta-max");
         if (!(0 <= lo && lo < hi && hi <= 180)) { throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180"); }
     }
 
+    // parse() resolves the convenience value `sampled` before this function: ep becomes the 50/50
+    // uniform-p/uniform-1/p mixture and en becomes uniform momentum. Mixed sampling requires a positive
+    // lower bound because inverse momentum is undefined at zero.
     if (get("nucleon-momentum") != "fixed" && get("nucleon-momentum") != "uniform" && get("nucleon-momentum") != "mixed") {
         throw std::runtime_error("nucleon-momentum must be fixed, sampled, uniform or mixed");
     }
     if (get("nucleon-momentum") == "mixed" && (get("channel") != "ep" || number("nucleon-p-min") <= 0)) { throw std::runtime_error("mixed requires ep and strictly positive nucleon-p-min"); }
+
+    // `auto` angle selection is likewise resolved before validation. Isotropic means uniform in cos
+    // theta within the configured legacy acceptance, not over the full sphere.
     if (get("nucleon-angle") != "theta" && get("nucleon-angle") != "isotropic") { throw std::runtime_error("nucleon-angle must be auto, theta or isotropic"); }
     if (get("electron-momentum") != "uniform" && get("electron-momentum") != "beam") { throw std::runtime_error("electron-momentum must be uniform or beam"); }
+
+    // The fixed momentum must be positive. Sampled bounds allow zero for uniform sampling, require a
+    // positive-width interval, and receive the stricter positive minimum above for inverse-p mixing.
     if (number("nucleon-p") <= 0 || number("nucleon-p-min") < 0 || number("nucleon-p-max") <= number("nucleon-p-min")) { throw std::runtime_error("Invalid nucleon momentum bounds"); }
+
+    // Trigger theta is a polar angle and the signed sector-offset magnitude cannot exceed 180 degrees.
     if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) { throw std::runtime_error("Invalid trigger angle"); }
+#pragma endregion
 }
 #pragma endregion
 
@@ -383,26 +588,49 @@ void RunConfig::validate(bool uniform) const {
 /**
  * @brief Encode a string as a JSON string literal.
  *
+ * Purpose:
+ *   Serialize resolved configuration and provenance text into manifests without allowing quotes,
+ *   backslashes, or control bytes to break the surrounding strict JSON document.
+ *
  * Algorithm:
- *   Escape quotes, backslashes and control characters, then enclose in quotes.
+ *   1. Write an opening double quote.
+ *   2. Prefix `"` and `\` bytes with a backslash.
+ *   3. Encode bytes below U+0020 as four-digit `\u00XX` escapes.
+ *   4. Copy other bytes unchanged and write the closing quote.
  *
- * @param s Unescaped configuration or provenance text.
+ * @param s Borrowed, unescaped configuration or provenance text; it is not modified or retained.
  *
- * @return JSON-safe text including surrounding quotes.
+ * @return Complete JSON string literal including its surrounding double quotes.
+ *
+ * @note Bytes at or above 0x20 are preserved. Callers therefore retain UTF-8 text byte-for-byte and
+ *       are responsible for supplying valid text encoding when the manifest will contain Unicode.
+ *
+ * @note This helper returns encoded text only; it does not write a file or validate a complete JSON
+ *       object. The manifest writer owns document structure and output I/O.
  */
 std::string jsonString(const std::string& s) {
+    // Build an independent result so the caller's source string remains available in RunConfig.
     std::ostringstream out;
     out << '"';
 
+    // Iterate as unsigned bytes: control-byte comparisons must not depend on whether plain char is
+    // signed on the current platform.
     for (unsigned char ch : s) {
-        if (ch == '"' || ch == '\\')
+        // Quotes could terminate the literal and backslashes begin JSON escapes, so preserve each as a
+        // two-byte escaped sequence.
+        if (ch == '"' || ch == '\\') {
             out << '\\' << ch;
-        else if (ch < 0x20)
+        } else if (ch < 0x20) {
+            // JSON forbids raw control bytes. Emit the equivalent zero-padded Unicode escape and then
+            // restore decimal stream formatting for subsequent output.
             out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(ch) << std::dec;
-        else
+        } else {
+            // Ordinary ASCII and multibyte UTF-8 bytes require no additional JSON escaping here.
             out << ch;
+        }
     }
 
+    // The returned value is ready to insert as one JSON key or value, including its delimiters.
     out << '"';
 
     return out.str();
@@ -415,15 +643,30 @@ std::string jsonString(const std::string& s) {
 /**
  * @brief Describe CLI options for the selected application.
  *
- * Algorithm:
- *   Combine shared option descriptions with workflow-specific usage.
+ * Purpose:
+ *   Keep command-line guidance adjacent to the parser contract so the uniform generator and physical
+ *   converter describe the same shared configuration grammar, units, and output-replacement behavior.
  *
- * @param uniform True for the uniform-generation help page.
+ * Workflow:
+ *   Start with the selected executable's usage line, append options shared by both LUND sources, add
+ *   the matching source-specific controls, and finish with target identifiers from the maintained
+ *   RG-M target table.
  *
- * @return Usage text; does not print or execute a workflow.
+ * @param uniform Select `clas12-uniform` help when true or `clas12-generator-to-lund` help when false.
+ *
+ * @return Newly owned multiline usage text. The caller decides where to print it.
+ *
+ * @note This function performs no parsing, file access, generation, conversion, or submission. Target
+ *       names come from rgmTargetNames(), keeping help synchronized with the accepted identity table.
  */
 std::string help(bool uniform) {
-    std::string result = uniform ? "clas12-uniform --channel 1e|ep|en --output PARENT_DIRECTORY\n" : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
+    // The physical example quotes its input glob so an interactive shell passes the pattern to the
+    // converter instead of expanding it before the adapter receives it.
+    std::string result =
+        uniform ? "clas12-uniform --channel 1e|ep|en --output PARENT_DIRECTORY\n" : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
+
+    // Shared settings control beam/target metadata, event and RNG counts, vertex production, writer
+    // compatibility, and optional plot rendering. Units are stated at the option boundary.
     result +=
         "Settings: --config FILE, --beam-energy GeV, --rgm-target ID, --target GEOMETRY, --A N, --Z N,\n"
         "--events N, --seed N, --vertex-seed N, --prefix NAME,\n"
@@ -432,15 +675,21 @@ std::string help(bool uniform) {
         "Files use key = value; CLI values override file settings. Existing output is replaced after a warning.\n";
 
     if (uniform) {
+        // Uniform-only settings select acceptance ranges and deliberately unphysical momentum/angle
+        // sampling. Automatic aliases are resolved by RunConfig::parse before validation.
         result +=
             "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
             "--electron-momentum uniform|beam, --nucleon-momentum fixed|sampled|uniform|mixed,\n"
             "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
     } else {
-        result += "Physical: --event-generator genie (default), --event-generator-version VERSION, --tune NAME,\n"
-                  "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n";
+        // Physical-only settings identify the current GENIE adapter and preserve generator, tune,
+        // selection, detector, and target-variation provenance in the output contract.
+        result +=
+            "Physical: --event-generator genie (default), --event-generator-version VERSION, --tune NAME,\n"
+            "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n";
     }
 
+    // Query the authoritative maintained identity table instead of duplicating its supported names.
     result += "RG-M targets: " + rgmTargetNames() + "\n";
 
     return result;
