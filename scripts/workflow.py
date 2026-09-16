@@ -23,10 +23,25 @@ import os
 # Launcher configuration objects -----------------------------------------------
 
 # region Launcher configuration objects
-# Purpose: define the checkout anchor and fallback controls shared by shell entry points.
-# Lifecycle: settings overlays one selected JSON profile and explicit CLI controls on DEFAULTS.
-# These are launcher controls, not particle physics settings. Relative workflow paths use ROOT.
+# Purpose:
+#     Define the immutable checkout anchor, launcher defaults, accepted dispatch vocabulary, and
+#     optional terminal colors used by this process.
+# Lifecycle:
+#     Python creates these module-level objects once at startup. Configuration loading copies
+#     DEFAULTS before overlaying one selected JSON profile and explicit command-line controls; no
+#     workflow should mutate DEFAULTS itself.
+# Scope:
+#     These values control launching and presentation. Physics parameters and target selections
+#     remain in the workflow profile and are forwarded through its `arguments` list.
+
+# Absolute repository root derived from this file's stable scripts/ location. All maintained helper,
+# build, executable, and profile paths are resolved from this anchor, independent of the caller's
+# current working directory.
 ROOT = Path(__file__).resolve().parents[1]
+
+# Complete fallback launcher configuration used when a profile or command-line option does not
+# override a field. `arguments` maps workflow/source selections to literal argv lists; subprocesses
+# receive those lists directly, so their contents are never evaluated by a shell.
 DEFAULTS = {
     # Workflow and CMake output configuration; names must agree with dispatch below.
     'workflow': 'create-lund', 'source': 'uniform', 'build_dir': 'build/release', 'build_type': 'Release',
@@ -35,11 +50,16 @@ DEFAULTS = {
     'arguments': {},
 }
 
-# Allowed dispatcher keys, used both by argparse and JSON validation.
+# Public workflow and LUND-source vocabularies. argparse uses these tuples for user-facing choices,
+# and profile validation uses the same objects so configuration files cannot select an undispatched
+# mode. `SOURCES` applies to create-lund; submission consumes LUND output already created earlier.
 WORKFLOWS = ('create-lund', 'submit')
 SOURCES = ('uniform', 'physical')
 
-# Printout colors obtained from environment variables
+# Optional ANSI presentation palette exported by set_colors.csh. The tcsh helper stores escape
+# prefixes as the printable sequence `\033`; replacing that prefix here produces the actual control
+# character expected by Python's terminal output. Missing variables become empty strings, keeping
+# logs readable in noninteractive environments and when workflow.py is invoked without run.csh.
 COLOR_START = os.environ.get("COLOR_START", "").replace(r"\033", "\033")
 COLOR_ERR = os.environ.get("COLOR_ERR", "").replace(r"\033", "\033")
 COLOR_COMPLETION = os.environ.get("COLOR_COMPLETION", "").replace(r"\033", "\033")
@@ -49,29 +69,94 @@ COLOR_END = os.environ.get("COLOR_END", "").replace(r"\033", "\033")
 # endregion
 
 
+# Error presentation ----------------------------------------------------------
+
+# region Error presentation
+ERROR_PREFIX = f'{COLOR_ERR}Error:{COLOR_END}'
+
+
+def error_message(message):
+    """Return an error message with exactly one colored ``Error:`` prefix.
+
+    Explicitly raised exceptions use this function when they are created. The normalization also
+    handles argparse, which may add option context around an ``ArgumentTypeError`` before displaying
+    it, and caught library exceptions whose messages do not yet have the prefix.
+    """
+
+    normalized = str(message).replace(f'{ERROR_PREFIX} ', '').replace(ERROR_PREFIX, '').strip()
+    return f'{ERROR_PREFIX} {normalized}'
+
+
+def print_error(message):
+    """Write one consistently formatted launcher error to standard error.
+
+    Args:
+        message: Human-readable diagnostic, with or without an existing ``Error:`` prefix.
+
+    Outputs:
+        Prints ``Error:`` using COLOR_ERR, restores COLOR_END, and then prints the message in the
+        terminal's normal color. Missing color environment variables naturally produce plain text.
+    """
+
+    print(error_message(message), file=sys.stderr)
+
+
+class LauncherArgumentParser(argparse.ArgumentParser):
+    """Argument parser whose validation failures use the launcher error format.
+
+    argparse calls :meth:`error` for invalid choices, values, and option syntax. Keeping that path on
+    the shared formatter ensures parser failures match errors caught by the module entry point.
+    """
+
+    def error(self, message):
+        """Print usage and a colored error prefix, then terminate with argparse status 2."""
+
+        self.print_usage(sys.stderr)
+        print_error(message)
+        self.exit(2)
+# endregion
+
+
 # boolean --------------------------------------------------------------------
 
 # region boolean
 def boolean(value):
-    """Parse a launcher boolean option.
+    """Convert one command-line token into a launcher boolean.
 
-    Algorithm:
-        Accept true/false and documented equivalent tokens; reject other input.
+    Purpose:
+        Let options such as ``--build``, ``--run``, and ``--test`` accept readable shell and JSON
+        style values while returning the native bool expected by the workflow dispatcher.
+
+    Workflow:
+        Normalize letter case, compare the token with the accepted true and false vocabularies, and
+        raise an argparse-specific error when neither vocabulary contains it.
 
     Args:
-        value: CLI string to interpret.
+        value: String supplied to an argparse option that uses this function as its ``type``.
 
     Returns:
-        A bool; invalid input raises argparse.ArgumentTypeError.
+        ``True`` for ``true``, ``yes``, ``on``, or ``1``; ``False`` for ``false``, ``no``, ``off``,
+        or ``0``. Alphabetic tokens are case-insensitive.
+
+    Assumptions:
+        argparse supplies a string. Leading or trailing whitespace is considered invalid rather than
+        silently removed, which catches malformed profile or shell input.
+
+    Raises:
+        argparse.ArgumentTypeError: If the token is outside the accepted vocabularies. argparse then
+        passes the diagnostic to ``LauncherArgumentParser.error()``, which applies ``print_error()``
+        before stopping the launcher with status 2.
     """
-    
+
+    # Normalize case only: preserving whitespace lets malformed values fail validation explicitly.
     if value.lower() in ('true', 'yes', 'on', '1'):
         return True
-    
+
     if value.lower() in ('false', 'no', 'off', '0'):
         return False
-    
-    raise argparse.ArgumentTypeError('Use true or false')
+
+    # LauncherArgumentParser catches this argparse error path and applies the shared colored prefix.
+    raise argparse.ArgumentTypeError(error_message('Use true or false'))
 # endregion
 
 
@@ -88,7 +173,7 @@ def parser():
         ArgumentParser for the checkout launcher.
     """
     
-    p = argparse.ArgumentParser(description=__doc__, epilog='Unrecognized options are forwarded to the selected workflow. Use -- --help for its help.')
+    p = LauncherArgumentParser(description=__doc__, epilog='Unrecognized options are forwarded to the selected workflow. Use -- --help for its help.')
     p.add_argument('--run-settings', type=Path, help='JSON settings; defaults to config/run.local.json if present, otherwise config/run.json')
     p.add_argument('--workflow', choices=WORKFLOWS)
     p.add_argument('--source', choices=SOURCES, help='LUND source mode for create-lund')
@@ -133,7 +218,7 @@ def settings(args):
     provided = json.loads(path.read_text())
     
     if not isinstance(provided, dict) or set(provided) - DEFAULTS.keys():
-        raise ValueError('Run settings contain unknown keys or are not an object')
+        raise ValueError(error_message('Run settings contain unknown keys or are not an object'))
     
     result = {**DEFAULTS, **provided}
     
@@ -143,30 +228,30 @@ def settings(args):
             result[key] = override
     
     if result['workflow'] not in WORKFLOWS:
-        raise ValueError('Invalid workflow in run settings')
+        raise ValueError(error_message('Invalid workflow in run settings'))
 
     if result['source'] not in SOURCES:
-        raise ValueError('Invalid LUND source in run settings')
+        raise ValueError(error_message('Invalid LUND source in run settings'))
     
     for key in ('build', 'run', 'test'):
         if type(result[key]) is not bool:
-            raise ValueError(f'{key} must be a JSON boolean')
+            raise ValueError(error_message(f'{key} must be a JSON boolean'))
     
     if type(result['jobs']) is not int or result['jobs'] < 1:
-        raise ValueError('jobs must be a positive integer')
+        raise ValueError(error_message('jobs must be a positive integer'))
     
     if result['build_type'] not in ('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'):
-        raise ValueError('Invalid build_type')
+        raise ValueError(error_message('Invalid build_type'))
     
     if not isinstance(result['build_dir'], str) or not result['build_dir']:
-        raise ValueError('build_dir must be a nonempty path')
+        raise ValueError(error_message('build_dir must be a nonempty path'))
     
     if not isinstance(result['arguments'], dict) or set(result['arguments']) - (set(SOURCES) | {'submit'}):
-        raise ValueError('arguments must map workflow names to argument lists')
+        raise ValueError(error_message('arguments must map workflow names to argument lists'))
     
     for name, values in result['arguments'].items():
         if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
-            raise ValueError(f'arguments.{name} must be a list of strings')
+            raise ValueError(error_message(f'arguments.{name} must be a list of strings'))
     
         # Keep forwarding predictable: settings contain --key value pairs or a
         # workflow boolean switch. Never evaluate these values as shell text.
@@ -200,10 +285,10 @@ def parse_options(values):
         key = values[i]
     
         if not key.startswith('--') or key == '--' or '=' in key:
-            raise ValueError(f'Expected --key value or a workflow switch, got {key}')
+            raise ValueError(error_message(f'Expected --key value or a workflow switch, got {key}'))
     
         if key in seen:
-            raise ValueError(f'Repeated workflow option: {key}')
+            raise ValueError(error_message(f'Repeated workflow option: {key}'))
     
         seen.add(key)
         group = [key]
@@ -372,7 +457,7 @@ def main():
         cache = (build / 'CMakeCache.txt').read_text()
         
         if 'BUILD_TESTING:BOOL=ON' not in cache:
-            raise RuntimeError('Tests are not configured; use --build true --test true')
+            raise RuntimeError(error_message('Tests are not configured; use --build true --test true'))
         
         execute(['ctest', '--test-dir', str(build), '--output-on-failure'])
         
@@ -394,7 +479,7 @@ def main():
             executable = build / 'apps' / app
 
             if not executable.is_file():
-                raise RuntimeError(f'Executable missing: {executable}; enable --build true')
+                raise RuntimeError(error_message(f'Executable missing: {executable}; enable --build true'))
 
             command = [str(executable)]
         else:
@@ -416,13 +501,15 @@ if __name__ == '__main__':
         sys.exit(main())
     except KeyboardInterrupt:
         banner('stop')
-        print('Interrupted.', file=sys.stderr)
+        print_error('Interrupted.')
         sys.exit(130)
     except subprocess.CalledProcessError as error:
         banner('stop')
-        sys.exit(128-error.returncode if error.returncode < 0 else error.returncode)
+        exit_status = 128-error.returncode if error.returncode < 0 else error.returncode
+        print_error(f'Command failed with exit status {exit_status}: {shlex.join(map(str, error.cmd))}')
+        sys.exit(exit_status)
     except (OSError, ValueError, TypeError, RuntimeError) as error:
         banner('stop')
-        print(f'Error: {error}', file=sys.stderr)
+        print_error(error)
         sys.exit(1)
 # endregion
