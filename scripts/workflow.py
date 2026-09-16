@@ -3,10 +3,10 @@
 """Build and launch CLAS12 sample workflows from a local or SSH checkout.
 
 Purpose:
-    Centralize launcher settings, optional safe Git updates, CMake builds and workflow dispatch.
+    Centralize launcher settings, CMake builds and workflow dispatch after run.csh synchronizes ifarm.
 
 Workflow:
-    Read settings -> optional pull -> optional build -> optional tests -> run one selected workflow.
+    Read settings -> optional build -> optional tests -> run one selected workflow.
 
 Notes:
     Arguments are passed as argv lists; callers select execution explicitly where supported.
@@ -21,6 +21,7 @@ import sys
 import os
 
 # Launcher configuration objects -----------------------------------------------
+
 # region Launcher configuration objects
 # Purpose: define the checkout anchor and fallback controls shared by shell entry points.
 # Lifecycle: settings overlays one selected JSON profile and explicit CLI controls on DEFAULTS.
@@ -29,24 +30,27 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULTS = {
     # Workflow and CMake output configuration; names must agree with dispatch below.
     'workflow': 'create-lund', 'source': 'uniform', 'build_dir': 'build/release', 'build_type': 'Release',
-    'jobs': 4, 'git_pull': False, 'build': True, 'run': True, 'test': False, # TODO: Remove 'git_pull' from the options. I'll be done in [run.csh](/Users/alon/Projects/CLAS12-sample-generator/run.csh) by default
+    'jobs': 4, 'build': True, 'run': True, 'test': False,
     # Per-workflow argv lists come from the selected profile; no shell evaluation is performed.
     'arguments': {},
 }
+
 # Allowed dispatcher keys, used both by argparse and JSON validation.
 WORKFLOWS = ('create-lund', 'submit')
 SOURCES = ('uniform', 'physical')
-# endregion
 
+# Printout colors obtained from environment variables
 COLOR_START = os.environ.get("COLOR_START", "").replace(r"\033", "\033")
 COLOR_ERR = os.environ.get("COLOR_ERR", "").replace(r"\033", "\033")
 COLOR_COMPLETION = os.environ.get("COLOR_COMPLETION", "").replace(r"\033", "\033")
 COLOR_INFO = os.environ.get("COLOR_INFO", "").replace(r"\033", "\033")
 COLOR_WARNING = os.environ.get("COLOR_WARNING", "").replace(r"\033", "\033")
 COLOR_END = os.environ.get("COLOR_END", "").replace(r"\033", "\033")
+# endregion
 
 
 # boolean --------------------------------------------------------------------
+
 # region boolean
 def boolean(value):
     """Parse a launcher boolean option.
@@ -72,12 +76,13 @@ def boolean(value):
 
 
 # parser --------------------------------------------------------------------
+
 # region parser
 def parser():
     """Define launcher options separately from forwarded workflow options.
 
     Algorithm:
-        Register build/update/run controls; leave child arguments for parse_known_args.
+        Register build/run controls; leave child arguments for parse_known_args.
 
     Returns:
         ArgumentParser for the checkout launcher.
@@ -87,20 +92,19 @@ def parser():
     p.add_argument('--run-settings', type=Path, help='JSON settings; defaults to config/run.local.json if present, otherwise config/run.json')
     p.add_argument('--workflow', choices=WORKFLOWS)
     p.add_argument('--source', choices=SOURCES, help='LUND source mode for create-lund')
-    p.add_argument('--git-pull', type=boolean)
     p.add_argument('--build', type=boolean)
     p.add_argument('--run', type=boolean)
     p.add_argument('--test', type=boolean)
     p.add_argument('--build-dir')
     p.add_argument('--build-type', choices=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     p.add_argument('--jobs', type=int)
-    p.add_argument('--update-only', action='store_true', help=argparse.SUPPRESS)
     
     return p
 # endregion
 
 
 # settings --------------------------------------------------------------------
+
 # region settings
 def settings(args):
     """Load and validate the effective launcher profile.
@@ -144,7 +148,7 @@ def settings(args):
     if result['source'] not in SOURCES:
         raise ValueError('Invalid LUND source in run settings')
     
-    for key in ('git_pull', 'build', 'run', 'test'):
+    for key in ('build', 'run', 'test'):
         if type(result[key]) is not bool:
             raise ValueError(f'{key} must be a JSON boolean')
     
@@ -173,6 +177,7 @@ def settings(args):
 
 
 # parse_options --------------------------------------------------------------------
+
 # region parse_options
 def parse_options(values):
     """Group workflow arguments without evaluating shell text.
@@ -215,6 +220,7 @@ def parse_options(values):
 
 
 # forwarded_arguments --------------------------------------------------------------------
+
 # region forwarded_arguments
 def forwarded_arguments(defaults, overrides):
     """Merge workflow defaults with explicit CLI options.
@@ -243,6 +249,7 @@ def forwarded_arguments(defaults, overrides):
 
 
 # execute --------------------------------------------------------------------
+
 # region execute
 def execute(command):
     """Run a checked command from the checkout root.
@@ -278,28 +285,8 @@ def execute(command):
 # endregion
 
 
-# update_repository --------------------------------------------------------------------
-# region update_repository
-def update_repository():
-    """Fast-forward the checkout only when local work is clean.
-
-    Algorithm:
-        Check tracked and untracked changes; refuse dirty work; invoke git pull --ff-only.
-
-    Returns:
-        None; local edits and divergent history cause failure, without reset or clean.
-    """
-    
-    status = subprocess.run(['git', 'status', '--porcelain', '--untracked-files=normal'], cwd=ROOT, check=True, capture_output=True, text=True)
-    
-    if status.stdout.strip():
-        raise RuntimeError('Checkout has local changes; commit/stash them or use --git-pull false. No files were reset or cleaned.')
-    
-    execute(['git', 'pull', '--ff-only'])
-# endregion
-
-
 # banner --------------------------------------------------------------------
+
 # region banner
 def banner(name):
     # Printers are presentation-only helpers and never determine the exit code.
@@ -323,6 +310,7 @@ def banner(name):
 
 
 # main --------------------------------------------------------------------
+
 # region main
 def main():
     """Run the configured checkout workflow in dependency order.
@@ -332,9 +320,8 @@ def main():
 
     Algorithm:
         1. Parse launcher options and read settings.
-        2. Handle update-only, or perform the optional update and reload settings.
-        3. Configure/build and optionally run CTest.
-        4. Dispatch one generation, conversion, simulation or submission command.
+        2. Configure/build and optionally run CTest.
+        3. Dispatch LUND creation or Slurm submission.
 
     Args:
         No arguments: options come from sys.argv.
@@ -350,17 +337,6 @@ def main():
     
     config = settings(args)
     # banner('logo')
-    
-    if args.update_only:
-        update_repository()
-        banner('success')
-        return 0
-    
-    # Update only when requested; the updater refuses local tracked or untracked changes.
-    if config['git_pull']:
-        update_repository()
-        # A pull may change the checked-in run profile.
-        config = settings(args)
     
     workflow = config['workflow']
     source = config['source']
@@ -434,6 +410,7 @@ def main():
 
 
 # Command-line entry point ------------------------------------------------
+
 # region Execution
 if __name__ == '__main__':
     try:

@@ -88,18 +88,6 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     commands=[json.loads(line) for line in log.read_text().splitlines()]
     assert len(commands)==2 and '--parallel' in commands[1] and commands[1][-1]=='2'
     assert '-DBUILD_TESTING=OFF' in commands[0]
-    # Exercise the update helper against an isolated local Git origin.
-    remote=root/'origin.git'
-    subprocess.run(['git','init','--bare',str(remote)],check=True,capture_output=True)
-    for command in [['git','init'],['git','config','user.name','Launcher Test'],['git','config','user.email','launcher@example.invalid'],
-                    ['git','add','.'],['git','commit','-m','Fixture'],['git','remote','add','origin',str(remote)],['git','push','-u','origin','HEAD']]:
-        subprocess.run(command,cwd=checkout,check=True,capture_output=True)
-    update=[sys.executable,str(checkout/'scripts/workflow.py'),'--update-only']
-    subprocess.run(update,cwd=checkout,check=True,capture_output=True)
-    sentinel=checkout/'local.txt';sentinel.write_text('keep')
-    result=subprocess.run(update,cwd=checkout,capture_output=True,text=True)
-    assert result.returncode!=0 and sentinel.read_text()=='keep'
-    assert 'local changes' in result.stderr
-print('Sourced/executed SSH launchers, shell survival, profiles, build commands and safe update passed.')
+print('Sourced/executed SSH launchers, shell survival, profiles and build commands passed.')
 
 # endregion

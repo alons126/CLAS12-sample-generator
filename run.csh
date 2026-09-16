@@ -66,7 +66,7 @@ endif
 # Workflow dispatch -----------------------------------------------------------
 # region Workflow dispatch
 if ($CLAS12_SAMPLE_STATUS == 0) then
-    python3 scripts/workflow.py --git-pull false $argv:q
+    python3 scripts/workflow.py $argv:q
     set CLAS12_SAMPLE_STATUS = $status
 endif
 popd > /dev/null

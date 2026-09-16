@@ -41,7 +41,6 @@ Copy `config/run.json` to the Git-ignored `config/run.local.json` for server-spe
 | --- | --- | --- |
 | `workflow` | `create-lund` | `--workflow create-lund|submit` |
 | `source` | `uniform` | `--source uniform|physical` for LUND creation |
-| `git_pull` | `false` | `--git-pull true`: require a clean checkout, then `git pull --ff-only` |
 | `build` | `true` | `--build false`: reuse existing binaries or skip compilation for simulation |
 | `run` | `true` | `--run false`: build/test only |
 | `test` | `false` | `--test true`: enable BUILD_TESTING and run CTest before execution |

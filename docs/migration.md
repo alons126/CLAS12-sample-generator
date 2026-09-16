@@ -36,6 +36,6 @@ Both keep the original azimuth and trigger-electron prescription. See [sampling 
 
 ## Retained corrections
 
-The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. It propagates actual file counts to simulation, validates input/configuration, warns before replacing existing outputs, and publishes a manifest only after success. The launcher updates Git only when explicitly requested or enabled in run settings, using a clean-checkout fast-forward pull. Generation may remove a resolved run directory when replacing it; Git operations never clean the checkout. See the [SSH workflow](ssh-workflow.md).
+The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. It propagates actual file counts to simulation, validates input/configuration, warns before replacing existing outputs, and publishes a manifest only after success. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](ssh-workflow.md).
 
 Full parity scope and limitations—including unknown historical random states and untested detector execution—are listed in [validation](validation.md).

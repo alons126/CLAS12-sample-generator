@@ -1,7 +1,6 @@
 {
   "workflow": "create-lund",
   "source": "uniform",
-  "git_pull": false,
   "build": true,
   "run": true,
   "test": false,

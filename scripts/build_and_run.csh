@@ -35,7 +35,7 @@ endif
 # Driver invocation ------------------------------------------------------------
 # region Driver invocation
 if (-f "$_clas12_root/scripts/workflow.py") then
-    python3 "$_clas12_root/scripts/workflow.py" --git-pull false $argv:q
+    python3 "$_clas12_root/scripts/workflow.py" $argv:q
     set CLAS12_SAMPLE_STATUS = $status
 else
     echo "Cannot find scripts/workflow.py. Source from the checkout root or set CLAS12_SAMPLES_DIR."
