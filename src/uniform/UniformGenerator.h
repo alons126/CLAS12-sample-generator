@@ -26,8 +26,8 @@
 namespace samples {
 
 // Public interface -------------------------------------------------------------
-#pragma region /* Public interface */
 
+#pragma region /* Public interface */
 /**
  * @brief Generate the requested acceptance channel and its completed run outputs.
  *
@@ -63,4 +63,5 @@ namespace samples {
  */
 void generateUniform(const RunConfig& config);
 #pragma endregion
-}
+
+}  // namespace samples

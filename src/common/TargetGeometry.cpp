@@ -7,15 +7,27 @@
  * @brief Adapter around the protected external target source.
  *
  * Purpose:
- *   Use targets.h as the geometry authority while keeping run RNG streams independent.
+ *   Use replaceable protected targets.h as the authoritative spatial sampler while isolating its
+ *   definitions and global RNG behind a maintained, validated, thread-safe interface.
  *
  * Workflow:
- *   Validate the target map entry; transfer RNG state; call randomVertex; restore caller state.
+ *   Isolate the external header in one private namespace/translation unit -> validate a nonempty map
+ *   entry -> lock global sampling state -> copy in the caller-owned TRandom3 -> invoke randomVertex()
+ *   -> copy the advanced state back -> reject non-finite vertices.
+ *
+ * Reproducibility and units:
+ *   Callers own and seed vertex RNG streams independently from kinematic RNGs. Copying complete TRandom3
+ *   state preserves draw order across interleaved geometry objects. Returned coordinates are cm.
+ *
+ * Protected-source rule:
+ *   The included external header is consumed as-is. Geometry updates occur by explicitly replacing that
+ *   protected file, while this adapter remains stable unless its external interface changes.
  */
 
 #include "common/TargetGeometry.h"
 
 #include <TString.h>
+
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -23,18 +35,46 @@
 #include <stdexcept>
 #include <vector>
 
+// External geometry bridge --------------------------------------------------
+
+#pragma region /* External geometry bridge */
+/**
+ * @brief Translation-unit-private ownership boundary for external symbols and synchronization state.
+ *
+ * targets.h defines data and functions rather than declarations alone, including a global TRandom3.
+ * Keeping its inclusion and the matching mutex here prevents those names from entering the maintained
+ * samples namespace and prevents multiple-definition problems in other translation units.
+ */
 namespace {
-// This external header defines globals and functions. Include it in ONE translation
-// unit, isolated from application symbols. Keep the header itself replaceable.
+// External targets namespace -------------------------------------------------
+
+#pragma region /* External targets namespace */
+/**
+ * @namespace external_targets
+ * @brief Private namespace containing the unmodified symbols defined by protected targets.h.
+ *
+ * The using-declarations supply standard-library names expected unqualified by the imported header.
+ * They remain confined to this private namespace and do not change maintained application APIs.
+ */
 namespace external_targets {
 using std::cout;
 using std::endl;
 using std::sqrt;
 using std::string;
 #include "common/external/targets.h"
-}
+}  // namespace external_targets
+#pragma endregion
+
+/**
+ * @brief Process-lifetime lock protecting the external global RNG transaction.
+ *
+ * Every non-point sample holds this mutex from caller-state installation through external sampling and
+ * state retrieval, so concurrent geometry calls cannot mix streams. The immutable target map needs no
+ * mutation lock during validation.
+ */
 std::mutex geometry_mutex;
-}
+}  // namespace
+#pragma endregion
 
 namespace samples {
 // TargetGeometry::validate ----------------------------------------------------------------------
@@ -43,19 +83,30 @@ namespace samples {
 /**
  * @brief Validate a target name without sampling.
  *
+ * Purpose:
+ *   Fail before output-directory replacement when a configured geometry cannot produce vertices.
+ *
  * Algorithm:
- *   Accept the artificial point mode; otherwise require a nonempty external map entry.
+ *   Accept the maintained artificial `point` mode directly. Otherwise perform an exact, case-sensitive
+ *   lookup in the external target map and require its geometry-element collection to be nonempty.
  *
- * @param name Target key in targets.h, or point.
+ * @param name Borrowed targets.h map key or the exact artificial value `point`.
  *
- * @note No value; throws for unknown or empty target entries.
+ * @return Nothing. Normal return means construction may store the key.
+ *
+ * @throws std::runtime_error If the name is absent or its external geometry entry contains no elements.
+ *
+ * @note This read-only check consumes no random draws and does not infer geometry from RG-M identity,
+ *       A/Z metadata, or GEMC variation.
  */
 void TargetGeometry::validate(const std::string& name) {
-    // The point vertex is an artificial electron-tester setting, not a target.
+    // The point vertex is a maintained compatibility mode for the electron tester, not an entry added
+    // to or expected from the protected external target map.
     if (name == "point") return;
+
+    // Use find rather than operator[] so validation cannot insert a missing key into external state.
     const auto found = external_targets::targets.find(name);
-    if (found == external_targets::targets.end() || found->second.empty())
-        throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name);
+    if (found == external_targets::targets.end() || found->second.empty()) throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name);
 }
 #pragma endregion
 
@@ -68,27 +119,39 @@ void TargetGeometry::validate(const std::string& name) {
  * Purpose:
  *   Use the external geometry algorithm without coupling otherwise independent run RNG streams.
  *
- * Algorithm:
- *   1. Return the Hall B engineering center directly for compatibility point mode.
- *   2. Lock the external RNG and copy in the caller state.
- *   3. Call randomVertex, copy the advanced state back, and check the vertex.
+ * Workflow:
+ *   1. Return the fixed Hall B compatibility point without locking or drawing.
+ *   2. Hold the process-wide mutex across the complete external RNG transaction.
+ *   3. Copy the caller's complete RNG state into external `ran` and call randomVertex(name_).
+ *   4. Copy the advanced external state back to the caller and verify the sampled vertex is finite.
  *
- * @param random Vertex RNG whose state advances for physical targets.
+ * @param random Borrowed run-owned vertex RNG. A physical target advances it by exactly the draws made
+ *               inside targets.h; point mode leaves it unchanged.
  *
- * @return Vertex in cm; throws if the external sampler returns non-finite coordinates.
+ * @return Sampled vertex in cm, or exactly (0, 0, -3) for point mode.
+ *
+ * @throws std::runtime_error If the external sampler returns a non-finite/overflowed squared magnitude.
+ *         Exceptions thrown inside the external sampler propagate after the mutex unlocks.
+ *
+ * @note If randomVertex() returns a non-finite vertex, its completed RNG draws are still copied back
+ *       before validation fails. If randomVertex() itself throws, copy-back is not reached and the caller
+ *       retains its prior state; the next call overwrites external `ran` from its own caller state.
  */
 TVector3 TargetGeometry::sample(TRandom3& random) const {
+    // Point mode preserves the archived tester location and does not contend on external global state.
     if (name_ == "point") return {0, 0, -3};
-    // Upstream randomVertex uses a global TRandom3 named ran. Transfer the full
-    // caller-owned state, not just its seed, so streams remain reproducible and
-    // independent even when different geometry instances are interleaved.
+
+    // Upstream randomVertex uses a global TRandom3 named ran. Transfer full state rather than reseeding,
+    // so streams remain reproducible and independent when geometry instances are interleaved.
     std::lock_guard<std::mutex> guard(geometry_mutex);
     external_targets::ran = random;
     const auto vertex = external_targets::randomVertex(name_);
     random = external_targets::ran;
+
+    // Mag2 covers all three coordinates in one check; non-finite inputs or overflow are invalid output.
     if (!std::isfinite(vertex.Mag2())) throw std::runtime_error("Non-finite vertex from targets.h");
     return vertex;
 }
 #pragma endregion
 
-}
+}  // namespace samples

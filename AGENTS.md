@@ -4,7 +4,28 @@ Document maintained C++ with file/class purpose and workflow descriptions, named
 
 Apply this layered style to all maintained code objects, not just functions: classes, structs (including private/nested implementation records), enums, meaningful state groups, constants and configuration containers. Explain purpose, how objects are created/used, member meanings and units, ownership/lifetime, invariants and consumers. Use named banners/regions at meaningful object boundaries; keep trivial members concise and avoid inventing algorithms for passive data records.
 
-Use module/function docstrings and `# region` / `# endregion` comment markers for Python. Use description, purpose, workflow, inputs/outputs, usage and named comment regions for shell scripts. Keep shebangs first and preserve sourced-shell exit-status behavior. Do not invent author/date attribution.
+## Maintained C++ formatting
+
+Apply these rules to maintained C++ source and header files. Do not apply them to protected external or archived sources.
+
+- Begin every maintained C++ source and header file with this ownership header, using the file's actual creation date:
+
+  ```cpp
+  //
+  // Created by Alon Sportes on <creation date>.
+  //
+  ```
+
+- Leave exactly one blank line before every `#pragma region` and after every `#pragma endregion`.
+- Leave exactly one blank line after the file's include block.
+- Leave exactly one blank line after namespace-usage declarations such as `using namespace std;`.
+- Leave exactly one blank line before every named separator banner.
+- Make every separator-banner line, including its label and repeated `-` characters, exactly 170 columns wide.
+- Always enclose the body of every C++ `if`, `else if`, `else`, `for`, range-based `for`, `while`, and `do while` statement in braces, even when the body contains only one statement.
+
+Every maintained code file in another language must begin with the analogous `Created by Alon Sportes on <creation date>.` ownership header using that language's comment syntax. When a file begins with an interpreter directive such as `#!/usr/bin/env python3`, keep the shebang on the first line and put the ownership header immediately below it. Use the actual creation date recorded in an existing header or recover it from repository history; never guess or silently substitute the modification date. These ownership-header requirements do not apply to protected external or archived files.
+
+Use module/function docstrings and `# region` / `# endregion` comment markers for Python. Use description, purpose, workflow, inputs/outputs, usage and named comment regions for shell scripts. Keep shebangs first and preserve sourced-shell exit-status behavior.
 
 # Project architecture and scope
 

@@ -4,13 +4,27 @@
 
 /**
  * @file LegacyMonitoring.cpp
- * @brief Maintained historical uniform histogram definitions.
+ * @brief Implements the archived uniform-sample monitoring contract.
  *
  * Purpose:
- *   Preserve numerical diagnostic compatibility without importing archived globals at runtime.
+ *   Recreate the historical `1e`, `ep`, `en`, and `Tester_e` histogram names,
+ *   binning, axes, and correlations using run-local C++ ownership. This module
+ *   observes written events; it does not generate, select, or serialize them.
  *
  * Workflow:
- *   Select channel definitions -> resolve each axis quantity -> fill -> save and optionally render.
+ *   1. Select and allocate the archived definitions for one uniform channel.
+ *   2. Resolve each definition's symbolic axis keys from every written Event.
+ *   3. Write the accumulated histograms to a new ROOT file.
+ *   4. Optionally render a multipage PDF and one PNG per histogram.
+ *
+ * Units and assumptions:
+ *   Momentum is in GeV/c, beam energy is in GeV, angles are in degrees, and
+ *   vertices are in centimeters. Names, ranges, bin counts, and correlations
+ *   are retained because parity tests and existing workflows depend on them.
+ *
+ * Failure behavior:
+ *   Missing event quantities, ROOT output failures, and rendering filesystem
+ *   failures are reported with exceptions to the calling generation workflow.
  */
 
 #include "common/LegacyMonitoring.h"
@@ -26,83 +40,125 @@
 #include <vector>
 
 namespace samples {
-// LegacyMonitoring::Impl object ------------------------------------------------
+
+// LegacyMonitoring::Impl object -----------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* LegacyMonitoring::Impl object */
+
 /**
  * @struct LegacyMonitoring::Impl
  * @brief Own the selected channel's historical diagnostic definitions.
  *
- * Purpose: preserve histogram names, binning and correlations without archived global state.
- * Lifecycle: construction adds entries; fill evaluates their quantity keys; save writes/renders
- * the same collection. Destruction releases the detached ROOT objects.
+ * Purpose:
+ *   Preserve histogram definitions and axis-key metadata without the archived
+ *   implementation's global ROOT state.
+ *
+ * Lifecycle and ownership:
+ *   Construction appends Entry records in historical order. fill() reads them,
+ *   save() writes and optionally renders them, and destruction releases every
+ *   detached histogram through std::unique_ptr.
+ *
+ * Invariant:
+ *   Each entry owns one initialized histogram and constructor-controlled keys.
+ *   Entry order remains stable through filling, writing, and rendering.
  */
 struct LegacyMonitoring::Impl {
-    // Entry object ------------------------------------------------
+    // Entry object ------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* Entry object */
+
     /**
      * @struct Entry
      * @brief Couple an owned histogram to the event quantities that fill its axes.
      *
-     * Usage: the constructor records keys such as Phi_e or P_p; value resolves them per event.
-     * Invariant: empty y selects a 1D histogram; nonempty y requires a TH2-compatible object.
-     * Quantity units are degrees for angles, GeV/c for momentum and cm for vertices.
+     * Creation and use:
+     *   Construction associates keys such as `Phi_e`, `P_p`, or `Vz_n` with a
+     *   detached ROOT object. fill() resolves those keys from each event.
+     *
+     * Invariants and units:
+     *   An empty y key denotes a TH1. A nonempty y key requires a TH2-compatible
+     *   object. Angles are in degrees, momenta in GeV/c, and vertices in cm.
      */
     struct Entry {
         std::unique_ptr<TH1> histogram;  ///< Detached TH1/TH2 object owned by this entry.
-        std::string x, y;               ///< Axis quantity keys; empty y means one-dimensional.
+        std::string x, y;                ///< Axis quantity keys; empty y means one-dimensional.
     };
+
 #pragma endregion
 
     std::vector<Entry> entries;  ///< Ordered channel definitions, reused for filling and saving.
 };
+
 #pragma endregion
 
 namespace {
-// value ----------------------------------------------------------------------
+
+// value -----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* value */
+
 /**
  * @brief Resolve a historical histogram axis quantity.
  *
+ * Purpose:
+ *   Translate a private `<metric>_<species>` key into one value from a written
+ *   electron, proton, or neutron record.
+ *
  * Algorithm:
- *   Select the particle from the key suffix, then evaluate momentum, angle or vertex coordinate.
+ *   Select the PDG code from the species suffix, find the first matching event
+ *   particle, select the metric from the prefix, and convert angles to degrees.
  *
- * @param key Metric and particle token used by a histogram definition.
- * @param event Event supplying the particle values.
+ * @param key Constructor-controlled metric and particle token.
+ * @param event Written uniform event supplying the particle values.
  *
- * @return Quantity in GeV/c for momentum, degrees for angles, or cm for vertices; unavailable quantities throw.
+ * @return Momentum in GeV/c, an angle in degrees, or a vertex coordinate in cm.
+ *
+ * @throws std::runtime_error If no supported metric and required particle match the key.
+ *
+ * @note The private key is assumed to be nonempty and to end in `e`, `p`, or `n`.
  */
 double value(const std::string& key, const Event& event) {
     int pid = key.back() == 'e' ? 11 : key.back() == 'p' ? 2212 : 2112;
     for (const auto& p : event.particles) {
-        if (p.pid != pid) continue;
+        if (p.pid != pid) { continue; }
+
         auto metric = key.substr(0, key.size() - 2);
-        if (metric == "Theta") return p.momentum.Theta() * TMath::RadToDeg();
-        if (metric == "Phi") return p.momentum.Phi() * TMath::RadToDeg();
-        if (metric == "P") return p.momentum.Mag();
-        if (metric == "Vx") return p.vertex.X();
-        if (metric == "Vy") return p.vertex.Y();
-        if (metric == "Vz") return p.vertex.Z();
+
+        if (metric == "Theta") { return p.momentum.Theta() * TMath::RadToDeg(); }
+        if (metric == "Phi") { return p.momentum.Phi() * TMath::RadToDeg(); }
+        if (metric == "P") { return p.momentum.Mag(); }
+        if (metric == "Vx") { return p.vertex.X(); }
+        if (metric == "Vy") { return p.vertex.Y(); }
+        if (metric == "Vz") { return p.vertex.Z(); }
     }
+
     throw std::runtime_error("No histogram quantity " + key);
 }
+
 #pragma endregion
 
 }  // namespace
 
-// LegacyMonitoring::LegacyMonitoring ----------------------------------------------------------------------
+// LegacyMonitoring::LegacyMonitoring ------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LegacyMonitoring::LegacyMonitoring */
+
 /**
  * @brief Build the selected channel historical diagnostic set.
  *
  * Algorithm:
- *   Create named detached histograms and record the particle quantities used for each axis.
+ *   Create an insertion helper that detaches ROOT ownership, select the matching
+ *   channel definition, and append its named one- and two-dimensional plots with
+ *   their symbolic axis keys. ep/en include both particle-level distributions
+ *   and electron-nucleon correlations.
  *
  * @param channel 1e, ep, en or Tester_e diagnostic selection.
  * @param Ebeam Beam energy in GeV used for momentum axes.
  *
- * @note Constructor; definitions preserve the original names, bins and correlations.
+ * @post A recognized channel owns its complete empty histogram set in archived order.
+ *
+ * @note The caller validates channel before construction. An unrecognized value
+ *       creates an empty set rather than selecting a fallback definition.
  */
 LegacyMonitoring::LegacyMonitoring(const std::string& channel, double Ebeam) : impl_(std::make_unique<Impl>()) {
     auto add = [&](std::unique_ptr<TH1> h, std::string x, std::string y) {
@@ -110,7 +166,7 @@ LegacyMonitoring::LegacyMonitoring(const std::string& channel, double Ebeam) : i
         impl_->entries.push_back({std::move(h), std::move(x), std::move(y)});
     };
 
-    // Select the original histogram family; names and binning are part of parity checks.
+    // Tester electron channel: fixed-vertex tester plots without vertex histograms.
     if (channel == "Tester_e") {
         add(std::make_unique<TH1D>("Theta_e_Tester_e", "#theta_{e} in Tester_e sample;#theta_{e} [#circ]", 100, 0, 50), "Theta_e", "");
         add(std::make_unique<TH1D>("Phi_e_Tester_e", "#phi_{e} in Tester_e sample;#phi_{e} [#circ]", 100, -180, 180), "Phi_e", "");
@@ -121,6 +177,7 @@ LegacyMonitoring::LegacyMonitoring(const std::string& channel, double Ebeam) : i
         add(std::make_unique<TH2D>("Phi_e_VS_P_e_Tester_e", "#phi_{e} vs. P_{e} in Tester_e sample;P_{e} [GeV/c];#phi_{e} [#circ]", 100, 0, Ebeam * 1.1, 100, -180, 180), "P_e", "Phi_e");
     }
 
+    // Production electron-only channel: electron kinematics and target vertex.
     if (channel == "1e") {
         add(std::make_unique<TH1D>("Theta_e_1e", "#theta_{e} in (e,e') sample;#theta_{e} [#circ]", 100, 0, 50), "Theta_e", "");
         add(std::make_unique<TH1D>("Phi_e_1e", "#phi_{e} in (e,e') sample;#phi_{e} [#circ]", 100, -180, 180), "Phi_e", "");
@@ -133,6 +190,7 @@ LegacyMonitoring::LegacyMonitoring(const std::string& channel, double Ebeam) : i
         add(std::make_unique<TH2D>("Phi_e_VS_P_e_1e", "#phi_{e} vs. P_{e} in (e,e') sample;P_{e} [GeV/c];#phi_{e} [#circ]", 100, 0, Ebeam * 1.1, 100, -180, 180), "P_e", "Phi_e");
     }
 
+    // Electron-proton channel: particle-level plots and electron-proton correlations.
     if (channel == "ep") {
         add(std::make_unique<TH1D>("Theta_e_ep", "#theta_{e} in (e,e'p) sample;#theta_{e} [#circ]", 100, 0, 50), "Theta_e", "");
         add(std::make_unique<TH1D>("Phi_e_ep", "#phi_{e} in (e,e'p) sample;#phi_{e} [#circ]", 100, -180, 180), "Phi_e", "");
@@ -163,7 +221,8 @@ LegacyMonitoring::LegacyMonitoring(const std::string& channel, double Ebeam) : i
         add(std::make_unique<TH2D>("Phi_e_VS_Theta_p_ep", "#phi_{e} vs. #theta_{p} in (e,e'p) sample;#theta_{p} [#circ];#phi_{e} [#circ]", 100, 0, 50, 100, -180, 180), "Theta_p", "Phi_e");
         add(std::make_unique<TH2D>("Phi_e_VS_Phi_p_ep", "#phi_{e} vs. #phi_{p} in (e,e'p) sample;#phi_{p} [#circ];#phi_{e} [#circ]", 100, -200, 200, 100, -200, 200), "Phi_p", "Phi_e");
     }
-    
+
+    // Electron-neutron channel: particle-level plots and electron-neutron correlations.
     if (channel == "en") {
         add(std::make_unique<TH1D>("Theta_e_en", "#theta_{e} in (e,e'n) sample;#theta_{e} [#circ]", 100, 0, 50), "Theta_e", "");
         add(std::make_unique<TH1D>("Phi_e_en", "#phi_{e} in (e,e'n) sample;#phi_{e} [#circ]", 100, -180, 180), "Phi_e", "");
@@ -195,59 +254,86 @@ LegacyMonitoring::LegacyMonitoring(const std::string& channel, double Ebeam) : i
         add(std::make_unique<TH2D>("Phi_e_VS_Phi_n_en", "#phi_{e} vs. #phi_{n} in (e,e'n) sample;#phi_{n} [#circ];#phi_{e} [#circ]", 100, -200, 200, 100, -200, 200), "Phi_n", "Phi_e");
     }
 }
+
 #pragma endregion
 
-// LegacyMonitoring destruction ------------------------------------------------------
+// LegacyMonitoring destruction ------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* Histogram destruction */
-/** @brief Release the run-owned diagnostic implementation and its detached ROOT objects. */
+
+/**
+ * @brief Release the implementation and every detached compatibility histogram.
+ *
+ * The out-of-line definition lets the public header keep Impl incomplete.
+ */
 LegacyMonitoring::~LegacyMonitoring() = default;
+
 #pragma endregion
 
-// LegacyMonitoring::fill ----------------------------------------------------------------------
+// LegacyMonitoring::fill ------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LegacyMonitoring::fill */
+
 /**
  * @brief Fill the historical channel histograms.
  *
  * Algorithm:
- *   Resolve each configured x quantity and optional y quantity, then fill the corresponding histogram.
+ *   Visit entries in archived order. Resolve x for every entry; fill a TH1 when
+ *   y is empty, otherwise resolve y and fill the histogram through its TH2 view.
  *
- * @param event Successfully written event with the channel particles.
+ * @param event Successfully written event containing the configured channel particles.
  *
- * @note No value; missing requested particle quantities throw.
+ * @throws std::runtime_error If a configured quantity cannot be resolved.
+ *
+ * @note The event is borrowed and unchanged. Earlier entries remain accumulated
+ *       if a later entry raises an exception.
  */
 void LegacyMonitoring::fill(const Event& event) {
     for (auto& entry : impl_->entries) {
-        if (entry.y.empty())
+        if (entry.y.empty()) {
             entry.histogram->Fill(value(entry.x, event));
-        else
+        } else {
             static_cast<TH2*>(entry.histogram.get())->Fill(value(entry.x, event), value(entry.y, event));
+        }
     }
 }
+
 #pragma endregion
 
-// LegacyMonitoring::save ----------------------------------------------------------------------
+// LegacyMonitoring::save ------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LegacyMonitoring::save */
+
 /**
  * @brief Persist historical histograms and optionally render plots.
  *
  * Algorithm:
- *   Write the ROOT file, then render the configured histogram collection when requested.
+ *   Create the ROOT file without overwriting an existing result, enable stored
+ *   sum-of-weights errors, write every histogram, and close the file. If render
+ *   is enabled, enter ROOT batch mode, create `monitoring_plots`, then draw every
+ *   entry into a multipage PDF and an individually named PNG.
  *
- * @param path New diagnostic ROOT path.
- * @param render True to create PDF and PNG plots.
+ * @param path Destination for the new compatibility ROOT file.
+ * @param render Whether to create `monitoring_plots/uniform.pdf` and PNG files.
  *
- * @note No value; diagnostic output errors prevent completion publication upstream.
+ * @throws std::runtime_error If ROOT cannot create the file or write a histogram.
+ * @throws std::filesystem::filesystem_error If the plot directory cannot be created.
+ *
+ * @note The workflow saves diagnostics before publishing its completion manifest,
+ *       so a reported failure prevents the run from being marked complete.
  */
 void LegacyMonitoring::save(const std::filesystem::path& path, bool render) {
     TFile out(path.string().c_str(), "CREATE");
-    if (out.IsZombie()) throw std::runtime_error("Cannot create legacy monitoring file");
+
+    if (out.IsZombie()) { throw std::runtime_error("Cannot create legacy monitoring file"); }
+
     for (auto& entry : impl_->entries) {
         entry.histogram->Sumw2();
-        if (entry.histogram->Write() <= 0) throw std::runtime_error("Cannot write legacy histogram");
+        if (entry.histogram->Write() <= 0) { throw std::runtime_error("Cannot write legacy histogram"); }
     }
+
     out.Close();
+
     // Rendering is optional and follows successful numerical ROOT output.
     if (render) {
         gROOT->SetBatch(true);
@@ -266,6 +352,7 @@ void LegacyMonitoring::save(const std::filesystem::path& path, bool render) {
         canvas.Print((pdf + "]").c_str());
     }
 }
+
 #pragma endregion
 
 }  // namespace samples
