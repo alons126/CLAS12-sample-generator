@@ -52,3 +52,9 @@ For local editing and server execution via `source run.csh`, read the [SSH workf
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
 The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+
+## Remaining TODOs
+
+- Finish adding monitoring printouts to new code
+- remove git_pull: false
+- Make sure that the genie converter does not use uniform kinematics
