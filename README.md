@@ -42,4 +42,4 @@ Read the [newcomer guide](docs/index.md), then [build instructions](docs/buildin
 
 The original source trees are retained in `legacy/` for comparison. They are retired and excluded from the build; use the commands documented above. Detector cards and reconstruction YAML are retained in `config/detector/`.
 
-For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/ssh-workflow.md). Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/external-inputs.md).
+For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/ssh-workflow.md). When sourcing from outside the checkout, the user may set the optional `CLAS12_SAMPLES_DIR` environment variable to its absolute path; the project does not define it automatically. Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/external-inputs.md).

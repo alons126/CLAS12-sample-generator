@@ -31,6 +31,19 @@ setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
 source "$CLAS12_SAMPLES_DIR/run.csh" --output runs/electron-003
 ```
 
+`CLAS12_SAMPLES_DIR` is an optional user-defined environment variable; the project does not create it. It overrides automatic checkout discovery so the launcher can be sourced from any working directory. When the shell is already in the repository root, it is unnecessary:
+
+```tcsh
+cd /shared/path/CLAS12-sample-generator
+source run.csh
+```
+
+Because `setenv` stores the value in the current shell, it remains available for later commands and sessions descended from that shell. Remove it when it should no longer override checkout discovery:
+
+```tcsh
+unsetenv CLAS12_SAMPLES_DIR
+```
+
 A failed command stops subsequent stages and returns a nonzero `$status` without exiting the sourced parent shell. `CLAS12_SAMPLE_STATUS` also retains the wrapper's result. Read `$status` immediately because the next shell command replaces it. `CLAS12_SKIP_SERVER_SYNC=1` is reserved for local tests and launcher development; routine ifarm use must keep synchronization enabled.
 
 ## Run settings and build controls

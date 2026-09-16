@@ -23,7 +23,9 @@
 #   source run.csh --workflow create-lund --source physical --event-generator genie [sample options]
 #   source run.csh --workflow submit [submission options]
 # Inputs:
-#   $argv carries launcher and child options; CLAS12_SAMPLES_DIR overrides checkout discovery.
+#   $argv carries launcher and child options. CLAS12_SAMPLES_DIR is an optional environment variable
+#   set by the user with `setenv`; when present, it supplies the absolute checkout path and overrides
+#   automatic discovery. The project does not create this variable.
 # Outputs:
 #   CLAS12_SAMPLE_STATUS and immediate $status report the complete update/build/run result.
 # Notes:
@@ -47,8 +49,12 @@ if ("$_clas12_invocation:t" != "tcsh" && "$_clas12_invocation:t" != "csh" && "$_
     set _clas12_root = "$_clas12_invocation:h"
 endif
 
-# An explicit environment value has final precedence. This supports sourcing the launcher from a
-# different working directory on ifarm without relying on shell-specific $0 behavior.
+# An explicit environment value has final precedence. CLAS12_SAMPLES_DIR is not defined by this
+# project: the user sets it only when they want to source run.csh from outside the checkout, for example:
+#   setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
+#   source "$CLAS12_SAMPLES_DIR/run.csh"
+# It remains in the shell until `unsetenv CLAS12_SAMPLES_DIR`. When the user is already at the checkout
+# root, `source run.csh` uses $cwd and the variable is unnecessary.
 if ($?CLAS12_SAMPLES_DIR) then
     set _clas12_root = "$CLAS12_SAMPLES_DIR"
 endif
