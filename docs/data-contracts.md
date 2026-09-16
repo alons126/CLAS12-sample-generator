@@ -49,7 +49,7 @@ The configurable prefix controls LUND filenames; choose the same prefix and outp
 
 ## 5. Mass conventions
 
-All values are GeV. Electron/proton/neutron values retain the archived constants. The two named pion conventions are explicit and recorded in the manifest:
+All mass values are GeV/c². Electron/proton/neutron values retain the archived constants. The two named pion conventions are explicit and recorded in the manifest:
 
 | PDG | `legacy` (default) | `standard` |
 | --- | --- | --- |

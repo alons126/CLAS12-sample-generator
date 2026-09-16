@@ -47,8 +47,8 @@ Counts and seeds must be integers from 1 through 4294967295. Production Ar defau
 | `nucleon-theta-min/max` | `5` / `auto` | Theta range; auto maximum 45° for ep, 35° for en |
 | `nucleon-momentum` | `fixed` | `fixed`, `sampled`, `uniform`, `mixed`; sampled resolves by channel |
 | `nucleon-angle` | `auto` | `theta` or `isotropic`; auto is isotropic for non-fixed en, theta otherwise |
-| `nucleon-p` | `1` | Fixed momentum, GeV |
-| `nucleon-p-min/max` | `0.3` / `auto` | Uniform bounds; auto maximum is beam energy |
+| `nucleon-p` | `1` | Fixed momentum, GeV/c |
+| `nucleon-p-min/max` | `0.3` / `auto` | Momentum bounds in GeV/c; auto maximum uses the beam-energy value under c=1 |
 | `trigger-theta` | `25` | Trigger electron theta, degrees |
 | `trigger-phi-offset` | `auto` | Offset in degrees; energy-based defaults in uniform guide |
 

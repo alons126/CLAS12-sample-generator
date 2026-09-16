@@ -34,7 +34,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
-Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV, mass in GeV, vertex in cm. Shared masses are listed in `src/common/TargetGeometry.cpp`. The default `mass-convention=legacy` preserves the restored converter's 0.13957 GeV for all pion species, including pi-zero. `standard` explicitly selects different charged/neutral pion constants; see the [data contract](data-contracts.md).
+Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Shared masses are listed in `src/common/TargetGeometry.cpp`. The default `mass-convention=legacy` preserves the restored converter's 0.13957 GeV/c² for all pion species, including pi-zero. `standard` explicitly selects different charged/neutral pion constants; see the [data contract](data-contracts.md).
 
 ## Splitting and completion
 

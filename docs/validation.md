@@ -8,7 +8,7 @@ Three different contracts are checked independently:
 2. **Numerical diagnostics:** matching names, binning, entries, bin contents and errors, including flow bins. ROOT container bytes and rendered image styles may differ.
 3. **Job arguments:** matching GEMC/reconstruction arguments and output naming at matched field/card/YAML/file-count settings. Real detector execution is a separate validation stage.
 
-The requested non-fixed neutron and proton models intentionally differ from the archived fixed-1-GeV distribution. Their validation uses analytical distribution tests rather than equality to that fixed source.
+The requested non-fixed neutron and proton models intentionally differ from the archived fixed-1-GeV/c distribution. Their validation uses analytical distribution tests rather than equality to that fixed source.
 
 ## 2. Independent references
 

@@ -42,7 +42,7 @@ enum class UniformChannel { Electron, ElectronProton, ElectronNeutron };
  *
  * Construct only after RunConfig has resolved auto/sampled modes and validated bounds.
  * Angles remain in degrees here; the generator converts to radians when constructing vectors.
- * Momentum and beam energy are in GeV. A/Z do not select the vertex geometry.
+ * Momentum is in GeV/c and beam energy is in GeV. A/Z do not select the vertex geometry.
  */
 struct UniformConfig {
     // Channel and resolved prescriptions ---------------------------------------
@@ -52,8 +52,8 @@ struct UniformConfig {
     bool uniform_electron_momentum, uniform_nucleon_momentum, mixed_nucleon_momentum, isotropic_nucleon_angle;
 
     // Physical ranges and trigger settings -------------------------------------
-    double beam, electron_theta_min, electron_theta_max;  ///< GeV beam scale and degree limits.
-    // Nucleon angles are in degrees; fixed momentum and lower/upper bounds are in GeV.
+    double beam, electron_theta_min, electron_theta_max;  ///< GeV beam-energy scale and degree limits.
+    // Nucleon angles are in degrees; fixed momentum and lower/upper bounds are in GeV/c.
     double nucleon_theta_min, nucleon_theta_max, nucleon_p, nucleon_p_min, nucleon_p_max;
     double trigger_theta, trigger_phi_offset;  ///< Artificial trigger angles in degrees.
     int A, Z;  ///< LUND target metadata; independent of the vertex geometry.

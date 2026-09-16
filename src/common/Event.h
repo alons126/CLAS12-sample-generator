@@ -7,7 +7,7 @@
  * @brief Shared event and particle records.
  *
  * Purpose:
- *   Represent PDG identity, mass and momentum in GeV, vertices in cm, and LUND header metadata.
+ *   Represent PDG identity, mass in GeV/c², momentum in GeV/c, vertices in cm, and LUND header metadata.
  *
  * Workflow:
  *   Generators populate Event values; monitoring reads them; LundWriter serializes them.
@@ -33,13 +33,13 @@ namespace samples {
  * Purpose: carry one generated or converted particle without coupling it to ROOT file ownership.
  * Workflow: a generator populates the record; Event owns it; the writer and diagnostics read it.
  *
- * Units: mass and Cartesian momentum are in GeV; vertex coordinates are in cm.
+ * Units: mass is in GeV/c², Cartesian momentum is in GeV/c, and vertex coordinates are in cm.
  * The writer derives mass-shell energy rather than storing an independent energy.
  */
 struct Particle {
     int pid;            ///< PDG code used for output identity and diagnostic grouping.
-    double mass;        ///< Selected mass convention in GeV; assigned before serialization.
-    TVector3 momentum;  ///< Cartesian momentum in GeV; energy is derived from mass and momentum.
+    double mass;        ///< Selected mass convention in GeV/c²; assigned before serialization.
+    TVector3 momentum;  ///< Cartesian momentum in GeV/c; energy is derived from mass and momentum.
     TVector3 vertex;    ///< Interaction position in cm; shared by particles from the same event.
 };
 #pragma endregion
@@ -68,7 +68,7 @@ struct Event {
 };
 #pragma endregion
 
-/** @brief Return a supported PDG mass in GeV; legacy selects historical pion constants. */
+/** @brief Return a supported PDG mass in GeV/c²; legacy selects historical pion constants. */
 double particleMass(int pid, bool legacy = true);
 #pragma endregion
 }  // namespace samples

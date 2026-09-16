@@ -2,7 +2,7 @@
 
 ## 1. Definitions
 
-Momentum is expressed in GeV/c, mass and energy in GeV (c=1), vertex coordinates in cm. CLI angles are in degrees and converted to radians for vector construction. In this chapter let U(a,b) denote a uniform draw between a and b.
+Momentum is expressed in GeV/c, mass in GeV/c² and energy in GeV (c=1), vertex coordinates in cm. CLI angles are in degrees and converted to radians for vector construction. In this chapter let U(a,b) denote a uniform draw between a and b.
 
 The Cartesian momentum is
 

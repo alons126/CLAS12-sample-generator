@@ -23,7 +23,7 @@ build/debug/apps/clas12-uniform \
   --output runs/legacy-coderun-smoke
 ```
 
-Select `--channel ep` or `--channel en` and a matching prefix instead of editing C++ calls. `--nucleon-momentum fixed` preserves the archived 1 GeV mode. `sampled` activates the new requested channel-dependent prescription. `electron-tester.conf` replaces the separately selected tester call.
+Select `--channel ep` or `--channel en` and a matching prefix instead of editing C++ calls. `--nucleon-momentum fixed` preserves the archived 1 GeV/c mode. `sampled` activates the new requested channel-dependent prescription. `electron-tester.conf` replaces the separately selected tester call.
 
 The reference tests call the actual archived event functions. They supply deterministic seeds, initialize archived histograms and write into temporary directories; they do not source `run.sh`, which contains repository cleanup/update commands.
 

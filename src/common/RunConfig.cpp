@@ -203,8 +203,8 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // Add only the keys meaningful to the selected source. This makes a physical-only option invalid
     // for uniform generation and vice versa instead of silently accepting an unused setting.
     if (uniform) {
-        // Angles are degrees and momenta are GeV. `auto` values are resolved only after profile and CLI
-        // precedence is complete; fixed 1 GeV nucleons retain the legacy default behavior.
+        // Angles are degrees and momenta are GeV/c. `auto` values are resolved only after profile and CLI
+        // precedence is complete; fixed 1 GeV/c nucleons retain the legacy default behavior.
         c.values_.insert({{"channel", "1e"},
                           {"electron-theta-min", "5"},
                           {"electron-theta-max", "40"},
@@ -310,7 +310,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 
     if (uniform) {
         // Preserve legacy channel acceptance: neutron theta ends at 35 degrees; proton/other uniform
-        // channel defaults end at 45 degrees. Sampled momentum may extend to the beam energy in GeV.
+        // channel defaults end at 45 degrees. Sampled momentum in GeV/c may extend numerically to the beam energy in GeV under the c=1 convention.
         if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
         if (c.get("nucleon-p-max") == "auto") c.values_["nucleon-p-max"] = c.get("beam-energy");
 
@@ -411,7 +411,7 @@ std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
  *
  * Purpose:
  *   Convert a resolved numeric setting at the point of use while retaining its original string for
- *   provenance. The key's contract supplies the unit, such as GeV, degrees, or cm.
+ *   provenance. The key's contract supplies the unit, such as GeV/c, GeV, degrees, or cm.
  *
  * Algorithm:
  *   Use std::stod while recording the consumed character count, then require the entire string to be
@@ -498,7 +498,7 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
  * @throws std::exception If a key is missing, a stored numeric value cannot be converted, a target
  *         geometry is unknown, or any shared/source-specific constraint fails.
  *
- * @note Numeric units follow the configuration contract: beam energy and momentum are GeV, angles
+ * @note Numeric units follow the configuration contract: beam energy is GeV, momentum is GeV/c, angles
  *       are degrees, and fixed vertex coordinates are cm.
  */
 void RunConfig::validate(bool uniform) const {
@@ -690,7 +690,7 @@ std::string help(bool uniform) {
         result +=
             "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
             "--electron-momentum uniform|beam, --nucleon-momentum fixed|sampled|uniform|mixed,\n"
-            "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV, --nucleon-p-min/max GeV, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
+            "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV/c, --nucleon-p-min/max GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
     } else {
         // Physical-only settings identify the current GENIE adapter and preserve generator, tune,
         // selection, detector, and target-variation provenance in the output contract.

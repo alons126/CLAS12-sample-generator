@@ -62,7 +62,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
         std::cout << "\033[33mGenerateLundFiles:\033[0m true\n";
         std::cout << "\033[33mnParticles:\033[0m 2\n";
-        std::cout << "\033[33mmass_e [GeV]:\033[0m " << 0.511e-3 << "  \033[33mmass_p [GeV]:\033[0m " << 0.938272 << "  \033[33mmass_n [GeV]:\033[0m " << 0.93957 << '\n';
+        std::cout << "\033[33mmass_e [GeV/c²]:\033[0m " << 0.511e-3 << "  \033[33mmass_p [GeV/c²]:\033[0m " << 0.938272 << "  \033[33mmass_n [GeV/c²]:\033[0m " << 0.93957 << '\n';
         std::cout << "\033[33mOutPutFolder:\033[0m " << output << '\n';
         std::cout << "\033[33mlundPath:\033[0m " << lund_dir << '\n';
         std::cout << "\033[33mmchipoPath:\033[0m " << mchipo_dir << '\n';
@@ -180,7 +180,7 @@ bool LundWriter::full() const { return count_ >= capacity_; }
  *   3. Write the selected header format and mass-shell particle records.
  *   4. Advance counts after successful serialization.
  *
- * @param e Event containing metadata and particles in GeV and cm.
+ * @param e Event containing beam energy in GeV, particle momentum in GeV/c, mass in GeV/c², and vertices in cm.
  *
  * @note No value; output failures leave partial files for inspection.
  */

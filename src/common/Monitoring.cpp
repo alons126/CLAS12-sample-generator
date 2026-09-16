@@ -44,7 +44,7 @@ struct Monitoring::Impl {
      *
      * Usage: fill allocates every pointer together when the species first appears.
      * Histograms are detached from ROOT directories; unique_ptr controls their lifetime.
-     * Momentum is in GeV, theta/phi in degrees, and vertex coordinates in cm.
+     * Momentum is in GeV/c, theta/phi in degrees, and vertex coordinates in cm.
      */
     struct Plots {
         std::unique_ptr<TH1D> p, theta, phi, vx, vy, vz;  ///< One-dimensional particle quantities.

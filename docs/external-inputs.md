@@ -20,7 +20,7 @@ The replacement-geometry test compiles the production adapter with a modified he
 
 ## LUND format
 
-We produce LUND files following the [GEMC LUND format documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html): an event header followed by fourteen-field particle records, with momentum/energy/mass in GeV and vertices in cm. The [data contract](data-contracts.md) specifies the exact columns and the historical application meanings used in user-defined header fields. In particular, the GENIE process tag is not a physical cross-section weight. The default legacy precision and whitespace preserve archived output; `--lund-format precise` increases numeric precision.
+We produce LUND files following the [GEMC LUND format documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html): an event header followed by fourteen-field particle records, with momentum in GeV/c, energy in GeV, mass in GeV/c², and vertices in cm. The [data contract](data-contracts.md) specifies the exact columns and the historical application meanings used in user-defined header fields. In particular, the GENIE process tag is not a physical cross-section weight. The default legacy precision and whitespace preserve archived output; `--lund-format precise` increases numeric precision.
 
 ## Gcard provenance and field settings
 

@@ -6,7 +6,7 @@
 
 | Suffix | Axes/range | Bins |
 | --- | --- | --- |
-| `p_GeV` | p: 0 to 1.1 × beam energy | 100 |
+| `p_GeV` | p in GeV/c: 0 to 1.1 × the beam-energy value (c=1) | 100 |
 | `theta_deg` | θ: 0–180° | 100 |
 | `phi_deg` | φ: −180–180° | 100 |
 | `vx_cm`, `vy_cm` | x or y: −0.3–0.3 cm | 100 |

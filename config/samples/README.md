@@ -19,8 +19,8 @@ The executable installs built-in defaults, reads the named profile, then applies
 | Profile | Purpose |
 | --- | --- |
 | `uniform-electron.conf` | Production uniform 1e acceptance sample |
-| `uniform-proton.conf` | Legacy fixed-1-GeV ep acceptance sample |
-| `uniform-neutron.conf` | Legacy fixed-1-GeV en acceptance sample |
+| `uniform-proton.conf` | Legacy fixed-1-GeV/c ep acceptance sample |
+| `uniform-neutron.conf` | Legacy fixed-1-GeV/c en acceptance sample |
 | `uniform-proton-sampled.conf` | ep sample with a 50/50 uniform-p and uniform-1/p mixture |
 | `uniform-neutron-sampled.conf` | en sample with sampled momentum and isotropic direction in the legacy acceptance |
 | `electron-tester.conf` | Beam-momentum electron with fixed `(0,0,-3 cm)` vertex |

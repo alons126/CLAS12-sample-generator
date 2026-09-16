@@ -29,7 +29,7 @@ namespace samples {
  * @param pid Particle PDG identifier.
  * @param legacy True to preserve the archived pion masses.
  *
- * @return Mass in GeV; unsupported species throw.
+ * @return Mass in GeV/c²; unsupported species throw.
  */
 double particleMass(int pid, bool legacy) {
     switch (pid) {

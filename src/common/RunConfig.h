@@ -56,7 +56,7 @@ namespace samples {
  *
  * Units and representation:
  *   Values remain strings so their resolved spelling can be recorded exactly. Individual key
- *   contracts define units: momenta and beam energy are GeV, angles are degrees, vertices are cm,
+ *   contracts define units: momenta are GeV/c, beam energy is GeV, angles are degrees, vertices are cm,
  *   counts/seeds/A/Z are unsigned integers, and paths are normalized strings.
  *
  * Ownership and lifetime:
