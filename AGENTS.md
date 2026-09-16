@@ -22,6 +22,8 @@ Keep the project centered on exactly two user-facing workflows:
 
 Keep these workflows separate: creating LUND files does not automatically submit simulation, and submission consumes already completed LUND output. Avoid extra workflow modes, abstraction layers, or orchestration features unless they directly support one of these two responsibilities.
 
+At the user interface, uniform generation and physical-event conversion are source modes of the single LUND-creation workflow, not separate top-level workflows. Likewise, the per-array-task GEMC/reconstruction runner is an internal worker of ifarm submission, not a third user-facing workflow. Maintained executables and scripts may remain separate internally when that keeps dependencies and code simple.
+
 # Legacy design sources
 
 Treat the two archived trees as independent historical sources that came from different Git repositories:
@@ -59,7 +61,11 @@ File splitting and naming need a common interface but adapter-aware semantics. U
 
 Monitoring must also retain workflow-specific content. Uniform monitoring covers generated electron/nucleon momenta, angles, vertices, and channel correlations. GENIE conversion historically monitors the scattered-electron theta-versus-phi distribution and prints input, conversion, and completion summaries. Share rendering and reporting infrastructure where useful, while letting each adapter register its own scientifically relevant histograms and counters.
 
-Legacy hard-coded filesystem paths, destructive output-directory recreation, hostname/current-directory heuristics, and metadata parsed from filenames are historical operational choices rather than physics requirements. Replace them with explicit validated configuration in maintained code. Never silently overwrite an existing output tree; state output and failure behavior in the user documentation.
+Legacy hard-coded filesystem paths, hostname/current-directory heuristics, and metadata parsed from filenames are historical operational choices rather than physics requirements. Replace them with explicit validated configuration in maintained code. Preserve the legacy generators' output behavior: after fully resolving and validating the intended run directory, clearly report it, recursively remove an existing directory at that exact path, and recreate it. Guard against empty, root, checkout, or otherwise unsafe deletion targets. State this replacement behavior prominently in help text and user documentation.
+
+For uniform samples, target geometry and nuclear metadata must remain configurable together without conflating them. Checked-in production profiles should use the physically consistent `A` and `Z` for their selected target; Ar profiles use `A=40`, `Z=18`. Support other targets through explicit profile/config values or a small validated target-metadata table, while retaining CLI overrides for unusual studies. Legacy byte-parity tests may supply the archived `A=1`, `Z=1` values explicitly when testing the old record format.
+
+Physical-sample output directories must use explicit metadata rather than parse it from the input path. Use the recognizable structure `<target-or-GEMC-target-variation>__<event-generator>-<generator-version>__<tune>__<Q2-cut>__<beam-energy-MeV>_<GEMC-version>`, sanitizing each component for use as one directory name. Record the unsanitized metadata separately in the manifest. If a field does not apply, use a documented token such as `none`; do not omit fields silently.
 
 The intended detector chain is: truth-level particles in LUND -> GEMC/Geant4 detector transport and response -> CLAS12 reconstruction with the selected YAML. LUND is the interface between event preparation and detector simulation. GCARD controls the GEMC detector configuration; YAML controls reconstruction. Acceptance-map calculation and physics analysis are downstream and outside these two workflows.
 
@@ -68,6 +74,12 @@ The intended detector chain is: truth-level particles in LUND -> GEMC/Geant4 det
 Prefer a direct, newcomer-readable call chain over generic orchestration. Each user-facing workflow should have one obvious entry point, one documented configuration path, and one clear output contract. Do not duplicate detector commands between Python and shell or create several wrappers with indistinguishable roles. If a protected legacy-derived payload owns GEMC and reconstruction commands, maintained code should validate inputs and submit that payload rather than reimplementing its command body.
 
 Documentation must begin with the two workflows and show the exact call chain before implementation details. Explain which steps run locally and which run on ifarm, what each input controls, where outputs are written, and which files a newcomer normally edits. Embedded explanations and external documentation must agree with actual behavior.
+
+# Local-to-ifarm synchronization
+
+The user's operational model has two clones with different roles. Development and commits happen in the local VS Code/GitHub checkout. The ifarm checkout is a disposable execution mirror: sourcing `run.csh` intentionally updates it to the remote revision, discards server-side tracked changes, and removes untracked/generated files according to the documented exclusions before building, creating LUND files, or submitting jobs. Do not reinterpret this synchronization as accidental data loss or replace it with a clean-working-tree refusal.
+
+Keep the destructive synchronization explicit and narrowly scoped. It must first resolve and verify the repository root, display the checkout path and operations, fail if it cannot identify the intended Git worktree/remote/branch, preserve documented server build/output exclusions, check each Git command, and propagate failure without continuing to build or submit. Never run cleanup relative to an unresolved caller directory. Documentation must tell newcomers that server-side edits are disposable and must be committed and pushed from the local clone before sourcing the launcher.
 
 # Protected external and archived sources
 
