@@ -54,6 +54,8 @@ A failed command stops subsequent stages and returns a nonzero `$status` without
 
 `config/run.json` contains only stable build/test controls. Use `--run-settings path/to/settings.json` to select another strict JSON build profile explicitly. Workflow, source, sample configuration, input and output remain visible on the command line. Use `--key value` syntax, not `--key=value`.
 
+There is no automatic `config/run.local.json`. The normal ifarm refresh removes untracked files, so an implicit local profile could disappear immediately before execution. Keep a reusable alternative profile in a deliberate location and select it with `--run-settings FILE`.
+
 | JSON key | Default | CLI override and purpose |
 | --- | --- | --- |
 | `build` | `true` | `--build false`: reuse existing binaries or skip compilation for simulation |
@@ -64,6 +66,16 @@ A failed command stops subsequent stages and returns a nonzero `$status` without
 | `jobs` | `4` | `--jobs 8`: positive build parallelism |
 
 `--workflow create-lund|submit` is required. `--source uniform|physical` is required for `create-lund` and invalid for `submit`.
+
+`workflow.py` separates its options from child options with `parse_known_args()`. It consumes the workflow, source, run-profile, and build/test flags. It forwards every other token unchanged to the selected executable or submitter; a single bare `--` may mark the boundary and is removed before forwarding. The dispatch is:
+
+| Selection | Child command |
+| --- | --- |
+| `--workflow create-lund --source uniform` | `BUILD/apps/clas12-uniform` |
+| `--workflow create-lund --source physical` | `BUILD/apps/clas12-generator-to-lund` |
+| `--workflow submit` | `python3 scripts/slurm/submit.py` |
+
+Run-profile precedence is built-in defaults, then the selected strict JSON, then explicit launcher options. Sample-profile values have their own C++ precedence: application defaults, then `--config FILE`, then explicit sample options. Site JSON, the completed manifest, GCARD, and reconstruction YAML are submission inputs rather than launcher settings. This keeps build policy, sample physics, completed output inventory, server resources, and detector configuration independently reviewable.
 
 Building always invokes CMake dependency checking, so replacing an uncommitted `src/common/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
 

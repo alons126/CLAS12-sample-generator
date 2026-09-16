@@ -13,6 +13,38 @@
 
 The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. The test targets alone compile archived reference code; production libraries do not include archived implementations. `apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
 
+## Workflow dispatcher
+
+`run.csh` performs the checked disposable-server refresh and environment setup, then calls `scripts/workflow.py` with the original argument boundaries preserved. The Python dispatcher owns build/test staging and selects one child; it does not interpret sample physics or detector settings.
+
+```text
+scripts/workflow.py
+    ├── --workflow create-lund --source uniform
+    │       └── BUILD/apps/clas12-uniform
+    ├── --workflow create-lund --source physical
+    │       └── BUILD/apps/clas12-generator-to-lund
+    └── --workflow submit
+            └── scripts/slurm/submit.py
+```
+
+The dispatcher calls `parse_known_args()`: its own options become launcher settings, while unknown tokens become the selected child's argument vector. One optional bare `--` separator is removed. The remaining tokens are appended unchanged and executed as an argv list from the repository root, without shell evaluation. Thus `--config`, `--input`, and `--output` reach a LUND executable, while `--manifest`, `--gcard`, `--reconstruction`, and `--site` reach the submitter.
+
+Launcher settings have three precedence levels: built-in fallbacks, the strict JSON selected by `--run-settings` (default `config/run.json`), and explicit launcher options. The JSON may contain only `build`, `run`, `test`, `build_dir`, `build_type`, and `jobs`. Workflow and source are required command selections. There is no automatic `config/run.local.json`; an alternative profile must be named explicitly because ifarm synchronization normally removes untracked files.
+
+When enabled, the stages run in dependency order: configure/build both LUND applications, run CTest, then dispatch the selected child. A failed checked stage prevents every later stage. `--run false` gives a build/test-only invocation. LUND creation never submits jobs automatically.
+
+The configuration files remain separate because they have different owners and lifetimes:
+
+| Input | Consumer | Responsibility |
+| --- | --- | --- |
+| `config/run.json` or `--run-settings FILE` | `workflow.py` | Stable build, test, and stage defaults |
+| `config/samples/*.conf` | Selected C++ application | Sample physics, target, event count, naming, and generator provenance |
+| Completed `manifest.json` | Submission and simulation coordinators | Exact completed LUND files, counts, resolved configuration, and provenance |
+| `config/sites/*.json` | Submission and simulation coordinators | Worker-visible programs and Slurm resources |
+| Explicit GCARD and YAML | GEMC and reconstruction payload | Detector and reconstruction configuration |
+
+This separation keeps the selected action visible in the command and prevents scheduler or build settings from changing the scientific definition of a sample.
+
 ## Following a uniform run
 
 1. The application calls `RunConfig::parse`. Built-in defaults are merged with a `key = value` file and then command-line overrides. Unknown, repeated and invalid settings fail before opening an output directory.

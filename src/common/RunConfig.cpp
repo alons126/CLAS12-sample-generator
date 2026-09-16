@@ -25,7 +25,9 @@
 
 #include "common/TargetGeometry.h"
 #include "common/RgmTarget.h"
+
 namespace samples {
+
 namespace {
 // trim ----------------------------------------------------------------------
 

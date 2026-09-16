@@ -66,10 +66,16 @@ The reader arrays replace the archived fixed 250-element buffers. Input errors, 
 
 | File/function | Contract |
 | --- | --- |
+| `scripts/workflow.py: parser` | Defines launcher-owned workflow/source and build/test options; child options remain unknown for forwarding |
+| `workflow.py: settings` | Merges built-ins, one explicit/default strict run JSON, and CLI overrides; validates the required workflow/source and build controls |
+| `workflow.py: execute` | Prints a safely quoted representation, then runs the original argv list from the repository root with checked failure propagation |
+| `workflow.py: main` | Optionally configures/builds both LUND applications, optionally runs CTest, and dispatches uniform, physical, or submission child commands |
 | `scripts/simulation/run.py: parser` | CLI for manifest, detector files, site, field scales, file index, naming and execution |
 | `run.py: load_plan` | Validates manifest schema/counts/paths, finite field scales, existing configuration files, output conflicts, site executable names; prepares a preview of the fixed legacy commands and validates compatible inputs |
 | `run.py: main` | Prints a dry run, or acquires a per-file exclusive lock, invokes submit_GEMC_sample.sh and records command/config/payload hashes |
 | `scripts/slurm/submit.py: main` | Reuses runner validation, validates site scheduler fields, constructs a one-task-per-file Slurm array and quotes the worker invocation; submits only with --execute |
+
+`workflow.py` maps `create-lund/uniform` to `clas12-uniform`, `create-lund/physical` to `clas12-generator-to-lund`, and `submit` to `scripts/slurm/submit.py`. It forwards child options unchanged after removing one optional bare `--`; it does not choose a sample profile, input, output, site, GCARD, or YAML. Its run JSON contains only build/test stage controls, and no `run.local.json` is loaded implicitly.
 
 The runner calls the external `src/common/external/submit_GEMC_sample.sh` Bash payload with resolved environment values. The payload retains the original GEMC/reconstruction command lines. Python prepares a preview and invokes the script for actual execution. Slurm's `--wrap` needs a shell command; fixed arguments are shell-quoted and only the task-index environment variable is expanded by the worker. Scripts do not send SSH commands, clean repositories or source environment modules. On failure, lock/partial outputs remain for inspection; successful file records are stored by manifest index.
 

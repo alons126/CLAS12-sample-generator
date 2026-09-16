@@ -8,19 +8,39 @@ Purpose:
     LUND creation or ifarm simulation-job submission.
 
 Workflow:
-    1. Parse launcher-owned options while retaining child-workflow options for later forwarding.
-    2. Load build/test defaults from ``config/run.json`` (or an explicit ``--run-settings`` file) and
-       apply explicit command-line overrides. Workflow, source, and sample profile stay explicit.
-    3. Optionally configure and build the maintained C++ applications.
-    4. Optionally run CTest against that build.
-    5. Dispatch exactly one user-facing workflow:
+    1. ``run.csh`` calls this module after repository synchronization and environment setup.
+    2. Parse launcher-owned options with ``parse_known_args()``. Retain every unknown token, remove one
+       optional ``--`` boundary, and later append those tokens unchanged to the selected child command.
+    3. Load stable build/test defaults from ``config/run.json`` or an explicitly selected
+       ``--run-settings`` file. Apply values in the order built-ins < JSON < explicit launcher options.
+       There is no automatic ``config/run.local.json`` because normal ifarm synchronization removes
+       untracked files. Workflow, source, sample profile, input, and output stay explicit on the command.
+    4. When ``build`` is true, configure CMake with both LUND applications enabled and build them in the
+       selected directory and build type, using the configured parallel-worker count.
+    5. When ``test`` is true, verify that the build tree has testing enabled and require CTest to pass.
+    6. When ``run`` is true, dispatch exactly one user-facing workflow:
        - ``create-lund --source uniform`` generates configured random acceptance samples;
        - ``create-lund --source physical`` converts supported event-generator truth into LUND; or
        - ``submit`` sends existing LUND, GCARD, and YAML inputs to ifarm Slurm jobs.
 
+Dispatch map:
+    ``create-lund --source uniform``  -> ``BUILD/apps/clas12-uniform``
+    ``create-lund --source physical`` -> ``BUILD/apps/clas12-generator-to-lund``
+    ``submit``                         -> ``scripts/slurm/submit.py``
+
+Configuration boundaries:
+    ``config/run.json`` controls only build, run, test, build_dir, build_type, and jobs. A
+    ``config/samples/*.conf`` file is read by the selected C++ application and describes sample physics,
+    target, event count, naming, and physical-input provenance. A ``config/sites/*.json`` file is read by
+    the submission stack and describes worker-visible programs and Slurm resources. The completed LUND
+    manifest identifies the files submitted; explicit GCARD and YAML arguments select detector simulation
+    and reconstruction settings. Keeping these layers separate prevents machine/build choices from being
+    mistaken for scientific sample definitions.
+
 Inputs:
     Launcher arguments, one strict JSON build profile, optional terminal-color environment variables,
-    and the selected child workflow's own files and forwarded options.
+    and the selected child workflow's own explicit files and forwarded options. Relative launcher paths
+    and every child process are anchored to the repository root by this module.
 
 Outputs:
     CMake build products when building is enabled, plus the outputs owned by the selected child:
