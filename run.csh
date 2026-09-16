@@ -75,6 +75,41 @@ if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/scripts/workflow.py") then
     set CLAS12_SAMPLE_STATUS = 1
     goto clas12_launcher_finish
 endif
+
+# Validate the two information-only/incomplete forms before entering the checkout or changing it.
+# `--help` is handled directly by the maintained Python parser. An empty invocation prints concrete
+# commands and returns usage status 2. Neither path performs clean/reset/pull, loads the environment,
+# configures CMake, creates LUND files, or submits jobs.
+if ($#argv == 1) then
+    if ("$argv[1]" == "--help") then
+        python3 "$_clas12_root/scripts/workflow.py" --help
+        set CLAS12_SAMPLE_STATUS = $status
+        goto clas12_launcher_finish
+    endif
+endif
+
+if ($#argv == 0) then
+    echo "Error: source run.csh requires an explicit workflow."
+    echo ""
+    echo "Create a uniform LUND sample:"
+    echo '  source run.csh --workflow create-lund --source uniform \'
+    echo "    --config config/samples/uniform-electron.conf --output OUTPUT_PARENT"
+    echo ""
+    echo "Convert physical generator output:"
+    echo '  source run.csh --workflow create-lund --source physical \'
+    echo "    --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
+    echo ""
+    echo "Submit completed LUND files:"
+    echo "  source run.csh --workflow submit --manifest RUN/manifest.json [submission options]"
+    echo ""
+    echo "Build and test without running a workflow payload:"
+    echo "  source run.csh --workflow create-lund --source uniform --build true --test true --run false"
+    echo ""
+    echo "Run 'source run.csh --help' for launcher options."
+    echo "After selecting a create-lund source, add '-- --help' for its sample options."
+    set CLAS12_SAMPLE_STATUS = 2
+    goto clas12_launcher_finish
+endif
 # endregion
 
 # Server mirror update --------------------------------------------------------
@@ -165,7 +200,8 @@ clas12_launcher_finish:
 # Remove launcher-only scratch variables from the interactive environment because sourcing executes
 # this file in the caller's tcsh process. Keep CLAS12_SAMPLE_STATUS available so the user can inspect
 # the named workflow result after control returns.
-unset _clas12_invocation _clas12_root _clas12_skip_server_sync
+unset _clas12_invocation _clas12_root
+if ($?_clas12_skip_server_sync) unset _clas12_skip_server_sync
 
 # Run a child shell that exits with the captured workflow result. A direct `exit` here would close the
 # user's interactive SSH shell because `source` executes this file in that shell. The temporary

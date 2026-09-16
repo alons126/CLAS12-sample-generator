@@ -100,6 +100,16 @@ COLOR_END = os.environ.get("COLOR_END", "").replace(r"\033", "\033")
 # region Error presentation
 ERROR_PREFIX = f'{COLOR_ERR}Error:{COLOR_END}'
 
+WORKFLOW_GUIDANCE = """Choose one of these forms:
+  source run.csh --workflow create-lund --source uniform \\
+    --config config/samples/uniform-electron.conf --output OUTPUT_PARENT
+  source run.csh --workflow create-lund --source physical \\
+    --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+  source run.csh --workflow submit --manifest RUN/manifest.json [submission options]
+  source run.csh --workflow create-lund --source uniform --build true --test true --run false
+Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
+create-lund source to see that executable's sample options."""
+
 
 def error_message(message):
     """Return an error message with exactly one colored ``Error:`` prefix.
@@ -212,12 +222,13 @@ def parser():
 
     # Use the module documentation as the help description. The epilog tells users how to request
     # help from a selected child executable instead of stopping at this launcher's own help screen.
-    p = LauncherArgumentParser(description=__doc__, epilog='Unrecognized options are forwarded to the selected workflow. Use -- --help for its help.')
+    p = LauncherArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+                               epilog='Unrecognized options are forwarded unchanged.\n\n' + WORKFLOW_GUIDANCE)
 
     # Profile and dispatch controls select one of the project's two user-facing workflows and, for
     # create-lund, whether its event content comes from uniform sampling or physical generator data.
     p.add_argument('--run-settings', type=Path, help='build/test JSON settings; defaults to config/run.json')
-    p.add_argument('--workflow', choices=WORKFLOWS, required=True)
+    p.add_argument('--workflow', choices=WORKFLOWS)
     p.add_argument('--source', choices=SOURCES, help='LUND source mode for create-lund')
 
     # Execution-stage switches override matching JSON booleans. The custom converter accepts explicit
@@ -299,10 +310,13 @@ def settings(args):
 
     # Workflow is required by argparse. Source is required only for LUND creation and rejected for
     # submission so every command states exactly the inputs relevant to its selected workflow.
+    if args.workflow is None:
+        raise ValueError(error_message('Missing required --workflow.\n\n' + WORKFLOW_GUIDANCE))
+
     result['workflow'] = args.workflow
     result['source'] = args.source
     if result['workflow'] == 'create-lund' and result['source'] is None:
-        raise ValueError(error_message('--source uniform|physical is required for create-lund'))
+        raise ValueError(error_message('--source uniform|physical is required for create-lund.\n\n' + WORKFLOW_GUIDANCE))
     if result['workflow'] == 'submit' and result['source'] is not None:
         raise ValueError(error_message('--source applies only to create-lund'))
 

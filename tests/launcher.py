@@ -40,7 +40,12 @@ def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
     Returns:
         Captured result; quoting, shell-exit or status mismatches raise an assertion.
     """
-    program = 'source "$argv[1]" $argv[2-]:q; set result=$status; echo "RESULT=$result"; echo SHELL_ALIVE; /bin/sh -c "exit $result"'
+    if args:
+        program = 'source "$argv[1]" $argv[2-]:q; set result=$status; echo "RESULT=$result"; echo SHELL_ALIVE; /bin/sh -c "exit $result"'
+    else:
+        # Model an interactive tcsh, whose argv is empty, rather than leaking this test process's
+        # entry-path argument into the sourced launcher's no-argument preflight.
+        program = 'set entry="$argv[1]"; set argv=(); source "$entry"; set result=$status; echo "RESULT=$result"; echo SHELL_ALIVE; /bin/sh -c "exit $result"'
     effective_env = dict(os.environ, CLAS12_SKIP_SERVER_SYNC='1')
     if env:
         effective_env.update(env)
@@ -56,6 +61,16 @@ def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
 # region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     root=Path(tmp).resolve()
+    # Empty/help invocations are resolved before destructive server synchronization.
+    missing=sourced([],success=False)
+    assert 'requires an explicit workflow' in missing.stdout
+    assert '--workflow create-lund --source uniform' in missing.stdout
+    assert '--workflow create-lund --source physical' in missing.stdout
+    assert '--workflow submit' in missing.stdout and 'source run.csh --help' in missing.stdout
+    assert 'Updating disposable ifarm checkout' not in missing.stdout
+    help_result=sourced(['--help'])
+    assert '--workflow' in help_result.stdout and 'Choose one of these forms:' in help_result.stdout
+    assert 'Updating disposable ifarm checkout' not in help_result.stdout
     output=root/'output with spaces'
     args=['--workflow','create-lund','--source','uniform','--build','false','--build-dir',build,
           '--config','config/samples/uniform-electron.conf','--events','4','--output',output]

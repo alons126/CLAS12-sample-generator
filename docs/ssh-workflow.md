@@ -24,6 +24,8 @@ GENIE glob patterns must be quoted so they reach ROOT unchanged. Options after `
 
 Use `source run.csh --help` for launcher options. Use `source run.csh --workflow create-lund --source uniform --build false -- --help` for the selected executable's help. Bash users can execute `./run.csh` with tcsh installed, or call `python3 scripts/workflow.py`; do not source csh syntax into Bash.
 
+An empty `source run.csh` prints uniform, physical, submission, and build/test examples and returns status 2. Both the empty-command guidance and `source run.csh --help` run before the disposable-clone synchronization, so asking for usage does not clean, reset, pull, build, create output, or submit jobs. A nonempty command that omits `--workflow` receives the same examples from `workflow.py`.
+
 To source from another directory, first set `CLAS12_SAMPLES_DIR` to the absolute checkout path:
 
 ```tcsh
