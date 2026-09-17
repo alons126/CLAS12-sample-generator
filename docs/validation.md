@@ -44,7 +44,7 @@ The full suite currently registers nine tests when both workflows are enabled an
 | `uniform-legacy-parity` | 1e/ep/en/tester at 2.07052/4.02962/5.98636 GeV; two files each; additional target geometries | Exact LUND bytes; original channel histograms match numerically |
 | `genie-legacy-parity` | 10000 accepted events at each legacy energy and associated C12 geometry; all retained species/processes; short fixture | Exact LUND bytes/full-file diagnostics; explicitly confirmed short-input correction |
 | `nucleon-distributions` | 20000 sampled en and 20000 sampled ep events | Bounds and empirical-CDF distance <0.025 from expected phi, angular and momentum distributions |
-| `submission-legacy-parity` | Uniform and physical Bash payloads at 2/4/6 GeV | Exact argv after normalizing temporary run-directory paths; full 10000-event files |
+| `submission-legacy-parity` | Uniform and physical Bash payloads at 2/4/6 GeV | Exact argv after normalizing temporary run-directory paths; 10000-event entries retain legacy arguments |
 
 Uniform reference seeds are kinematic 67890 and vertex 12345. Target checks cover Ar plus liquid, 4-foil, 1-foil, 1-foil-small, 1-foil-large and Ca; the tester uses a point vertex. Photon and all pion/nucleon species are included in the GENIE fixture. Comparisons use the restored archived pion constants, including π⁰=0.13957 GeV.
 
@@ -68,4 +68,4 @@ Use a small matched legacy/current LUND sample, identical GEMC/reconstruction ve
 
 The simulation integration test also checks external-payload monitoring, its recorded hash, installed discovery, a non-GENIE generator and explicit rejection of partial files or incompatible settings. Submission parity compares detector argv to both protected originals at all three beam energies, including their monitoring labels. No real jobs are submitted.
 
-The restored unified payload is checked byte-for-byte against the legacy GENIE script for its Slurm header and the entire NEVENTS=10000-through-reconstruction section. Only monitoring and prefix selection may differ.
+The unified payload is checked against the legacy GENIE script after normalizing its single generalized event-count assignment back to `NEVENTS=10000`. For a 10000-event manifest entry, detector and reconstruction argv remain identical. Coordinator integration separately verifies that shorter manifest entries reach both commands with their exact count.

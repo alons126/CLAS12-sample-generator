@@ -10,7 +10,7 @@ build/debug/apps/clas12-uniform \
 
 Uniform generation creates `Uniform_sample_<channel>_<beam-energy in MeV>`, padded to four MeV digits, below the supplied output directory. For example, this produces `runs/Uniform_sample_1e_5986MeV/lundfiles/`.
 
-`events` is the total run size. `events-per-file` controls splitting and defaults to 25,000, matching the active archived uniform launcher. Use `--events-per-file 10000` when these files will be consumed by the current protected GEMC submission payload, which is fixed at 10,000 events.
+`events` is the total run size. `events-per-file` controls splitting and defaults to 25,000, matching the active archived uniform launcher. The completed manifest records each file's count, which the submission workflow passes to GEMC and reconstruction as `JOB_NEVENTS`; no submission-specific split override is required.
 
 Use `uniform-proton.conf` or `uniform-neutron.conf` for the two-particle modes. The file prefix is a label; the manifest carries the actual channel, energy and file counts.
 

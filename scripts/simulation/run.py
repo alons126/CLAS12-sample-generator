@@ -44,11 +44,11 @@ def payload_path(args):
 def payload_environment(data, index, path, count, mc, reco, gcard, reconstruction, gemc, recon, args):
     """Supply the original payload's environment and generalized sample labels.
 
-    The preserved script fixes 10000 events, solenoid -1 and the legacy layout.
-    Reject incompatible requests rather than silently overriding those settings.
+    The manifest's validated per-file count controls both GEMC and reconstruction.
+    The preserved script still fixes solenoid -1 and the legacy output layout.
     """
-    if count != 10000 or args.solenoid != -1 or args.output_naming != 'legacy':
-        raise ValueError('Legacy payload requires 10000 events per file, solenoid -1, and legacy output naming')
+    if args.solenoid != -1 or args.output_naming != 'legacy':
+        raise ValueError('Legacy payload requires solenoid -1 and legacy output naming')
     suffix = f'_{index}.txt'
     if not path.name.endswith(suffix) or path.parent != mc.parent.parent / 'lundfiles':
         raise ValueError('Legacy payload requires lundfiles/PREFIX_INDEX.txt matching the manifest index')
@@ -65,9 +65,11 @@ def payload_environment(data, index, path, count, mc, reco, gcard, reconstructio
     env['PATH'] = os.pathsep.join(directories + [env.get('PATH', '')])
     env.update(GCARD_FILE=str(gcard), YAML_FILE=str(reconstruction), TORUS_FIELD=str(args.torus),
                OUTPATH=str(mc.parent.parent), SLURM_ARRAY_TASK_ID=str(index),
+               JOB_NEVENTS=str(count),
                SAMPLE_FILE_PREFIX=path.name[:-len(suffix)],
                SAMPLE_GENERATOR=env.get('SAMPLE_GENERATOR', str(config.get('event-generator', data.get('workflow', '')))),
                GENERATOR_TUNE=env.get('GENERATOR_TUNE', env.get('GENIE_TUNE', '')),
+               Q2_CUT=env.get('Q2_CUT', str(config.get('q2-cut', ''))),
                SAMPLE_TARGET_NUCLEUS=env.get('SAMPLE_TARGET_NUCLEUS', str(config.get('target', ''))),
                TEMP_BEAM_E=env.get('TEMP_BEAM_E', str(config.get('beam-energy', ''))),
                TEMP_OUTPATH_PARTICLE=env.get('TEMP_OUTPATH_PARTICLE', str(config.get('channel', ''))))
@@ -188,12 +190,12 @@ def load_plan(args):
 
         # Resolve run bookkeeping here; the external Bash payload defines detector commands.
         env = payload_environment(data, index, path, count, mc, reco, gcard, reconstruction, gemc, recon, args)
-        # Preview mirrors the unchanged legacy command lines; execution uses the external script.
+        # Preview mirrors the external payload command lines; execution uses that script.
         commands = [
             [gemc, '-USE_GUI=0', f'-SCALE_FIELD=binary_torus, {args.torus}',
-             '-SCALE_FIELD=binary_solenoid, -1.0', '-N=10000',
+             '-SCALE_FIELD=binary_solenoid, -1.0', f'-N={count}',
              f'-INPUT_GEN_FILE=lund, {path}', f'-OUTPUT=hipo, {mc}', str(gcard)],
-            [recon, '-y', str(reconstruction), '-n', '10000', '-i', str(mc), '-o', str(reco)],
+            [recon, '-y', str(reconstruction), '-n', str(count), '-i', str(mc), '-o', str(reco)],
         ]
         plan.append((index, commands, mc, reco, record, env))
 

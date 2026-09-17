@@ -15,9 +15,9 @@ For uniform samples, a prefix can be `Uniform_en_sample_2070MeV`. For physical s
 
 ## What remains the same
 
-The Slurm header and the entire block beginning with `NEVENTS=10000` are copied unchanged from the legacy GENIE payload: field settings, directory assignments, GEMC command and reconstruction command. There are no command arrays, parser, preview mode, directory creation, input validation or output checks added to this script.
+The Slurm header, field settings, directory assignments, GEMC command and reconstruction command retain the legacy GENIE payload structure. The event-count assignment is generalized to require `JOB_NEVENTS` from the coordinator. There are no command arrays, parser, preview mode, directory creation, input validation or output checks added to this script.
 
-The payload processes 10000 events with solenoid -1.0 and `TORUS_FIELD` supplied by the caller. Paths follow:
+The payload processes `JOB_NEVENTS` events with solenoid -1.0 and `TORUS_FIELD` supplied by the caller. The same count is passed to GEMC and reconstruction. Paths follow:
 
 ```text
 OUTPATH/lundfiles/SAMPLE_FILE_PREFIX_SLURM_ARRAY_TASK_ID.txt
@@ -32,6 +32,7 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | Variable | Purpose |
 | --- | --- |
 | `SAMPLE_FILE_PREFIX` | Complete filename prefix, without the `_INDEX.txt` suffix |
+| `JOB_NEVENTS` | Validated number of events in this manifest file; required |
 | `SAMPLE_GENERATOR`, `GENERATOR_TUNE` | Generator/tune monitoring labels |
 | `SAMPLE_TARGET_NUCLEUS`, `Q2_CUT` | Target and Q² monitoring labels |
 | `TEMP_BEAM_E`, `TEMP_OUTPATH_PARTICLE`, `GEMC_DATA_DIR` | Beam/channel/environment monitoring |
@@ -39,11 +40,13 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | `TORUS_FIELD` | +0.5 at 2 GeV; −1 at 4/6 GeV |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction configurations |
 
+The maintained coordinator builds the payload environment in `scripts/simulation/run.py`. It first copies the current process environment, preserving variables established by the ifarm software setup such as `GEMC_DATA_DIR`. It then sets the run-controlled paths, field scale, array index and filename prefix from the submission arguments and selected manifest entry. `JOB_NEVENTS` always comes from that entry's validated `events` value, so an exported shell value cannot disagree with the LUND file. Sample labels come from manifest configuration with documented environment overrides; this includes `Q2_CUT`, whose fallback is `config.q2-cut`. Slurm creates `SLURM_ARRAY_TASK_ID` for an array task, and the coordinator passes the validated selected index to the payload under the same name.
+
 ## Integration with the maintained launcher
 
 `run.csh` still selects simulation or submission. Python validates the manifest, prepares a preview, and supplies the variables above. Actual detector execution invokes this Bash script. Slurm workers use the same coordinator and payload. `GENIE_TUNE` inherited by the Python coordinator maps to `GENERATOR_TUNE` for compatibility.
 
-The coordinator requires complete 10000-event files, matching `lundfiles/PREFIX_INDEX.txt` names, legacy output naming and solenoid -1. It rejects incompatible requests instead of silently processing them with different settings. Because the original reconstruction command leaves paths unquoted, whitespace/glob-containing paths are rejected. Site executable paths must end in `gemc` and `recon-util`; their directories are added to PATH.
+The coordinator requires positive per-file manifest counts, matching `lundfiles/PREFIX_INDEX.txt` names, legacy output naming and solenoid -1. It exports each selected file's count as `JOB_NEVENTS`, and also supplies `Q2_CUT` from manifest configuration unless the calling environment overrides it. Because the original reconstruction command leaves paths unquoted, whitespace/glob-containing paths are rejected. Site executable paths must end in `gemc` and `recon-util`; their directories are added to PATH.
 
 The coordinator creates output directories, retains per-file locks, invokes Bash with `-e`, checks both outputs and records command/configuration/payload hashes. Those protections live outside the unchanged payload. The script has no `--print-commands` or explicit input/output-path interface.
 

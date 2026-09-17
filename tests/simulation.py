@@ -34,14 +34,15 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     root = Path(tmp)
     output_root = root/'run'
     output = output_root/'Uniform_sample_1e_5986MeV'
-    call(exe, '--output', output_root, '--events', '20000', '--events-per-file', '10000', '--render-plots', 'false')
+    call(exe, '--output', output_root, '--events', '25001', '--render-plots', 'false')
     card = root/'detector.gcard'; card.write_text('<gcard/>')
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner = project/'scripts/simulation/run.py'
     payload = project/'src/common/external/submit_GEMC_sample.sh'
     options = ['--manifest', output/'manifest.json', '--gcard', card, '--reconstruction', yaml, '--torus', '-1']
     preview = call(sys.executable, runner, *options)
-    assert preview.stdout.count('-N=10000') == 2
+    assert preview.stdout.count('-N=25000') == 1 and preview.stdout.count('-N=1') == 1
+    assert ' -n 25000 ' in preview.stdout and ' -n 1 ' in preview.stdout
     assert (output/'mchipo').is_dir() and (output/'reconhipo').is_dir()
     call(sys.executable, runner, *options, '--file-index', '3', ok=False)
     call(sys.executable, runner, *options, '--solenoid', '1', ok=False)
@@ -70,16 +71,16 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     custom = root/'custom'; (custom/'lundfiles').mkdir(parents=True)
     (custom/'lundfiles/other_1.txt').write_text('command fixture\n')
     manifest = custom/'manifest.json'
-    data = {'schema_version':1,'workflow':'other-generator','written_events':10000,'files':[{'path':'lundfiles/other_1.txt','events':10000}]}
+    data = {'schema_version':1,'workflow':'physical','written_events':3,
+            'config':{'event-generator':'other-generator','q2-cut':'Q2_0_02'},
+            'files':[{'path':'lundfiles/other_1.txt','events':3}]}
     manifest.write_text(json.dumps(data))
     custom_options = ['--manifest',manifest,'--gcard',card,'--reconstruction',yaml,'--torus','0.5','--site',site]
-    # A short manifest file cannot override NEVENTS=10000 in the protected payload.
-    short = dict(data, written_events=3, files=[{'path':'lundfiles/other_1.txt','events':3}])
-    manifest.write_text(json.dumps(short))
-    call(sys.executable, installed/'clas12-simulate', *custom_options, ok=False)
-    manifest.write_text(json.dumps(data))
+    short_preview = call(sys.executable, installed/'clas12-simulate', *custom_options)
+    assert '-N=3' in short_preview.stdout and ' -n 3 ' in short_preview.stdout
     result = call(sys.executable, installed/'clas12-simulate', *custom_options, '--execute')
-    assert 'JOB_GENERATOR = other-generator' in result.stdout and 'FILE_PREFIX = other' in result.stdout
+    assert 'JOB_GENERATOR = other-generator' in result.stdout and 'JOB_Q2_CUT = Q2_0_02' in result.stdout
+    assert 'FILE_PREFIX = other' in result.stdout
     assert (custom/'reconhipo/recon_other_1_torus0.5.hipo').is_file()
 
     # Coordinator uses bash -e without adding error-handling logic to the external script.

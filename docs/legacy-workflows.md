@@ -88,7 +88,7 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Uncomment uniform vs GENIE setup line | Choose generation/conversion CLI; both yield the same manifest contract |
 | Hardcoded output/input prefixes | `--output`, `--prefix`, manifest file list |
 | `NUM_OF_FILES` / Slurm array | Actual number of completed manifest files |
-| `NEVENTS=10000` in payload | Per-file manifest count; old argument parity holds for full 10000-event files |
+| `NEVENTS=10000` in archived payloads | `JOB_NEVENTS` from each validated manifest entry; old argument parity holds when that entry contains 10000 events |
 | `TARGET_VARIATION`, `GCARD_FILE` | Explicit `--gcard` path |
 | `YAML_FILE` | Explicit `--reconstruction` path |
 | `TORUS_FIELD` | `--torus 0.5` at 2 GeV, `--torus -1` at 4/6 GeV for the legacy setup |

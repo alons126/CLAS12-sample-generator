@@ -29,7 +29,7 @@ FILE_PREFIX=${SAMPLE_FILE_PREFIX}
 echo "FILE_PREFIX = ${FILE_PREFIX}"
 echo
 
-NEVENTS=10000
+NEVENTS=${JOB_NEVENTS:?JOB_NEVENTS is required}
 #-1.0 for inbending (6,4 GeV) 0.5 for outbending (2 Gev)
 TORUS=${TORUS_FIELD}
 echo "TORUS = ${TORUS}"

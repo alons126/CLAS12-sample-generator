@@ -47,7 +47,7 @@ runs/example/
 
 A failed generation may leave partial files but no completed manifest. On rerun, the resolved run directory is validated, reported, recursively removed, and recreated, preserving the legacy generator lifecycle.
 
-Uniform LUND files default to 25,000 events per file; physical conversion defaults to 10,000. The protected GEMC payload processes 10,000 events, so create submission-ready uniform files with `--events-per-file 10000`.
+Uniform LUND files default to 25,000 events per file; physical conversion defaults to 10,000. Submission reads each file's exact event count from the completed manifest and passes it to both GEMC and reconstruction.
 
 All documented shell examples start at the repository root. Executables and scripts also work from other directories when supplied appropriate paths; relative sample configuration paths are interpreted from the caller's working directory.
 

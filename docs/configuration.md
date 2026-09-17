@@ -23,7 +23,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `vertex-mode` | `target` | Sample the selected target or use explicit `fixed` coordinates |
 | `vertex-x/y/z` | `0` / `0` / `-3` | Fixed-vertex coordinates in cm |
 | `events` | Required | Total number of accepted events to write |
-| `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold recorded in the manifest; use `10000` for the protected GEMC submission payload |
+| `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold recorded per file in the manifest and passed to GEMC/reconstruction during submission |
 | `seed` | `67890` | Uniform kinematic RNG seed; unused in GENIE conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
