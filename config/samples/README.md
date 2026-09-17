@@ -4,7 +4,7 @@ These files describe the LUND sample being created. They do not select the user-
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-electron.conf --output OUTPUT_PARENT
+  --config config/samples/uniform-1e-5986.conf --output OUTPUT_PARENT
 ```
 
 ```tcsh
@@ -14,16 +14,33 @@ source run.csh --workflow create-lund --source physical \
 
 The executable installs built-in defaults, reads the named profile, then applies explicit `--key value` overrides. Unknown and repeated keys fail. Blank lines and lines beginning with `#` are ignored; inline comments, sections, quoting, and environment expansion are unsupported.
 
-## Profile inventory
+## Uniform production matrix
+
+Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, legacy-derived angular conventions, current PDG masses, and 25,000 events per file. Uniform profiles request 50,000,000 events, following the legacy production scale; tester profiles request 1,000,000 events, following its server default. Override `--events` for smaller studies.
+
+| Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
+| --- | --- | --- | --- |
+| Uniform 1e | `uniform-1e-2070.conf` | `uniform-1e-4029.conf` | `uniform-1e-5986.conf` |
+| Uniform epFD | `uniform-epfd-2070.conf` | `uniform-epfd-4029.conf` | `uniform-epfd-5986.conf` |
+| Uniform enFD | `uniform-enfd-2070.conf` | `uniform-enfd-4029.conf` | `uniform-enfd-5986.conf` |
+| Uniform epipFD | `uniform-epipfd-2070.conf` | `uniform-epipfd-4029.conf` | `uniform-epipfd-5986.conf` |
+| Uniform epimFD | `uniform-epimfd-2070.conf` | `uniform-epimfd-4029.conf` | `uniform-epimfd-5986.conf` |
+| Uniform epCD | `uniform-epcd-2070.conf` | `uniform-epcd-4029.conf` | `uniform-epcd-5986.conf` |
+| Uniform enCD | `uniform-encd-2070.conf` | `uniform-encd-4029.conf` | `uniform-encd-5986.conf` |
+| Uniform epipCD | `uniform-epipcd-2070.conf` | `uniform-epipcd-4029.conf` | `uniform-epipcd-5986.conf` |
+| Uniform epimCD | `uniform-epimcd-2070.conf` | `uniform-epimcd-4029.conf` | `uniform-epimcd-5986.conf` |
+| Electron tester | `electron-tester-2070.conf` | `electron-tester-4029.conf` | `electron-tester-5986.conf` |
+
+The 1e profiles use the updated 0.7 GeV/c minimum and 50/50 uniform-p/uniform-1/p mixture. The epFD profiles use a beam-momentum 25° trigger electron and a proton mixture from 0.3 GeV/c to the beam momentum. The enFD profiles use the same trigger prescription and uniform neutron momentum from zero to the beam momentum. All retain flat legacy theta and full phi coverage. The beam-specific trigger offsets are written explicitly as 16°, 7°, and 5°.
+
+FD pion and all CD profiles are marked experimental inside the files. They encode the documented updated conventions but have not yet been tested as production samples; see [uniform generation](../../docs/uniform-samples.md) and [validation](../../docs/validation.md).
+
+The electron tester profiles use a fixed `(0,0,-3 cm)` vertex and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
+
+## Compatibility and physical-input profiles
 
 | Profile | Purpose |
 | --- | --- |
-| `uniform-electron.conf` | Production uniform 1e acceptance sample |
-| `uniform-proton.conf` | Production epFD 50/50 uniform-p and uniform-1/p sample |
-| `uniform-neutron.conf` | Production enFD uniform-p sample from zero to beam momentum |
-| `uniform-proton-sampled.conf` | Explicit alias profile for the production epFD mixture |
-| `uniform-neutron-sampled.conf` | Explicit enFD uniform-momentum profile with flat legacy theta and zero lower bound |
-| `electron-tester.conf` | Beam-momentum electron with fixed `(0,0,-3 cm)` vertex |
 | `genie.conf` | Physical GENIE GST conversion example |
 | `legacy-coderun.conf` | Archived uniform `CodeRun.cpp` compatibility settings |
 | `legacy-genie-wrapper.conf` | Archived GENIE wrapper compatibility settings |

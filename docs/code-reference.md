@@ -83,9 +83,8 @@ The runner calls the external `src/common/external/submit_GEMC_sample.sh` Bash p
 
 ## 6. Configuration and resources
 
-- `config/samples/uniform-{electron,proton,neutron}.conf`: production sampling examples with explicit Ar metadata.
-- `uniform-{proton,neutron}-sampled.conf`: explicit aliases for the non-fixed production modes with legacy angular windows.
-- `electron-tester.conf`: fixed beam momentum and fixed `(0,0,-3 cm)` vertex.
+- `config/samples/uniform-<label>-{2070,4029,5986}.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each established beam energy; pion and CD files are explicitly marked unvalidated for production.
+- `electron-tester-{2070,4029,5986}.conf`: beam-specific tester profiles with fixed beam momentum and fixed `(0,0,-3 cm)` vertex.
 - `genie.conf`: an explicit Ar conversion example.
 - `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
 - `config/sites/local.json`: executable names for local processing.

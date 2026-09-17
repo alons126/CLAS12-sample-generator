@@ -4,7 +4,7 @@
 
 ```bash
 build/debug/apps/clas12-uniform \
-  --config config/samples/uniform-electron.conf \
+  --config config/samples/uniform-1e-5986.conf \
   --events 100 --output runs
 ```
 
@@ -20,6 +20,25 @@ build/debug/apps/clas12-uniform \
 
 `events` is the total run size. `events-per-file` controls splitting and defaults to 25,000. The completed manifest records every file count; submission passes that exact value to GEMC and reconstruction as `JOB_NEVENTS`.
 
+## Reviewed profiles
+
+Every supported mode has an explicit profile at each established beam energy:
+
+| Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
+| --- | --- | --- | --- |
+| 1e | `uniform-1e-2070.conf` | `uniform-1e-4029.conf` | `uniform-1e-5986.conf` |
+| epFD | `uniform-epfd-2070.conf` | `uniform-epfd-4029.conf` | `uniform-epfd-5986.conf` |
+| enFD | `uniform-enfd-2070.conf` | `uniform-enfd-4029.conf` | `uniform-enfd-5986.conf` |
+| epipFD | `uniform-epipfd-2070.conf` | `uniform-epipfd-4029.conf` | `uniform-epipfd-5986.conf` |
+| epimFD | `uniform-epimfd-2070.conf` | `uniform-epimfd-4029.conf` | `uniform-epimfd-5986.conf` |
+| epCD | `uniform-epcd-2070.conf` | `uniform-epcd-4029.conf` | `uniform-epcd-5986.conf` |
+| enCD | `uniform-encd-2070.conf` | `uniform-encd-4029.conf` | `uniform-encd-5986.conf` |
+| epipCD | `uniform-epipcd-2070.conf` | `uniform-epipcd-4029.conf` | `uniform-epipcd-5986.conf` |
+| epimCD | `uniform-epimcd-2070.conf` | `uniform-epimcd-4029.conf` | `uniform-epimcd-5986.conf` |
+| Electron tester | `electron-tester-2070.conf` | `electron-tester-4029.conf` | `electron-tester-5986.conf` |
+
+Each file contains the full relevant scientific definition, including beam energy, target metadata, event/file counts, seeds, momentum and angular settings, trigger prescription, output prefix, LUND convention, mass convention, and monitoring selection. Supply only `--output` for the recorded profile as written; command-line options remain available for deliberate studies and override the file. Uniform profiles request 50,000,000 events and tester profiles request 1,000,000, so add a smaller `--events` value for smoke tests. The unvalidated pion/CD profiles also carry an explicit warning in their file headers.
+
 ## Production sampling contract
 
 | Hadron/region | θ range | p minimum | Momentum distribution |
@@ -33,6 +52,8 @@ build/debug/apps/clas12-uniform \
 
 Every maximum momentum defaults to the beam energy. θ is uniform in theta and φ is uniform from −180° to 180°. These deliberately unphysical samples map acceptance; they do not enforce exclusive energy or momentum conservation.
 
+> **Validation status:** uniform FD pion samples (`epipFD` and `epimFD`) and every uniform CD particle sample (`epCD`, `enCD`, `epipCD`, and `epimCD`) have not yet been tested as production samples. Automated integration checks exercise their labels, particle IDs, configured bounds, and output structure, but their complete generated distributions and detector workflow have not been validated. Do not treat them as validated production modes until those checks are complete. The established physics and legacy validation currently covers `1e`, `epFD`, `enFD`, and the electron tester.
+
 The `1e` electron has θ 5–40°, full φ, and a 50/50 uniform-p/uniform-1/p mixture from 0.7 GeV/c to beam momentum. In `eh`, the trigger electron has beam momentum and θ=25°. Its φ is the CLAS12 sector center closest to the direction opposite the hadron, plus the beam-dependent offset: 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° otherwise. This opposite-sector constraint is not required for a CD hadron, but it is retained deliberately to be sure the trigger electron is separated in the established way.
 
 The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a neutron, in either FD or CD. `--hadron-angle isotropic` samples uniformly in cos(theta) inside the selected acceptance; production defaults remain flat in theta.
@@ -41,7 +62,7 @@ The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a
 
 ```bash
 build/debug/apps/clas12-uniform \
-  --config config/samples/electron-tester.conf \
+  --config config/samples/electron-tester-5986.conf \
   --output runs
 ```
 

@@ -10,6 +10,8 @@ Three different contracts are checked independently:
 
 The maintained production electron/proton mixtures and zero-to-beam uniform neutron mode intentionally differ from the pinned upstream submodule's older momentum bounds and modes. The production modes have their own analytical distribution tests; fixed 1 GeV/c remains a neutron-only option.
 
+Uniform FD pion modes and every uniform CD mode currently have structural integration coverage only. They have not yet been tested as production samples through full distribution and detector-workflow validation; see the explicit status note in [uniform samples](uniform-samples.md).
+
 ## 2. Independent references
 
 `legacy_uniform_driver.cpp` includes event functions, tester and histogram initialization from the pinned `legacy/Uniform-sample-generator` submodule. It supplies missing compilation context, output streams, target/channel parameters and deterministic RNG seeds. It bypasses launcher cleanup and large production defaults. The production executable and reference do not share sampling or LUND-writing implementations. Initialize the submodule before configuring tests. Exact comparisons explicitly select the matching upstream ep/en momentum and angular modes.

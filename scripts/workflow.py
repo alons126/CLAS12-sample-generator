@@ -126,7 +126,7 @@ ERROR_PREFIX = f'{COLOR_ERR}Error:{COLOR_END}'
 
 WORKFLOW_GUIDANCE = """Choose one of these forms:
   source run.csh --workflow create-lund --source uniform \\
-    --config config/samples/uniform-electron.conf --output OUTPUT_PARENT
+    --config config/samples/uniform-1e-5986.conf --output OUTPUT_PARENT
   source run.csh --workflow create-lund --source physical \\
     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
   source run.csh --workflow submit --manifest RUN/manifest.json [submission options]

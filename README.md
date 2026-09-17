@@ -25,7 +25,7 @@ cmake --build --preset debug --parallel 4
 ctest --preset debug
 
 build/debug/apps/clas12-uniform \
-  --config config/samples/uniform-electron.conf \
+  --config config/samples/uniform-1e-5986.conf \
   --events 100 \
   --output runs/first-electron
 ```

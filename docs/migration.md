@@ -7,7 +7,7 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 | Previous | Supported replacement |
 | --- | --- |
 | Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `clas12-uniform --config FILE --channel ... --output NEW_DIR` |
-| `Uniform_sample_generator_e_tester.C` | `electron-tester.conf` |
+| `Uniform_sample_generator_e_tester.C` | `electron-tester-{2070,4029,5986}.conf` |
 | `GENIE_to_LUND_converter.csh` → ROOT macro | `clas12-generator-to-lund --event-generator genie --input ... --config ... --output ...` |
 | Sourced `setup_and_submit_jobs.csh` → selected setup script | Common simulation runner or Slurm submitter consuming a manifest |
 | Per-energy detector resources | `config/detector/Generation_files_*` |
@@ -23,7 +23,7 @@ Higher-precision text remains available through `--lund-format precise`; current
 
 ## New requested sampling
 
-The production profiles select the requested modes directly; `sampled` remains a compatibility alias:
+The beam-specific production profiles select the requested modes directly; `sampled` remains an accepted CLI compatibility alias:
 
 - 1e: half uniform p and half uniform 1/p from 0.7 GeV/c to beam momentum, retaining 5–40° flat theta.
 - en: uniform p from zero to beam momentum and flat theta within the original 5–35° window.
