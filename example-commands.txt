@@ -2,5 +2,5 @@ source run.csh \
   --workflow create-lund \
   --source uniform \
   --config config/samples/uniform-1e-4029MeV.conf \
-  --events 100 \
+  --events 10000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
