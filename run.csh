@@ -25,7 +25,7 @@
 #      immediate tcsh `$status`, without using `exit` in this normally sourced launcher.
 # Usage:
 #   source run.csh --workflow create-lund --source uniform \
-#     --config config/samples/uniform-1e-5986.conf --output OUTPUT_PARENT
+#     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 #   source run.csh --workflow create-lund --source physical \
 #     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 #   source run.csh --workflow submit [submission options]
@@ -98,7 +98,7 @@ if ($#argv == 0) then
     echo ""
     echo "Create a uniform LUND sample:"
     echo '  source run.csh --workflow create-lund --source uniform \'
-    echo "    --config config/samples/uniform-1e-5986.conf --output OUTPUT_PARENT"
+    echo "    --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT"
     echo ""
     echo "Convert physical generator output:"
     echo '  source run.csh --workflow create-lund --source physical \'

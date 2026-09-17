@@ -4,7 +4,7 @@
 
 ```bash
 build/debug/apps/clas12-uniform \
-  --config config/samples/uniform-1e-5986.conf \
+  --config config/samples/uniform-1e-5986MeV.conf \
   --events 100 --output runs
 ```
 
@@ -26,16 +26,16 @@ Every supported mode has an explicit profile at each established beam energy:
 
 | Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
 | --- | --- | --- | --- |
-| 1e | `uniform-1e-2070.conf` | `uniform-1e-4029.conf` | `uniform-1e-5986.conf` |
-| epFD | `uniform-epfd-2070.conf` | `uniform-epfd-4029.conf` | `uniform-epfd-5986.conf` |
-| enFD | `uniform-enfd-2070.conf` | `uniform-enfd-4029.conf` | `uniform-enfd-5986.conf` |
-| epipFD | `uniform-epipfd-2070.conf` | `uniform-epipfd-4029.conf` | `uniform-epipfd-5986.conf` |
-| epimFD | `uniform-epimfd-2070.conf` | `uniform-epimfd-4029.conf` | `uniform-epimfd-5986.conf` |
-| epCD | `uniform-epcd-2070.conf` | `uniform-epcd-4029.conf` | `uniform-epcd-5986.conf` |
-| enCD | `uniform-encd-2070.conf` | `uniform-encd-4029.conf` | `uniform-encd-5986.conf` |
-| epipCD | `uniform-epipcd-2070.conf` | `uniform-epipcd-4029.conf` | `uniform-epipcd-5986.conf` |
-| epimCD | `uniform-epimcd-2070.conf` | `uniform-epimcd-4029.conf` | `uniform-epimcd-5986.conf` |
-| Electron tester | `electron-tester-2070.conf` | `electron-tester-4029.conf` | `electron-tester-5986.conf` |
+| 1e | `uniform-1e-2070MeV.conf` | `uniform-1e-4029MeV.conf` | `uniform-1e-5986MeV.conf` |
+| epFD | `uniform-epFD-2070MeV.conf` | `uniform-epFD-4029MeV.conf` | `uniform-epFD-5986MeV.conf` |
+| enFD | `uniform-enFD-2070MeV.conf` | `uniform-enFD-4029MeV.conf` | `uniform-enFD-5986MeV.conf` |
+| epipFD | `uniform-epipFD-2070MeV.conf` | `uniform-epipFD-4029MeV.conf` | `uniform-epipFD-5986MeV.conf` |
+| epimFD | `uniform-epimFD-2070MeV.conf` | `uniform-epimFD-4029MeV.conf` | `uniform-epimFD-5986MeV.conf` |
+| epCD | `uniform-epCD-2070MeV.conf` | `uniform-epCD-4029MeV.conf` | `uniform-epCD-5986MeV.conf` |
+| enCD | `uniform-enCD-2070MeV.conf` | `uniform-enCD-4029MeV.conf` | `uniform-enCD-5986MeV.conf` |
+| epipCD | `uniform-epipCD-2070MeV.conf` | `uniform-epipCD-4029MeV.conf` | `uniform-epipCD-5986MeV.conf` |
+| epimCD | `uniform-epimCD-2070MeV.conf` | `uniform-epimCD-4029MeV.conf` | `uniform-epimCD-5986MeV.conf` |
+| Electron tester | `electron-tester-2070MeV.conf` | `electron-tester-4029MeV.conf` | `electron-tester-5986MeV.conf` |
 
 Each file contains the full relevant scientific definition, including beam energy, target metadata, event/file counts, seeds, momentum and angular settings, trigger prescription, output prefix, LUND convention, mass convention, and monitoring selection. Supply only `--output` for the recorded profile as written; command-line options remain available for deliberate studies and override the file. Uniform profiles request 50,000,000 events and tester profiles request 1,000,000, so add a smaller `--events` value for smoke tests. The unvalidated pion/CD profiles also carry an explicit warning in their file headers.
 
@@ -62,7 +62,7 @@ The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a
 
 ```bash
 build/debug/apps/clas12-uniform \
-  --config config/samples/electron-tester-5986.conf \
+  --config config/samples/electron-tester-5986MeV.conf \
   --output runs
 ```
 

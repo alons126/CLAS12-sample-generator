@@ -51,7 +51,7 @@ The separately selectable legacy electron tester maps to:
 
 ```bash
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/electron-tester-2070.conf \
+  --config config/samples/electron-tester-2070MeV.conf \
   --beam-energy 2.07052 \
   --A 1 --Z 1 \
   --events 1000000 --events-per-file 10000 \

@@ -8,13 +8,13 @@ In a **csh/tcsh** session on the server, select the workflow, source, sample pro
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-1e-5986.conf --output runs/electron-001
+  --config config/samples/uniform-1e-5986MeV.conf --output runs/electron-001
 ```
 
 The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, pulls the remote revision, and runs `git submodule sync --recursive` followed by `git submodule update --init --recursive`. The latter checks out `legacy/Uniform-sample-generator` at the exact revision pinned by the main repository. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads build/test defaults from `config/run.json` and dispatches the action written in the command. Existing resolved run directories are recreated as in the legacy generators.
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform --config config/samples/uniform-enfd-5986.conf --output runs/en-001
+source run.csh --workflow create-lund --source uniform --config config/samples/uniform-enFD-5986MeV.conf --output runs/en-001
 source run.csh --workflow create-lund --source physical --config config/samples/genie.conf \
   --input '/data/genie/*.root' --output runs/physical
 source run.csh --workflow create-lund --source uniform --build true --test true --run false
@@ -31,7 +31,7 @@ To source from another directory, first set `CLAS12_SAMPLES_DIR` to the absolute
 ```tcsh
 setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
 source "$CLAS12_SAMPLES_DIR/run.csh" --workflow create-lund --source uniform \
-  --config config/samples/uniform-1e-5986.conf --output runs/electron-003
+  --config config/samples/uniform-1e-5986MeV.conf --output runs/electron-003
 ```
 
 `CLAS12_SAMPLES_DIR` is an optional user-defined environment variable; the project does not create it. It overrides automatic checkout discovery so the launcher can be sourced from any working directory. When the shell is already in the repository root, it is unnecessary:
@@ -39,7 +39,7 @@ source "$CLAS12_SAMPLES_DIR/run.csh" --workflow create-lund --source uniform \
 ```tcsh
 cd /shared/path/CLAS12-sample-generator
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-1e-5986.conf --output runs/electron-001
+  --config config/samples/uniform-1e-5986MeV.conf --output runs/electron-001
 ```
 
 Because `setenv` stores the value in the current shell, it remains available for later commands and sessions descended from that shell. Remove it when it should no longer override checkout discovery:
@@ -93,7 +93,7 @@ For example, generate a 2 GeV sample, then preview outbending processing:
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-1e-2070.conf --output runs/electron-2gev
+  --config config/samples/uniform-1e-2070MeV.conf --output runs/electron-2gev
 source run.csh --workflow submit --build false \
   --manifest runs/electron-2gev/Uniform_sample_1e_2070MeV/manifest.json \
   --gcard config/detector/Generation_files_2GeV/5.14/rgm_fall2021_Ar_2GeV.gcard \

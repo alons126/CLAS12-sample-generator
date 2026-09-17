@@ -12,7 +12,7 @@ Create a uniform LUND sample by naming both the source and its sample profile:
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-1e-5986.conf --output OUTPUT_PARENT
+  --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 ```
 
 Convert physical generator output by naming the physical source, profile, input and output:

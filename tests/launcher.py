@@ -77,7 +77,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     assert 'Updating disposable ifarm checkout' not in help_result.stdout
     output=root/'output with spaces'
     args=['--workflow','create-lund','--source','uniform','--build','false','--build-dir',build,
-          '--config','config/samples/uniform-1e-5986.conf','--events','4','--output',output]
+          '--config','config/samples/uniform-1e-5986MeV.conf','--events','4','--output',output]
     sourced(args)
     output = output/'Uniform_sample_1e_5986MeV'
     m=json.loads((output/'manifest.json').read_text())
