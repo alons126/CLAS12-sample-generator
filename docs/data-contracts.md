@@ -18,7 +18,7 @@ These types are defined in [Event.h](../src/lund/Event.h). LUND serialization is
 | 6 | 11 (electron beam) | 11 |
 | 7 | Configured beam energy, with output-mode rounding | Same |
 | 8 | 1 | 1 |
-| 9 | Per-file event index in legacy mode; run-global in precise mode | Global input entry index, including skipped entries |
+| 9 | Per-file event index | Global input entry index, including skipped entries |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
 
 The GENIE process tag and resonance metadata are historical application conventions, not a claim that field 10 is a physical cross-section weight. We produce LUND files following the format in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
@@ -41,30 +41,28 @@ The writer rejects empty events and non-finite particle energy/vertex data. GENI
 
 ## 4. Output precision and compatibility
 
-`lund-format=legacy` is the default. It matches the archived whitespace, five decimal places for particle momenta/energy/mass/vertices, and per-file uniform numbering. The ordinary 1e and GENIE header beam energy has six decimals. The electron–hadron and angular-tester header beam energy has **one decimal**, as in the archived format (e.g. 5.98636 is serialized as 6.0). The event's internal momentum calculations still use the full configured beam value. This rounding is retained for compatibility, not introduced as a physics approximation.
+The single maintained format matches the archived whitespace, five decimal places for particle momenta, energy, mass, and vertices, and per-file uniform numbering. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal, as in the archived format (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
 
-`lund-format=precise` writes numeric values at ten significant digits, single-space separators and run-global uniform IDs. It is an explicit alternative when historical text compatibility is not required. Do not compare its output bytes to legacy text.
+Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`. `--prefix` remains an explicit override for a downstream naming requirement. Output directories are explicit and never inferred from the current machine.
 
-The configurable prefix controls LUND filenames; choose the same prefix and output layout when reproducing external naming conventions. Ready-made `legacy-coderun.conf` and `legacy-genie-wrapper.conf` examples capture the active archived prefix choices. Output directories are explicit and never inferred from the current machine.
+## 5. Mass convention
 
-## 5. Mass conventions
+All maintained particle identities and masses come from [`src/support/constants.h`](../src/support/constants.h). The values below are based on the [Particle Data Group 2026](https://pdg.lbl.gov/2026/listings/particle_properties.html), converted to GeV/c² and rounded to the five decimal places stored by the LUND writer. The electron is deliberately approximated as massless.
 
-All particle identities and masses used by maintained code come from [`src/support/constants.h`](../src/support/constants.h). Production defaults to `mass-convention=standard`, using the [Particle Data Group 2026](https://pdg.lbl.gov/2026/listings/particle_properties.html) values below in GeV/c². The explicit `legacy` mode centralizes the rounded archived values needed for byte-parity tests.
+| Species (PDG) | LUND mass (GeV/c²) |
+| --- | ---: |
+| electron (11) | 0 |
+| proton (2212) | 0.93827 |
+| neutron (2112) | 0.93957 |
+| pip/pim (±211) | 0.13957 |
+| pi0 (111) | 0.13498 |
+| photon (22) | 0 |
 
-| Species (PDG) | `standard` default | `legacy` compatibility |
-| --- | ---: | ---: |
-| electron (11) | 0.00051099895069 | 0.000511 |
-| proton (2212) | 0.93827208943 | 0.938272 |
-| neutron (2112) | 0.93956542194 | 0.93957 |
-| pip/pim (±211) | 0.13957039 | 0.13957 |
-| pi0 (111) | 0.1349768 | 0.13957 |
-| photon (22) | 0 | 0 |
-
-The archived pi0 value is intentionally preserved only for compatibility. `particleMass()` reads both tables from `constants.h`; generators and converters also use that header for PDG identifiers. Selecting a convention changes the stored mass and the mass-shell energy.
+`particleMass()` reads this one table. The stored value also controls the mass-shell energy calculated by the writer.
 
 ## 6. File splitting and completion
 
-Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. `events-per-file` controls rollover: the maintained uniform default is 25,000, retained from the earlier imported launcher, while the pinned upstream generator currently defaults to 10,000; physical conversion also defaults to 10,000. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and legacy-format uniform event IDs restart from zero in each file.
+Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. `events-per-file` controls rollover: the maintained uniform default is 25,000, retained from the earlier imported launcher, while the pinned upstream generator currently defaults to 10,000; physical conversion also defaults to 10,000. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and uniform event IDs restart from zero in each file.
 
 For submission, the coordinator validates each manifest entry's positive `events` value and exports it as `JOB_NEVENTS`. The GEMC payload uses that exact count for both GEMC and reconstruction. Consequently, the 25,000-event uniform default, the 10,000-event physical default and final partial physical files are all processed without a separate submission-specific split size.
 

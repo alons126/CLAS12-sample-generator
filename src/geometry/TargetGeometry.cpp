@@ -70,7 +70,7 @@ using std::string;
 /**
  * @brief Process-lifetime lock protecting the external global RNG transaction.
  *
- * Every non-point sample holds this mutex from caller-state installation through external sampling and
+ * Every sample holds this mutex from caller-state installation through external sampling and
  * state retrieval, so concurrent geometry calls cannot mix streams. The immutable target map needs no
  * mutation lock during validation.
  */
@@ -90,10 +90,10 @@ namespace samples {
  *   Fail before output-directory replacement when a configured geometry cannot produce vertices.
  *
  * Algorithm:
- *   Accept the maintained artificial `point` mode directly. Otherwise perform an exact, case-sensitive
- *   lookup in the external target map and require its geometry-element collection to be nonempty.
+ *   Perform an exact, case-sensitive lookup in the external target map and require its geometry-element
+ *   collection to be nonempty.
  *
- * @param name Borrowed targets.h map key or the exact artificial value `point`.
+ * @param name Borrowed targets.h map key.
  *
  * @return Nothing. Normal return means construction may store the key.
  *
@@ -103,10 +103,6 @@ namespace samples {
  *       A/Z metadata, or GEMC variation.
  */
 void TargetGeometry::validate(const std::string& name) {
-    // The point vertex is a maintained compatibility mode for the electron tester, not an entry added
-    // to or expected from the protected external target map.
-    if (name == "point") { return; }
-
     // Use find rather than operator[] so validation cannot insert a missing key into external state.
     const auto found = external_targets::targets.find(name);
     if (found == external_targets::targets.end() || found->second.empty()) { throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name); }
@@ -123,15 +119,14 @@ void TargetGeometry::validate(const std::string& name) {
  *   Use the external geometry algorithm without coupling otherwise independent run RNG streams.
  *
  * Workflow:
- *   1. Return the fixed Hall B compatibility point without locking or drawing.
- *   2. Hold the process-wide mutex across the complete external RNG transaction.
- *   3. Copy the caller's complete RNG state into external `ran` and call randomVertex(name_).
- *   4. Copy the advanced external state back to the caller and verify the sampled vertex is finite.
+ *   1. Hold the process-wide mutex across the complete external RNG transaction.
+ *   2. Copy the caller's complete RNG state into external `ran` and call randomVertex(name_).
+ *   3. Copy the advanced external state back to the caller and verify the sampled vertex is finite.
  *
  * @param random Borrowed run-owned vertex RNG. A physical target advances it by exactly the draws made
- *               inside targets.h; point mode leaves it unchanged.
+ *               inside targets.h.
  *
- * @return Sampled vertex in cm, or exactly (0, 0, -3) for point mode.
+ * @return Sampled vertex in cm.
  *
  * @throws std::runtime_error If the external sampler returns a non-finite/overflowed squared magnitude.
  *         Exceptions thrown inside the external sampler propagate after the mutex unlocks.
@@ -141,9 +136,6 @@ void TargetGeometry::validate(const std::string& name) {
  *       retains its prior state; the next call overwrites external `ran` from its own caller state.
  */
 TVector3 TargetGeometry::sample(TRandom3& random) const {
-    // Point mode preserves the archived tester location and does not contend on external global state.
-    if (name_ == "point") { return {0, 0, -3}; }
-
     // Upstream randomVertex uses a global TRandom3 named ran. Transfer full state rather than reseeding,
     // so streams remain reproducible and independent when geometry instances are interleaved.
     std::lock_guard<std::mutex> guard(geometry_mutex);

@@ -49,8 +49,7 @@ namespace samples {
  *   is then read-only and reusable; each sample() call borrows and advances a caller-owned vertex RNG.
  *
  * Geometry modes:
- *   Normal names address nonempty entries in protected targets.h. The maintained artificial `point`
- *   mode bypasses that map and returns the legacy electron-tester position (0, 0, -3 cm) without a draw.
+ *   Names address nonempty entries in protected targets.h; no fixed-point mode exists.
  *
  * RNG ownership and concurrency:
  *   targets.h samples through its own global `ran`. The implementation serializes access, copies the
@@ -58,7 +57,7 @@ namespace samples {
  *   state back. The adapter owns no RNG and keeps vertex streams independent across runs/callers.
  *
  * Invariants:
- *   name_ is `point` or a validated nonempty external map key. Returned vertices use cm and must be
+ *   name_ is a validated nonempty external map key. Returned vertices use cm and must be
  *   finite. The generator/converter, rather than this object, enforces one sample per event and a shared
  *   vertex for all particles.
  */
@@ -67,17 +66,17 @@ class TargetGeometry {
     /**
      * @brief Store and validate one target-geometry mode without consuming random numbers.
      *
-     * @param name External targets.h map key or the artificial `point` mode. The string is moved into
+     * @param name External targets.h map key. The string is moved into
      *             owned state after the parameter is copied/moved by the caller.
      *
-     * @throws std::runtime_error If name is neither `point` nor a nonempty external geometry entry.
+     * @throws std::runtime_error If name is not a nonempty external geometry entry.
      */
     explicit TargetGeometry(std::string name) : name_(std::move(name)) { validate(name_); }
 
     /**
      * @brief Check whether a geometry mode can be constructed, without sampling or changing RNG state.
      *
-     * @param name External targets.h key or `point`.
+     * @param name External targets.h key.
      *
      * @throws std::runtime_error If the key is absent or its external geometry record is empty.
      *
@@ -89,9 +88,9 @@ class TargetGeometry {
      * @brief Produce one finite interaction vertex from the selected geometry.
      *
      * @param random Borrowed run-owned vertex TRandom3. Physical target sampling advances its complete
-     *               state; `point` returns directly without reading or modifying it.
+     *               state.
      *
-     * @return Vertex in cm. `point` returns exactly (0, 0, -3).
+     * @return Vertex in cm.
      *
      * @throws std::runtime_error If the protected external sampler returns non-finite coordinates.
      *         Exceptions from the external implementation may also propagate.
@@ -100,7 +99,7 @@ class TargetGeometry {
 
     // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:
-    /** @brief Validated external map key or artificial `point` mode, owned for object lifetime. */
+    /** @brief Validated external map key, owned for object lifetime. */
     std::string name_;
 };
 #pragma endregion

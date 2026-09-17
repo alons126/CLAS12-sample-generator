@@ -60,12 +60,14 @@ namespace {
 
 std::string sampleLabel(const RunConfig& c) {
     if (c.get("channel") == "1e") { return "1e"; }
+    if (c.get("channel") == "electron-tester") { return "electron-tester"; }
     const std::string token = c.get("hadron") == "proton" ? "p" : c.get("hadron") == "neutron" ? "n" : c.get("hadron");
     return "e" + token + c.get("hadron-region");
 }
 
 std::string compatibilityMonitoringChannel(const RunConfig& c) {
-    if (c.get("channel") == "1e") { return c.get("electron-momentum") == "beam" ? "Tester_e" : "1e"; }
+    if (c.get("channel") == "1e") { return "1e"; }
+    if (c.get("channel") == "electron-tester") { return "Tester_e"; }
     if (c.get("hadron-region") == "FD" && c.get("hadron") == "proton") { return "ep"; }
     if (c.get("hadron-region") == "FD" && c.get("hadron") == "neutron") { return "en"; }
     return sampleLabel(c);
@@ -223,9 +225,8 @@ void generateUniform(const RunConfig& c) {
     // target draws from shifting the electron/hadron sequence when both streams are reproducible.
     TRandom3 random(c.integer("seed")), vertex_random(c.integer("vertex-seed"));
 
-    // Target mode delegates spatial draws to the external geometry implementation. Fixed mode selects
-    // its valid point helper but bypasses sample() below and uses the configured coordinates directly.
-    TargetGeometry geometry(c.get("vertex-mode") == "target" ? c.get("target") : "point");
+    // Every event delegates its vertex draw to the selected external target-geometry implementation.
+    TargetGeometry geometry(c.get("target"));
 
     // Construction validates the final path, replaces an existing exact run, creates the legacy uniform
     // directory layout, and stores the requested total capacity and per-file split threshold.
@@ -253,14 +254,13 @@ void generateUniform(const RunConfig& c) {
         event.Z = settings.Z;
         event.beam_energy = beam;
 
-        // Sample exactly one interaction vertex per event. Fixed mode consumes no vertex RNG draws;
-        // target mode uses only vertex_random. Every particle below receives this same value.
-        const auto vertex = c.get("vertex-mode") == "fixed" ? TVector3(c.number("vertex-x"), c.number("vertex-y"), c.number("vertex-z")) : geometry.sample(vertex_random);
+        // Sample exactly one target vertex with vertex_random and give it to every particle in the event.
+        const auto vertex = geometry.sample(vertex_random);
 
         // The 1e branch writes one electron. Theta and phi retain the legacy flat-angle prescription.
         // Momentum may be uniform-p, an exactly alternating 50/50 uniform-p/uniform-1/p mixture, or
         // fixed to the beam value for the angular tester. Inverse-p sampling requires a positive minimum.
-        if (channel == UniformChannel::Electron) {
+        if (channel != UniformChannel::ElectronHadron) {
             double theta = random.Uniform(settings.electron_theta_min, settings.electron_theta_max);
             double phi = random.Uniform(-180, 180);
             double p = settings.uniform_electron_momentum ? random.Uniform(settings.electron_p_min, settings.electron_p_max) : beam;
@@ -268,14 +268,10 @@ void generateUniform(const RunConfig& c) {
             if (settings.mixed_electron_momentum) {
                 p = event.id % 2 == 0 ? random.Uniform(settings.electron_p_min, settings.electron_p_max) : 1.0 / random.Uniform(1.0 / settings.electron_p_max, 1.0 / settings.electron_p_min);
             }
-            event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg, settings.legacy_mass), momentum(p, theta, phi), vertex});
+            event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg), momentum(p, theta, phi), vertex});
         } else {
-            // The eh branch first samples the hadron direction. Isotropic mode draws cos(theta) uniformly only
-            // inside the configured configured detector-region window; theta mode draws theta itself uniformly.
-            double theta =
-                settings.isotropic_hadron_angle
-                    ? std::acos(random.Uniform(std::cos(settings.hadron_theta_max * TMath::DegToRad()), std::cos(settings.hadron_theta_min * TMath::DegToRad()))) * TMath::RadToDeg()
-                    : random.Uniform(settings.hadron_theta_min, settings.hadron_theta_max);
+            // Acceptance-map coverage is flat in theta and phi inside the configured detector window.
+            double theta = random.Uniform(settings.hadron_theta_min, settings.hadron_theta_max);
 
             // Azimuth is flat over the full signed range. The initial momentum covers fixed and
             // uniform-p modes; mixed mode deliberately replaces it below using the same stream.
@@ -292,9 +288,9 @@ void generateUniform(const RunConfig& c) {
             // followed by the selected proton, neutron, pi+, or pi-. triggerPhi() correlates its azimuth with
             // the direction opposite the hadron and applies the configured sector offset.
             const int pid = settings.hadron_pid;
-            event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg, settings.legacy_mass),
-                                       momentum(beam, settings.trigger_theta, triggerPhi(phi, settings.trigger_phi_offset)), vertex});
-            event.particles.push_back({pid, particleMass(pid, settings.legacy_mass), momentum(p, theta, phi), vertex});
+            event.particles.push_back(
+                {constants::electron_pdg, particleMass(constants::electron_pdg), momentum(beam, settings.trigger_theta, triggerPhi(phi, settings.trigger_phi_offset)), vertex});
+            event.particles.push_back({pid, particleMass(pid), momentum(p, theta, phi), vertex});
         }
 
         // Serialize first so neither monitoring file counts an event rejected by the writer. A later

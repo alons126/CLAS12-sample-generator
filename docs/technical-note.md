@@ -25,7 +25,7 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 
 - The repository converts GENIE output; it does not produce GENIE interactions or compute cross sections.
 - Uniform electron–hadron events are artificial acceptance probes. The trigger electron and hadron need not satisfy exclusive scattering energy/momentum conservation.
-- The production neutron angle is uniform in theta inside the legacy forward window. An explicit isotropic option means uniform solid angle inside that window, not full-sphere emission.
+- Hadron theta and phi are always uniform inside the configured detector window for acceptance-map coverage.
 - GENIE header field 10 retains a process code, not a physical event weight.
 - Compatibility requires matching beam energy, geometry, A/Z, seeds, selected mode and file settings. The archived launch scripts contain independent manual selections; they must not be assumed to describe one consistent campaign.
 - Legacy LUND precision, historical pion constants and the retained short-input correction are explicit in the data/validation chapters.

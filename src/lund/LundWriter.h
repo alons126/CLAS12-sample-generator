@@ -20,7 +20,7 @@
  * Data contract:
  *   Particle momentum is in GeV/c, mass is in GeV/c², derived energy and beam energy are in GeV, and
  *   vertices are in cm. Header metadata and particle ordering are supplied by the event source; this
- *   component preserves them while applying the selected legacy or precise text format.
+ *   component preserves them while applying the project's single legacy-compatible text format.
  */
 
 #pragma once
@@ -58,7 +58,7 @@ namespace samples {
  *
  * Ownership and lifetime:
  *   The RunConfig is borrowed by const reference and must outlive the writer. The workflow label,
- *   normalized directory, stream, per-file records, counters, limits, and format selection are owned
+ *   normalized directory, stream, per-file records, counters, and limits are owned
  *   by this object. Event arguments are borrowed only for the duration of write().
  *
  * Invariants:
@@ -167,7 +167,6 @@ class LundWriter {
     std::uint64_t count_ = 0;        ///< Successfully serialized run-global event count.
     std::uint64_t events_per_file_;  ///< Positive source-specific split threshold from RunConfig.
     std::uint64_t capacity_;         ///< Maximum written events requested by RunConfig::events.
-    bool legacy_format_;             ///< Select archived precision/spacing/ID behavior when true.
 };
 #pragma endregion
 

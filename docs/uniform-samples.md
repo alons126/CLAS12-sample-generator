@@ -8,7 +8,7 @@ build/debug/apps/clas12-uniform \
   --events 100 --output runs
 ```
 
-Uniform generation has two channel shapes: `--channel 1e` writes one electron, while `--channel eh` writes a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. A run is written below the supplied parent as `Uniform_sample_<label>_<beam MeV>MeV/`.
+Uniform generation uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. A run is written below the supplied parent as `Uniform_sample_<label>_<beam MeV>MeV/`.
 
 For example, a central-detector pi+ sample is:
 
@@ -37,7 +37,7 @@ Every supported mode has an explicit profile at each established beam energy:
 | epimCD | `uniform-epimCD-2070MeV.conf` | `uniform-epimCD-4029MeV.conf` | `uniform-epimCD-5986MeV.conf` |
 | Electron tester | `electron-tester-2070MeV.conf` | `electron-tester-4029MeV.conf` | `electron-tester-5986MeV.conf` |
 
-Each file contains the full relevant scientific definition, including beam energy, target metadata, event/file counts, seeds, momentum and angular settings, trigger prescription, output prefix, LUND convention, mass convention, and monitoring selection. Supply only `--output` for the recorded profile as written; command-line options remain available for deliberate studies and override the file. Uniform profiles request 50,000,000 events and tester profiles request 1,000,000, so add a smaller `--events` value for smoke tests. The unvalidated pion/CD profiles also carry an explicit warning in their file headers.
+Each file contains the relevant scientific definition: beam energy, target identity, event/file counts, seeds, momentum and angular settings, trigger prescription, and monitoring selection. Prefix, LUND layout, masses, target-vertex mode, trigger-electron momentum, and sampled hadron maximum are automatic contracts rather than repeated profile values. Supply only `--output` for the recorded profile as written; command-line options remain available for deliberate studies and override the file. Uniform profiles request 50,000,000 events and tester profiles request 1,000,000, so add a smaller `--events` value for smoke tests. The unvalidated pion/CD profiles also carry an explicit warning in their file headers.
 
 ## Production sampling contract
 
@@ -56,7 +56,7 @@ Every maximum momentum defaults to the beam energy. θ is uniform in theta and �
 
 The `1e` electron has θ 5–40°, full φ, and a 50/50 uniform-p/uniform-1/p mixture from 0.7 GeV/c to beam momentum. In `eh`, the trigger electron has beam momentum and θ=25°. Its φ is the CLAS12 sector center closest to the direction opposite the hadron, plus the beam-dependent offset: 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° otherwise. This opposite-sector constraint is not required for a CD hadron, but it is retained deliberately to be sure the trigger electron is separated in the established way.
 
-The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a neutron, in either FD or CD. `--hadron-angle isotropic` samples uniformly in cos(theta) inside the selected acceptance; production defaults remain flat in theta.
+The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a neutron, in either FD or CD. Hadron theta and phi are always sampled uniformly inside the configured detector ranges so equal-width angular bins receive comparable generated statistics for acceptance mapping.
 
 ## Electron tester
 
@@ -66,7 +66,7 @@ build/debug/apps/clas12-uniform \
   --output runs
 ```
 
-The tester always scans electron θ from 5–40° and all φ at beam momentum, with a fixed `(0,0,-3 cm)` vertex. It provides a rough estimate of where the trigger electron in electron–hadron samples should be thrown. The maintained 25° trigger prescription was selected from this scan.
+The tester always scans electron θ from 5–40° and all φ at beam momentum, and samples the selected target geometry. It provides a rough estimate of where the trigger electron in electron–hadron samples should be thrown. The maintained 25° trigger prescription was selected from this scan.
 
 ## Targets, reproducibility, and masses
 
@@ -74,7 +74,7 @@ The tester always scans electron θ from 5–40° and all φ at beam momentum, w
 
 `seed` controls kinematics and `vertex-seed` controls geometry. Defaults 67890 and 12345 are repeatable. `TRandom3(0)` asks ROOT to choose an automatic seed; a manifest that records zero therefore cannot reproduce the event sequence. The streams are separate so geometry draws do not shift kinematics.
 
-`mass-convention=standard` is the production default and reads current values from `src/support/constants.h`, sourced from the [PDG 2026 Review of Particle Physics](https://pdg.lbl.gov/2026/listings/particle_properties.html). `legacy` selects the rounded archived constants only for exact compatibility tests.
+Masses come only from `src/support/constants.h`: PDG 2026-based values rounded to LUND's five decimal places, with the electron approximated as massless.
 
 ## Output and diagnostics
 

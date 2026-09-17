@@ -27,7 +27,7 @@ def run(*args, ok=True):
     """Run a test command and check its expected status.
 
     Algorithm:
-        Enable precise output for normal generator calls, capture diagnostics, and assert the expected result.
+        Run the project's single LUND format, capture diagnostics, and assert the expected result.
 
     Args:
         args: Executable and arguments.
@@ -36,7 +36,6 @@ def run(*args, ok=True):
     Returns:
         Captured subprocess result.
     """
-    args = (*args, "--lund-format", "precise") if str(args[0]) == executable and "--help" not in args else args
     result = subprocess.run([str(x) for x in args], capture_output=True, text=True)
     assert (result.returncode == 0) == ok, result.stdout + result.stderr
     return result
@@ -70,7 +69,7 @@ def read_run(directory):
                 assert len(particle) == 14 and particle[0] == i and particle[2] == 1
                 assert all(math.isfinite(x) for x in particle)
                 p2 = sum(x*x for x in particle[6:9])
-                assert math.isclose(particle[9]**2, p2 + particle[10]**2, rel_tol=1e-8, abs_tol=1e-9)
+                assert math.isclose(particle[9]**2, p2 + particle[10]**2, rel_tol=2e-4, abs_tol=2e-4)
                 assert particle[11:] == particles[0][11:]
             events.append((header, particles))
             count += 1
@@ -116,15 +115,15 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
     run(executable, '--help')
     if mode == 'uniform':
         cases = [
-            ('1e', 11, 0.00051099895069, [], 5, 40, 0.7),
-            ('epFD', 2212, 0.93827208943, ['--channel','eh','--hadron','proton','--hadron-region','FD'], 5, 45, 0.3),
-            ('enFD', 2112, 0.93956542194, ['--channel','eh','--hadron','neutron','--hadron-region','FD'], 5, 35, 0),
-            ('epipFD', 211, 0.13957039, ['--channel','eh','--hadron','pip','--hadron-region','FD'], 5, 45, 0.2),
-            ('epimFD', -211, 0.13957039, ['--channel','eh','--hadron','pim','--hadron-region','FD'], 5, 45, 0.2),
-            ('epCD', 2212, 0.93827208943, ['--channel','eh','--hadron','proton','--hadron-region','CD'], 35, 145, 0.2),
-            ('enCD', 2112, 0.93956542194, ['--channel','eh','--hadron','neutron','--hadron-region','CD'], 35, 145, 0),
-            ('epipCD', 211, 0.13957039, ['--channel','eh','--hadron','pip','--hadron-region','CD'], 35, 140, 0.1),
-            ('epimCD', -211, 0.13957039, ['--channel','eh','--hadron','pim','--hadron-region','CD'], 35, 140, 0.1),
+            ('1e', 11, 0.0, [], 5, 40, 0.7),
+            ('epFD', 2212, 0.93827, ['--channel','eh','--hadron','proton','--hadron-region','FD'], 5, 45, 0.3),
+            ('enFD', 2112, 0.93957, ['--channel','eh','--hadron','neutron','--hadron-region','FD'], 5, 35, 0),
+            ('epipFD', 211, 0.13957, ['--channel','eh','--hadron','pip','--hadron-region','FD'], 5, 45, 0.2),
+            ('epimFD', -211, 0.13957, ['--channel','eh','--hadron','pim','--hadron-region','FD'], 5, 45, 0.2),
+            ('epCD', 2212, 0.93827, ['--channel','eh','--hadron','proton','--hadron-region','CD'], 35, 145, 0.2),
+            ('enCD', 2112, 0.93957, ['--channel','eh','--hadron','neutron','--hadron-region','CD'], 35, 145, 0),
+            ('epipCD', 211, 0.13957, ['--channel','eh','--hadron','pip','--hadron-region','CD'], 35, 140, 0.1),
+            ('epimCD', -211, 0.13957, ['--channel','eh','--hadron','pim','--hadron-region','CD'], 35, 140, 0.1),
         ]
         for channel, pid, mass, selection, theta_min, theta_max, p_min in cases:
             output_root = root / channel
@@ -133,7 +132,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             run(executable, *settings, '--output', output_root)
             manifest, events = read_run(output)
             assert [f['events'] for f in manifest['files']] == [10000,1]
-            assert [int(h[8]) for h,p in events] == list(range(10001))
+            assert [int(h[8]) for h,p in events] == list(range(10000)) + [0]
             for header, particles in events:
                 assert len(particles) == (1 if channel == '1e' else 2)
                 assert particles[-1][3] == pid
@@ -142,12 +141,12 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
                 p,theta,phi = angles(particles[-1])
                 assert theta_min-1e-7 <= theta <= theta_max+1e-7
                 if channel == '1e':
-                    assert 0.7-1e-8 <= p <= 5.98636+1e-8
+                    assert 0.7-2e-5 <= p <= 5.98636+2e-5
                 else:
-                    assert p_min-1e-8 <= p <= 5.98636+1e-8
+                    assert p_min-2e-5 <= p <= 5.98636+2e-5
                     ep, et, ef = angles(particles[0])
-                    assert math.isclose(ep,5.98636,abs_tol=1e-8) and math.isclose(et,25,abs_tol=1e-7)
-                    assert abs(((ef-5+180)%60)-0) < 1e-6 or abs(((ef-5+180)%60)-60) < 1e-6
+                    assert math.isclose(ep,5.98636,abs_tol=2e-5) and math.isclose(et,25,abs_tol=2e-4)
+                    assert abs(((ef-5+180)%60)-0) < 2e-4 or abs(((ef-5+180)%60)-60) < 2e-4
             # The default is flat in theta, not cos(theta); a broad mean check guards it.
             mean = sum(angles(p[-1])[1] for h,p in events)/len(events)
             assert abs(mean - (theta_min+theta_max)/2) < 2
@@ -179,7 +178,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable, '--config', config, '--events', '5', '--output', configured.parent)
         m,_ = read_run(configured)
         assert m['written_events'] == 5 and m['config']['trigger-phi-offset'] == '16'
-        assert m['config']['hadron-momentum'] == 'uniform' and m['config']['hadron-angle'] == 'theta'
+        assert m['config']['hadron-momentum'] == 'uniform'
         assert m['config']['hadron-p-min'] == '0'
         assert [entry['events'] for entry in m['files']] == [2, 2, 1]
         variable = root/'variable'/ 'Uniform_sample_epFD_5986MeV'
@@ -187,14 +186,14 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         _,events=read_run(variable)
         momenta=[angles(p[-1])[0] for h,p in events]
         assert min(momenta)>=0.3 and max(momenta)<=5.98636 and max(momenta)-min(momenta)>1
-        tester = root/'tester'/ 'Uniform_sample_1e_5986MeV'
-        run(executable, '--electron-momentum', 'beam', '--target', 'point', '--events', '5', '--output', tester.parent)
+        tester = root/'tester'/ 'Uniform_sample_electron-tester_5986MeV'
+        run(executable, '--channel', 'electron-tester', '--events', '5', '--output', tester.parent)
         _,events=read_run(tester)
-        assert all(p[0][11:]==[0,0,-3] and math.isclose(angles(p[0])[0],5.98636,abs_tol=1e-8) for h,p in events)
+        assert all(math.isclose(angles(p[0])[0],5.98636,abs_tol=2e-5) for h,p in events)
         fixed = root/'fixed'/ 'Uniform_sample_enFD_5986MeV'
         run(executable, '--channel', 'eh', '--hadron', 'neutron', '--hadron-momentum', 'fixed', '--events', '5', '--render-plots', 'false', '--output', fixed.parent)
         _,events=read_run(fixed)
-        assert all(math.isclose(angles(p[-1])[0],1,abs_tol=1e-8) for h,p in events)
+        assert all(math.isclose(angles(p[-1])[0],1,abs_tol=2e-5) for h,p in events)
         automatic = root/'automatic-seed'/'Uniform_sample_1e_5986MeV'
         run(executable, '--seed', '0', '--vertex-seed', '0', '--events', '2', '--render-plots', 'false', '--output', automatic.parent)
         am,_=read_run(automatic)
@@ -221,10 +220,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             assert manifest['config']['target']==geometry
             assert manifest['config']['gemc-target-variation']==variation
         override_parent=root/'target-overrides'
-        run(executable,'--rgm-target','Ar40','--target','point','--A','1','--Z','1',
+        run(executable,'--rgm-target','Ar40','--target','Ar','--A','1','--Z','1',
             '--gemc-target-variation','custom_variation','--events','1','--output',override_parent)
         override_manifest,_=read_run(override_parent/'Uniform_sample_1e_5986MeV')
-        assert override_manifest['config']['target']=='point'
+        assert override_manifest['config']['target']=='Ar'
         assert override_manifest['config']['A']=='1' and override_manifest['config']['Z']=='1'
         assert override_manifest['config']['gemc-target-variation']=='custom_variation'
         for key,value in [('channel','bad'),('seed','4294967296'),('events-per-file','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
@@ -242,10 +241,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert m['workflow']=='physical' and m['config']['event-generator']=='genie'
         assert m['scanned_events']==7 and m['written_events']==6
         assert [f['events'] for f in m['files']]==[6]
-        assert [int(h[9]) for h,p in events]==[1,2,3,4,1,1]
+        assert [int(float(h[9])) for h,p in events]==[1,2,3,4,1,1]
         assert [int(h[8]) for h,p in events]==[0,1,2,3,5,6]
         for h,p in events:
-            assert h[1:4]==['40','18','7']
+            assert [int(float(x)) for x in h[1:4]]==[40,18,7]
             assert [int(x[3]) for x in p]==[11,2212,2112,211,-211,111,22]
             assert p[0][6:9]==[0.5,0.1,2]
         named_root=root/'named'

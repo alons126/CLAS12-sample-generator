@@ -28,7 +28,7 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### LUND records and serialization (`src/lund/`)
 
-[Event.h](../src/lund/Event.h) declares `Particle`, `Event`, and `particleMass(pid,legacy)`. [Particle.cpp](../src/lund/Particle.cpp) reads the centralized support tables and rejects unsupported species.
+[Event.h](../src/lund/Event.h) declares `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../src/lund/Particle.cpp) reads the centralized rounded mass table and rejects unsupported species.
 
 [LundWriter.h](../src/lund/LundWriter.h) / [LundWriter.cpp](../src/lund/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at the resolved `events-per-file` threshold; `finish(scanned)` publishes the manifest. Uniform construction also prepares the archived downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
@@ -84,7 +84,7 @@ The runner calls the external `src/common/external/submit_GEMC_sample.sh` Bash p
 ## 6. Configuration and resources
 
 - `config/samples/uniform-<label>-{2070,4029,5986}MeV.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each established beam energy; pion and CD files are explicitly marked unvalidated for production.
-- `electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and fixed `(0,0,-3 cm)` vertex.
+- `electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and target-sampled vertices.
 - `genie.conf`: an explicit Ar conversion example.
 - `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
 - `config/sites/local.json`: executable names for local processing.

@@ -148,10 +148,11 @@ long long beamMeV(double energy) {
 /**
  * @brief Build the public uniform-sample label from resolved particle and detector selections.
  * @param config Resolved configuration containing channel, hadron, and hadron-region.
- * @return `1e` or one of `epFD`, `enFD`, `epipFD`, `epimFD`, and their CD counterparts.
+ * @return `1e`, `electron-tester`, or one of the resolved electron-hadron FD/CD labels.
  */
 std::string uniformSampleLabel(const RunConfig& config) {
     if (config.get("channel") == "1e") { return "1e"; }
+    if (config.get("channel") == "electron-tester") { return "electron-tester"; }
 
     const auto& hadron = config.get("hadron");
     const std::string token = hadron == "proton" ? "p" : hadron == "neutron" ? "n" : hadron;
@@ -199,7 +200,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */
     // Store all settings as text so the exact resolved values used by generation can also be written
     // to provenance. Shared defaults preserve the established RG-M beam/Ar setup, separate vertex and
-    // kinematic seeds, legacy LUND text formatting, and current PDG masses unless overridden.
+    // kinematic seeds, the single supported LUND text contract, and centralized rounded masses.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
                  {"rgm-target", "Ar40"},
@@ -207,16 +208,10 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"A", "auto"},
                  {"Z", "auto"},
                  {"gemc-target-variation", "auto"},
-                 {"vertex-mode", "target"},
-                 {"vertex-x", "0"},
-                 {"vertex-y", "0"},
-                 {"vertex-z", "-3"},
                  {"output", ""},
                  {"events", ""},
                  {"events-per-file", uniform ? "25000" : "10000"},
                  {"seed", "67890"},
-                 {"lund-format", "legacy"},
-                 {"mass-convention", "standard"},
                  {"render-plots", uniform ? "true" : "false"},
                  {"vertex-seed", "12345"},
                  {"prefix", "auto"}};
@@ -236,10 +231,8 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                           {"hadron-theta-min", "auto"},
                           {"hadron-theta-max", "auto"},
                           {"hadron-momentum", "auto"},
-                          {"hadron-angle", "theta"},
                           {"hadron-p", "1"},
                           {"hadron-p-min", "auto"},
-                          {"hadron-p-max", "auto"},
                           {"electron-momentum", "auto"},
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
@@ -355,7 +348,6 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         if (c.get("hadron-theta-max") == "auto") { c.values_["hadron-theta-max"] = central ? (pion ? "140" : "145") : (neutron ? "35" : "45"); }
         if (c.get("electron-p-max") == "auto") { c.values_["electron-p-max"] = c.get("beam-energy"); }
         if (c.get("hadron-p-min") == "auto") { c.values_["hadron-p-min"] = neutron ? "0" : c.get("hadron") == "proton" ? (central ? "0.2" : "0.3") : (central ? "0.1" : "0.2"); }
-        if (c.get("hadron-p-max") == "auto") { c.values_["hadron-p-max"] = c.get("beam-energy"); }
 
         // Trigger-electron sector offsets are legacy beam-setting values in degrees. Unknown beam
         // energies receive zero offset rather than an inferred experimental configuration.
@@ -391,7 +383,6 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         if (c.get("hadron-momentum") == "auto" || c.get("hadron-momentum") == "sampled") {
             c.values_["hadron-momentum"] = c.get("channel") == "eh" && c.get("hadron") != "neutron" ? "mixed" : "uniform";
         }
-        if (c.get("hadron-angle") == "auto") { c.values_["hadron-angle"] = "theta"; }
     }
 #pragma endregion
 
@@ -533,10 +524,10 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
  *
  * Workflow:
  *   1. Check required shared values, beam energy, counts/seeds, nuclear metadata, filename prefix,
- *      LUND/mass conventions, and monitoring selection.
- *   2. Validate fixed-vertex coordinates and, for target sampling, the external geometry key.
+ *      and monitoring selection.
+ *   2. Validate the external target-geometry key used by every event.
  *   3. For physical conversion, require current GENIE GST input and complete naming provenance.
- *   4. For uniform generation, validate the channel, angular acceptance, momentum/angle modes,
+ *   4. For uniform generation, validate the channel, angular acceptance, momentum modes,
  *      momentum bounds, and trigger-electron angles.
  *
  * @param uniform Select uniform-generation constraints when true or physical-conversion constraints
@@ -548,7 +539,7 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
  *         geometry is unknown, or any shared/source-specific constraint fails.
  *
  * @note Numeric units follow the configuration contract: beam energy is GeV, momentum is GeV/c, angles
- *       are degrees, and fixed vertex coordinates are cm.
+ *       are degrees, and sampled target coordinates are cm.
  */
 void RunConfig::validate(bool uniform) const {
 #pragma region /* Shared run and output contract */
@@ -580,19 +571,13 @@ void RunConfig::validate(bool uniform) const {
         throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
     }
 
-    // These enums select concrete writer/monitor behavior; unknown strings must not silently fall back.
-    if (get("lund-format") != "legacy" && get("lund-format") != "precise") { throw std::runtime_error("lund-format must be legacy or precise"); }
-    if (get("mass-convention") != "legacy" && get("mass-convention") != "standard") { throw std::runtime_error("mass-convention must be legacy or standard"); }
+    // Plot rendering remains the only shared Boolean output control.
     if (get("render-plots") != "true" && get("render-plots") != "false") { throw std::runtime_error("render-plots must be true or false"); }
 #pragma endregion
 
 #pragma region /* Vertex contract */
-    // Both modes require finite coordinates because fixed mode consumes all three and retaining valid
-    // inactive values keeps the resolved manifest reusable. Target mode additionally requires a key
-    // implemented by the protected external geometry source.
-    if (get("vertex-mode") != "target" && get("vertex-mode") != "fixed") { throw std::runtime_error("vertex-mode must be target or fixed"); }
-    for (auto k : {"vertex-x", "vertex-y", "vertex-z"}) { number(k); }
-    if (get("vertex-mode") == "target") { TargetGeometry::validate(get("target")); }
+    // Every maintained event samples the selected target geometry. There is no fixed-vertex mode.
+    TargetGeometry::validate(get("target"));
 #pragma endregion
 
 #pragma region /* Source-specific contract */
@@ -614,7 +599,7 @@ void RunConfig::validate(bool uniform) const {
 
     // Uniform source selection fixes event multiplicity/content to electron-only, electron-proton, or
     // electron-neutron generation; it never represents a physical interaction model.
-    if (get("channel") != "1e" && get("channel") != "eh") { throw std::runtime_error("channel must be 1e or eh"); }
+    if (get("channel") != "1e" && get("channel") != "eh" && get("channel") != "electron-tester") { throw std::runtime_error("channel must be 1e, eh or electron-tester"); }
     if (get("hadron") != "proton" && get("hadron") != "neutron" && get("hadron") != "pip" && get("hadron") != "pim") {
         throw std::runtime_error("hadron must be proton, neutron, pip or pim");
     }
@@ -639,9 +624,6 @@ void RunConfig::validate(bool uniform) const {
         throw std::runtime_error("fixed hadron momentum is available only for eh neutron samples");
     }
 
-    // `auto` angle selection is likewise resolved before validation. Isotropic means uniform in cos
-    // theta within the configured legacy acceptance, not over the full sphere.
-    if (get("hadron-angle") != "theta" && get("hadron-angle") != "isotropic") { throw std::runtime_error("hadron-angle must be auto, theta or isotropic"); }
     if (get("electron-momentum") != "uniform" && get("electron-momentum") != "mixed" && get("electron-momentum") != "beam") {
         throw std::runtime_error("electron-momentum must be auto, uniform, mixed or beam");
     }
@@ -651,7 +633,7 @@ void RunConfig::validate(bool uniform) const {
 
     // The fixed momentum must be positive. Sampled bounds allow zero for uniform sampling, require a
     // positive-width interval, and receive the stricter positive minimum above for inverse-p mixing.
-    if (number("hadron-p") <= 0 || number("hadron-p-min") < 0 || number("hadron-p-max") <= number("hadron-p-min")) { throw std::runtime_error("Invalid hadron momentum bounds"); }
+    if (number("hadron-p") <= 0 || number("hadron-p-min") < 0 || number("beam-energy") <= number("hadron-p-min")) { throw std::runtime_error("Invalid hadron momentum bounds"); }
     if (number("electron-p-min") < 0 || number("electron-p-max") <= number("electron-p-min")) { throw std::runtime_error("Invalid electron momentum bounds"); }
 
     // Trigger theta is a polar angle and the signed sector-offset magnitude cannot exceed 180 degrees.
@@ -740,16 +722,14 @@ std::string jsonString(const std::string& s) {
 std::string help(bool uniform) {
     // The physical example quotes its input glob so an interactive shell passes the pattern to the
     // converter instead of expanding it before the adapter receives it.
-    std::string result = uniform ? "clas12-uniform --channel 1e|eh [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
+    std::string result = uniform ? "clas12-uniform --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
                                  : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
-    // Shared settings control beam/target metadata, event and RNG counts, vertex production, writer
-    // compatibility, and optional plot rendering. Units are stated at the option boundary.
+    // Shared settings control beam/target metadata, event and RNG counts, automatic naming, and plots.
     result +=
         "Settings: --config FILE, --beam-energy GeV, --rgm-target ID, --target GEOMETRY, --A N, --Z N,\n"
         "--events N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
-        "--vertex-mode target|fixed, --vertex-x/y/z CM,\n"
-        "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
+        "--render-plots true|false. Every event samples the selected target geometry.\n"
         "Files use key = value; CLI values override file settings. Seed 0 requests ROOT automatic, nonrepeatable seeding.\n"
         "Existing output is replaced after a warning.\n";
 
@@ -760,7 +740,9 @@ std::string help(bool uniform) {
             "Uniform: --hadron proton|neutron|pip|pim, --hadron-region FD|CD, --electron-theta-min/max DEG, --electron-p-min/max GeV/c,\n"
             "--hadron-theta-min/max DEG, --electron-momentum auto|uniform|mixed|beam,\n"
             "--hadron-momentum auto|fixed|sampled|uniform|mixed,\n"
-            "--hadron-angle auto|theta|isotropic, --hadron-p GeV/c, --hadron-p-min/max GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
+            "--hadron-p GeV/c, --hadron-p-min GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG.\n"
+            "Hadron theta and phi are always sampled uniformly inside their configured ranges.\n"
+            "Sampled hadron momentum extends to the beam energy.\n";
     } else {
         // Physical-only settings identify the current GENIE adapter and preserve generator, tune,
         // selection, detector, and target-variation provenance in the output contract.

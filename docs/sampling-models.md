@@ -23,7 +23,7 @@ The tester always keeps the 5–40° and full-φ scan at beam momentum. It provi
 | neutron | 5–35° | 35–145° | 0 | 0 | uniform |
 | pip, pim | 5–45° | 35–140° | 0.2 | 0.1 | mixed |
 
-Maximum p is the beam energy. `theta` draws θ uniformly; optional `isotropic` draws cos(theta) uniformly within the same configured limits. φ is always uniform over −180° to 180°. Fixed 1 GeV/c momentum is an optional neutron-only mode in either region.
+Maximum p is the beam energy. Theta is always uniform inside the configured FD/CD range and phi is always uniform over −180° to 180°. Fixed 1 GeV/c momentum is an optional neutron-only mode in either region.
 
 For charged hadrons, `mixed` alternates uniform-p and uniform-1/p:
 

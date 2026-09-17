@@ -16,8 +16,7 @@
  *
  * Scope:
  *   This object caches particle-content and kinematic settings only. Output, formatting, RNG seeds, and
- *   fixed/target vertex controls remain in RunConfig because they are prepared or read outside the hot
- *   sampling path.
+ *   target geometry selection remains in RunConfig because vertex sampling occurs outside this object.
  */
 
 #pragma once
@@ -50,6 +49,7 @@ namespace samples {
  */
 enum class UniformChannel {
     Electron,        ///< `1e`: one generated electron.
+    ElectronTester,  ///< `electron-tester`: one beam-momentum electron for the angular scan.
     ElectronHadron,  ///< `eh`: trigger electron followed by the selected hadron.
 };
 #pragma endregion
@@ -85,21 +85,19 @@ enum class HadronSpecies { Proton, Neutron, PiPlus, PiMinus };
  *
  * Invariants:
  *   Exactly one channel enum is selected. Electron momentum is uniform-p, mixed p and 1/p, or beam-valued.
- *   Hadron momentum is exactly one of uniform-p, mixed p and 1/p, or fixed (both flags false). Hadron angle is
- *   uniform in cos(theta) when isotropic_hadron_angle is true and uniform in theta otherwise. Bounds,
- *   target metadata, and mode/channel compatibility were checked by RunConfig::validate(true).
+ *   Hadron momentum is exactly one of uniform-p, mixed p and 1/p, or fixed (both flags false). Hadron
+ *   theta and phi are always uniform inside their configured bounds. Target metadata and mode/channel
+ *   compatibility were checked by RunConfig::validate(true).
  */
 struct UniformConfig {
     // Channel and resolved prescriptions --------------------------------------------------------------------------------------------------------------------------------
     UniformChannel channel;          ///< Electron-only or electron-hadron branch.
     HadronSpecies hadron;            ///< Hadron identity used by the eh branch.
     int hadron_pid;                  ///< Centralized PDG identifier for the selected hadron.
-    bool legacy_mass;                ///< Select archived rounded masses only when explicitly requested.
     bool uniform_electron_momentum;  ///< True: p~U(electron_p_min,electron_p_max).
     bool mixed_electron_momentum;    ///< True: 1e alternates uniform-p and uniform-1/p by event ID.
     bool uniform_hadron_momentum;    ///< True: p~U(p_min,p_max); mutually exclusive with mixed mode.
     bool mixed_hadron_momentum;      ///< True: charged hadrons alternate uniform-p and uniform-1/p by event ID.
-    bool isotropic_hadron_angle;     ///< True: cos(theta) is uniform within the configured bounds.
 
     // Physical ranges and trigger settings ------------------------------------------------------------------------------------------------------------------------------
     double beam;                ///< Beam energy in GeV; also supplies the c=1 momentum-scale value.
@@ -129,7 +127,9 @@ struct UniformConfig {
      * @note The channel fallback maps the only other validated value, `eh`, to ElectronHadron. Hadron text is likewise safe because RunConfig admits exactly four species.
      */
     explicit UniformConfig(const RunConfig& c)
-        : channel(c.get("channel") == "1e" ? UniformChannel::Electron : UniformChannel::ElectronHadron),
+        : channel(c.get("channel") == "1e"                ? UniformChannel::Electron
+                  : c.get("channel") == "electron-tester" ? UniformChannel::ElectronTester
+                                                          : UniformChannel::ElectronHadron),
           hadron(c.get("hadron") == "proton"    ? HadronSpecies::Proton
                  : c.get("hadron") == "neutron" ? HadronSpecies::Neutron
                  : c.get("hadron") == "pip"     ? HadronSpecies::PiPlus
@@ -138,12 +138,10 @@ struct UniformConfig {
                      : c.get("hadron") == "neutron" ? constants::neutron_pdg
                      : c.get("hadron") == "pip"     ? constants::pi_plus_pdg
                                                     : constants::pi_minus_pdg),
-          legacy_mass(c.get("mass-convention") == "legacy"),
           uniform_electron_momentum(c.get("electron-momentum") == "uniform"),
           mixed_electron_momentum(c.get("electron-momentum") == "mixed"),
           uniform_hadron_momentum(c.get("hadron-momentum") == "uniform"),
           mixed_hadron_momentum(c.get("hadron-momentum") == "mixed"),
-          isotropic_hadron_angle(c.get("hadron-angle") == "isotropic"),
           beam(c.number("beam-energy")),
           electron_theta_min(c.number("electron-theta-min")),
           electron_theta_max(c.number("electron-theta-max")),
@@ -153,7 +151,7 @@ struct UniformConfig {
           hadron_theta_max(c.number("hadron-theta-max")),
           hadron_p(c.number("hadron-p")),
           hadron_p_min(c.number("hadron-p-min")),
-          hadron_p_max(c.number("hadron-p-max")),
+          hadron_p_max(c.number("beam-energy")),
           trigger_theta(c.number("trigger-theta")),
           trigger_phi_offset(c.number("trigger-phi-offset")),
           A(static_cast<int>(c.integer("A"))),

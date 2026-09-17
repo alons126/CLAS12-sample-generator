@@ -6,7 +6,7 @@ The authoritative target source is [`src/common/external/targets.h`](../src/comm
 
 The target header, unified GEMC submission payload, and detector cards/YAML under `config/detector/` are external snapshots. They are kept in the repository so workflows remain reproducible, while only minimal compatibility changes are applied around them. The maintained code consumes their interfaces without reformatting or rewriting the external content, so reviewed upstream replacements can be adopted with a small, explicit reference update.
 
-Both uniform generation and physical conversion call this header's `randomVertex()` through `TargetGeometry`. The maintained RG-M catalog selects valid map keys and supplies nucleus/GEMC metadata without changing the protected header. The adapter transfers the caller's full vertex RNG state into and out of its `ran` generator under a mutex, preserving independent seeded streams and legacy draw order. Its particle formatter and mass globals are retained but unused. The electron tester uses an explicit fixed `(0,0,-3 cm)` vertex and consumes no vertex random numbers.
+Both uniform generation and physical conversion call this header's `randomVertex()` through `TargetGeometry`. The maintained RG-M catalog selects valid map keys and supplies nucleus/GEMC metadata without changing the protected header. The adapter transfers the caller's full vertex RNG state into and out of its `ran` generator under a mutex, preserving independent seeded streams and legacy draw order. Its particle formatter and mass globals are retained but unused. Every maintained mode, including the electron tester, samples its selected target geometry.
 
 To update geometry:
 
@@ -20,7 +20,7 @@ The replacement-geometry test compiles the production adapter with a modified he
 
 ## LUND format
 
-We produce LUND files following the [GEMC LUND format documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html): an event header followed by fourteen-field particle records, with momentum in GeV/c, energy in GeV, mass in GeV/c², and vertices in cm. The [data contract](data-contracts.md) specifies the exact columns and the historical application meanings used in user-defined header fields. In particular, the GENIE process tag is not a physical cross-section weight. The default legacy precision and whitespace preserve archived output; `--lund-format precise` increases numeric precision.
+We produce LUND files following the [GEMC LUND format documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html): an event header followed by fourteen-field particle records, with momentum in GeV/c, energy in GeV, mass in GeV/c², and vertices in cm. The [data contract](data-contracts.md) specifies the exact columns and the historical application meanings used in user-defined header fields. In particular, the GENIE process tag is not a physical cross-section weight. The maintained writer always uses the established precision, whitespace, and numbering conventions.
 
 ## Gcard provenance and field settings
 

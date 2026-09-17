@@ -18,7 +18,7 @@ Profiles normally specify only `rgm-target`. The maintained target catalog first
 
 ## Uniform production matrix
 
-Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, legacy-derived angular conventions, current PDG masses, and 25,000 events per file. Uniform profiles request 50,000,000 events, following the legacy production scale; tester profiles request 1,000,000 events, following its server default. Override `--events` for smaller studies.
+Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, legacy-derived angular conventions, rounded PDG-based masses, and 25,000 events per file. Uniform profiles request 50,000,000 events, following the legacy production scale; tester profiles request 1,000,000 events, following its server default. Override `--events` for smaller studies.
 
 | Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
 | --- | --- | --- | --- |
@@ -37,7 +37,7 @@ The 1e profiles use the updated 0.7 GeV/c minimum and 50/50 uniform-p/uniform-1/
 
 FD pion and all CD profiles are marked experimental inside the files. They encode the documented updated conventions but have not yet been tested as production samples; see [uniform generation](../../docs/uniform-samples.md) and [validation](../../docs/validation.md).
 
-The electron tester profiles use a fixed `(0,0,-3 cm)` vertex and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
+The electron tester profiles sample the selected target geometry and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
 
 ## Compatibility and physical-input profiles
 
@@ -49,11 +49,11 @@ The electron tester profiles use a fixed `(0,0,-3 cm)` vertex and scan electron 
 
 ## Available common options
 
-`output`, `beam-energy`, `rgm-target`, optional target-field overrides (`target`, `A`, `Z`, `gemc-target-variation`), `vertex-mode`, `vertex-x`, `vertex-y`, `vertex-z`, `events`, `events-per-file`, `seed`, `vertex-seed`, `prefix`, `lund-format`, `mass-convention`, and `render-plots` are common configuration keys. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
+`output`, `beam-energy`, `rgm-target`, optional target-field overrides (`target`, `A`, `Z`, `gemc-target-variation`), `events`, `events-per-file`, `seed`, `vertex-seed`, `prefix`, and `render-plots` are common configuration keys. Every event samples its selected target geometry. Uniform prefixes are automatic unless `--prefix` explicitly overrides them. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
 
 ## Available uniform options
 
-Uniform profiles may set `channel`, `hadron`, `hadron-region`, `electron-theta-min`, `electron-theta-max`, `electron-momentum`, `electron-p-min`, `electron-p-max`, `hadron-theta-min`, `hadron-theta-max`, `hadron-momentum`, `hadron-angle`, `hadron-p`, `hadron-p-min`, `hadron-p-max`, `trigger-theta`, and `trigger-phi-offset`.
+Uniform profiles may set `channel`, `hadron`, `hadron-region`, `electron-theta-min`, `electron-theta-max`, `electron-momentum`, `electron-p-min`, `electron-p-max`, `hadron-theta-min`, `hadron-theta-max`, `hadron-momentum`, `hadron-p`, `hadron-p-min`, `trigger-theta`, and `trigger-phi-offset`. Sampled hadron momentum always ends at beam energy; the eh trigger electron automatically uses beam momentum.
 
 ## Available physical options
 

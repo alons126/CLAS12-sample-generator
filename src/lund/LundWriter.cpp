@@ -17,10 +17,9 @@
  *   stream -> write manifest.json.tmp -> atomically rename it to manifest.json.
  *
  * Compatibility:
- *   Legacy LUND format preserves archived whitespace, precision, and uniform per-file IDs. Precise
- *   format uses the same event content with higher numeric precision and run-global IDs; the separate
- *   mass-convention setting selects particle masses. Both formats use momentum in GeV/c, mass in
- *   GeV/c², energy in GeV, and vertices in cm.
+ *   The LUND format preserves archived whitespace, precision, and uniform per-file IDs. Particle
+ *   masses come from the rounded constants.h table, with a massless electron. Records use momentum in
+ *   GeV/c, mass in GeV/c², energy in GeV, and vertices in cm.
  *
  * Failure behavior:
  *   Unsafe replacement targets are rejected before deletion. Stream and filesystem failures throw and
@@ -105,10 +104,9 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
         std::cout << env::SYSTEM_COLOR << "GenerateLundFiles:" << env::RESET_COLOR << " true\n";
         std::cout << env::SYSTEM_COLOR << "nParticles:" << env::RESET_COLOR << " 2\n";
-        const bool legacy_mass = config.get("mass-convention") == "legacy";
-        std::cout << env::SYSTEM_COLOR << "mass_e [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::electron_pdg, legacy_mass) << "  " << env::SYSTEM_COLOR
-                  << "mass_p [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::proton_pdg, legacy_mass) << "  " << env::SYSTEM_COLOR << "mass_n [GeV/c²]:" << env::RESET_COLOR
-                  << ' ' << particleMass(constants::neutron_pdg, legacy_mass) << '\n';
+        std::cout << env::SYSTEM_COLOR << "mass_e [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::electron_pdg) << "  " << env::SYSTEM_COLOR
+                  << "mass_p [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::proton_pdg) << "  " << env::SYSTEM_COLOR << "mass_n [GeV/c²]:" << env::RESET_COLOR << ' '
+                  << particleMass(constants::neutron_pdg) << '\n';
         std::cout << env::SYSTEM_COLOR << "OutPutFolder:" << env::RESET_COLOR << " " << output << '\n';
         std::cout << env::SYSTEM_COLOR << "lundPath:" << env::RESET_COLOR << " " << lund_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "mchipoPath:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
@@ -152,8 +150,8 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
               << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << '\n';
     std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
               << config.get("events-per-file") << '\n';
-    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " " << config.get("lund-format") << "  " << env::SYSTEM_COLOR << "Mass convention:" << env::RESET_COLOR << " "
-              << config.get("mass-convention") << '\n';
+    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " legacy-compatible  " << env::SYSTEM_COLOR << "Masses:" << env::RESET_COLOR
+              << " rounded constants.h values; electron massless\n";
 
     if (final) {
         // Uniform generation writes every generated event, so scanned equals written. Physical scanned
@@ -198,12 +196,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
  *       source-specific run name; this constructor reports and removes only that exact resolved path.
  */
 LundWriter::LundWriter(const RunConfig& c, std::string workflow)
-    : config_(c),
-      workflow_(std::move(workflow)),
-      directory_(c.get("output")),
-      events_per_file_(c.integer("events-per-file")),
-      capacity_(c.integer("events")),
-      legacy_format_(c.get("lund-format") == "legacy") {
+    : config_(c), workflow_(std::move(workflow)), directory_(c.get("output")), events_per_file_(c.integer("events-per-file")), capacity_(c.integer("events")) {
     // Re-normalize defensively at the destructive-operation boundary even though RunConfig::parse()
     // already returns an absolute output path.
     directory_ = std::filesystem::absolute(directory_).lexically_normal();
@@ -278,7 +271,7 @@ bool LundWriter::full() const { return count_ >= capacity_; }
  * Workflow:
  *   1. Reject capacity overflow and empty events.
  *   2. Lazily open the first numbered file or rotate after exactly events_per_file_ records.
- *   3. Serialize a ten-field event header using legacy-compatible or precise formatting.
+ *   3. Serialize a ten-field event header using the legacy-compatible formatting contract.
  *   4. Derive each particle's on-shell energy and serialize its fourteen-field record in stable order.
  *   5. Increment per-file and run-global counts only after every record has been written.
  *
@@ -309,32 +302,23 @@ void LundWriter::write(const Event& e) {
         // Number files from one in creation order and store a run-relative path for portable manifests.
         files_.push_back({"lundfiles/" + config_.get("prefix") + "_" + std::to_string(files_.size() + 1) + ".txt", 0});
 
-        // Convert bad/fail stream states into exceptions. Precise output uses ten significant digits;
-        // legacy branches below use explicit printf-compatible field precision instead.
+        // Convert bad/fail stream states into exceptions. Records below use explicit archived field precision.
         stream_.exceptions(std::ios::badbit | std::ios::failbit);
         stream_.open(directory_ / files_.back().path);
-        stream_ << std::setprecision(10);
     }
 
-    // Preserve archived header precision and numbering when legacy output is selected. Uniform IDs
+    // Preserve archived header precision and numbering. Uniform IDs
     // restart from zero in each split file; physical IDs retain the source entry index stored in e.id.
-    if (legacy_format_) {
-        const auto id = static_cast<unsigned long long>(workflow_ == "uniform" ? files_.back().events : e.id);
+    const auto id = static_cast<unsigned long long>(workflow_ == "uniform" ? files_.back().events : e.id);
 
-        // electron–hadron samples and the beam-momentum electron tester historically wrote beam energy with one decimal;
-        // ordinary 1e and physical conversion used six decimals. Other header fields retain their
-        // archived precision and meanings, including physical process tags in e.weight.
-        const bool electron_hadron = workflow_ == "uniform" && config_.get("channel") == "eh";
-        const bool tester = workflow_ == "uniform" && config_.get("channel") == "1e" && config_.get("electron-momentum") == "beam";
-        const char* format =
-            electron_hadron || tester ? "%i \t %i \t %i \t %.3f \t %.3f \t %i \t %.1f \t %i \t %llu \t %.3f \n" : "%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %llu \t %.2f \n";
-        stream_ << TString::Format(format, static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., constants::electron_pdg, e.beam_energy, 1, id, e.weight);
-    } else {
-        // Precise format keeps one-space separation, the run/source-global ID, and the stream's ten
-        // significant-digit precision while preserving the same semantic header fields.
-        stream_ << e.particles.size() << ' ' << e.A << ' ' << e.Z << ' ' << e.resonance_id << " 0 " << constants::electron_pdg << ' ' << e.beam_energy << " 1 " << e.id << ' ' << e.weight
-                << '\n';
-    }
+    // electron–hadron samples and the beam-momentum electron tester historically wrote beam energy with one decimal;
+    // ordinary 1e and physical conversion used six decimals. Other header fields retain their
+    // archived precision and meanings, including physical process tags in e.weight.
+    const bool electron_hadron = workflow_ == "uniform" && config_.get("channel") == "eh";
+    const bool tester = workflow_ == "uniform" && config_.get("channel") == "electron-tester";
+    const char* format =
+        electron_hadron || tester ? "%i \t %i \t %i \t %.3f \t %.3f \t %i \t %.1f \t %i \t %llu \t %.3f \n" : "%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %llu \t %.2f \n";
+    stream_ << TString::Format(format, static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., constants::electron_pdg, e.beam_energy, 1, id, e.weight);
 
     // Derive mass-shell energy E=sqrt(m²+p²) under c=1 and emit fourteen fields per particle. The loop
     // follows Event::particles order exactly; no source-specific sorting or filtering occurs here.
@@ -345,16 +329,9 @@ void LundWriter::write(const Event& e) {
         // A non-finite momentum or mass propagates into energy; checking vertex magnitude catches any
         // non-finite coordinate. Reject before emitting that particle record.
         if (!std::isfinite(energy) || !std::isfinite(p.vertex.Mag2())) { throw std::runtime_error("Non-finite particle data"); }
-        if (legacy_format_) {
-            // Legacy particle records retain tabs, status/parent zeros, active flag 1, and five decimal
-            // places for momentum, energy, mass, and vertex fields.
-            stream_ << TString::Format("%i \t %.3f \t %i \t %i \t %i \t %i \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \n", ++index, 0., 1, p.pid, 0, 0, p.momentum.X(),
-                                       p.momentum.Y(), p.momentum.Z(), energy, p.mass, p.vertex.X(), p.vertex.Y(), p.vertex.Z());
-        } else {
-            // Precise records contain the identical fourteen fields and constants with compact spacing.
-            stream_ << ++index << " 0 1 " << p.pid << " 0 0 " << p.momentum.X() << ' ' << p.momentum.Y() << ' ' << p.momentum.Z() << ' ' << energy << ' ' << p.mass << ' ' << p.vertex.X()
-                    << ' ' << p.vertex.Y() << ' ' << p.vertex.Z() << '\n';
-        }
+        // Particle records retain tabs, status/parent zeros, active flag 1, and five decimal places.
+        stream_ << TString::Format("%i \t %.3f \t %i \t %i \t %i \t %i \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \n", ++index, 0., 1, p.pid, 0, 0, p.momentum.X(),
+                                   p.momentum.Y(), p.momentum.Z(), energy, p.mass, p.vertex.X(), p.vertex.Y(), p.vertex.Z());
     }
 
     // Commit bookkeeping only after the full event has reached the stream successfully.

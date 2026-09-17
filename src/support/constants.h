@@ -12,8 +12,8 @@
  *
  * Conventions:
  *   PDG identifiers follow the standard Monte Carlo particle-numbering scheme. Maintained masses use
- *   the 2025 Particle Data Group values and are stored in GeV/c². A separate compatibility namespace
- *   contains only the rounded masses required to reproduce archived LUND bytes.
+ *   rounded 2026 Particle Data Group values in GeV/c². The electron is intentionally massless in the
+ *   LUND acceptance-sample convention.
  *
  * Scope:
  *   This header describes particles accepted by the shared Event/LUND contract. Detector acceptance,
@@ -57,41 +57,20 @@ constexpr int proton_pdg = static_cast<int>(Pdg::proton);      ///< Proton ident
  * @namespace mass
  * @brief Maintained rest masses from the Particle Data Group 2026 Review of Particle Physics.
  *
- * Values are converted from MeV/c² to GeV/c². The charged-pion value applies to both charges. The
- * photon is exactly massless in this event-record model.
+ * Values are converted from MeV/c² to GeV/c² and rounded to the five decimal places serialized in the
+ * LUND particle record. The charged-pion value applies to both charges. The electron and photon are
+ * massless in this event-record model.
  *
  * @see https://pdg.lbl.gov/2026/listings/particle_properties.html
  */
 namespace mass {
-constexpr double electron = 0.00051099895069;
-constexpr double proton = 0.93827208943;
-constexpr double neutron = 0.93956542194;
-constexpr double pi_charged = 0.13957039;
-constexpr double pi_zero = 0.1349768;
-constexpr double photon = 0.0;
-}  // namespace mass
-
-#pragma endregion
-
-// Archived compatibility masses --------------------------------------------------------------------------------------------------------------------------------------
-
-#pragma region /* Archived compatibility masses */
-
-/**
- * @namespace legacy_mass
- * @brief Rounded constants written by the archived generators.
- *
- * These values exist only for explicit `mass-convention=legacy` validation and migration runs. New
- * production defaults use constants::mass. Keeping the table here prevents numeric duplication.
- */
-namespace legacy_mass {
-constexpr double electron = 0.000511;
-constexpr double proton = 0.938272;
+constexpr double electron = 0.0;
+constexpr double proton = 0.93827;
 constexpr double neutron = 0.93957;
 constexpr double pi_charged = 0.13957;
-constexpr double pi_zero = 0.13957;
+constexpr double pi_zero = 0.13498;
 constexpr double photon = 0.0;
-}  // namespace legacy_mass
+}  // namespace mass
 
 #pragma endregion
 

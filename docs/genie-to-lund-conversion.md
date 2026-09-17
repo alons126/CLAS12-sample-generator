@@ -34,7 +34,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
-Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers and masses come from `src/support/constants.h`. The production default `mass-convention=standard` uses PDG 2026 values. Explicit `legacy` mode preserves the restored converter’s rounded masses, including its 0.13957 GeV/c² pi-zero value, for parity tests; see the [data contract](data-contracts.md).
+Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers and the single rounded mass table come from `src/support/constants.h`; the electron is approximated as massless. See the [data contract](data-contracts.md).
 
 ## Splitting and completion
 

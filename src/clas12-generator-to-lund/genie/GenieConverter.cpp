@@ -84,10 +84,9 @@ void convertGenie(const RunConfig& c) {
     // A nonzero vertex seed is repeatable. ROOT interprets TRandom3(0) as automatic seeding; accepting
     // zero leaves that nonrepeatable behavior available when the user values independence over replay.
     TRandom3 random(c.integer("vertex-seed"));
-    TargetGeometry geometry(c.get("vertex-mode") == "target" ? c.get("target") : "point");
+    TargetGeometry geometry(c.get("target"));
     const double beam = c.number("beam-energy");
     const int A = static_cast<int>(c.integer("A")), Z = static_cast<int>(c.integer("Z"));
-    const bool legacy_mass = c.get("mass-convention") == "legacy";
     Monitoring monitoring(beam);
     TH2D legacy_electron("theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}", 100, -180., 180., 100, 0., 50.);
     legacy_electron.SetDirectory(nullptr);
@@ -120,14 +119,14 @@ void convertGenie(const RunConfig& c) {
         event.beam_energy = beam;
         event.resonance_id = *resid;
         event.weight = code;
-        auto vertex = c.get("vertex-mode") == "fixed" ? TVector3(c.number("vertex-x"), c.number("vertex-y"), c.number("vertex-z")) : geometry.sample(random);
-        event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg, legacy_mass), {*pxl, *pyl, *pzl}, vertex});
+        auto vertex = geometry.sample(random);
+        event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg), {*pxl, *pyl, *pzl}, vertex});
         // Copy only supported final-state species while preserving the input momenta.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
             if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::pi_zero_pdg ||
                 pid == constants::photon_pdg) {
-                event.particles.push_back({pid, particleMass(pid, legacy_mass), {pxf[i], pyf[i], pzf[i]}, vertex});
+                event.particles.push_back({pid, particleMass(pid), {pxf[i], pyf[i], pzf[i]}, vertex});
             }
         }
         writer.write(event);

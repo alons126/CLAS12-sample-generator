@@ -61,7 +61,7 @@ namespace samples {
 struct Particle {
     int pid;  ///< Supported PDG identity used verbatim in LUND and for monitoring groups.
 
-    double mass;  ///< Selected legacy/standard mass in GeV/c²; particleMass() normally supplies it.
+    double mass;  ///< Central rounded LUND mass in GeV/c²; particleMass() normally supplies it.
 
     TVector3 momentum;  ///< Truth/generated Cartesian momentum in GeV/c; never resampled by the writer.
 
@@ -133,7 +133,7 @@ struct Event {
  * @note This lookup does not validate event-generator status or particle selection. Adapters decide
  *       which truth particles are retained before requesting a mass.
  */
-double particleMass(int pid, bool legacy = false);
+double particleMass(int pid);
 #pragma endregion
 
 #pragma endregion

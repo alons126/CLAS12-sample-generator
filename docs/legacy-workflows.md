@@ -14,7 +14,7 @@ source Uniform-sample-generator/run.sh
 
 `CodeRun.cpp` selects channels through three booleans and currently makes three active calls: **1e, ep and en at 2.07052 GeV**, each under a GEMC 5.14 `rgm_fall2021_C_S` output label. Each call inherits 5000 files × 10000 events. The generator itself hardcodes `1-foil-small` vertex geometry and A=Z=1 header metadata. Its local kinematic `TRandom3(0)` is automatically seeded; the target helper uses a global seed of 12345. Consequently, the exact historical production event sequence cannot be reconstructed unless the automatically chosen kinematic seed/state was recorded.
 
-The three active `CodeRun.cpp` calls map to these maintained commands. `legacy-coderun.conf` already supplies 50,000,000 total events, 10,000 events per file, `1-foil-small` geometry, A=Z=1, legacy masses/formatting, and the archived angular ranges. `--seed 0` preserves the archived request for ROOT automatic seeding, although it cannot reproduce an earlier automatically seeded sequence.
+The three active `CodeRun.cpp` calls map to these maintained commands. `legacy-coderun.conf` already supplies 50,000,000 total events, 10,000 events per file, `1-foil-small` geometry, A=Z=1, the maintained rounded masses/formatting, and the archived angular ranges. `--seed 0` preserves the archived request for ROOT automatic seeding, although it cannot reproduce an earlier automatically seeded sequence.
 
 ```bash
 source run.csh --workflow create-lund --source uniform \
@@ -26,8 +26,8 @@ source run.csh --workflow create-lund --source uniform \
   --config config/samples/legacy-coderun.conf \
   --channel eh --hadron proton --hadron-region FD \
   --electron-momentum beam \
-  --hadron-momentum uniform --hadron-angle theta \
-  --hadron-p-min 0.3 --hadron-p-max 2.07052 \
+  --hadron-momentum uniform \
+  --hadron-p-min 0.3 \
   --prefix Uniform_ep_sample_2070MeV \
   --seed 0 \
   --output OUTPUT_PARENT
@@ -36,8 +36,8 @@ source run.csh --workflow create-lund --source uniform \
   --config config/samples/legacy-coderun.conf \
   --channel eh --hadron neutron --hadron-region FD \
   --electron-momentum beam \
-  --hadron-momentum uniform --hadron-angle theta \
-  --hadron-p-min 0.3 --hadron-p-max 2.07052 \
+  --hadron-momentum uniform \
+  --hadron-p-min 0.3 \
   --prefix Uniform_en_sample_2070MeV \
   --seed 0 \
   --output OUTPUT_PARENT
@@ -45,7 +45,7 @@ source run.csh --workflow create-lund --source uniform \
 
 The three commands can share one output parent because the maintained writer creates distinct `Uniform_sample_1e_2070MeV/`, `Uniform_sample_epFD_2070MeV/`, and `Uniform_sample_enFD_2070MeV/` run directories below it. The old launcher instead rewrote `OutPut/` to sibling `OutPut_1e/`, `OutPut_ep/`, and `OutPut_en/` directories. The LUND filename prefixes above retain the archived names. Use a smaller explicit `--events` value for a smoke test.
 
-The commented 4.02962 and 5.98636 GeV calls use the same commands with `--beam-energy 4.02962` or `5.98636`, matching `--hadron-p-max`, and prefixes ending in `4029MeV` or `5986MeV`. Automatic trigger offsets resolve to the same legacy 7° and 5° prescriptions; the active 2.07052 GeV commands resolve to 16°.
+The commented 4.02962 and 5.98636 GeV calls use the same commands with `--beam-energy 4.02962` or `5.98636`, the hadron upper bound following beam energy automatically, and prefixes ending in `4029MeV` or `5986MeV`. Automatic trigger offsets resolve to the same legacy 7° and 5° prescriptions; the active 2.07052 GeV commands resolve to 16°.
 
 The separately selectable legacy electron tester maps to:
 
@@ -56,15 +56,15 @@ source run.csh --workflow create-lund --source uniform \
   --A 1 --Z 1 \
   --events 1000000 --events-per-file 10000 \
   --prefix Uniform_1e_sample_2070MeV \
-  --seed 0 --mass-convention legacy --lund-format legacy \
+  --seed 0 \
   --output OUTPUT_PARENT/tester
 ```
 
-One million events reproduces the tester's server default of 100 files × 10,000 events. Its old local-path branch reduced that to 100,000 events. Repeat with the two other beam energies and matching prefixes for the commented tester calls. The tester profile supplies its fixed `(0,0,-3 cm)` vertex and beam-momentum electron.
+One million events reproduces the tester's server default of 100 files × 10,000 events. Its old local-path branch reduced that to 100,000 events. Repeat with the two other beam energies and matching prefixes for the commented tester calls. The maintained tester keeps its beam-momentum electron and samples the selected target geometry.
 
 The pinned upstream ep/en prescription maps to uniform hadron momentum, flat theta, and a 0.3 GeV/c lower bound. `fixed` preserves the older selectable 1 GeV/c neutron mode, while the maintained production profiles activate the newer channel-dependent prescriptions.
 
-The reference tests call the actual pinned upstream event functions. They supply deterministic seeds, initialize upstream histograms and write into temporary directories; they do not source `run.sh`, which contains repository cleanup/update commands. With matched modes, LUND bytes and numerical histogram contents agree for 1e, ep, en and the tester at all three established beam energies.
+The reference tests call the actual pinned upstream event functions. They supply deterministic seeds, initialize upstream histograms and write into temporary directories; they do not source `run.sh`, which contains repository cleanup/update commands. With matched modes, tests compare archived kinematics and diagnostics while explicitly allowing the maintained mass and tester-vertex changes.
 
 ## 2. GENIE conversion
 

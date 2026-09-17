@@ -48,11 +48,11 @@ def run(*args):
 
 # compare --------------------------------------------------------------------
 # region compare
-def compare(actual, expected):
-    """Require byte-identical new and reference LUND files.
+def compare(actual, expected, ignore_vertex=False):
+    """Compare archived and maintained LUND semantics unaffected by intentional mass changes.
 
     Algorithm:
-        Compare bytes; on disagreement identify the first differing line or line-count mismatch.
+        Compare headers and particle fields, excluding energy/mass and optionally tester vertices.
 
     Args:
         actual: New output path.
@@ -61,12 +61,18 @@ def compare(actual, expected):
     Returns:
         None; mismatches raise an assertion with file context.
     """
-    a, e = actual.read_bytes(), expected.read_bytes()
-    if a != e:
-        al, el = a.decode().splitlines(), e.decode().splitlines()
-        for i, (x,y) in enumerate(zip(al,el),1):
-            assert x == y, f'{actual.name}, line {i}: new={x!r}; legacy={y!r}'
-        raise AssertionError(f'{actual}: new {len(al)} lines vs legacy {len(el)} lines')
+    al, el = actual.read_text().splitlines(), expected.read_text().splitlines()
+    assert len(al) == len(el), f'{actual}: new {len(al)} lines vs legacy {len(el)} lines'
+    remaining = 0
+    for i, (a, e) in enumerate(zip(al, el), 1):
+        av, ev = a.split(), e.split()
+        if remaining == 0:
+            assert av == ev, f'{actual.name}, header line {i}: new={a!r}; legacy={e!r}'
+            remaining = int(av[0])
+        else:
+            keep = list(range(9)) + ([] if ignore_vertex else [11, 12, 13])
+            assert [av[j] for j in keep] == [ev[j] for j in keep], f'{actual.name}, particle line {i}: new={a!r}; legacy={e!r}'
+            remaining -= 1
 # endregion
 
 
@@ -81,27 +87,28 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             for channel in ['1e','ep','en','tester']:
                 name=beam+'-'+channel
                 original, new_root = root/(name+'-old'), root/(name+'-new')
-                label = '1e' if channel == 'tester' else {'ep':'epFD','en':'enFD'}.get(channel,channel)
+                label = 'electron-tester' if channel == 'tester' else {'ep':'epFD','en':'enFD'}.get(channel,channel)
                 new = uniform_output(new_root, label, beam)
                 run(legacy,channel,original,beam,64,1,67890,12345,'Ar')
                 if channel == 'tester':
-                    extra = ['--electron-momentum','beam','--target','point']
+                    extra = ['--target','Ar']
                 elif channel == '1e':
                     extra = ['--electron-momentum','uniform','--electron-p-min','0','--electron-p-max',beam]
                 elif channel in ('ep', 'en'):
                     # The pinned upstream generator draws p uniformly from 0.3 GeV/c to the beam
                     # energy and theta uniformly over the channel acceptance for both nucleons.
-                    extra = ['--hadron-momentum','uniform','--hadron-angle','theta',
-                             '--hadron-p-min','0.3','--hadron-p-max',beam]
+                    extra = ['--hadron-momentum','uniform',
+                             '--hadron-p-min','0.3']
                 else:
                     extra = []
                 selection = [] if channel in ('1e','tester') else ['--hadron','proton' if channel=='ep' else 'neutron','--hadron-region','FD']
-                run(current,'--channel','1e' if channel in ('1e','tester') else 'eh','--beam-energy',beam,'--events',64,
-                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--mass-convention','legacy','--render-plots','false','--output',new_root,*selection,*extra)
-                run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
+                run(current,'--channel','electron-tester' if channel == 'tester' else '1e' if channel == '1e' else 'eh','--beam-energy',beam,'--events',64,
+                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--render-plots','false','--output',new_root,*selection,*extra)
+                if channel != 'tester':
+                    run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
                 m=json.loads((new/'manifest.json').read_text())
                 assert len(m['files']) == 1
-                compare(new/m['files'][0]['path'],original/'legacy_1.txt')
+                compare(new/m['files'][0]['path'],original/'legacy_1.txt', channel == 'tester')
         for target in ['liquid','4-foil','1-foil','1-foil-small','1-foil-large','Ca']:
             original,new_root=root/(target+'-old'),root/(target+'-new')
             new=uniform_output(new_root,'1e','2.07052')
@@ -118,7 +125,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             run(fixture,gst,'parity')
             original,new_root=root/(label+'-old'),root/(label+'-new')
             run(legacy,gst,original,1,target,A,Z)
-            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--mass-convention','legacy','--output',new_root)
+            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--output',new_root)
             q2={'2.07052':'Q2_0_02','4.02962':'Q2_0_25','5.98636':'Q2_0_40'}[beam]
             new=new_root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{label}_GEMC-unknown'
             m=json.loads((new/'manifest.json').read_text())

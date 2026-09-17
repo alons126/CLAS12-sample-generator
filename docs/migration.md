@@ -15,11 +15,11 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 
 ## Legacy-compatible settings
 
-The default `lund-format=legacy` restores historical whitespace, precision and uniform per-file IDs. `mass-convention=legacy` explicitly restores the archived rounded masses; the production default is `standard` with PDG 2026 values. Production sampling now uses the documented electron/charged-hadron p/1-p mixtures and uniform neutron momentum; `hadron-momentum=fixed` preserves the optional neutron-only 1 GeV/c study. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
+The writer always uses the established whitespace, precision, and uniform per-file IDs. It uses one rounded PDG-based mass table and approximates the electron as massless. Production sampling now uses the documented electron/charged-hadron p/1-p mixtures and uniform neutron momentum; `hadron-momentum=fixed` preserves the optional neutron-only 1 GeV/c study. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
 
 `legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture active reference launch settings. Their counts are production-sized; override `--events` for local tests. The maintained uniform default remains 25,000 events per file, while the pinned upstream uniform generator and physical conversion currently use 10,000; the compatibility profile selects the upstream value explicitly.
 
-Higher-precision text remains available through `--lund-format precise`; current PDG masses are now the production default through `--mass-convention standard`. Runner `--output-naming indexed` retains the earlier alternative naming mode. Default runner filenames follow the legacy `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo` convention.
+Runner `--output-naming indexed` retains the earlier alternative naming mode. Default runner filenames follow the legacy `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo` convention.
 
 ## New requested sampling
 

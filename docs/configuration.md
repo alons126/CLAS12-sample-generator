@@ -22,15 +22,11 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `target` | `auto` | Optional override of the protected `targets.h` geometry selected by `rgm-target` |
 | `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
 | `gemc-target-variation` | `auto` | Optional GCARD target-variation override applied after the catalog default |
-| `vertex-mode` | `target` | Sample the selected target or use explicit `fixed` coordinates |
-| `vertex-x/y/z` | `0` / `0` / `-3` | Fixed-vertex coordinates in cm |
 | `events` | Required | Total number of accepted events to write |
 | `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold recorded per file in the manifest and passed to GEMC/reconstruction during submission |
 | `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused in physical conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed; zero requests ROOT automatic, nonrepeatable seeding |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
-| `lund-format` | `legacy` | Legacy text precision/numbering, or `precise` |
-| `mass-convention` | `standard` | Current PDG values from `constants.h`; `legacy` selects archived rounded compatibility values |
 | `render-plots` | `true` uniform / `false` physical | Render legacy-named uniform PDF/PNG artifacts or optional physical plots |
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
 | `event-generator` | `genie` | Physical adapter name; GENIE is currently implemented |
@@ -44,7 +40,7 @@ Counts and the split threshold must be integers from 1 through 4294967295. Seeds
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `channel` | `1e` | `1e` for one electron or `eh` for trigger electron plus selected hadron |
+| `channel` | `1e` | `1e` for one sampled electron, `electron-tester` for the beam-momentum angular scan, or `eh` for trigger electron plus selected hadron |
 | `hadron` | `proton` | `proton`, `neutron`, `pip`, or `pim`; used by `eh` |
 | `hadron-region` | `FD` | `FD` or `CD`; resolves the hadron angular and momentum thresholds |
 | `electron-theta-min/max` | `5` / `40` | Electron-only/tester theta range, degrees |
@@ -52,13 +48,12 @@ Counts and the split threshold must be integers from 1 through 4294967295. Seeds
 | `electron-p-min/max` | `0.7` / beam | 1e momentum bounds in GeV/c |
 | `hadron-theta-min/max` | `auto` / `auto` | FD: p/pions 5–45°, n 5–35°; CD: nucleons 35–145°, pions 35–140° |
 | `hadron-momentum` | `auto` | charged hadrons → `mixed`; neutron → `uniform`; neutron-only `fixed` is optional |
-| `hadron-angle` | `theta` | Flat theta; explicit `isotropic` is uniform in cos(theta) inside the same limits |
 | `hadron-p` | `1` | Fixed neutron momentum in GeV/c |
-| `hadron-p-min/max` | species/region / beam | p: 0.3 FD, 0.2 CD; pip/pim: 0.2 FD, 0.1 CD; n: 0 |
+| `hadron-p-min` | species/region | p: 0.3 FD, 0.2 CD; pip/pim: 0.2 FD, 0.1 CD; n: 0; upper bound is always beam energy |
 | `trigger-theta` | `25` | Trigger electron theta in eh, degrees |
 | `trigger-phi-offset` | energy-based | Offset from sector closest to opposite hadron direction |
 
-The trigger-electron opposite-sector rule is retained for CD samples even though it is not geometrically obligatory. The electron tester always scans theta 5–40° and all phi at beam momentum; its scan motivated the 25° production trigger setting. Mixed sampling requires a positive lower bound. Resolved labels are `1e`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`; they control output directory and automatic prefix names. Resolved values are recorded in the manifest.
+Every event samples exactly one vertex from the selected target geometry and shares it among its particles; fixed coordinates are not a maintained mode. The trigger-electron opposite-sector rule is retained for CD samples even though it is not geometrically obligatory. The electron tester always scans theta 5–40° and all phi at beam momentum; its scan motivated the 25° production trigger setting. Mixed sampling requires a positive lower bound. Resolved labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`; they control output directory and automatic prefix names. Resolved values are recorded in the manifest.
 
 ## Target geometry
 
@@ -75,7 +70,6 @@ All positions below are in cm in the imported GEMC coordinate convention. Target
 | `1-foil-small` | −2.1 |
 | `1-foil-large` | −2.32 |
 | `Ca` | −3.0 |
-| `point` | compatibility alias for fixed x=y=0, z=−3 |
 
 Unknown geometries fail instead of writing sentinel coordinates. Geometry does not automatically select a matching detector card.
 
@@ -101,7 +95,7 @@ The maintained catalog centralizes the same kind of selection that the legacy su
 
 Schema version 1 contains `workflow`, project `version`, configure-time Git `revision` (including a dirty marker when applicable), `root_version`, the compiled header hash `targets_sha256`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
 
-It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Legacy masses and all LUND fields/precision are defined in the [data contract](data-contracts.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
+It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Rounded masses and all LUND fields/precision are defined in the [data contract](data-contracts.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
 
 ## Detector and site settings
 
