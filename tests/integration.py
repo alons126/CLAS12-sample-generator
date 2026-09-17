@@ -173,6 +173,14 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert (artifacts/'MonitoringPlotsPath/Uniform_1e_plots_5986MeV.pdf').is_file()
         assert list((artifacts/'MonitoringPlotsPath').glob('[0-9]*_*.png'))
 
+        # Rendered electron-hadron artifacts use the maintained region-bearing sample label while the
+        # compatibility ROOT histogram names remain available for archived numerical comparisons.
+        labeled_parent = root/'labeled-artifacts'
+        labeled = labeled_parent/'Uniform_sample_epFD_5986MeV'
+        run(executable, '--channel', 'eh', '--hadron', 'proton', '--hadron-region', 'FD', '--events', '3', '--output', labeled_parent)
+        assert (labeled/'MonitoringPlotsPath/Uniform_epFD_plots_5986MeV.pdf').is_file()
+        assert list((labeled/'MonitoringPlotsPath').glob('[0-9]*_epFD_*.png'))
+
         config.write_text('# test precedence\nchannel = eh\nhadron = neutron\nhadron-region = FD\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
         configured = root/'configured'/ 'Uniform_sample_enFD_2070MeV'
         run(executable, '--config', config, '--events', '5', '--output', configured.parent)

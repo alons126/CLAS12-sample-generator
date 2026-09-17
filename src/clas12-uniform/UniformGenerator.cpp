@@ -308,9 +308,9 @@ void generateUniform(const RunConfig& c) {
     const auto output = std::filesystem::path(c.get("output"));
     const auto legacy_root = output / (c.get("prefix") + "_plots.root");
     const auto plot_directory = output / "MonitoringPlotsPath";
-    const auto plot_channel = compatibilityMonitoringChannel(c);
+    const auto plot_channel = sampleLabel(c);
     const auto pdf_name = "Uniform_" + plot_channel + "_plots_" + legacyBeamLabel(beam) + ".pdf";
-    legacy_monitoring.save(legacy_root, c.get("render-plots") == "true", plot_directory, pdf_name);
+    legacy_monitoring.save(legacy_root, c.get("render-plots") == "true", plot_directory, pdf_name, plot_channel);
 
     // Keep the maintained stable diagnostic name as an exact copy while making the archived prefix-based
     // filename the primary output artifact. Downstream validation can therefore retain one fixed path.

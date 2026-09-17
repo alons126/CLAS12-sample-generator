@@ -39,8 +39,48 @@
 #include <initializer_list>
 #include <map>
 #include <stdexcept>
+#include <string>
+
+#include "support/constants.h"
 
 namespace samples {
+
+// Particle display labels ----------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* Particle display labels */
+
+namespace {
+
+/**
+ * @brief Return the maintained human-readable label for one supported PDG code.
+ * @param pid Supported particle identifier from Event::particles.
+ * @return `electron`, `proton`, `neutron`, `pip`, `pim`, `pi0`, or `photon`.
+ * @throws std::runtime_error If monitoring receives an unsupported species.
+ */
+std::string particleDisplayLabel(int pid) {
+    switch (pid) {
+        case constants::electron_pdg:
+            return "electron";
+        case constants::proton_pdg:
+            return "proton";
+        case constants::neutron_pdg:
+            return "neutron";
+        case constants::pi_plus_pdg:
+            return "pip";
+        case constants::pi_minus_pdg:
+            return "pim";
+        case constants::pi_zero_pdg:
+            return "pi0";
+        case constants::photon_pdg:
+            return "photon";
+        default:
+            throw std::runtime_error("Unsupported monitoring PDG code: " + std::to_string(pid));
+    }
+}
+
+}  // namespace
+
+#pragma endregion
 
 // Monitoring::Impl object -----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -159,28 +199,29 @@ void Monitoring::fill(const Event& event) {
         // Allocate detached ROOT histograms only when this PDG first appears.
         if (inserted) {
             const auto prefix = "pid_" + std::to_string(particle.pid) + "_";
+            const auto label = particleDisplayLabel(particle.pid);
 
-            auto one = [&](const char* name, double lo, double hi) {
-                auto result = std::make_unique<TH1D>((prefix + name).c_str(), name, 100, lo, hi);
+            auto one = [&](const char* name, const std::string& title, double lo, double hi) {
+                auto result = std::make_unique<TH1D>((prefix + name).c_str(), title.c_str(), 100, lo, hi);
                 result->SetDirectory(nullptr);
                 return result;
             };
 
-            auto two = [&](const char* name, double xl, double xh, double yl, double yh) {
-                auto result = std::make_unique<TH2D>((prefix + name).c_str(), name, 100, xl, xh, 100, yl, yh);
+            auto two = [&](const char* name, const std::string& title, double xl, double xh, double yl, double yh) {
+                auto result = std::make_unique<TH2D>((prefix + name).c_str(), title.c_str(), 100, xl, xh, 100, yl, yh);
                 result->SetDirectory(nullptr);
                 return result;
             };
 
-            h.p = one("p_GeV", 0, impl_->beam * 1.1);
-            h.theta = one("theta_deg", 0, 180);
-            h.phi = one("phi_deg", -180, 180);
-            h.vx = one("vx_cm", -0.3, 0.3);
-            h.vy = one("vy_cm", -0.3, 0.3);
-            h.vz = one("vz_cm", -7, 1);
-            h.theta_phi = two("theta_vs_phi", -180, 180, 0, 180);
-            h.theta_p = two("theta_vs_p", 0, impl_->beam * 1.1, 0, 180);
-            h.phi_p = two("phi_vs_p", 0, impl_->beam * 1.1, -180, 180);
+            h.p = one("p_GeV", label + " momentum;p [GeV/c];Events", 0, impl_->beam * 1.1);
+            h.theta = one("theta_deg", label + " theta;theta [deg];Events", 0, 180);
+            h.phi = one("phi_deg", label + " phi;phi [deg];Events", -180, 180);
+            h.vx = one("vx_cm", label + " vertex x;x [cm];Events", -0.3, 0.3);
+            h.vy = one("vy_cm", label + " vertex y;y [cm];Events", -0.3, 0.3);
+            h.vz = one("vz_cm", label + " vertex z;z [cm];Events", -7, 1);
+            h.theta_phi = two("theta_vs_phi", label + " theta vs phi;phi [deg];theta [deg]", -180, 180, 0, 180);
+            h.theta_p = two("theta_vs_p", label + " theta vs momentum;p [GeV/c];theta [deg]", 0, impl_->beam * 1.1, 0, 180);
+            h.phi_p = two("phi_vs_p", label + " phi vs momentum;p [GeV/c];phi [deg]", 0, impl_->beam * 1.1, -180, 180);
         }
 
         // Convert angles to degrees and retain momentum/vertex units from the event.

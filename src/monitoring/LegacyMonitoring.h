@@ -113,11 +113,14 @@ class LegacyMonitoring {
      * @param render Whether to render PDF and PNG plots after writing ROOT data.
      * @param plot_directory Rendering destination. An empty path selects `monitoring_plots` beside path.
      * @param pdf_name Multipage PDF filename inside plot_directory.
+     * @param display_label Maintained sample label appended to rendered titles and PNG filenames. It
+     *                      does not alter compatibility ROOT object names or stored numerical content.
      *
      * @throws std::runtime_error If ROOT cannot create the file or write a histogram.
      * @throws std::filesystem::filesystem_error If the rendering directory cannot be created.
      */
-    void save(const std::filesystem::path& path, bool render, const std::filesystem::path& plot_directory = {}, const std::string& pdf_name = "uniform.pdf");
+    void save(const std::filesystem::path& path, bool render, const std::filesystem::path& plot_directory = {}, const std::string& pdf_name = "uniform.pdf",
+              const std::string& display_label = "uniform");
 
     // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:

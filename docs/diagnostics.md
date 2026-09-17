@@ -2,7 +2,7 @@
 
 ## 1. Common per-particle diagnostics
 
-`monitoring.root` is filled for written events and contains independent histograms for each written PDG species. Names begin `pid_<PDG>_`:
+`monitoring.root` is filled for written events and contains independent histograms for each written PDG species. Names begin `pid_<PDG>_`, while displayed titles use the maintained labels `electron`, `proton`, `neutron`, `pip`, `pim`, `pi0`, and `photon`:
 
 | Suffix | Axes/range | Bins |
 | --- | --- | --- |
@@ -42,6 +42,6 @@ A zero-momentum electron is mapped to θ=0 in this diagnostic to avoid division 
 
 ## 4. Rendered products
 
-Uniform generation defaults to `--render-plots true`, creates `MonitoringPlotsPath/Uniform_<channel>_plots_<beam>MeV.pdf`, and writes numbered `<index>_<histogram>.png` files in archived histogram order. Use `--render-plots false` for a non-rendering run; the legacy directory and ROOT artifacts still exist. GENIE conversion continues to default to false and, when enabled, creates `monitoring_plots/genie.pdf` and `theta_e_VS_phi_e.png`. ROOT runs in batch mode for these plots.
+Uniform generation defaults to `--render-plots true` and creates `MonitoringPlotsPath/Uniform_<maintained-sample-label>_plots_<beam>MeV.pdf`. For the archived compatibility sets (`1e`, electron tester, `epFD`, and `enFD`), rendered titles append the maintained label and PNG files use `<index>_<sample-label>_<histogram>.png`. The compatibility ROOT objects retain their archived names so numerical comparisons remain possible. Pion and CD species still use their correctly labeled families in `monitoring.root`; the archive defined no rendered compatibility set for them. Use `--render-plots false` for a non-rendering run. GENIE conversion continues to default to false and, when enabled, creates `monitoring_plots/genie.pdf` and `theta_e_VS_phi_e.png`. ROOT runs in batch mode for these plots.
 
 The uniform folder and filenames now mirror the archived artifact layout. Historical PDF bytes and every canvas style detail remain outside the numerical parity contract. Keep ROOT histograms as the numerical source for later technical-note figures.

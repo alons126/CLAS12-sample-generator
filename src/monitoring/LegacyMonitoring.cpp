@@ -319,6 +319,7 @@ void LegacyMonitoring::fill(const Event& event) {
  * @param render Whether to create the requested PDF and PNG files.
  * @param plot_directory Rendering destination; empty selects `monitoring_plots` beside path.
  * @param pdf_name Multipage PDF filename inside the rendering destination.
+ * @param display_label Maintained channel label used only by rendered plot presentation.
  *
  * @throws std::runtime_error If ROOT cannot create the file or write a histogram.
  * @throws std::filesystem::filesystem_error If the plot directory cannot be created.
@@ -326,7 +327,7 @@ void LegacyMonitoring::fill(const Event& event) {
  * @note The workflow saves diagnostics before publishing its completion manifest,
  *       so a reported failure prevents the run from being marked complete.
  */
-void LegacyMonitoring::save(const std::filesystem::path& path, bool render, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
+void LegacyMonitoring::save(const std::filesystem::path& path, bool render, const std::filesystem::path& plot_directory, const std::string& pdf_name, const std::string& display_label) {
     TFile out(path.string().c_str(), "CREATE");
 
     if (out.IsZombie()) { throw std::runtime_error("Cannot create legacy monitoring file"); }
@@ -350,9 +351,12 @@ void LegacyMonitoring::save(const std::filesystem::path& path, bool render, cons
         for (auto& entry : impl_->entries) {
             canvas.Clear();
             canvas.SetGrid();
+            const std::string stored_title = entry.histogram->GetTitle();
+            entry.histogram->SetTitle((stored_title + " [" + display_label + "]").c_str());
             entry.histogram->Draw(entry.y.empty() ? "hist" : "colz");
             canvas.Print(pdf.c_str());
-            canvas.Print((directory / (std::to_string(++index) + "_" + entry.histogram->GetName() + ".png")).string().c_str());
+            canvas.Print((directory / (std::to_string(++index) + "_" + display_label + "_" + entry.histogram->GetName() + ".png")).string().c_str());
+            entry.histogram->SetTitle(stored_title.c_str());
         }
         canvas.Print((pdf + "]").c_str());
     }
