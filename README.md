@@ -11,6 +11,14 @@ Both write LUND files and a run manifest. The submission workflow sends complete
 
 Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, and Python 3.9+ for tests and simulation scripts. GEMC and `recon-util` are needed only when executing simulation.
 
+Clone with the pinned legacy reference submodule, or initialize it after an existing clone:
+
+```bash
+git clone --recurse-submodules REPOSITORY_URL
+# Existing clone:
+git submodule update --init --recursive
+```
+
 ```bash
 cmake --preset debug
 cmake --build --preset debug --parallel 4
@@ -40,6 +48,6 @@ Read the [newcomer guide](docs/index.md), then [build instructions](docs/buildin
 - [Legacy parity and validation](docs/validation.md)
 - [Migration from the imported repositories](docs/migration.md)
 
-The original source trees are retained in `legacy/` for comparison. They are retired and excluded from the build; use the commands documented above. Detector cards and reconstruction YAML are retained in `config/detector/`.
+The original source trees are retained in `legacy/` for comparison. `legacy/Uniform-sample-generator` is pinned as a submodule to its independent upstream repository; its selected kernels are compiled only by parity tests. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
 
 For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/ssh-workflow.md). When sourcing from outside the checkout, the user may set the optional `CLAS12_SAMPLES_DIR` environment variable to its absolute path; the project does not define it automatically. Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/external-inputs.md).

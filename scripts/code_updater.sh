@@ -23,8 +23,9 @@
 # 1. Clean untracked build artifacts.
 # 2. Reset local repository state.
 # 3. Pull latest changes from remote.
-# 4. Display commit and branch information.
-# 5. Return status to run.csh; environment loading happens there after the update.
+# 4. Synchronize and initialize pinned Git submodules.
+# 5. Display commit and branch information.
+# 6. Return status to run.csh; environment loading happens there after the update.
 # ------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------------
@@ -116,6 +117,22 @@ if ( $status != 0 ) then
     echo ""
     echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
     echo "${COLOR_ERR}= git pull failed. Aborting update script.                                                         =${COLOR_END}"
+    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
+    echo ""
+    exit 1
+endif
+
+# Synchronize local submodule URLs with the committed .gitmodules file, then check out every
+# submodule at the exact gitlink revision recorded by the pulled superproject commit. This is
+# required by fresh clones and also advances an existing ifarm submodule when its pin changes.
+git submodule sync --recursive
+if ( $status != 0 ) exit 1
+
+git submodule update --init --recursive
+if ( $status != 0 ) then
+    echo ""
+    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
+    echo "${COLOR_ERR}= git submodule update failed. Aborting update script.                                             =${COLOR_END}"
     echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
     echo ""
     exit 1

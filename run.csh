@@ -15,7 +15,8 @@
 #      it and verify both `.git` and the project workflow driver before any destructive command.
 #   2. Enter that verified checkout and run the intentionally destructive updater in a child tcsh.
 #      The updater validates the Git worktree, cleans untracked/ignored files except build/, resets
-#      tracked server changes, pulls the configured upstream, and prints the resulting HEAD/branch.
+#      tracked server changes, pulls the configured upstream, initializes pinned submodules, and
+#      prints the resulting HEAD/branch.
 #   3. If synchronization succeeds, source the server environment into the caller's shell so its
 #      compiler, ROOT, GEMC, reconstruction, and site variables reach the workflow and its children.
 #   4. Forward the original quoted argument vector to scripts/workflow.py, which owns configuration,
@@ -145,7 +146,9 @@ endif
 #   - `git clean -fxd -e build/ -e build` to remove server-only untracked and ignored content while
 #     retaining the reusable build tree;
 #   - `git reset --hard` to discard server-side tracked edits;
-#   - `git pull` to obtain the configured upstream revision; and
+#   - `git pull` to obtain the configured upstream revision;
+#   - `git submodule sync --recursive` and `git submodule update --init --recursive` to check out
+#     the exact external reference revisions recorded by that revision; and
 #   - `git log -1 --oneline` plus `git branch --show-current` to report the resulting checkout.
 # Each state-changing Git command is checked there. Any failure is captured below and prevents the
 # environment, build, LUND creation, and job submission stages from running.

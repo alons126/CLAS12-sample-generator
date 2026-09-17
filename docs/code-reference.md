@@ -109,7 +109,7 @@ Exact test scope and acceptance criteria are in [validation](validation.md).
 
 ## 8. Archived supporting code
 
-`legacy/Uniform-sample-generator/` retains the former configuration/path helpers, text printing, particle formatter, angle calculation, target globals, histogram globals, main/ROOT launchers and tester. These are historical comparison material; only the event/diagnostic kernels are imported into test references.
+`legacy/Uniform-sample-generator/` is a Git submodule pinned to the independent `alons126/Uniform-sample-generator` repository. It retains the configuration/path helpers, text printing, particle formatter, angle calculation, target globals, histogram globals, main/ROOT launchers, tester and upstream historical material. Only selected event/diagnostic kernels are compiled into maintained test references; production targets do not link the submodule.
 
 `legacy/GEMC-samples/` retains the converter, geometry helper, shell setup/submission chains and resource snapshots. Its `framework/classes/AMaps` implements historical acceptance-map lookup, `hPlots` implements plotting containers, and `DSCuts` stores cut parameters. `framework/namespaces/general_utilities` holds environment/text/ROOT helpers and the restored converter mass constants. The acceptance-map/fiducial application is commented out in the archived converter; these classes are not active new generation dependencies. They are not a supported replacement for downstream acceptance analysis.
 

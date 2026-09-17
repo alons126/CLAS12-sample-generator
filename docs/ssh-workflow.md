@@ -11,7 +11,7 @@ source run.csh --workflow create-lund --source uniform \
   --config config/samples/uniform-electron.conf --output runs/electron-001
 ```
 
-The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, and pulls the remote revision. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads build/test defaults from `config/run.json` and dispatches the action written in the command. Existing resolved run directories are recreated as in the legacy generators.
+The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, pulls the remote revision, and runs `git submodule sync --recursive` followed by `git submodule update --init --recursive`. The latter checks out `legacy/Uniform-sample-generator` at the exact revision pinned by the main repository. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads build/test defaults from `config/run.json` and dispatches the action written in the command. Existing resolved run directories are recreated as in the legacy generators.
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform --config config/samples/uniform-neutron-sampled.conf --output runs/en-001
@@ -85,7 +85,7 @@ After transferring committed changes to the remote, a server refresh/build/test 
 source run.csh --workflow create-lund --source uniform --test true --run false
 ```
 
-The refresh requires a configured Git upstream and intentionally discards server-side edits and untracked files, retaining the updater's documented build exclusions. It stops before building if cleanup, reset, or pull fails.
+The refresh requires a configured Git upstream and network access to any not-yet-initialized submodule. It intentionally discards server-side edits and untracked files, retaining the updater's documented build exclusions. It stops before building if cleanup, reset, pull, submodule synchronization, or submodule checkout fails.
 
 ## Detector processing and submission
 
@@ -106,6 +106,6 @@ Select the actual reconstruction YAML path from your checkout. Submission previe
 
 ## Supporting shell files
 
-`run.csh` owns the intentional disposable-clone refresh and forwards to `scripts/workflow.py`. `scripts/build_and_run.csh` uses the same driver without the refresh. `scripts/code_updater.sh` performs the checked clean/reset/pull sequence in a child shell. `scripts/printers/` supplies project start/success/failure banners.
+`run.csh` owns the intentional disposable-clone refresh and forwards to `scripts/workflow.py`. `scripts/build_and_run.csh` uses the same driver without the refresh. `scripts/code_updater.sh` performs the checked clean/reset/pull/submodule-update sequence in a child shell. `scripts/printers/` supplies project start/success/failure banners.
 
 The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

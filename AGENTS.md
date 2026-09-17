@@ -60,7 +60,7 @@ At the user interface, uniform generation and physical-event conversion are `--s
 
 Treat the two archived trees as independent historical sources that came from different Git repositories:
 
-- `legacy/Uniform-sample-generator/` defines uniform 1e/ep/en generation, its manual `CodeRun.cpp` selection, random kinematics, output naming, monitoring, and ROOT launch chain.
+- `legacy/Uniform-sample-generator/` is a pinned Git submodule for the independent upstream repository and defines uniform 1e/ep/en generation, its manual `CodeRun.cpp` selection, random kinematics, output naming, monitoring, and ROOT launch chain. Treat the pinned commit as the current external reference; do not edit files inside the submodule from this repository.
 - `legacy/GEMC-samples/` defines GENIE-GST-to-LUND conversion, detector configuration resources, and ifarm setup/submission for both physical and uniform LUND samples.
 
 When unifying behavior, compare both implementations rather than assuming one archive is a later version of the other. Preserve scientifically meaningful behavior and common operational conventions. Consolidate duplicated code only after identifying real differences in input semantics, particle content, sampling, naming, monitoring, and submission variables.
