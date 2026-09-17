@@ -4,11 +4,11 @@
 
 Three different contracts are checked independently:
 
-1. **LUND bytes:** identical serialized events for matched seeds, beam/geometry/A/Z, sampling settings, and legacy precision/masses. The pinned upstream ep/en profile maps to `--nucleon-momentum uniform --nucleon-angle theta --nucleon-p-min 0.3 --nucleon-p-max BEAM`.
+1. **LUND bytes:** identical serialized events for matched seeds, beam/geometry/A/Z, sampling settings, and legacy precision/masses. The pinned upstream ep/en profile maps to `--hadron-momentum uniform --hadron-angle theta --hadron-p-min 0.3 --hadron-p-max BEAM`.
 2. **Numerical diagnostics:** matching names, binning, entries, bin contents and errors, including flow bins. ROOT container bytes and rendered image styles may differ.
 3. **Job arguments:** matching GEMC/reconstruction arguments and output naming at matched field/card/YAML/file-count settings. Real detector execution is a separate validation stage.
 
-The maintained older fixed-1-GeV/c mode and requested neutron-isotropic/proton-mixture modes intentionally differ from the pinned upstream submodule's uniform-in-momentum, flat-theta ep/en implementation. The requested modes have their own analytical distribution tests.
+The maintained production electron/proton mixtures and zero-to-beam uniform neutron mode intentionally differ from the pinned upstream submodule's older momentum bounds and modes. The production modes have their own analytical distribution tests; fixed 1 GeV/c remains a neutron-only option.
 
 ## 2. Independent references
 
@@ -29,7 +29,7 @@ ctest --preset debug
 For a focused audit:
 
 ```bash
-ctest --test-dir build/debug --output-on-failure -R 'legacy-parity|nucleon-distributions'
+ctest --test-dir build/debug --output-on-failure -R 'legacy-parity|uniform-distributions'
 ```
 
 The full suite currently registers nine tests when both workflows are enabled and csh/tcsh is available (eight without the shell). Temporary directories isolate generated fixtures and output. Successful test output is the current executable evidence; rerun after changing the reference sources or production algorithms.
@@ -38,12 +38,12 @@ The full suite currently registers nine tests when both workflows are enabled an
 
 | Test | Cases | Pass criterion |
 | --- | --- | --- |
-| `uniform-integration` | 1e/ep/en, seed repeat, tester, config overrides, invalid inputs | Output counts/PDGs, bounds, mass-shell relation in precise mode, unchanged repeat output and rejection semantics |
+| `uniform-integration` | 1e plus all proton/neutron/pip/pim FD/CD labels, seed repeat, tester, config overrides, invalid inputs | Output counts/PDGs, bounds, mass-shell relation in precise mode, unchanged repeat output and rejection semantics |
 | `genie-integration` | Processes/species, partial files, capacity limit, missing/wrong branches, empty/unsupported input, 300-particle arrays, broken later chain file | Correct records/counts and no completed manifest on failures |
 | `simulation-integration` | Dry runs, index selection, count propagation, successful stubs, failing GEMC | No dry-run writes, correct argument counts, reconstruction skipped on failure, locks preserved |
 | `uniform-legacy-parity` | 1e/ep/en/tester at 2.07052/4.02962/5.98636 GeV; additional target geometries | Exact LUND bytes and numerical histograms with explicit matching upstream settings |
 | `genie-legacy-parity` | 10000 accepted events at each legacy energy and associated C12 geometry; all retained species/processes; short fixture | Exact LUND bytes/full-file diagnostics; explicitly confirmed short-input correction |
-| `nucleon-distributions` | 20000 sampled en and 20000 sampled ep events | Bounds and empirical-CDF distance <0.025 from expected phi, angular and momentum distributions |
+| `uniform-distributions` | 20000 default 1e events plus 20000 sampled enFD and epFD events | Bounds and empirical-CDF distance <0.025 for electron/proton mixture components, uniform neutron momentum, phi and flat theta |
 | `submission-legacy-parity` | Uniform and physical Bash payloads at 2/4/6 GeV | Exact argv after normalizing temporary run-directory paths; 10000-event entries retain legacy arguments |
 
 Uniform reference seeds are kinematic 67890 and vertex 12345. Target checks cover Ar plus liquid, 4-foil, 1-foil, 1-foil-small, 1-foil-large and Ca; the tester uses a point vertex. Photon and all pion/nucleon species are included in the GENIE fixture. Comparisons use the restored archived pion constants, including π⁰=0.13957 GeV.
@@ -57,7 +57,7 @@ The `replacement-geometry` test verifies header-only geometry updates, new targe
 - **Short GENIE input:** the archived loop stops after one accepted event when fewer than 10000 entries remain. In the seven-entry fixture, the old converter writes one event while the new converter writes all six accepted events. The correction is retained; parity is not claimed for this defect or for its near-end truncation behavior.
 - **Unknown historical RNG state:** archived `TRandom3(0)` runs cannot be reconstructed from a seed that was never recorded. Deterministic parity uses an explicitly substituted nonzero seed.
 - **Precise format or standard masses:** these explicitly change output and are outside legacy-byte equivalence.
-- **New sampled modes:** these follow the requested neutron/proton distributions and are not equal to the fixed legacy output.
+- **Production sampling modes:** the 1e/ep mixtures and en zero-to-beam uniform momentum follow the requested acceptance-map coverage and differ from upstream unless its settings are selected explicitly.
 - **Diagnostics and paths:** histogram data are restored; file names/plot styling are standardized, and user-selected run directories differ. The new manifest adds provenance.
 - **Metadata:** ready-made Ar examples use A=40/Z=18, while the original uniform launcher used A=Z=1. Match settings explicitly; `legacy-coderun.conf` captures the archived values.
 - **Detector processing:** local executable stubs verify command contracts only. GEMC/server software, geometry databases, reconstruction versions, field settings and simulation RNG state are required before claiming identical HIPO or acceptance results.

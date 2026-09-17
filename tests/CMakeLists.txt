@@ -51,7 +51,7 @@ if(BUILD_UNIFORM)
     target_include_directories(legacy-uniform-reference PRIVATE ${PROJECT_SOURCE_DIR})
     target_link_libraries(legacy-uniform-reference PRIVATE ROOT::Core ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Gpad ROOT::Tree)
     add_test(NAME uniform-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/legacy_parity.py uniform $<TARGET_FILE:clas12-uniform> $<TARGET_FILE:legacy-uniform-reference> $<TARGET_FILE:compare-histograms>)
-    add_test(NAME nucleon-distributions COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/distributions.py $<TARGET_FILE:clas12-uniform>)
+    add_test(NAME uniform-distributions COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/distributions.py $<TARGET_FILE:clas12-uniform>)
 endif()
 if(BUILD_GENIE)
     set(LEGACY_CONVERTER ${PROJECT_SOURCE_DIR}/legacy/GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter.C)
@@ -79,7 +79,7 @@ add_custom_command(OUTPUT ${REPLACEMENT_TARGETS}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py
         ${PROJECT_SOURCE_DIR}/src/common/external/targets.h ${REPLACEMENT_TARGETS}
     DEPENDS ${PROJECT_SOURCE_DIR}/src/common/external/targets.h ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py VERBATIM)
-add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/common/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
+add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/geometry/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
 target_include_directories(replacement-geometry PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/replacement ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(replacement-geometry PRIVATE ROOT::Core ROOT::Physics Threads::Threads)
 add_test(NAME replacement-geometry COMMAND replacement-geometry)

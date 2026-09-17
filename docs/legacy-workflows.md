@@ -23,7 +23,7 @@ build/debug/apps/clas12-uniform \
   --output runs/legacy-coderun-smoke
 ```
 
-Select `--channel ep` or `--channel en` and a matching prefix instead of editing C++ calls. The pinned upstream ep/en prescription maps to `--nucleon-momentum uniform --nucleon-angle theta --nucleon-p-min 0.3 --nucleon-p-max 2.07052` for its active beam setting. `fixed` preserves the older selectable 1 GeV/c mode, while `sampled` activates the requested channel-dependent extension. `electron-tester.conf` replaces the separately selected tester call.
+Select `--channel eh --hadron proton --hadron-region FD` or `--channel eh --hadron neutron --hadron-region FD` instead of editing C++ calls. The pinned upstream ep/en prescription maps to `--hadron-momentum uniform --hadron-angle theta --hadron-p-min 0.3 --hadron-p-max 2.07052` for its active beam setting. `fixed` preserves the older selectable 1 GeV/c mode, while `sampled` activates the requested channel-dependent extension. `electron-tester.conf` replaces the separately selected tester call.
 
 The reference tests call the actual pinned upstream event functions. They supply deterministic seeds, initialize upstream histograms and write into temporary directories; they do not source `run.sh`, which contains repository cleanup/update commands. With matched modes, LUND bytes and numerical histogram contents agree for 1e, ep, en and the tester at all three established beam energies.
 

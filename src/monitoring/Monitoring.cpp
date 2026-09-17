@@ -29,7 +29,7 @@
  *   reports that a histogram was not written.
  */
 
-#include "common/Monitoring.h"
+#include "monitoring/Monitoring.h"
 
 #include <TFile.h>
 #include <TH1D.h>

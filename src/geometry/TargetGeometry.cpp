@@ -24,7 +24,7 @@
  *   protected file, while this adapter remains stable unless its external interface changes.
  */
 
-#include "common/TargetGeometry.h"
+#include "geometry/TargetGeometry.h"
 
 #include <TString.h>
 

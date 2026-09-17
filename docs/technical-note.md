@@ -4,7 +4,7 @@
 
 ## Abstract
 
-The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A shared runner executes GEMC and reconstruction, with optional Slurm arrays. Legacy-compatible output is tested against archived implementations. Additional non-fixed nucleon prescriptions provide neutron isotropy inside the historical angular bounds and a balanced proton momentum/inverse-momentum mixture.
+The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A shared runner executes GEMC and reconstruction, with optional Slurm arrays. Legacy-compatible output is tested against external reference implementations. Production uniform sampling balances momentum and inverse-momentum coverage for 1e electrons and charged hadrons, while neutrons cover zero to beam momentum; hadron region selects the documented FD or CD flat-theta window.
 
 ## Reading and assembly order
 
@@ -24,8 +24,8 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 ## Boundaries and assumptions
 
 - The repository converts GENIE output; it does not produce GENIE interactions or compute cross sections.
-- Uniform electron–nucleon events are artificial acceptance probes. The trigger electron and nucleon need not satisfy exclusive scattering energy/momentum conservation.
-- “Isotropic en” means uniform solid angle inside the legacy forward angular window, not full-sphere emission.
+- Uniform electron–hadron events are artificial acceptance probes. The trigger electron and hadron need not satisfy exclusive scattering energy/momentum conservation.
+- The production neutron angle is uniform in theta inside the legacy forward window. An explicit isotropic option means uniform solid angle inside that window, not full-sphere emission.
 - GENIE header field 10 retains a process code, not a physical event weight.
 - Compatibility requires matching beam energy, geometry, A/Z, seeds, selected mode and file settings. The archived launch scripts contain independent manual selections; they must not be assumed to describe one consistent campaign.
 - Legacy LUND precision, historical pion constants and the retained short-input correction are explicit in the data/validation chapters.

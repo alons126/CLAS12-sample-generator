@@ -59,7 +59,7 @@ endif()
 # Reconfigure when the replaceable geometry source changes, including its manifest hash.
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/common/external/targets.h")
 file(SHA256 "${PROJECT_SOURCE_DIR}/src/common/external/targets.h" SAMPLE_TARGETS_SHA256)
-configure_file(src/common/Version.h.in generated/Version.h @ONLY)
+configure_file(src/support/Version.h.in generated/Version.h @ONLY)
 # endregion
 
 # Build graph and tests -------------------------------------------------------

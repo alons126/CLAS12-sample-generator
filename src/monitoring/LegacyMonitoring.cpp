@@ -27,7 +27,7 @@
  *   failures are reported with exceptions to the calling generation workflow.
  */
 
-#include "common/LegacyMonitoring.h"
+#include "monitoring/LegacyMonitoring.h"
 
 #include <TCanvas.h>
 #include <TFile.h>
@@ -38,6 +38,8 @@
 
 #include <stdexcept>
 #include <vector>
+
+#include "support/constants.h"
 
 namespace samples {
 
@@ -118,7 +120,7 @@ namespace {
  * @note The private key is assumed to be nonempty and to end in `e`, `p`, or `n`.
  */
 double value(const std::string& key, const Event& event) {
-    int pid = key.back() == 'e' ? 11 : key.back() == 'p' ? 2212 : 2112;
+    int pid = key.back() == 'e' ? constants::electron_pdg : key.back() == 'p' ? constants::proton_pdg : constants::neutron_pdg;
     for (const auto& p : event.particles) {
         if (p.pid != pid) { continue; }
 

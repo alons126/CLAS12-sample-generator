@@ -21,7 +21,7 @@
  *   after RunConfig::parse() returns successfully.
  */
 
-#include "common/RunConfig.h"
+#include "config/RunConfig.h"
 
 #include <cctype>
 #include <cmath>
@@ -31,8 +31,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "common/RgmTarget.h"
-#include "common/TargetGeometry.h"
+#include "config/RgmTarget.h"
+#include "geometry/TargetGeometry.h"
 
 namespace samples {
 
@@ -142,6 +142,23 @@ long long beamMeV(double energy) {
 }
 #pragma endregion
 
+// uniformSampleLabel ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* uniformSampleLabel */
+/**
+ * @brief Build the public uniform-sample label from resolved particle and detector selections.
+ * @param config Resolved configuration containing channel, hadron, and hadron-region.
+ * @return `1e` or one of `epFD`, `enFD`, `epipFD`, `epimFD`, and their CD counterparts.
+ */
+std::string uniformSampleLabel(const RunConfig& config) {
+    if (config.get("channel") == "1e") { return "1e"; }
+
+    const auto& hadron = config.get("hadron");
+    const std::string token = hadron == "proton" ? "p" : hadron == "neutron" ? "n" : hadron;
+    return "e" + token + config.get("hadron-region");
+}
+#pragma endregion
+
 }  // namespace
 #pragma endregion
 
@@ -182,7 +199,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */
     // Store all settings as text so the exact resolved values used by generation can also be written
     // to provenance. Shared defaults preserve the established RG-M beam/Ar setup, separate vertex and
-    // kinematic seeds, and legacy LUND/mass output unless the user chooses documented alternatives.
+    // kinematic seeds, legacy LUND text formatting, and current PDG masses unless overridden.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
                  {"rgm-target", "Ar40"},
@@ -199,7 +216,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"events-per-file", uniform ? "25000" : "10000"},
                  {"seed", "67890"},
                  {"lund-format", "legacy"},
-                 {"mass-convention", "legacy"},
+                 {"mass-convention", "standard"},
                  {"render-plots", uniform ? "true" : "false"},
                  {"vertex-seed", "12345"},
                  {"prefix", "auto"}};
@@ -207,19 +224,23 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // Add only the keys meaningful to the selected source. This makes a physical-only option invalid
     // for uniform generation and vice versa instead of silently accepting an unused setting.
     if (uniform) {
-        // Angles are degrees and momenta are GeV/c. `auto` values are resolved only after profile and CLI
-        // precedence is complete; fixed 1 GeV/c nucleons retain the legacy default behavior.
+        // Angles are degrees and momenta are GeV/c. Channel-dependent `auto` values are resolved only
+        // after profile and CLI precedence is complete. Fixed 1 GeV/c momentum is neutron-only.
         c.values_.insert({{"channel", "1e"},
+                          {"hadron", "proton"},
+                          {"hadron-region", "FD"},
                           {"electron-theta-min", "5"},
                           {"electron-theta-max", "40"},
-                          {"nucleon-theta-min", "5"},
-                          {"nucleon-theta-max", "auto"},
-                          {"nucleon-momentum", "fixed"},
-                          {"nucleon-angle", "auto"},
-                          {"nucleon-p", "1"},
-                          {"nucleon-p-min", "0.3"},
-                          {"nucleon-p-max", "auto"},
-                          {"electron-momentum", "uniform"},
+                          {"electron-p-min", "0.7"},
+                          {"electron-p-max", "auto"},
+                          {"hadron-theta-min", "auto"},
+                          {"hadron-theta-max", "auto"},
+                          {"hadron-momentum", "auto"},
+                          {"hadron-angle", "theta"},
+                          {"hadron-p", "1"},
+                          {"hadron-p-min", "auto"},
+                          {"hadron-p-max", "auto"},
+                          {"electron-momentum", "auto"},
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
     } else {
@@ -313,10 +334,16 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     if (c.get("gemc-target-variation") == "auto") { c.values_["gemc-target-variation"] = rgm_target.gemc_variation; }
 
     if (uniform) {
-        // Preserve legacy channel acceptance: neutron theta ends at 35 degrees; proton/other uniform
-        // channel defaults end at 45 degrees. Sampled momentum in GeV/c may extend numerically to the beam energy in GeV under the c=1 convention.
-        if (c.get("nucleon-theta-max") == "auto") { c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45"; }
-        if (c.get("nucleon-p-max") == "auto") { c.values_["nucleon-p-max"] = c.get("beam-energy"); }
+        // Resolve the species/region acceptance contract. CD pions stop at 140 degrees; CD nucleons
+        // stop at 145. FD neutrons stop at 35, while charged FD hadrons stop at 45 degrees.
+        const bool neutron = c.get("hadron") == "neutron";
+        const bool pion = c.get("hadron") == "pip" || c.get("hadron") == "pim";
+        const bool central = c.get("hadron-region") == "CD";
+        if (c.get("hadron-theta-min") == "auto") { c.values_["hadron-theta-min"] = central ? "35" : "5"; }
+        if (c.get("hadron-theta-max") == "auto") { c.values_["hadron-theta-max"] = central ? (pion ? "140" : "145") : (neutron ? "35" : "45"); }
+        if (c.get("electron-p-max") == "auto") { c.values_["electron-p-max"] = c.get("beam-energy"); }
+        if (c.get("hadron-p-min") == "auto") { c.values_["hadron-p-min"] = neutron ? "0" : c.get("hadron") == "proton" ? (central ? "0.2" : "0.3") : (central ? "0.1" : "0.2"); }
+        if (c.get("hadron-p-max") == "auto") { c.values_["hadron-p-max"] = c.get("beam-energy"); }
 
         // Trigger-electron sector offsets are legacy beam-setting values in degrees. Unknown beam
         // energies receive zero offset rather than an inferred experimental configuration.
@@ -338,7 +365,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     if (c.get("prefix") == "auto") {
         if (uniform) {
             std::ostringstream prefix;
-            prefix << "Uniform_sample_" << c.get("channel") << '_' << beamMeV(c.number("beam-energy")) << "MeV";
+            prefix << "Uniform_sample_" << uniformSampleLabel(c) << '_' << beamMeV(c.number("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         } else {
             c.values_["prefix"] = pathToken(c.get("rgm-target")) + '_' + pathToken(c.get("event-generator")) + '_' + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
@@ -346,11 +373,13 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     }
 
     if (uniform) {
-        // `sampled` is a user-facing convenience profile: ep selects the required 50/50 momentum/
-        // inverse-momentum mixture, while en selects uniform momentum. Non-fixed en directions default
-        // to isotropic sampling within the separately resolved legacy angular acceptance.
-        if (c.get("nucleon-momentum") == "sampled") { c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform"; }
-        if (c.get("nucleon-angle") == "auto") { c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta"; }
+        // Resolve production momentum by particle: charged hadrons use the 50/50 p and 1/p mixture;
+        // neutrons use uniform p. Every eh trigger electron remains fixed at beam momentum.
+        if (c.get("electron-momentum") == "auto") { c.values_["electron-momentum"] = c.get("channel") == "1e" ? "mixed" : "beam"; }
+        if (c.get("hadron-momentum") == "auto" || c.get("hadron-momentum") == "sampled") {
+            c.values_["hadron-momentum"] = c.get("channel") == "eh" && c.get("hadron") != "neutron" ? "mixed" : "uniform";
+        }
+        if (c.get("hadron-angle") == "auto") { c.values_["hadron-angle"] = "theta"; }
     }
 #pragma endregion
 
@@ -367,7 +396,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         // Uniform output keeps the legacy recognizable channel/beam directory below the user-selected
         // parent. Width four provides labels such as 2070, 4029, and 5986 without truncating others.
         std::ostringstream directory;
-        directory << "Uniform_sample_" << c.get("channel") << '_' << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
+        directory << "Uniform_sample_" << uniformSampleLabel(c) << '_' << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     } else {
         // Physical output encodes explicit simulation provenance in the documented order. Each field
@@ -404,7 +433,11 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
  *
  * @throws std::out_of_range If the key does not exist in this configuration's source-specific map.
  */
-std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
+std::string RunConfig::get(const std::string& k) const {
+    const auto value = values_.find(k);
+    if (value == values_.end()) { throw std::out_of_range("Missing configuration key: " + k); }
+    return value->second;
+}
 #pragma endregion
 
 // RunConfig::number -----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -515,12 +548,15 @@ void RunConfig::validate(bool uniform) const {
     // Beam energy must be a finite, strictly positive GeV value. number() owns lexical/finite checks.
     if (number("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
 
-    // Total capacity, per-file split size, and the two independent RNG seeds must fit the unsigned type
-    // used downstream and be nonzero. Source-specific defaults preserve 25,000-event archived uniform
-    // files and 10,000-event physical files; explicit values remain available for submission compatibility.
-    for (auto k : {"events", "events-per-file", "seed", "vertex-seed"}) {
+    // Total capacity and split size must be positive. RNG seeds additionally allow zero because ROOT
+    // defines TRandom3(0) as a request for automatic, nonrepeatable seeding; users may select that
+    // behavior deliberately even though it prevents exact event reproduction from the manifest alone.
+    for (auto k : {"events", "events-per-file"}) {
         auto n = integer(k);
         if (!n || n > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
+    }
+    for (auto k : {"seed", "vertex-seed"}) {
+        if (integer(k) > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [0, 4294967295]"); }
     }
 
     // A and Z are LUND header metadata, independently configurable from target geometry. integer()
@@ -566,31 +602,45 @@ void RunConfig::validate(bool uniform) const {
 
     // Uniform source selection fixes event multiplicity/content to electron-only, electron-proton, or
     // electron-neutron generation; it never represents a physical interaction model.
-    if (get("channel") != "1e" && get("channel") != "ep" && get("channel") != "en") { throw std::runtime_error("channel must be 1e, ep or en"); }
+    if (get("channel") != "1e" && get("channel") != "eh") { throw std::runtime_error("channel must be 1e or eh"); }
+    if (get("hadron") != "proton" && get("hadron") != "neutron" && get("hadron") != "pip" && get("hadron") != "pim") {
+        throw std::runtime_error("hadron must be proton, neutron, pip or pim");
+    }
+    if (get("hadron-region") != "FD" && get("hadron-region") != "CD") { throw std::runtime_error("hadron-region must be FD or CD"); }
 
     // Require ordered polar-angle bounds inside the full geometric domain. The resolved defaults carry
     // the legacy per-particle acceptance, while explicit profiles may narrow those ranges.
-    for (auto stem : {"electron", "nucleon"}) {
+    for (auto stem : {"electron", "hadron"}) {
         double lo = number(std::string(stem) + "-theta-min"), hi = number(std::string(stem) + "-theta-max");
         if (!(0 <= lo && lo < hi && hi <= 180)) { throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180"); }
     }
 
-    // parse() resolves the convenience value `sampled` before this function: ep becomes the 50/50
-    // uniform-p/uniform-1/p mixture and en becomes uniform momentum. Mixed sampling requires a positive
-    // lower bound because inverse momentum is undefined at zero.
-    if (get("nucleon-momentum") != "fixed" && get("nucleon-momentum") != "uniform" && get("nucleon-momentum") != "mixed") {
-        throw std::runtime_error("nucleon-momentum must be fixed, sampled, uniform or mixed");
+    // parse() resolves `auto`/`sampled` before this function. Mixed sampling requires a positive lower
+    // bound because inverse momentum is undefined at zero. Fixed momentum is intentionally neutron-only.
+    if (get("hadron-momentum") != "fixed" && get("hadron-momentum") != "uniform" && get("hadron-momentum") != "mixed") {
+        throw std::runtime_error("hadron-momentum must be fixed, sampled, uniform or mixed");
     }
-    if (get("nucleon-momentum") == "mixed" && (get("channel") != "ep" || number("nucleon-p-min") <= 0)) { throw std::runtime_error("mixed requires ep and strictly positive nucleon-p-min"); }
+    if (get("hadron-momentum") == "mixed" && (get("channel") != "eh" || get("hadron") == "neutron" || number("hadron-p-min") <= 0)) {
+        throw std::runtime_error("mixed requires an eh charged hadron and strictly positive hadron-p-min");
+    }
+    if (get("hadron-momentum") == "fixed" && (get("channel") != "eh" || get("hadron") != "neutron")) {
+        throw std::runtime_error("fixed hadron momentum is available only for eh neutron samples");
+    }
 
     // `auto` angle selection is likewise resolved before validation. Isotropic means uniform in cos
     // theta within the configured legacy acceptance, not over the full sphere.
-    if (get("nucleon-angle") != "theta" && get("nucleon-angle") != "isotropic") { throw std::runtime_error("nucleon-angle must be auto, theta or isotropic"); }
-    if (get("electron-momentum") != "uniform" && get("electron-momentum") != "beam") { throw std::runtime_error("electron-momentum must be uniform or beam"); }
+    if (get("hadron-angle") != "theta" && get("hadron-angle") != "isotropic") { throw std::runtime_error("hadron-angle must be auto, theta or isotropic"); }
+    if (get("electron-momentum") != "uniform" && get("electron-momentum") != "mixed" && get("electron-momentum") != "beam") {
+        throw std::runtime_error("electron-momentum must be auto, uniform, mixed or beam");
+    }
+    if (get("electron-momentum") == "mixed" && (get("channel") != "1e" || number("electron-p-min") <= 0)) {
+        throw std::runtime_error("mixed electron momentum requires 1e and strictly positive electron-p-min");
+    }
 
     // The fixed momentum must be positive. Sampled bounds allow zero for uniform sampling, require a
     // positive-width interval, and receive the stricter positive minimum above for inverse-p mixing.
-    if (number("nucleon-p") <= 0 || number("nucleon-p-min") < 0 || number("nucleon-p-max") <= number("nucleon-p-min")) { throw std::runtime_error("Invalid nucleon momentum bounds"); }
+    if (number("hadron-p") <= 0 || number("hadron-p-min") < 0 || number("hadron-p-max") <= number("hadron-p-min")) { throw std::runtime_error("Invalid hadron momentum bounds"); }
+    if (number("electron-p-min") < 0 || number("electron-p-max") <= number("electron-p-min")) { throw std::runtime_error("Invalid electron momentum bounds"); }
 
     // Trigger theta is a polar angle and the signed sector-offset magnitude cannot exceed 180 degrees.
     if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) { throw std::runtime_error("Invalid trigger angle"); }
@@ -678,8 +728,8 @@ std::string jsonString(const std::string& s) {
 std::string help(bool uniform) {
     // The physical example quotes its input glob so an interactive shell passes the pattern to the
     // converter instead of expanding it before the adapter receives it.
-    std::string result =
-        uniform ? "clas12-uniform --channel 1e|ep|en --output PARENT_DIRECTORY\n" : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
+    std::string result = uniform ? "clas12-uniform --channel 1e|eh [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
+                                 : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
     // Shared settings control beam/target metadata, event and RNG counts, vertex production, writer
     // compatibility, and optional plot rendering. Units are stated at the option boundary.
@@ -688,15 +738,17 @@ std::string help(bool uniform) {
         "--events N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
         "--vertex-mode target|fixed, --vertex-x/y/z CM,\n"
         "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
-        "Files use key = value; CLI values override file settings. Existing output is replaced after a warning.\n";
+        "Files use key = value; CLI values override file settings. Seed 0 requests ROOT automatic, nonrepeatable seeding.\n"
+        "Existing output is replaced after a warning.\n";
 
     if (uniform) {
         // Uniform-only settings select acceptance ranges and deliberately unphysical momentum/angle
         // sampling. Automatic aliases are resolved by RunConfig::parse before validation.
         result +=
-            "Uniform: --electron-theta-min/max DEG, --nucleon-theta-min/max DEG,\n"
-            "--electron-momentum uniform|beam, --nucleon-momentum fixed|sampled|uniform|mixed,\n"
-            "--nucleon-angle auto|theta|isotropic, --nucleon-p GeV/c, --nucleon-p-min/max GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
+            "Uniform: --hadron proton|neutron|pip|pim, --hadron-region FD|CD, --electron-theta-min/max DEG, --electron-p-min/max GeV/c,\n"
+            "--hadron-theta-min/max DEG, --electron-momentum auto|uniform|mixed|beam,\n"
+            "--hadron-momentum auto|fixed|sampled|uniform|mixed,\n"
+            "--hadron-angle auto|theta|isotropic, --hadron-p GeV/c, --hadron-p-min/max GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG.\n";
     } else {
         // Physical-only settings identify the current GENIE adapter and preserve generator, tune,
         // selection, detector, and target-variation provenance in the output contract.

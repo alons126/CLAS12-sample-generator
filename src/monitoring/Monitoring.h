@@ -33,7 +33,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "common/Event.h"
+#include "lund/Event.h"
 
 namespace samples {
 

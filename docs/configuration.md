@@ -24,11 +24,11 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `vertex-x/y/z` | `0` / `0` / `-3` | Fixed-vertex coordinates in cm |
 | `events` | Required | Total number of accepted events to write |
 | `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold recorded per file in the manifest and passed to GEMC/reconstruction during submission |
-| `seed` | `67890` | Uniform kinematic RNG seed; unused in GENIE conversion |
-| `vertex-seed` | `12345` | Vertex RNG seed |
+| `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused in physical conversion |
+| `vertex-seed` | `12345` | Vertex RNG seed; zero requests ROOT automatic, nonrepeatable seeding |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
 | `lund-format` | `legacy` | Legacy text precision/numbering, or `precise` |
-| `mass-convention` | `legacy` | Restored constants, or `standard` pion constants |
+| `mass-convention` | `standard` | Current PDG values from `constants.h`; `legacy` selects archived rounded compatibility values |
 | `render-plots` | `true` uniform / `false` physical | Render legacy-named uniform PDF/PNG artifacts or optional physical plots |
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
 | `event-generator` | `genie` | Physical adapter name; GENIE is currently implemented |
@@ -36,24 +36,27 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `tune`, `q2-cut` | `unknown` / energy-based | Generator provenance and naming components |
 | `gemc-version` | `unknown` | Planned detector-simulation version and naming component |
 
-Counts, the split threshold, and seeds must be integers from 1 through 4294967295. Production Ar defaults resolve to A=40/Z=18. Legacy parity tests explicitly request the archived A=1/Z=1 uniform headers.
+Counts and the split threshold must be integers from 1 through 4294967295. Seeds may range from 0 through 4294967295. A nonzero seed is reproducible; `TRandom3(0)` asks ROOT to choose an automatic seed, so a manifest containing zero cannot reproduce the generated sequence. Production Ar defaults resolve to A=40/Z=18. Legacy parity tests explicitly request the archived A=1/Z=1 uniform headers.
 
 ## Uniform settings
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `channel` | `1e` | `1e`, `ep`, `en` |
-| `electron-theta-min/max` | `5` / `40` | `1e` theta range, degrees |
-| `electron-momentum` | `uniform` | `uniform` in [0, beam), or `beam` |
-| `nucleon-theta-min/max` | `5` / `auto` | Theta range; auto maximum 45° for ep, 35° for en |
-| `nucleon-momentum` | `fixed` | `fixed`, `sampled`, `uniform`, `mixed`; sampled resolves by channel |
-| `nucleon-angle` | `auto` | `theta` or `isotropic`; auto is isotropic for non-fixed en, theta otherwise |
-| `nucleon-p` | `1` | Fixed momentum, GeV/c |
-| `nucleon-p-min/max` | `0.3` / `auto` | Momentum bounds in GeV/c; auto maximum uses the beam-energy value under c=1 |
-| `trigger-theta` | `25` | Trigger electron theta, degrees |
-| `trigger-phi-offset` | `auto` | Offset in degrees; energy-based defaults in uniform guide |
+| `channel` | `1e` | `1e` for one electron or `eh` for trigger electron plus selected hadron |
+| `hadron` | `proton` | `proton`, `neutron`, `pip`, or `pim`; used by `eh` |
+| `hadron-region` | `FD` | `FD` or `CD`; resolves the hadron angular and momentum thresholds |
+| `electron-theta-min/max` | `5` / `40` | Electron-only/tester theta range, degrees |
+| `electron-momentum` | `auto` | `mixed` for 1e, `beam` for eh; explicit `uniform`, `mixed`, or `beam` |
+| `electron-p-min/max` | `0.7` / beam | 1e momentum bounds in GeV/c |
+| `hadron-theta-min/max` | `auto` / `auto` | FD: p/pions 5–45°, n 5–35°; CD: nucleons 35–145°, pions 35–140° |
+| `hadron-momentum` | `auto` | charged hadrons → `mixed`; neutron → `uniform`; neutron-only `fixed` is optional |
+| `hadron-angle` | `theta` | Flat theta; explicit `isotropic` is uniform in cos(theta) inside the same limits |
+| `hadron-p` | `1` | Fixed neutron momentum in GeV/c |
+| `hadron-p-min/max` | species/region / beam | p: 0.3 FD, 0.2 CD; pip/pim: 0.2 FD, 0.1 CD; n: 0 |
+| `trigger-theta` | `25` | Trigger electron theta in eh, degrees |
+| `trigger-phi-offset` | energy-based | Offset from sector closest to opposite hadron direction |
 
-Theta limits require 0≤min<max≤180. Fixed momentum must be positive; uniform momentum bounds require 0≤min<max. All numeric values must be finite. `mixed` requires channel ep and a strictly positive minimum momentum; it alternates uniform-p and uniform-1/p draws. `sampled` resolves to `uniform` for en and `mixed` for ep. Resolved `auto` values are written to the manifest. Settings are validated even when inactive for the selected channel.
+The trigger-electron opposite-sector rule is retained for CD samples even though it is not geometrically obligatory. The electron tester always scans theta 5–40° and all phi at beam momentum; its scan motivated the 25° production trigger setting. Mixed sampling requires a positive lower bound. Resolved labels are `1e`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`; they control output directory and automatic prefix names. Resolved values are recorded in the manifest.
 
 ## Target geometry
 

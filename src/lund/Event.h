@@ -96,8 +96,8 @@ struct Particle {
  *   interaction.
  *
  * Ordering and invariants:
- *   particles must be nonempty and finite. The scattered/generated electron is first; uniform ep/en
- *   places its nucleon second, while physical conversion preserves supported final-state input order.
+ *   particles must be nonempty and finite. The scattered/generated electron is first; uniform electron–hadron generation
+ *   places its selected hadron second, while physical conversion preserves supported final-state input order.
  */
 struct Event {
     std::uint64_t id = 0;  ///< Run-global uniform index or scanned GST entry index. Legacy uniform text
@@ -123,8 +123,8 @@ struct Event {
  * @brief Return the configured mass convention for one supported output species.
  *
  * @param pid PDG code for electron, proton, neutron, charged/neutral pion, or photon.
- * @param legacy Select archived pion constants when true; false selects distinct standard charged and
- *               neutral pion values. Electron, nucleon, and photon values are common to both modes.
+ * @param legacy Select the archived rounded compatibility table when true; false selects the current
+ *               PDG table. Every value comes from constants.h.
  *
  * @return Particle mass in GeV/c².
  *
@@ -133,7 +133,7 @@ struct Event {
  * @note This lookup does not validate event-generator status or particle selection. Adapters decide
  *       which truth particles are retained before requesting a mass.
  */
-double particleMass(int pid, bool legacy = true);
+double particleMass(int pid, bool legacy = false);
 #pragma endregion
 
 #pragma endregion

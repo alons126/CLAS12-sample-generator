@@ -34,7 +34,7 @@
 #include <memory>
 #include <string>
 
-#include "common/Event.h"
+#include "lund/Event.h"
 
 namespace samples {
 

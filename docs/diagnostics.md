@@ -19,16 +19,18 @@ Correlations use the corresponding one-dimensional ranges. Underflow and overflo
 
 ## 2. Legacy uniform diagnostics
 
-Uniform generation writes the archived `<prefix>_plots.root` artifact and an identical `legacy_histograms.root` copy with the original histogram names, axis ranges, binning, and correlations. The stable copy keeps maintained validation and consumers independent of a configured filename prefix. Definitions are in [LegacyMonitoring.cpp](../src/common/LegacyMonitoring.cpp), with independent comparisons against the archived `Histograms.cpp` initializers and event functions.
+Uniform generation writes the archived `<prefix>_plots.root` artifact and an identical `legacy_histograms.root` copy with the original histogram names, axis ranges, binning, and correlations. The stable copy keeps maintained validation and consumers independent of a configured filename prefix. Definitions are in [LegacyMonitoring.cpp](../src/monitoring/LegacyMonitoring.cpp), with independent comparisons against the archived `Histograms.cpp` initializers and event functions.
 
 | Channel | Histograms | Content |
 | --- | --- | --- |
 | `1e` | 9 | Electron θ, φ, p, x/y/z vertex and three angular/momentum correlations |
-| `ep` | 27 | Electron and proton single-particle histograms plus nine electron–proton correlations |
-| `en` | 27 | Electron and neutron single-particle histograms plus nine electron–neutron correlations |
+| `epFD` (legacy key `ep`) | 27 | Electron and proton single-particle histograms plus nine electron–proton correlations |
+| `enFD` (legacy key `en`) | 27 | Electron and neutron single-particle histograms plus nine electron–neutron correlations |
 | Angular tester | 6 | Electron θ, φ, p and three angular/momentum correlations |
 
 Names follow the original pattern, e.g. `Theta_e_1e`, `Vz_n_en`, `Theta_p_VS_P_p_ep`, `Phi_e_VS_Theta_n_en`. In `A_VS_B`, B is the x-axis and A the y-axis. Single-particle θ ranges are 0–50°, momenta 0–1.1 × beam energy and φ −180–180°. Legacy vertex ranges are −5–5 cm; consequently Ar z entries lie in underflow. The φ_e versus φ_N pair plots retain the archived −200–200° ranges. These ranges are kept for parity even when the common diagnostics provide a more useful display.
+
+The archive defined no CD or charged-pion uniform histogram set. Those modes therefore use `monitoring.root` as their scientific diagnostic; their compatibility ROOT file contains no invented legacy histograms.
 
 The original unweighted histogram errors are obtained with `Sumw2` after filling. Parity tests compare names, axis bounds, every bin (including flow bins), entries and bin errors. ROOT file timestamps/object metadata are not compared byte-for-byte.
 

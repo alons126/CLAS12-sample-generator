@@ -2,9 +2,9 @@
 
 ## 1. In-memory representation
 
-`Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one nucleon. Converted events contain the scattered electron followed by retained GST particles in their input order.
+`Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one selected hadron. Converted events contain the scattered electron followed by retained GST particles in their input order.
 
-These types are defined in [Event.h](../src/common/Event.h). LUND serialization is centralized in [LundWriter.cpp](../src/common/LundWriter.cpp).
+These types are defined in [Event.h](../src/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../src/lund/LundWriter.cpp).
 
 ## 2. LUND header: ten fields
 
@@ -41,7 +41,7 @@ The writer rejects empty events and non-finite particle energy/vertex data. GENI
 
 ## 4. Output precision and compatibility
 
-`lund-format=legacy` is the default. It matches the archived whitespace, five decimal places for particle momenta/energy/mass/vertices, and per-file uniform numbering. The ordinary 1e and GENIE header beam energy has six decimals. The ep/en and angular-tester header beam energy has **one decimal**, as in the archived format (e.g. 5.98636 is serialized as 6.0). The event's internal momentum calculations still use the full configured beam value. This rounding is retained for compatibility, not introduced as a physics approximation.
+`lund-format=legacy` is the default. It matches the archived whitespace, five decimal places for particle momenta/energy/mass/vertices, and per-file uniform numbering. The ordinary 1e and GENIE header beam energy has six decimals. The electron–hadron and angular-tester header beam energy has **one decimal**, as in the archived format (e.g. 5.98636 is serialized as 6.0). The event's internal momentum calculations still use the full configured beam value. This rounding is retained for compatibility, not introduced as a physics approximation.
 
 `lund-format=precise` writes numeric values at ten significant digits, single-space separators and run-global uniform IDs. It is an explicit alternative when historical text compatibility is not required. Do not compare its output bytes to legacy text.
 
@@ -49,18 +49,18 @@ The configurable prefix controls LUND filenames; choose the same prefix and outp
 
 ## 5. Mass conventions
 
-All mass values are GeV/c². Electron/proton/neutron values retain the archived constants. The two named pion conventions are explicit and recorded in the manifest:
+All particle identities and masses used by maintained code come from [`src/support/constants.h`](../src/support/constants.h). Production defaults to `mass-convention=standard`, using the [Particle Data Group 2026](https://pdg.lbl.gov/2026/listings/particle_properties.html) values below in GeV/c². The explicit `legacy` mode centralizes the rounded archived values needed for byte-parity tests.
 
-| PDG | `legacy` (default) | `standard` |
-| --- | --- | --- |
-| 11 | 0.000511 | 0.000511 |
-| 2212 | 0.938272 | 0.938272 |
-| 2112 | 0.93957 | 0.93957 |
-| ±211 | 0.13957 | 0.13957039 |
-| 111 | **0.13957** | 0.1349768 |
-| 22 | 0 | 0 |
+| Species (PDG) | `standard` default | `legacy` compatibility |
+| --- | ---: | ---: |
+| electron (11) | 0.00051099895069 | 0.000511 |
+| proton (2212) | 0.93827208943 | 0.938272 |
+| neutron (2112) | 0.93956542194 | 0.93957 |
+| pip/pim (±211) | 0.13957039 | 0.13957 |
+| pi0 (111) | 0.1349768 | 0.13957 |
+| photon (22) | 0 | 0 |
 
-The legacy π⁰ value is the one in the restored [converter utilities](../legacy/GEMC-samples/framework/namespaces/general_utilities/utilities.h). It is preserved deliberately for parity, and is not presented as the physical neutral-pion mass. Selecting `standard` changes both stored mass and computed energy. It is not legacy-equivalent.
+The archived pi0 value is intentionally preserved only for compatibility. `particleMass()` reads both tables from `constants.h`; generators and converters also use that header for PDG identifiers. Selecting a convention changes the stored mass and the mass-shell energy.
 
 ## 6. File splitting and completion
 

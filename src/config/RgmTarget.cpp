@@ -20,7 +20,7 @@
  *   vertex distributions; detector GCARD resources own GEMC geometry implementation.
  */
 
-#include "common/RgmTarget.h"
+#include "config/RgmTarget.h"
 
 #include <sstream>
 #include <stdexcept>

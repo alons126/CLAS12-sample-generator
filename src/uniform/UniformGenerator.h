@@ -15,13 +15,13 @@
  *   monitoring files, and manifest from the resolved run directory.
  *
  * Scientific scope:
- *   The implementation generates configured 1e, ep, or en probes from random kinematics. It is not an
+ *   The implementation generates configured 1e or electron–hadron probes from random kinematics. It is not an
  *   interaction model and does not read or run an event generator. Physical truth conversion enters
  *   through the separate physical adapter workflow.
  */
 
 #pragma once
-#include "common/RunConfig.h"
+#include "config/RunConfig.h"
 
 namespace samples {
 
@@ -39,7 +39,7 @@ namespace samples {
  *   1. Revalidate and cache the uniform configuration.
  *   2. Initialize independent kinematic and vertex random streams from their configured seeds.
  *   3. Safely prepare the resolved output directory and initialize both monitoring systems.
- *   4. Generate 1e events or artificial trigger-electron+nucleon ep/en events until the requested
+ *   4. Generate 1e events or artificial trigger-electron+hadron events until the requested
  *      event capacity is written, sampling exactly one shared vertex per event.
  *   5. Save modern monitoring plus the archived prefix-based ROOT/PDF/PNG artifacts, retain the stable
  *      legacy_histograms.root copy, finalize LUND output, and publish the manifest.
@@ -55,15 +55,14 @@ namespace samples {
  *         monitoring output, or manifest publication fails. The CLI boundary converts the exception
  *         to an error diagnostic and nonzero process status.
  *
- * @note Every particle in an ep/en event receives the same sampled interaction vertex. Kinematic and
+ * @note Every particle in an electron–hadron event receives the same sampled interaction vertex. Kinematic and
  *       vertex RNG ownership remains separate so target draws do not change the kinematic sequence.
  *
- * @note Uniform files default to 25,000 events each. `events-per-file` remains configurable; submission
- *       through the protected 10,000-event GEMC payload requires an explicit value of 10,000.
+ * @note Uniform files default to 25,000 events each. `events-per-file` remains configurable, and the
+ *       completed manifest supplies each actual file count to GEMC and reconstruction submission.
  *
- * @note Fixed 1 GeV/c nucleons and the configured legacy angular prescriptions remain available. In
- *       sampled mode, ep alternates uniform-p and uniform-1/p events; non-fixed en may sample uniformly
- *       in cos(theta) within the legacy neutron angular acceptance.
+ * @note Production defaults retain flat-theta legacy angular windows. The 1e electron and charged hadrons alternate uniform-p and uniform-1/p events over their particle-specific bounds.
+ * Neutrons sample p uniformly from zero; fixed 1 GeV/c remains neutron-only.
  */
 void generateUniform(const RunConfig& config);
 #pragma endregion

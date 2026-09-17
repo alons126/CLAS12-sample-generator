@@ -115,10 +115,21 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
     root = Path(temp)
     run(executable, '--help')
     if mode == 'uniform':
-        for channel, pid in [('1e',11),('ep',2212),('en',2112)]:
+        cases = [
+            ('1e', 11, 0.00051099895069, [], 5, 40, 0.7),
+            ('epFD', 2212, 0.93827208943, ['--channel','eh','--hadron','proton','--hadron-region','FD'], 5, 45, 0.3),
+            ('enFD', 2112, 0.93956542194, ['--channel','eh','--hadron','neutron','--hadron-region','FD'], 5, 35, 0),
+            ('epipFD', 211, 0.13957039, ['--channel','eh','--hadron','pip','--hadron-region','FD'], 5, 45, 0.2),
+            ('epimFD', -211, 0.13957039, ['--channel','eh','--hadron','pim','--hadron-region','FD'], 5, 45, 0.2),
+            ('epCD', 2212, 0.93827208943, ['--channel','eh','--hadron','proton','--hadron-region','CD'], 35, 145, 0.2),
+            ('enCD', 2112, 0.93956542194, ['--channel','eh','--hadron','neutron','--hadron-region','CD'], 35, 145, 0),
+            ('epipCD', 211, 0.13957039, ['--channel','eh','--hadron','pip','--hadron-region','CD'], 35, 140, 0.1),
+            ('epimCD', -211, 0.13957039, ['--channel','eh','--hadron','pim','--hadron-region','CD'], 35, 140, 0.1),
+        ]
+        for channel, pid, mass, selection, theta_min, theta_max, p_min in cases:
             output_root = root / channel
             output = output_root / f'Uniform_sample_{channel}_5986MeV'
-            settings = ['--channel', channel, '--events', '10001', '--events-per-file', '10000', '--seed', '17', '--vertex-seed', '23', '--render-plots', 'false']
+            settings = selection + ['--events', '10001', '--events-per-file', '10000', '--seed', '17', '--vertex-seed', '23', '--render-plots', 'false']
             run(executable, *settings, '--output', output_root)
             manifest, events = read_run(output)
             assert [f['events'] for f in manifest['files']] == [10000,1]
@@ -126,18 +137,20 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             for header, particles in events:
                 assert len(particles) == (1 if channel == '1e' else 2)
                 assert particles[-1][3] == pid
+                assert math.isclose(particles[-1][10], mass, rel_tol=0, abs_tol=5e-10)
                 assert -5.75 <= particles[0][13] <= -5.25
                 p,theta,phi = angles(particles[-1])
-                assert 5-1e-7 <= theta <= (40 if channel == '1e' else 45 if channel == 'ep' else 35)+1e-7
-                if channel != '1e':
-                    assert math.isclose(p,1,abs_tol=1e-8)
+                assert theta_min-1e-7 <= theta <= theta_max+1e-7
+                if channel == '1e':
+                    assert 0.7-1e-8 <= p <= 5.98636+1e-8
+                else:
+                    assert p_min-1e-8 <= p <= 5.98636+1e-8
                     ep, et, ef = angles(particles[0])
                     assert math.isclose(ep,5.98636,abs_tol=1e-8) and math.isclose(et,25,abs_tol=1e-7)
                     assert abs(((ef-5+180)%60)-0) < 1e-6 or abs(((ef-5+180)%60)-60) < 1e-6
             # The default is flat in theta, not cos(theta); a broad mean check guards it.
             mean = sum(angles(p[-1])[1] for h,p in events)/len(events)
-            hi = 40 if channel == '1e' else 45 if channel == 'ep' else 35
-            assert abs(mean - (5+hi)/2) < 2
+            assert abs(mean - (theta_min+theta_max)/2) < 2
             second = root / (channel+'-repeat') / f'Uniform_sample_{channel}_5986MeV'
             run(executable, *settings, '--output', second.parent)
             for file in manifest['files']:
@@ -161,14 +174,16 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert (artifacts/'MonitoringPlotsPath/Uniform_1e_plots_5986MeV.pdf').is_file()
         assert list((artifacts/'MonitoringPlotsPath').glob('[0-9]*_*.png'))
 
-        config.write_text('# test precedence\nchannel = en\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
-        configured = root/'configured'/ 'Uniform_sample_en_2070MeV'
+        config.write_text('# test precedence\nchannel = eh\nhadron = neutron\nhadron-region = FD\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
+        configured = root/'configured'/ 'Uniform_sample_enFD_2070MeV'
         run(executable, '--config', config, '--events', '5', '--output', configured.parent)
         m,_ = read_run(configured)
         assert m['written_events'] == 5 and m['config']['trigger-phi-offset'] == '16'
+        assert m['config']['hadron-momentum'] == 'uniform' and m['config']['hadron-angle'] == 'theta'
+        assert m['config']['hadron-p-min'] == '0'
         assert [entry['events'] for entry in m['files']] == [2, 2, 1]
-        variable = root/'variable'/ 'Uniform_sample_ep_5986MeV'
-        run(executable, '--channel', 'ep', '--nucleon-momentum', 'uniform', '--events', '100', '--output', variable.parent)
+        variable = root/'variable'/ 'Uniform_sample_epFD_5986MeV'
+        run(executable, '--channel', 'eh', '--hadron', 'proton', '--hadron-momentum', 'uniform', '--events', '100', '--output', variable.parent)
         _,events=read_run(variable)
         momenta=[angles(p[-1])[0] for h,p in events]
         assert min(momenta)>=0.3 and max(momenta)<=5.98636 and max(momenta)-min(momenta)>1
@@ -176,6 +191,14 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable, '--electron-momentum', 'beam', '--target', 'point', '--events', '5', '--output', tester.parent)
         _,events=read_run(tester)
         assert all(p[0][11:]==[0,0,-3] and math.isclose(angles(p[0])[0],5.98636,abs_tol=1e-8) for h,p in events)
+        fixed = root/'fixed'/ 'Uniform_sample_enFD_5986MeV'
+        run(executable, '--channel', 'eh', '--hadron', 'neutron', '--hadron-momentum', 'fixed', '--events', '5', '--render-plots', 'false', '--output', fixed.parent)
+        _,events=read_run(fixed)
+        assert all(math.isclose(angles(p[-1])[0],1,abs_tol=1e-8) for h,p in events)
+        automatic = root/'automatic-seed'/'Uniform_sample_1e_5986MeV'
+        run(executable, '--seed', '0', '--vertex-seed', '0', '--events', '2', '--render-plots', 'false', '--output', automatic.parent)
+        am,_=read_run(automatic)
+        assert am['config']['seed'] == '0' and am['config']['vertex-seed'] == '0'
         # Every material-bearing RG-M target resolves nuclear metadata and one external geometry key.
         targets = {
             'H1':(1,1,'liquid'), 'D2':(2,1,'liquid'), 'He4':(4,2,'liquid'),
@@ -191,10 +214,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             manifest,_=read_run(parent/'Uniform_sample_1e_5986MeV')
             assert manifest['config']['A']==str(A) and manifest['config']['Z']==str(Z)
             assert manifest['config']['target']==geometry
-        for key,value in [('channel','bad'),('seed','0'),('events-per-file','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
+        for key,value in [('channel','bad'),('seed','4294967296'),('events-per-file','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
             output=root/('invalid-'+key)
             run(executable, '--'+key, value, '--output', output, ok=False)
             assert not output.exists()
+        run(executable, '--channel', 'eh', '--hadron', 'proton', '--hadron-momentum', 'fixed', '--events', '1', '--output', root/'invalid-fixed-ep', ok=False)
     else:
         fixture = sys.argv[3]
         gst = root/'gst.root'

@@ -1,10 +1,28 @@
 # Architecture and code walkthrough
 
+## Source layout
+
+Maintained code is grouped by the responsibility a newcomer is looking for. The folders are ownership boundaries, while `LundCore` compiles the small shared layers together so the build does not introduce a library for every folder.
+
+| Directory | Responsibility |
+| --- | --- |
+| `src/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
+| `src/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
+| `src/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
+| `src/monitoring/` | Produce general and legacy-compatible ROOT diagnostics |
+| `src/support/` | Central PDG constants, terminal presentation, and the generated-version template |
+| `src/uniform/` | Produce deliberately unphysical acceptance-map events |
+| `src/physical/` | Dispatch a physical input source to its event-generator adapter |
+| `src/genie/` | Read GENIE GST as the currently implemented physical adapter |
+| `src/common/external/` | Protected imported geometry and GEMC worker payloads; these are not maintained source |
+
+This layout separates concepts without adding user-facing workflows or runtime layers. Cross-layer includes state the dependency directly, for example `config/RunConfig.h`, `lund/Event.h`, and `support/constants.h`.
+
 ## Build targets
 
 | Target | Source | Responsibility |
 | --- | --- | --- |
-| `SampleCommon` | `src/common/` | Configuration, event representation, vertices, LUND output, monitoring |
+| `LundCore` | `src/config/`, `src/lund/`, `src/geometry/`, `src/monitoring/`, `src/support/` | Shared configuration-to-manifest LUND pipeline |
 | `UniformGeneration` | `src/uniform/` | Uniform sampling prescriptions |
 | `GenieConversion` | `src/genie/` | GENIE GST input adapter |
 | `PhysicalConversion` | `src/physical/` | Select the configured physical event-generator adapter |
@@ -67,11 +85,11 @@ This boundary is intentionally side-effect-free with respect to run products: pa
 ## Following a uniform run
 
 1. The application calls `RunConfig::parse`. Built-in defaults are merged with a `key = value` file and then command-line overrides. Unknown, repeated and invalid settings fail before opening an output directory.
-2. `generateUniform` resolves the channel and owns separate kinematic and vertex random streams. `TargetGeometry` samples a common interaction vertex for all particles in the event.
+2. `generateUniform` receives the resolved `1e` or `eh` channel, selected hadron, and FD/CD region, then owns separate kinematic and vertex random streams. `TargetGeometry` samples a common interaction vertex for all particles in the event.
 3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
 5. `Monitoring` owns detached ROOT histograms. It fills per-PDG momentum, angles, vertices and angular/momentum correlations.
-6. `LegacyMonitoring` writes the original channel histogram names and binning to a separate ROOT file, with optional rendered plots.
+6. `LegacyMonitoring` writes original histogram names and binning for 1e/tester/epFD/enFD compatibility. The common per-PDG monitor covers every pion and CD mode.
 7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
 
 ## Following a physical run

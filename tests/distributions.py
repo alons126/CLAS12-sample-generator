@@ -2,10 +2,10 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Check sampled nucleon distributions against analytic CDFs.
+"""Check production uniform-sample distributions against analytic CDFs.
 
 Purpose:
-    Test angular and momentum prescriptions, including both proton-mixture components.
+    Test electron/proton mixture components and the uniform neutron prescription.
 
 Workflow:
     CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
@@ -46,10 +46,27 @@ def ks(values, cdf):
 # Test execution ------------------------------------------------
 # region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-distributions-') as temp:
-    for channel in ['en','ep']:
+    # The 1e default alternates uniform p and uniform 1/p over [0.7, beam].
+    output_root=Path(temp)/'1e'
+    out=output_root/'Uniform_sample_1e_5986MeV'
+    subprocess.run([sys.argv[1],'--channel','1e','--render-plots','false','--events','20000','--lund-format','precise','--output',str(output_root)],check=True,capture_output=True)
+    m=json.loads((out/'manifest.json').read_text())
+    lines=(out/m['files'][0]['path']).read_text().splitlines()
+    momenta=[]
+    for i in range(0,len(lines),2):
+        p=list(map(float,lines[i+1].split()))
+        x,y,z=p[6:9]; momenta.append(math.sqrt(x*x+y*y+z*z))
+    assert m['config']['electron-momentum']=='mixed' and m['config']['electron-p-min']=='0.7'
+    beam=5.98636
+    ks(momenta[::2],lambda p:(p-0.7)/(beam-0.7))
+    ks([1/p for p in momenta[1::2]],lambda q:(q-1/beam)/(1/0.7-1/beam))
+
+    for channel in ['enFD','epFD']:
         output_root=Path(temp)/channel
         out=output_root/f'Uniform_sample_{channel}_5986MeV'
-        subprocess.run([sys.argv[1],'--channel',channel,'--nucleon-momentum','sampled','--nucleon-p-min','0.3','--nucleon-p-max','3','--render-plots','false',
+        p_min='0' if channel=='enFD' else '0.3'
+        hadron='neutron' if channel=='enFD' else 'proton'
+        subprocess.run([sys.argv[1],'--channel','eh','--hadron',hadron,'--hadron-region','FD','--hadron-momentum','sampled','--hadron-p-min',p_min,'--hadron-p-max','3','--render-plots','false',
                         '--events','20000','--lund-format','precise','--output',str(output_root)],check=True,capture_output=True)
         m=json.loads((out/'manifest.json').read_text())
         lines=(out/m['files'][0]['path']).read_text().splitlines()
@@ -58,20 +75,20 @@ with tempfile.TemporaryDirectory(prefix='clas12-distributions-') as temp:
             p=list(map(float,lines[i+2].split()))
             x,y,z=p[6:9]; mag=math.sqrt(x*x+y*y+z*z)
             momenta.append(mag);cosines.append(z/mag);phis.append(math.atan2(y,x))
-        max_theta=35 if channel=='en' else 45
+        max_theta=35 if channel=='enFD' else 45
         lo,hi=math.cos(math.radians(max_theta)),math.cos(math.radians(5))
         assert min(cosines)>=lo-1e-9 and max(cosines)<=hi+1e-9
         ks(phis,lambda x:(x+math.pi)/(2*math.pi))
-        if channel=='en':
-            assert m['config']['nucleon-angle']=='isotropic'
-            ks(cosines,lambda x:(x-lo)/(hi-lo))
-            ks(momenta,lambda p:(p-0.3)/2.7)
+        if channel=='enFD':
+            assert m['config']['hadron-angle']=='theta'
+            ks([math.degrees(math.acos(c)) for c in cosines],lambda t:(t-5)/30)
+            ks(momenta,lambda p:p/3)
         else:
-            assert m['config']['nucleon-momentum']=='mixed' and m['config']['nucleon-angle']=='theta'
+            assert m['config']['hadron-momentum']=='mixed' and m['config']['hadron-angle']=='theta'
             ks([math.degrees(math.acos(c)) for c in cosines],lambda t:(t-5)/40)
             ks(momenta[::2],lambda p:(p-0.3)/2.7)
             ks([1/p for p in momenta[1::2]],lambda q:(q-1/3)/(1/0.3-1/3))
             ks(momenta,lambda p:0.5*(p-0.3)/2.7+0.5*(1/0.3-1/p)/(1/0.3-1/3))
-print('Neutron isotropy and proton 50/50 momentum mixture passed')
+print('Electron/proton mixtures and uniform neutron momentum passed')
 
 # endregion

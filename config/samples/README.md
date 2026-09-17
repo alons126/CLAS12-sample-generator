@@ -19,10 +19,10 @@ The executable installs built-in defaults, reads the named profile, then applies
 | Profile | Purpose |
 | --- | --- |
 | `uniform-electron.conf` | Production uniform 1e acceptance sample |
-| `uniform-proton.conf` | Legacy fixed-1-GeV/c ep acceptance sample |
-| `uniform-neutron.conf` | Legacy fixed-1-GeV/c en acceptance sample |
-| `uniform-proton-sampled.conf` | ep sample with a 50/50 uniform-p and uniform-1/p mixture |
-| `uniform-neutron-sampled.conf` | en sample with sampled momentum and isotropic direction in the legacy acceptance |
+| `uniform-proton.conf` | Production epFD 50/50 uniform-p and uniform-1/p sample |
+| `uniform-neutron.conf` | Production enFD uniform-p sample from zero to beam momentum |
+| `uniform-proton-sampled.conf` | Explicit alias profile for the production epFD mixture |
+| `uniform-neutron-sampled.conf` | Explicit enFD uniform-momentum profile with flat legacy theta and zero lower bound |
 | `electron-tester.conf` | Beam-momentum electron with fixed `(0,0,-3 cm)` vertex |
 | `genie.conf` | Physical GENIE GST conversion example |
 | `legacy-coderun.conf` | Archived uniform `CodeRun.cpp` compatibility settings |
@@ -34,7 +34,7 @@ The executable installs built-in defaults, reads the named profile, then applies
 
 ## Available uniform options
 
-Uniform profiles may set `channel`, `electron-theta-min`, `electron-theta-max`, `electron-momentum`, `nucleon-theta-min`, `nucleon-theta-max`, `nucleon-momentum`, `nucleon-angle`, `nucleon-p`, `nucleon-p-min`, `nucleon-p-max`, `trigger-theta`, and `trigger-phi-offset`.
+Uniform profiles may set `channel`, `hadron`, `hadron-region`, `electron-theta-min`, `electron-theta-max`, `electron-momentum`, `electron-p-min`, `electron-p-max`, `hadron-theta-min`, `hadron-theta-max`, `hadron-momentum`, `hadron-angle`, `hadron-p`, `hadron-p-min`, `hadron-p-max`, `trigger-theta`, and `trigger-phi-offset`.
 
 ## Available physical options
 

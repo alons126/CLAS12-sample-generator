@@ -8,7 +8,7 @@ This chapter inventories the supported code and the archived support code so a f
 | --- | --- |
 | `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds libraries/apps/tests and installation |
 | `CMakePresets.json` | Debug and Release configure/build presets; Debug CTest preset |
-| `src/CMakeLists.txt` | Static `SampleCommon`, `UniformGeneration`, `GenieConversion`, and `PhysicalConversion` targets |
+| `src/CMakeLists.txt` | Static `LundCore`, `UniformGeneration`, `GenieConversion`, and `PhysicalConversion` targets |
 | `apps/CMakeLists.txt` | Defines and installs the two application targets |
 | `apps/uniform_main.cpp` | Handles `--help`, parses uniform settings, invokes generation; returns 1 on caught exceptions |
 | `apps/genie_to_lund_main.cpp` | Generator-independent physical entry point and error reporting |
@@ -16,43 +16,45 @@ This chapter inventories the supported code and the archived support code so a f
 
 Production sources compile once into conventional targets. References to archived implementation files appear only in test adapters. Test executables are not installed.
 
-## 2. Common code
+## 2. Shared maintained layers
 
-### RunConfig
+The shared pipeline is organized by responsibility instead of a catch-all `common` directory. These directories compile into the single `LundCore` target because they are small and always used together. `src/common/external/` retains only protected imported files and is outside the maintained layers described below.
 
-[RunConfig.h](../src/common/RunConfig.h) declares the shared, read-only handoff from each C++ command-line entry point to its generator/converter and writer. [RunConfig.cpp](../src/common/RunConfig.cpp) implements the accepted common and source-specific key sets, strict `--key value` and `key = value` parsing, precedence, RG-M target lookup, automatic sampling/provenance settings, output naming, path normalization, and validation. Typed readers expose checked values and `values` supplies the exact resolved strings for manifest provenance.
+### Configuration (`src/config/`)
+
+[RunConfig.h](../src/config/RunConfig.h) declares the shared, read-only handoff from each C++ command-line entry point to its generator/converter and writer. [RunConfig.cpp](../src/config/RunConfig.cpp) implements the accepted common and source-specific key sets, strict `--key value` and `key = value` parsing, precedence, RG-M target lookup, automatic sampling/provenance settings, output naming, path normalization, and validation. Typed readers expose checked values and `values` supplies the exact resolved strings for manifest provenance.
 
 Configuration is parsed once; `UniformConfig` converts frequently used settings to typed values before the event loop. `RunConfig` does not inspect event data, own RNGs, mutate output directories, serialize LUND, monitor events, or submit simulation. Unknown/duplicate keys and invalid ranges fail before those operations can begin. Config syntax and defaults are in [configuration](configuration.md).
 
-### Event and particle mass
+### LUND records and serialization (`src/lund/`)
 
-[Event.h](../src/common/Event.h) declares `Particle`, `Event` and `particleMass(pid,legacy)`. Momentum and vertex values are owned, not shared mutable pointers. `particleMass` is implemented in [Particle.cpp](../src/common/Particle.cpp) and rejects unsupported species. Legacy/standard pion constants are listed in the [data contract](data-contracts.md).
+[Event.h](../src/lund/Event.h) declares `Particle`, `Event`, and `particleMass(pid,legacy)`. [Particle.cpp](../src/lund/Particle.cpp) reads the centralized support tables and rejects unsupported species.
 
-### TargetGeometry
+[LundWriter.h](../src/lund/LundWriter.h) / [LundWriter.cpp](../src/lund/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at the resolved `events-per-file` threshold; `finish(scanned)` publishes the manifest. Uniform construction also prepares the archived downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
-[RgmTarget.h](../src/common/RgmTarget.h) / [RgmTarget.cpp](../src/common/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/common/TargetGeometry.h) / [TargetGeometry.cpp](../src/common/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock. Fixed tester coordinates bypass target sampling.
+### Geometry (`src/geometry/`)
 
-### LundWriter
+[RgmTarget.h](../src/config/RgmTarget.h) / [RgmTarget.cpp](../src/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../src/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock. Fixed tester coordinates bypass target sampling. The adapter includes the protected `src/common/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained geometry code.
 
-[LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at the resolved `events-per-file` threshold; `finish(scanned)` publishes the manifest. Uniform construction also prepares the archived downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
+### Monitoring (`src/monitoring/`)
 
-`Version.h.in` embeds project version, target-header SHA-256 and the configure-time Git revision into the manifest. This is build provenance, not a runtime Git dependency.
+[Monitoring.h](../src/monitoring/Monitoring.h) / [Monitoring.cpp](../src/monitoring/Monitoring.cpp): an owned implementation allocates per-PDG histograms on first use. `fill` records all written particles and `save` writes `monitoring.root`. Histograms are detached from the ROOT directory during generation to avoid global ownership conflicts.
 
-### Monitoring
+[LegacyMonitoring.h](../src/monitoring/LegacyMonitoring.h) / [LegacyMonitoring.cpp](../src/monitoring/LegacyMonitoring.cpp): owns the original uniform histogram definitions as run-local objects. Constructor selects `1e`, `ep`, `en`, or `Tester_e`. Each entry maps histogram x/y quantities to particle values. `fill` includes original inter-particle correlations; `save` writes numerical histograms and optionally renders a caller-selected legacy PDF/numbered-PNG layout. The definitions are migrated source, not runtime imports from `legacy/`.
 
-[Monitoring.h](../src/common/Monitoring.h) / [Monitoring.cpp](../src/common/Monitoring.cpp): an owned implementation allocates per-PDG histograms on first use. `fill` records all written particles and `save` writes `monitoring.root`. Histograms are detached from the ROOT directory during generation to avoid global ownership conflicts.
+### Support (`src/support/`)
 
-### LegacyMonitoring
+[constants.h](../src/support/constants.h) is the single maintained catalog of supported PDG identifiers, current PDG 2026 masses, and explicitly separated archived compatibility masses consumed by the LUND layer and generators. [environment.h](../src/support/environment.h) is the only maintained C++ source of ANSI color definitions. It exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. Shell and Python launchers retain their separate environment-variable palette because they cannot include a C++ header.
 
-[LegacyMonitoring.h](../src/common/LegacyMonitoring.h) / [LegacyMonitoring.cpp](../src/common/LegacyMonitoring.cpp): owns the original uniform histogram definitions as run-local objects. Constructor selects `1e`, `ep`, `en`, or `Tester_e`. Each entry maps histogram x/y quantities to particle values. `fill` includes original inter-particle correlations; `save` writes numerical histograms and optionally renders a caller-selected legacy PDF/numbered-PNG layout. The definitions are migrated source, not runtime imports from `legacy/`.
+[Version.h.in](../src/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 
 ## 3. Uniform code
 
-[UniformConfig.h](../src/uniform/UniformConfig.h) defines the `UniformChannel` enum and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
+[UniformConfig.h](../src/uniform/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
 
 [UniformGenerator.h](../src/uniform/UniformGenerator.h) / [UniformGenerator.cpp](../src/uniform/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, both monitoring sets and a writer. Internal `momentum` constructs Cartesian vectors; `triggerPhi` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves both ROOT products, optional plots, and the manifest.
 
-The sampled ep branch alternates momentum components using the run-global index, independent of output-format numbering. Mathematical definitions are in [sampling models](sampling-models.md).
+The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p components using the run-global index. Neutrons use uniform momentum unless their optional fixed mode is selected. Hadron species and FD/CD region resolve the documented angular and threshold defaults. Mathematical definitions are in [sampling models](sampling-models.md).
 
 ## 4. Physical input code
 
@@ -81,8 +83,8 @@ The runner calls the external `src/common/external/submit_GEMC_sample.sh` Bash p
 
 ## 6. Configuration and resources
 
-- `config/samples/uniform-{electron,proton,neutron}.conf`: small default/fixed examples with explicit Ar metadata.
-- `uniform-{proton,neutron}-sampled.conf`: requested non-fixed modes with legacy angular windows.
+- `config/samples/uniform-{electron,proton,neutron}.conf`: production sampling examples with explicit Ar metadata.
+- `uniform-{proton,neutron}-sampled.conf`: explicit aliases for the non-fixed production modes with legacy angular windows.
 - `electron-tester.conf`: fixed beam momentum and fixed `(0,0,-3 cm)` vertex.
 - `genie.conf`: an explicit Ar conversion example.
 - `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.

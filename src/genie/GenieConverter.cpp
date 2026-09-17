@@ -30,9 +30,13 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "common/LundWriter.h"
-#include "common/Monitoring.h"
-#include "common/TargetGeometry.h"
+#include "geometry/TargetGeometry.h"
+#include "lund/LundWriter.h"
+#include "monitoring/Monitoring.h"
+#include "support/constants.h"
+#include "support/environment.h"
+
+namespace env = environment;
 
 namespace samples {
 
@@ -76,6 +80,8 @@ void convertGenie(const RunConfig& c) {
     TTreeReaderArray<Double_t> pxf(reader, "pxf"), pyf(reader, "pyf"), pzf(reader, "pzf");
 #pragma endregion
 
+    // A nonzero vertex seed is repeatable. ROOT interprets TRandom3(0) as automatic seeding; accepting
+    // zero leaves that nonrepeatable behavior available when the user values independence over replay.
     TRandom3 random(c.integer("vertex-seed"));
     TargetGeometry geometry(c.get("vertex-mode") == "target" ? c.get("target") : "point");
     const double beam = c.number("beam-energy");
@@ -114,11 +120,12 @@ void convertGenie(const RunConfig& c) {
         event.resonance_id = *resid;
         event.weight = code;
         auto vertex = c.get("vertex-mode") == "fixed" ? TVector3(c.number("vertex-x"), c.number("vertex-y"), c.number("vertex-z")) : geometry.sample(random);
-        event.particles.push_back({11, particleMass(11, legacy_mass), {*pxl, *pyl, *pzl}, vertex});
+        event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg, legacy_mass), {*pxl, *pyl, *pzl}, vertex});
         // Copy only supported final-state species while preserving the input momenta.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
-            if (pid == 2212 || pid == 2112 || pid == 211 || pid == -211 || pid == 111 || pid == 22) {
+            if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::pi_zero_pdg ||
+                pid == constants::photon_pdg) {
                 event.particles.push_back({pid, particleMass(pid, legacy_mass), {pxf[i], pyf[i], pzf[i]}, vertex});
             }
         }
@@ -146,7 +153,7 @@ void convertGenie(const RunConfig& c) {
     }
     writer.finish(scanned);
     LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);
-    std::cout << "\033[33mScanned " << scanned << ", wrote " << writer.count() << " events to \033[0m" << c.get("output") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Scanned " << scanned << ", wrote " << writer.count() << " events to " << env::RESET_COLOR << c.get("output") << '\n';
 }
 #pragma endregion
 

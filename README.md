@@ -2,7 +2,7 @@
 
 One compiled project for two sources of CLAS12 simulation input:
 
-- **Uniform samples** for acceptance-map studies: $(e,e')$, $(e,e'pFD)$, $(e,e'nFD)$ samples.
+- **Uniform samples** for acceptance-map studies: $(e,e')$, electron–hadron samples with proton, neutron, pip, or pim in FD or CD.
 - **Physical samples**: conversion of existing GENIE `gst` ROOT trees to LUND.
 
 Both write LUND files and a run manifest. The submission workflow sends completed files through GEMC and reconstruction on ifarm Slurm. This repository does not run the physical event generator itself or calculate final acceptance maps.
@@ -32,13 +32,15 @@ build/debug/apps/clas12-uniform \
 
 The resolved uniform run is written below `runs/first-electron/Uniform_sample_1e_5986MeV`. If that directory already exists, generation prints a warning, removes its previous contents and recreates it. Building and generation do not run `git clean` or submit jobs.
 
-The default LUND format preserves legacy text conventions; use `--lund-format precise` for higher precision. Fixed nucleon momentum is optional: `--nucleon-momentum sampled` selects the requested neutron/proton distributions.
+The default LUND format preserves legacy text conventions; use `--lund-format precise` for higher precision. Production momentum defaults are mixed p/1-p for the 1e electron and charged hadrons, and uniform p for neutrons. Fixed 1 GeV/c momentum is a neutron-only option. Select electron–hadron samples with `--channel eh --hadron proton|neutron|pip|pim --hadron-region FD|CD`.
 
 Open `runs/first-electron/Uniform_sample_1e_5986MeV/manifest.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `monitoring.root`.
 
 ## Where to start
 
 Read the [newcomer guide](docs/index.md), then [build instructions](docs/building.md) and the [architecture walkthrough](docs/architecture.md).
+
+Maintained shared C++ is grouped by responsibility under `src/config/`, `src/lund/`, `src/geometry/`, `src/monitoring/`, and `src/support/`. Protected imported files remain under `src/common/external/`. The architecture walkthrough maps these directories to the build targets and runtime call chain.
 
 - [Uniform generation](docs/uniform-samples.md)
 - [Physical event-generator conversion](docs/genie-to-lund-conversion.md)

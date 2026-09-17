@@ -13,23 +13,24 @@
  *
  * Workflow:
  *   1. A uniform or physical event adapter chooses a supported PDG code.
- *   2. The adapter requests either the legacy-compatible or standard pion mass.
+ *   2. The adapter requests either the archived compatibility or current PDG mass.
  *   3. The returned mass is stored in Particle.
  *   4. LundWriter combines that mass with momentum to calculate on-shell energy.
  *
  * Units and conventions:
- *   All returned masses are in GeV/c². The legacy switch changes only charged
- *   and neutral pion constants; electron, proton, neutron and photon values are
- *   identical in both modes. The photon is treated as massless.
+ *   All returned masses are in GeV/c². Both conventions come from constants.h. The photon is treated
+ *   as massless; the compatibility table retains every rounded value written by the archives.
  *
  * Failure behavior:
  *   A PDG code outside the supported LUND particle set raises std::runtime_error
  *   instead of silently assigning an unknown or zero mass.
  */
 
-#include "common/Event.h"
 #include <stdexcept>
 #include <string>
+
+#include "lund/Event.h"
+#include "support/constants.h"
 
 namespace samples {
 
@@ -51,8 +52,7 @@ namespace samples {
  *   archived common value required for byte-compatible legacy output.
  *
  * @param pid Particle PDG identifier selected by the event-source adapter.
- * @param legacy If true, preserve the archived charged/neutral pion mass value;
- *               otherwise use the maintained standard pion constants.
+ * @param legacy If true, preserve archived rounded masses; otherwise use the maintained PDG table.
  *
  * @return Rest mass in GeV/c².
  *
@@ -64,19 +64,19 @@ namespace samples {
  */
 double particleMass(int pid, bool legacy) {
     switch (pid) {
-        case 11:
-            return 0.000511;
-        case 2212:
-            return 0.938272;
-        case 2112:
-            return 0.93957;
-        case 211:
-        case -211:
-            return legacy ? 0.13957 : 0.13957039;
-        case 111:
-            return legacy ? 0.13957 : 0.1349768;
-        case 22:
-            return 0;
+        case constants::electron_pdg:
+            return legacy ? constants::legacy_mass::electron : constants::mass::electron;
+        case constants::proton_pdg:
+            return legacy ? constants::legacy_mass::proton : constants::mass::proton;
+        case constants::neutron_pdg:
+            return legacy ? constants::legacy_mass::neutron : constants::mass::neutron;
+        case constants::pi_plus_pdg:
+        case constants::pi_minus_pdg:
+            return legacy ? constants::legacy_mass::pi_charged : constants::mass::pi_charged;
+        case constants::pi_zero_pdg:
+            return legacy ? constants::legacy_mass::pi_zero : constants::mass::pi_zero;
+        case constants::photon_pdg:
+            return legacy ? constants::legacy_mass::photon : constants::mass::photon;
         default:
             throw std::runtime_error("Unsupported output PDG code: " + std::to_string(pid));
     }

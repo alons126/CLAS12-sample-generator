@@ -10,7 +10,7 @@ Uniform sampling -------------------+
 Existing GENIE GST --> conversion --+
 ```
 
-**Uniform sampling** places particles across chosen momentum and angular ranges so an analysis can measure detector acceptance. The electron–nucleon modes use an artificial trigger electron; they are not models of exclusive scattering kinematics.
+**Uniform sampling** places particles across chosen momentum and angular ranges so an analysis can measure detector acceptance. The electron–hadron modes use an artificial trigger electron; they are not models of exclusive scattering kinematics.
 
 **GENIE conversion** reads already generated physical events from a ROOT tree named `gst`, selects supported final-state particle species, and writes their momenta to LUND. It does not generate new GENIE interactions.
 
@@ -26,6 +26,21 @@ Existing GENIE GST --> conversion --+
 6. [Migration](migration.md): old-to-new entry points and deliberate behavioral changes.
 
 For the scientific and implementation reference, start at the [technical-note outline](technical-note.md). It links the sampling equations, data contracts, source inventory, legacy launch-chain mapping, and validation evidence.
+
+## Where the maintained code lives
+
+| Directory | What to look for there |
+| --- | --- |
+| `src/config/` | Run-option parsing, validation, and RG-M target metadata |
+| `src/lund/` | Event records, particle masses, LUND writing, file splitting, and manifests |
+| `src/geometry/` | The maintained adapter around external target geometry |
+| `src/monitoring/` | ROOT histograms and legacy-compatible monitoring artifacts |
+| `src/support/` | Shared constants, terminal colors, and compiled provenance template |
+| `src/uniform/` | Uniform kinematic generation |
+| `src/physical/` and `src/genie/` | Physical-source dispatch and GENIE GST conversion |
+| `src/common/external/` | Protected imported files; do not treat this as maintained common code |
+
+The first five directories build together as `LundCore`. They remain separate folders so configuration, data format, geometry, diagnostics, and low-level definitions are easy to find without adding unnecessary runtime abstractions. The detailed call chain is in the [architecture walkthrough](architecture.md).
 
 ## A run directory
 

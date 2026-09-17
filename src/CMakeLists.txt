@@ -4,25 +4,33 @@
 
 # src/CMakeLists.txt ------------------------------------------------------------
 # Description:
-#   Reusable C++ libraries.
+#   Responsibility-grouped C++ libraries.
 # Purpose:
-#   Compile shared infrastructure once and link the selected sample-generation implementations against it.
+#   Compile the shared LUND pipeline once and link source-specific generation or conversion code against it.
 # Workflow:
 #   The root discovers ROOT/Threads first; this directory creates libraries consumed by apps/ and tests/.
 # Inputs:
 #   Root workflow options, imported ROOT/Threads targets and the generated provenance include directory.
 # Outputs:
-#   SampleCommon, optional UniformGeneration and optional GenieConversion static libraries.
+#   LundCore, optional UniformGeneration, and optional GenieConversion/PhysicalConversion static libraries.
 # Notes:
-#   PUBLIC dependencies propagate to consumers; PRIVATE dependencies belong to library implementation.
+#   The directories describe source ownership; LundCore remains one target because these layers form one small pipeline.
 
-# Shared infrastructure -------------------------------------------------------
+# Shared LUND pipeline -------------------------------------------------------
 
-# region Shared infrastructure
-# Purpose: Own configuration, target adapter, particle masses, output and diagnostics in one static library.
-add_library(SampleCommon STATIC common/RunConfig.cpp common/RgmTarget.cpp common/TargetGeometry.cpp common/Particle.cpp common/LundWriter.cpp common/Monitoring.cpp common/LegacyMonitoring.cpp)
-target_include_directories(SampleCommon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${PROJECT_BINARY_DIR}/generated)
-target_link_libraries(SampleCommon PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
+# region Shared LUND pipeline
+# Purpose: Join configuration, geometry, LUND records/serialization, monitoring, and support definitions without hiding their source boundaries.
+add_library(
+    LundCore STATIC
+    config/RunConfig.cpp
+    config/RgmTarget.cpp
+    geometry/TargetGeometry.cpp
+    lund/Particle.cpp
+    lund/LundWriter.cpp
+    monitoring/Monitoring.cpp
+    monitoring/LegacyMonitoring.cpp)
+target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${PROJECT_BINARY_DIR}/generated)
+target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
 # endregion
 
 # Uniform generation -------------------------------------------------------
@@ -31,7 +39,7 @@ target_link_libraries(SampleCommon PUBLIC ROOT::Core ROOT::Physics PRIVATE Threa
 # Purpose: Expose the acceptance-sample implementation through UniformGeneration.
 if(BUILD_UNIFORM)
     add_library(UniformGeneration STATIC uniform/UniformGenerator.cpp)
-    target_link_libraries(UniformGeneration PUBLIC SampleCommon)
+    target_link_libraries(UniformGeneration PUBLIC LundCore)
 endif()
 # endregion
 
@@ -41,8 +49,8 @@ endif()
 # Purpose: Add GST tree-reading dependencies only to the GENIE conversion implementation.
 if(BUILD_GENIE)
     add_library(GenieConversion STATIC genie/GenieConverter.cpp)
-    target_link_libraries(GenieConversion PUBLIC SampleCommon PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)
+    target_link_libraries(GenieConversion PUBLIC LundCore PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)
     add_library(PhysicalConversion STATIC physical/PhysicalConverter.cpp)
-    target_link_libraries(PhysicalConversion PUBLIC SampleCommon PRIVATE GenieConversion)
+    target_link_libraries(PhysicalConversion PUBLIC LundCore PRIVATE GenieConversion)
 endif()
 # endregion

@@ -81,19 +81,23 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             for channel in ['1e','ep','en','tester']:
                 name=beam+'-'+channel
                 original, new_root = root/(name+'-old'), root/(name+'-new')
-                new = uniform_output(new_root, '1e' if channel == 'tester' else channel, beam)
+                label = '1e' if channel == 'tester' else {'ep':'epFD','en':'enFD'}.get(channel,channel)
+                new = uniform_output(new_root, label, beam)
                 run(legacy,channel,original,beam,64,1,67890,12345,'Ar')
                 if channel == 'tester':
                     extra = ['--electron-momentum','beam','--target','point']
+                elif channel == '1e':
+                    extra = ['--electron-momentum','uniform','--electron-p-min','0','--electron-p-max',beam]
                 elif channel in ('ep', 'en'):
                     # The pinned upstream generator draws p uniformly from 0.3 GeV/c to the beam
                     # energy and theta uniformly over the channel acceptance for both nucleons.
-                    extra = ['--nucleon-momentum','uniform','--nucleon-angle','theta',
-                             '--nucleon-p-min','0.3','--nucleon-p-max',beam]
+                    extra = ['--hadron-momentum','uniform','--hadron-angle','theta',
+                             '--hadron-p-min','0.3','--hadron-p-max',beam]
                 else:
                     extra = []
-                run(current,'--channel','1e' if channel=='tester' else channel,'--beam-energy',beam,'--events',64,
-                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--render-plots','false','--output',new_root,*extra)
+                selection = [] if channel in ('1e','tester') else ['--hadron','proton' if channel=='ep' else 'neutron','--hadron-region','FD']
+                run(current,'--channel','1e' if channel in ('1e','tester') else 'eh','--beam-energy',beam,'--events',64,
+                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--mass-convention','legacy','--render-plots','false','--output',new_root,*selection,*extra)
                 run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
                 m=json.loads((new/'manifest.json').read_text())
                 assert len(m['files']) == 1
@@ -102,7 +106,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             original,new_root=root/(target+'-old'),root/(target+'-new')
             new=uniform_output(new_root,'1e','2.07052')
             run(legacy,'1e',original,2.07052,64,1,67890,12345,target)
-            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--A',1,'--Z',1,'--events',64,'--render-plots','false','--output',new_root)
+            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--A',1,'--Z',1,'--events',64,
+                '--electron-momentum','uniform','--electron-p-min',0,'--electron-p-max',2.07052,
+                '--render-plots','false','--output',new_root)
             m=json.loads((new/'manifest.json').read_text())
             compare(new/m['files'][0]['path'],original/'legacy_1.txt')
     else:
@@ -112,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             run(fixture,gst,'parity')
             original,new_root=root/(label+'-old'),root/(label+'-new')
             run(legacy,gst,original,1,target,A,Z)
-            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--output',new_root)
+            run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--mass-convention','legacy','--output',new_root)
             q2={'2.07052':'Q2_0_02','4.02962':'Q2_0_25','5.98636':'Q2_0_40'}[beam]
             new=new_root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{label}_GEMC-unknown'
             m=json.loads((new/'manifest.json').read_text())

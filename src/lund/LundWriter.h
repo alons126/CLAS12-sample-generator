@@ -27,8 +27,8 @@
 #include <fstream>
 #include <vector>
 
-#include "common/Event.h"
-#include "common/RunConfig.h"
+#include "config/RunConfig.h"
+#include "lund/Event.h"
 
 namespace samples {
 

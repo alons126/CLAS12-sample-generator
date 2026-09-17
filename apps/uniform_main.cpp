@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 
-#include "common/environment.h"
+#include "support/environment.h"
 #include "uniform/UniformGenerator.h"
 
 namespace env = environment;

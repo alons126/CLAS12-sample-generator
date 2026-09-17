@@ -27,7 +27,7 @@
  *   may leave partial output for inspection; absence of manifest.json marks the run incomplete.
  */
 
-#include "common/LundWriter.h"
+#include "lund/LundWriter.h"
 
 #include <TROOT.h>
 #include <TString.h>
@@ -40,7 +40,10 @@
 #include <stdexcept>
 
 #include "Version.h"
-#include "common/environment.h"
+#include "support/constants.h"
+#include "support/environment.h"
+
+namespace env = environment;
 
 namespace samples {
 
@@ -89,70 +92,80 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto monitoring_dir = output / (uniform ? "MonitoringPlotsPath" : "monitoring_plots");
 
     // Keep the archived yellow separator style so long interactive and Slurm logs expose run boundaries.
-    std::cout << "\033[33m\n=============================================================\n\033[0m";
-    std::cout << "\033[33m\n= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << " summary" << "\n\033[0m";
-    std::cout << "\033[33m=============================================================\n\033[0m";
+    std::cout << env::SYSTEM_COLOR << "\n=============================================================\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "\n= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << " summary\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "=============================================================\n" << env::RESET_COLOR;
 
     if (uniform) {
         // Reproduce CodeRun-style labels and constants alongside the resolved channel/mode. Several
         // listed downstream paths are planning information for later GEMC/reconstruction workflows.
-        std::cout << "\033[33m\nOutputFileNamePrefix:\033[0m " << config.get("prefix") << '\n';
-        std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m " << config.get("events-per-file") << '\n';
-        std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
-        std::cout << "\033[33mGenerateLundFiles:\033[0m true\n";
-        std::cout << "\033[33mnParticles:\033[0m 2\n";
-        std::cout << "\033[33mmass_e [GeV/c²]:\033[0m " << 0.511e-3 << "  \033[33mmass_p [GeV/c²]:\033[0m " << 0.938272 << "  \033[33mmass_n [GeV/c²]:\033[0m " << 0.93957 << '\n';
-        std::cout << "\033[33mOutPutFolder:\033[0m " << output << '\n';
-        std::cout << "\033[33mlundPath:\033[0m " << lund_dir << '\n';
-        std::cout << "\033[33mmchipoPath:\033[0m " << mchipo_dir << '\n';
-        std::cout << "\033[33mreconhipoPath:\033[0m " << recon_dir << '\n';
-        std::cout << "\033[33mrootfilesPath:\033[0m " << rootfiles_dir << '\n';
-        std::cout << "\033[33mMonitoringPlotsPath:\033[0m " << monitoring_dir << '\n';
-        std::cout << "\033[33mPlot list path:\033[0m " << output / (config.get("prefix") + "_plots.root") << '\n';
-        std::cout << "\033[33mChannel:\033[0m " << config.get("channel") << "  \033[33mElectron momentum:\033[0m " << config.get("electron-momentum") << "  \033[33mNucleon momentum:\033[0m "
-                  << config.get("nucleon-momentum") << '\n';
-        std::cout << "\033[33mtargP:\033[0m 0  \033[33mbeamP:\033[0m 0  \033[33minteractN:\033[0m 1  \033[33mbeamType:\033[0m 11\n";
-        std::cout << "\033[33mbeamE_in_lundfiles:\033[0m " << config.get("beam-energy") << "\n";
-        std::cout << "\033[33mweight:\033[0m 1\n";
-        std::cout << "\033[33mCreating plot directories...\033[0m\n";
+        std::cout << env::SYSTEM_COLOR << "\nOutputFileNamePrefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
+                  << config.get("events-per-file") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
+        std::cout << env::SYSTEM_COLOR << "GenerateLundFiles:" << env::RESET_COLOR << " true\n";
+        std::cout << env::SYSTEM_COLOR << "nParticles:" << env::RESET_COLOR << " 2\n";
+        const bool legacy_mass = config.get("mass-convention") == "legacy";
+        std::cout << env::SYSTEM_COLOR << "mass_e [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::electron_pdg, legacy_mass) << "  " << env::SYSTEM_COLOR
+                  << "mass_p [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::proton_pdg, legacy_mass) << "  " << env::SYSTEM_COLOR << "mass_n [GeV/c²]:" << env::RESET_COLOR
+                  << ' ' << particleMass(constants::neutron_pdg, legacy_mass) << '\n';
+        std::cout << env::SYSTEM_COLOR << "OutPutFolder:" << env::RESET_COLOR << " " << output << '\n';
+        std::cout << env::SYSTEM_COLOR << "lundPath:" << env::RESET_COLOR << " " << lund_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "mchipoPath:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "reconhipoPath:" << env::RESET_COLOR << " " << recon_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "rootfilesPath:" << env::RESET_COLOR << " " << rootfiles_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "MonitoringPlotsPath:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "Plot list path:" << env::RESET_COLOR << " " << output / (config.get("prefix") + "_plots.root") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << "  " << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " "
+                  << config.get("electron-momentum") << "  " << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed") << "  " << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " "
+                  << config.get("vertex-seed") << (config.get("seed") == "0" || config.get("vertex-seed") == "0" ? "  (0 requests ROOT automatic, nonrepeatable seeding)" : "") << '\n';
+        std::cout << env::SYSTEM_COLOR << "targP:" << env::RESET_COLOR << " 0  " << env::SYSTEM_COLOR << "beamP:" << env::RESET_COLOR << " 0  " << env::SYSTEM_COLOR
+                  << "interactN:" << env::RESET_COLOR << " 1  " << env::SYSTEM_COLOR << "beamType:" << env::RESET_COLOR << " " << constants::electron_pdg << '\n';
+        std::cout << env::SYSTEM_COLOR << "beamE_in_lundfiles:" << env::RESET_COLOR << " " << config.get("beam-energy") << "\n";
+        std::cout << env::SYSTEM_COLOR << "weight:" << env::RESET_COLOR << " 1\n";
+        std::cout << env::SYSTEM_COLOR << "Creating plot directories..." << env::RESET_COLOR << "\n";
     } else {
         // Physical setup text identifies the adapter/input provenance and the requested accepted-event
         // capacity before the converter begins scanning its source entries.
-        std::cout << "\033[33m\nProceeding input arguments...\033[0m\n";
-        std::cout << "\033[33mEvent generator:\033[0m " << config.get("event-generator") << " " << config.get("event-generator-version") << '\n';
-        std::cout << "\033[33mInputFiles:\033[0m " << config.get("input") << '\n';
-        std::cout << "\033[33mLUND file prefix:\033[0m " << config.get("prefix") << '\n';
-        std::cout << "\033[33mOutput directory:\033[0m " << output << '\n';
-        std::cout << "\033[33mGenerating lundfiles directory:\033[0m " << lund_dir << '\n';
-        std::cout << "\033[33mGenerating mchipo directory:\033[0m " << mchipo_dir << '\n';
-        std::cout << "\033[33mGenerating reconhipo directory:\033[0m " << recon_dir << '\n';
-        std::cout << "\033[33mGenerating monitoring plots directory:\033[0m " << monitoring_dir << '\n';
-        std::cout << "\033[33mSaving lundfiles into\033[0m " << lund_dir << '\n';
-        std::cout << "\033[33mNumber of events\033[0m " << config.get("events") << '\n';
-        std::cout << "\033[33mEvents per output file:\033[0m " << config.get("events-per-file") << '\n';
+        std::cout << env::SYSTEM_COLOR << "\nProceeding input arguments..." << env::RESET_COLOR << "\n";
+        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << " " << config.get("event-generator-version") << '\n';
+        std::cout << env::SYSTEM_COLOR << "InputFiles:" << env::RESET_COLOR << " " << config.get("input") << '\n';
+        std::cout << env::SYSTEM_COLOR << "LUND file prefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << '\n';
+        std::cout << env::SYSTEM_COLOR << "Generating lundfiles directory:" << env::RESET_COLOR << " " << lund_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "Generating mchipo directory:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "Generating reconhipo directory:" << env::RESET_COLOR << " " << recon_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "Generating monitoring plots directory:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "Saving lundfiles into" << env::RESET_COLOR << " " << lund_dir << '\n';
+        std::cout << env::SYSTEM_COLOR << "Number of events" << env::RESET_COLOR << " " << config.get("events") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Events per output file:" << env::RESET_COLOR << " " << config.get("events-per-file") << '\n';
     }
 
     // Shared fields make uniform and physical logs comparable without erasing their source semantics.
     // Target is the geometry key; A and Z remain independent LUND header metadata.
-    std::cout << "\033[33mOutput directory:\033[0m " << output << '\n';
-    std::cout << "\033[33mLUND directory:\033[0m " << lund_dir << '\n';
-    std::cout << "\033[33mOutput prefix:\033[0m " << config.get("prefix") << '\n';
-    std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
-    std::cout << "\033[33mTarget:\033[0m " << config.get("target") << "  \033[33mA:\033[0m " << config.get("A") << "  \033[33mZ:\033[0m " << config.get("Z") << '\n';
-    std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m " << config.get("events-per-file") << '\n';
-    std::cout << "\033[33mLUND format:\033[0m " << config.get("lund-format") << "  \033[33mMass convention:\033[0m " << config.get("mass-convention") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << '\n';
+    std::cout << env::SYSTEM_COLOR << "LUND directory:" << env::RESET_COLOR << " " << lund_dir << '\n';
+    std::cout << env::SYSTEM_COLOR << "Output prefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Target:" << env::RESET_COLOR << " " << config.get("target") << "  " << env::SYSTEM_COLOR << "A:" << env::RESET_COLOR << " " << config.get("A") << "  "
+              << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
+              << config.get("events-per-file") << '\n';
+    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " " << config.get("lund-format") << "  " << env::SYSTEM_COLOR << "Mass convention:" << env::RESET_COLOR << " "
+              << config.get("mass-convention") << '\n';
 
     if (final) {
         // Uniform generation writes every generated event, so scanned equals written. Physical scanned
         // includes unsupported interactions skipped before serialization; `written` and the resolved
         // split threshold determine the number of files, including a possible partial last file.
-        std::cout << "\033[33m\n- Completion summary ----------------------------------------\n\033[0m";
-        std::cout << "\033[33mTotal entries scanned:\033[0m " << scanned << '\n';
-        std::cout << "\033[33mEvents passing cuts:\033[0m " << written << '\n';
+        std::cout << env::SYSTEM_COLOR << "\n- Completion summary ----------------------------------------\n" << env::RESET_COLOR;
+        std::cout << env::SYSTEM_COLOR << "Total entries scanned:" << env::RESET_COLOR << " " << scanned << '\n';
+        std::cout << env::SYSTEM_COLOR << "Events passing cuts:" << env::RESET_COLOR << " " << written << '\n';
         const auto events_per_file = config.integer("events-per-file");
         const auto output_files = (written + events_per_file - 1) / events_per_file;
-        std::cout << "\033[33mOutput files written:\033[0m " << output_files << '\n';
-        std::cout << "\033[33m\nOperation finished!\033[0m\n";
+        std::cout << env::SYSTEM_COLOR << "Output files written:" << env::RESET_COLOR << " " << output_files << '\n';
+        std::cout << env::SYSTEM_COLOR << "\nOperation finished!" << env::RESET_COLOR << "\n";
     }
 
     std::cout << '\n';
@@ -219,7 +232,7 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     // final path are disposable by the documented legacy rerun contract.
     std::filesystem::create_directories(directory_.parent_path());
     if (std::filesystem::exists(directory_)) {
-        std::cout << environment::WARNING_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << environment::RESET_COLOR << '\n';
+        std::cout << env::WARNING_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << env::RESET_COLOR << '\n';
         std::filesystem::remove_all(directory_);
     }
 
@@ -308,17 +321,19 @@ void LundWriter::write(const Event& e) {
     if (legacy_format_) {
         const auto id = static_cast<unsigned long long>(workflow_ == "uniform" ? files_.back().events : e.id);
 
-        // ep/en and the beam-momentum electron tester historically wrote beam energy with one decimal;
+        // electron–hadron samples and the beam-momentum electron tester historically wrote beam energy with one decimal;
         // ordinary 1e and physical conversion used six decimals. Other header fields retain their
         // archived precision and meanings, including physical process tags in e.weight.
-        const bool nucleon = workflow_ == "uniform" && config_.get("channel") != "1e";
+        const bool electron_hadron = workflow_ == "uniform" && config_.get("channel") == "eh";
         const bool tester = workflow_ == "uniform" && config_.get("channel") == "1e" && config_.get("electron-momentum") == "beam";
-        const char* format = nucleon || tester ? "%i \t %i \t %i \t %.3f \t %.3f \t %i \t %.1f \t %i \t %llu \t %.3f \n" : "%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %llu \t %.2f \n";
-        stream_ << TString::Format(format, static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., 11, e.beam_energy, 1, id, e.weight);
+        const char* format =
+            electron_hadron || tester ? "%i \t %i \t %i \t %.3f \t %.3f \t %i \t %.1f \t %i \t %llu \t %.3f \n" : "%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %llu \t %.2f \n";
+        stream_ << TString::Format(format, static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., constants::electron_pdg, e.beam_energy, 1, id, e.weight);
     } else {
         // Precise format keeps one-space separation, the run/source-global ID, and the stream's ten
         // significant-digit precision while preserving the same semantic header fields.
-        stream_ << e.particles.size() << ' ' << e.A << ' ' << e.Z << ' ' << e.resonance_id << " 0 11 " << e.beam_energy << " 1 " << e.id << ' ' << e.weight << '\n';
+        stream_ << e.particles.size() << ' ' << e.A << ' ' << e.Z << ' ' << e.resonance_id << " 0 " << constants::electron_pdg << ' ' << e.beam_energy << " 1 " << e.id << ' ' << e.weight
+                << '\n';
     }
 
     // Derive mass-shell energy E=sqrt(m²+p²) under c=1 and emit fourteen fields per particle. The loop
