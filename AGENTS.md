@@ -23,6 +23,17 @@ Apply these rules to maintained C++ source and header files. Do not apply them t
 - Make every separator-banner line, including its label and repeated `-` characters, exactly 170 columns wide.
 - Always enclose the body of every C++ `if`, `else if`, `else`, `for`, range-based `for`, `while`, and `do while` statement in braces, even when the body contains only one statement.
 
+### Formatter-overriding exceptions
+
+For maintained C++, the repository `.clang-format` output is authoritative wherever it conflicts with the manual formatting rules above. Do not repeatedly restore whitespace or line layouts that clang-format removes. Apply the current formatter contract as these explicit exceptions:
+
+- Use Google as the base style, attached braces, four-space indentation, four-column tab width, and spaces instead of tab characters.
+- Use the formatter's 190-column limit for ordinary code. The explicit 170-column requirement still applies to named separator-banner lines when clang-format leaves those comment lines unchanged.
+- Short `if` statements, loops, and blocks may remain on one line when clang-format permits them. Do not expand them again merely to satisfy the manual layout rules.
+- Braces that already exist must remain; clang-format's permission to keep a short statement on one line does not authorize manually deleting braces.
+- Blank-line requirements around `#pragma region`, `#pragma endregion`, banners, includes, and namespace-usage declarations apply only where clang-format preserves those blank lines. The formatter may remove blank lines at the beginning or end of a block, and that formatted result is compliant.
+- Run clang-format after manual C++ formatting changes and treat the resulting layout as the final code format.
+
 Every maintained code file in another language must begin with the analogous `Created by Alon Sportes on <creation date>.` ownership header using that language's comment syntax. When a file begins with an interpreter directive such as `#!/usr/bin/env python3` or `#!/bin/tcsh`, keep the shebang on the first line, leave exactly one blank line, and then place the ownership header. Use the actual creation date recorded in an existing header or recover it from repository history; never guess or silently substitute the modification date. These ownership-header requirements do not apply to protected external or archived files or to `.clang-format`, `.vscode/c_cpp_properties.json`, `.vscode/settings.json`, and `*.conf` files unless explicitly requested.
 
 Use module/function docstrings and `# region` / `# endregion` comment markers for Python. Use description, purpose, workflow, inputs/outputs, usage and named comment regions for shell scripts. Keep shebangs first and preserve sourced-shell exit-status behavior.
