@@ -11,21 +11,21 @@ Maintained code is grouped by the responsibility a newcomer is looking for. The 
 | `src/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
 | `src/monitoring/` | Produce general and legacy-compatible ROOT diagnostics |
 | `src/support/` | Central PDG constants, terminal presentation, and the generated-version template |
-| `src/uniform/` | Produce deliberately unphysical acceptance-map events |
-| `src/physical/` | Dispatch a physical input source to its event-generator adapter |
-| `src/genie/` | Read GENIE GST as the currently implemented physical adapter |
+| `src/clas12-uniform/` | Produce deliberately unphysical acceptance-map events |
+| `src/clas12-generator-to-lund/` | Dispatch a physical input source to its event-generator adapter |
+| `src/clas12-generator-to-lund/genie/` | Read GENIE GST as the currently implemented physical adapter |
 | `src/common/external/` | Protected imported geometry and GEMC worker payloads; these are not maintained source |
 
-This layout separates concepts without adding user-facing workflows or runtime layers. Cross-layer includes state the dependency directly, for example `config/RunConfig.h`, `lund/Event.h`, and `support/constants.h`.
+The two source-specific directories intentionally match the installed executable names. The GENIE reader is nested under `clas12-generator-to-lund` because it implements one physical-input adapter rather than an independent workflow. A future adapter belongs beside it, such as `src/clas12-generator-to-lund/gibuu/`. Cross-layer includes state dependencies directly, for example `config/RunConfig.h`, `lund/Event.h`, and `support/constants.h`.
 
 ## Build targets
 
 | Target | Source | Responsibility |
 | --- | --- | --- |
 | `LundCore` | `src/config/`, `src/lund/`, `src/geometry/`, `src/monitoring/`, `src/support/` | Shared configuration-to-manifest LUND pipeline |
-| `UniformGeneration` | `src/uniform/` | Uniform sampling prescriptions |
-| `GenieConversion` | `src/genie/` | GENIE GST input adapter |
-| `PhysicalConversion` | `src/physical/` | Select the configured physical event-generator adapter |
+| `UniformGeneration` | `src/clas12-uniform/` | Uniform sampling prescriptions |
+| `GenieConversion` | `src/clas12-generator-to-lund/genie/` | GENIE GST input adapter |
+| `PhysicalConversion` | `src/clas12-generator-to-lund/` | Select the configured physical event-generator adapter |
 | `clas12-uniform` | `apps/uniform_main.cpp` | Parse CLI, call generator, report errors |
 | `clas12-generator-to-lund` | `apps/genie_to_lund_main.cpp` | Parse physical input settings and dispatch an adapter |
 
@@ -106,8 +106,8 @@ The converter stops at the configured output capacity or end of input. The final
 
 ## Adding functionality
 
-- Add a sampling prescription in `src/uniform/` with validated settings and an output-level test of its distribution or invariants.
-- Add another physical adapter behind `convertPhysical`; keep the public executable and manifest contract unchanged.
+- Add a sampling prescription in `src/clas12-uniform/` with validated settings and an output-level test of its distribution or invariants.
+- Add another physical adapter under `src/clas12-generator-to-lund/<generator>/` and register it behind `convertPhysical`; keep the public executable and manifest contract unchanged.
 - Replace or extend `src/common/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
 - Keep machine paths, scheduler resources and binary names in site configuration.

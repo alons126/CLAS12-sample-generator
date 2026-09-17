@@ -8,8 +8,8 @@
  *
  * Purpose:
  *   Keep workflow code independent of concrete event-generator input formats.
- *   New physical adapters connect through this dispatch boundary while shared
- *   LUND output remains in the common layer.
+ *   New physical adapters live below this executable-aligned directory and
+ *   connect through this dispatch boundary while LUND output remains shared.
  *
  * Workflow:
  *   The create-lund workflow resolves RunConfig, then calls convertPhysical(),

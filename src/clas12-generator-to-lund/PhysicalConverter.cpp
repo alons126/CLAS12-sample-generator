@@ -15,11 +15,11 @@
  *   reject unsupported values explicitly.
  */
 
-#include "physical/PhysicalConverter.h"
+#include "clas12-generator-to-lund/PhysicalConverter.h"
 
 #include <stdexcept>
 
-#include "genie/GenieConverter.h"
+#include "clas12-generator-to-lund/genie/GenieConverter.h"
 
 namespace samples {
 

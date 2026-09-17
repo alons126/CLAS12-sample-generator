@@ -36,11 +36,11 @@ For the scientific and implementation reference, start at the [technical-note ou
 | `src/geometry/` | The maintained adapter around external target geometry |
 | `src/monitoring/` | ROOT histograms and legacy-compatible monitoring artifacts |
 | `src/support/` | Shared constants, terminal colors, and compiled provenance template |
-| `src/uniform/` | Uniform kinematic generation |
-| `src/physical/` and `src/genie/` | Physical-source dispatch and GENIE GST conversion |
+| `src/clas12-uniform/` | Uniform kinematic generation |
+| `src/clas12-generator-to-lund/` | Physical-source dispatch, with generator adapters such as `genie/` nested below it |
 | `src/common/external/` | Protected imported files; do not treat this as maintained common code |
 
-The first five directories build together as `LundCore`. They remain separate folders so configuration, data format, geometry, diagnostics, and low-level definitions are easy to find without adding unnecessary runtime abstractions. The detailed call chain is in the [architecture walkthrough](architecture.md).
+The first five directories build together as `LundCore`. They remain separate folders so configuration, data format, geometry, diagnostics, and low-level definitions are easy to find without adding unnecessary runtime abstractions. The two source-specific directories match their executable names, and physical generator adapters are subordinate to `clas12-generator-to-lund`. The detailed call chain is in the [architecture walkthrough](architecture.md).
 
 ## A run directory
 

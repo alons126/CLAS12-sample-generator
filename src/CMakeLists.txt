@@ -14,7 +14,8 @@
 # Outputs:
 #   LundCore, optional UniformGeneration, and optional GenieConversion/PhysicalConversion static libraries.
 # Notes:
-#   The directories describe source ownership; LundCore remains one target because these layers form one small pipeline.
+#   Source-specific directories match their executable names. Physical event-generator adapters are nested below
+#   clas12-generator-to-lund; LundCore remains one target because its shared layers form one small pipeline.
 
 # Shared LUND pipeline -------------------------------------------------------
 
@@ -36,9 +37,9 @@ target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::
 # Uniform generation -------------------------------------------------------
 
 # region Uniform generation
-# Purpose: Expose the acceptance-sample implementation through UniformGeneration.
+# Purpose: Build the implementation behind the clas12-uniform executable as UniformGeneration.
 if(BUILD_UNIFORM)
-    add_library(UniformGeneration STATIC uniform/UniformGenerator.cpp)
+    add_library(UniformGeneration STATIC clas12-uniform/UniformGenerator.cpp)
     target_link_libraries(UniformGeneration PUBLIC LundCore)
 endif()
 # endregion
@@ -46,11 +47,11 @@ endif()
 # Physical-event conversion -------------------------------------------------------
 
 # region Physical-event conversion
-# Purpose: Add GST tree-reading dependencies only to the GENIE conversion implementation.
+# Purpose: Build the clas12-generator-to-lund dispatcher and keep GST dependencies on its nested GENIE adapter.
 if(BUILD_GENIE)
-    add_library(GenieConversion STATIC genie/GenieConverter.cpp)
+    add_library(GenieConversion STATIC clas12-generator-to-lund/genie/GenieConverter.cpp)
     target_link_libraries(GenieConversion PUBLIC LundCore PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)
-    add_library(PhysicalConversion STATIC physical/PhysicalConverter.cpp)
+    add_library(PhysicalConversion STATIC clas12-generator-to-lund/PhysicalConverter.cpp)
     target_link_libraries(PhysicalConversion PUBLIC LundCore PRIVATE GenieConversion)
 endif()
 # endregion

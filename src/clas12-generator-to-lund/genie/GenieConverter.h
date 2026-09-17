@@ -7,10 +7,12 @@
  * @brief GENIE GST conversion entry-point contract.
  *
  * Purpose:
- *   Expose conversion of existing physical events to the CLI.
+ *   Implement the GENIE-specific input adapter nested under the generator-independent
+ *   clas12-generator-to-lund workflow.
  *
  * Workflow:
- *   Pass input and output settings to convertGenie; consume the completed LUND run through its manifest.
+ *   Receive validated physical settings from convertPhysical, read existing GST truth,
+ *   and publish the completed LUND run through its manifest.
  */
 
 #pragma once

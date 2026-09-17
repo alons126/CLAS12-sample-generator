@@ -48,19 +48,19 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 [Version.h.in](../src/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 
-## 3. Uniform code
+## 3. `clas12-uniform` implementation
 
-[UniformConfig.h](../src/uniform/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
+[UniformConfig.h](../src/clas12-uniform/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
 
-[UniformGenerator.h](../src/uniform/UniformGenerator.h) / [UniformGenerator.cpp](../src/uniform/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, both monitoring sets and a writer. Internal `momentum` constructs Cartesian vectors; `triggerPhi` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves both ROOT products, optional plots, and the manifest.
+[UniformGenerator.h](../src/clas12-uniform/UniformGenerator.h) / [UniformGenerator.cpp](../src/clas12-uniform/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, both monitoring sets and a writer. Internal `momentum` constructs Cartesian vectors; `triggerPhi` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves both ROOT products, optional plots, and the manifest.
 
 The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p components using the run-global index. Neutrons use uniform momentum unless their optional fixed mode is selected. Hadron species and FD/CD region resolve the documented angular and threshold defaults. Mathematical definitions are in [sampling models](sampling-models.md).
 
-## 4. Physical input code
+## 4. `clas12-generator-to-lund` implementation
 
-[PhysicalConverter.h](../src/physical/PhysicalConverter.h) / [PhysicalConverter.cpp](../src/physical/PhysicalConverter.cpp) provide the stable physical-source dispatch. `event-generator=genie` selects the current adapter; future adapters join here without changing the public executable.
+[PhysicalConverter.h](../src/clas12-generator-to-lund/PhysicalConverter.h) / [PhysicalConverter.cpp](../src/clas12-generator-to-lund/PhysicalConverter.cpp) provide the stable physical-source dispatch. `event-generator=genie` selects the current adapter; future adapters join here without changing the public executable.
 
-[GenieConverter.h](../src/genie/GenieConverter.h) / [GenieConverter.cpp](../src/genie/GenieConverter.cpp) expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, fills the original pre-selection electron diagnostic, selects process/species, and writes an `Event`. It also fills the common written-particle diagnostics.
+[GenieConverter.h](../src/clas12-generator-to-lund/genie/GenieConverter.h) / [GenieConverter.cpp](../src/clas12-generator-to-lund/genie/GenieConverter.cpp) are nested below the physical dispatcher because GENIE is one adapter of the `clas12-generator-to-lund` executable. They expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, fills the original pre-selection electron diagnostic, selects process/species, and writes an `Event`. It also fills the common written-particle diagnostics.
 
 The reader arrays replace the archived fixed 250-element buffers. Input errors, unsupported-only input and output failures do not publish a manifest. Complete splitting retains partial files; the capacity limit counts accepted events, not scanned entries. Schema and process conventions are in the [GENIE guide](genie-to-lund-conversion.md).
 

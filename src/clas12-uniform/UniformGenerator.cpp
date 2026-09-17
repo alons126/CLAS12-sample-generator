@@ -27,20 +27,20 @@
  *   reproducibility contract, so target-geometry sampling cannot consume kinematic random numbers.
  */
 
-#include "uniform/UniformGenerator.h"
+#include "clas12-uniform/UniformGenerator.h"
 
 #include <TMath.h>
 
 #include <cmath>
 #include <iostream>
 
+#include "clas12-uniform/UniformConfig.h"
 #include "geometry/TargetGeometry.h"
 #include "lund/LundWriter.h"
 #include "monitoring/LegacyMonitoring.h"
 #include "monitoring/Monitoring.h"
 #include "support/constants.h"
 #include "support/environment.h"
-#include "uniform/UniformConfig.h"
 
 namespace env = environment;
 

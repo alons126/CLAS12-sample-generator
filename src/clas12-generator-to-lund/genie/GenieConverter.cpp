@@ -7,13 +7,14 @@
  * @brief Existing GENIE GST events converted into LUND records.
  *
  * Purpose:
- *   Read supported processes and final-state species, retain momenta, and assign a target vertex.
+ *   Serve as the nested GENIE adapter: read supported processes and final-state species,
+ *   retain their momenta, and assign a target vertex.
  *
  * Workflow:
  *   Validate GST schema -> scan and select -> write events -> save diagnostics -> publish manifest.
  */
 
-#include "genie/GenieConverter.h"
+#include "clas12-generator-to-lund/genie/GenieConverter.h"
 
 #include <TCanvas.h>
 #include <TChain.h>

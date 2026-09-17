@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 
-#include "physical/PhysicalConverter.h"
+#include "clas12-generator-to-lund/PhysicalConverter.h"
 #include "support/environment.h"
 
 namespace env = environment;

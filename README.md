@@ -40,7 +40,7 @@ Open `runs/first-electron/Uniform_sample_1e_5986MeV/manifest.json` to see the re
 
 Read the [newcomer guide](docs/index.md), then [build instructions](docs/building.md) and the [architecture walkthrough](docs/architecture.md).
 
-Maintained shared C++ is grouped by responsibility under `src/config/`, `src/lund/`, `src/geometry/`, `src/monitoring/`, and `src/support/`. Protected imported files remain under `src/common/external/`. The architecture walkthrough maps these directories to the build targets and runtime call chain.
+Maintained shared C++ is grouped by responsibility under `src/config/`, `src/lund/`, `src/geometry/`, `src/monitoring/`, and `src/support/`. Source-specific implementations match the executable names in `src/clas12-uniform/` and `src/clas12-generator-to-lund/`; GENIE is nested under the latter as one physical-input adapter. Protected imported files remain under `src/common/external/`. The architecture walkthrough maps these directories to the build targets and runtime call chain.
 
 - [Uniform generation](docs/uniform-samples.md)
 - [Physical event-generator conversion](docs/genie-to-lund-conversion.md)
