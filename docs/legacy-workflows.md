@@ -12,7 +12,7 @@ source Uniform-sample-generator/run.sh
         -> LUND + monitoring products
 ```
 
-`CodeRun.cpp` selects the channel through three booleans and passes beam energy, output directory and counts. Its currently active archived call is **1e, 2.07052 GeV, Ar output label, 100,000,000 total events**, expressed as 4000 files × 25000 events. The maintained uniform default now uses the same 25,000-event split through `events-per-file`; physical conversion retains 10,000. The generator itself hardcodes Ar vertex geometry and A=Z=1 header metadata. Its local kinematic `TRandom3(0)` is automatically seeded; the target helper uses a global seed of 12345.
+`CodeRun.cpp` selects channels through three booleans and currently makes three active calls: **1e, ep and en at 2.07052 GeV**, each under a GEMC 5.14 `rgm_fall2021_C_S` output label. Each call inherits 5000 files × 10000 events. The generator itself hardcodes `1-foil-small` vertex geometry and A=Z=1 header metadata. Its local kinematic `TRandom3(0)` is automatically seeded; the target helper uses a global seed of 12345. Consequently, the exact historical production event sequence cannot be reconstructed unless the automatically chosen kinematic seed/state was recorded.
 
 Current equivalent with small counts:
 
@@ -23,9 +23,9 @@ build/debug/apps/clas12-uniform \
   --output runs/legacy-coderun-smoke
 ```
 
-Select `--channel ep` or `--channel en` and a matching prefix instead of editing C++ calls. `--nucleon-momentum fixed` preserves the archived 1 GeV/c mode. `sampled` activates the new requested channel-dependent prescription. `electron-tester.conf` replaces the separately selected tester call.
+Select `--channel ep` or `--channel en` and a matching prefix instead of editing C++ calls. The pinned upstream ep/en prescription maps to `--nucleon-momentum uniform --nucleon-angle theta --nucleon-p-min 0.3 --nucleon-p-max 2.07052` for its active beam setting. `fixed` preserves the older selectable 1 GeV/c mode, while `sampled` activates the requested channel-dependent extension. `electron-tester.conf` replaces the separately selected tester call.
 
-The reference tests call the actual archived event functions. They supply deterministic seeds, initialize archived histograms and write into temporary directories; they do not source `run.sh`, which contains repository cleanup/update commands.
+The reference tests call the actual pinned upstream event functions. They supply deterministic seeds, initialize upstream histograms and write into temporary directories; they do not source `run.sh`, which contains repository cleanup/update commands. With matched modes, LUND bytes and numerical histogram contents agree for 1e, ep, en and the tester at all three established beam energies.
 
 ## 2. GENIE conversion
 

@@ -4,15 +4,15 @@
 
 Three different contracts are checked independently:
 
-1. **LUND bytes:** identical serialized events for matched seeds, beam/geometry/A/Z, and legacy precision/masses where the pinned reference retains the same sampling contract. This currently covers 1e and the electron tester. The pinned upstream ep/en source now samples nucleon momentum uniformly, while the maintained `fixed` profile deliberately retains the earlier 1 GeV/c contract; tests require those outputs to differ.
+1. **LUND bytes:** identical serialized events for matched seeds, beam/geometry/A/Z, sampling settings, and legacy precision/masses. The pinned upstream ep/en profile maps to `--nucleon-momentum uniform --nucleon-angle theta --nucleon-p-min 0.3 --nucleon-p-max BEAM`.
 2. **Numerical diagnostics:** matching names, binning, entries, bin contents and errors, including flow bins. ROOT container bytes and rendered image styles may differ.
 3. **Job arguments:** matching GEMC/reconstruction arguments and output naming at matched field/card/YAML/file-count settings. Real detector execution is a separate validation stage.
 
-The maintained requested neutron-isotropic and proton mixture models have their own analytical distribution tests. They also differ from the pinned upstream submodule's newer uniform-in-momentum ep/en implementation.
+The maintained older fixed-1-GeV/c mode and requested neutron-isotropic/proton-mixture modes intentionally differ from the pinned upstream submodule's uniform-in-momentum, flat-theta ep/en implementation. The requested modes have their own analytical distribution tests.
 
 ## 2. Independent references
 
-`legacy_uniform_driver.cpp` includes event functions, tester and histogram initialization from the pinned `legacy/Uniform-sample-generator` submodule. It supplies missing compilation context, output streams, target/channel parameters and deterministic RNG seeds. It bypasses launcher cleanup and large production defaults. The production executable and reference do not share sampling or LUND-writing implementations. Initialize the submodule before configuring tests. Exact comparisons cover matching 1e/tester behavior; ep/en tests expose the newer upstream momentum-model difference rather than relabeling it as parity.
+`legacy_uniform_driver.cpp` includes event functions, tester and histogram initialization from the pinned `legacy/Uniform-sample-generator` submodule. It supplies missing compilation context, output streams, target/channel parameters and deterministic RNG seeds. It bypasses launcher cleanup and large production defaults. The production executable and reference do not share sampling or LUND-writing implementations. Initialize the submodule before configuring tests. Exact comparisons explicitly select the matching upstream ep/en momentum and angular modes.
 
 `prepare_legacy_genie.py` generates a test-only copy of the archived converter. Changes are limited to resolving includes, replacing external output setup with a new temporary directory, safe directory creation, and capturing the original diagnostic histogram. The event loop, species/process selection, formatting and early-stop behavior remain unchanged. Thus tests reveal the short-input difference instead of modifying it out of the reference.
 
@@ -41,7 +41,7 @@ The full suite currently registers nine tests when both workflows are enabled an
 | `uniform-integration` | 1e/ep/en, seed repeat, tester, config overrides, invalid inputs | Output counts/PDGs, bounds, mass-shell relation in precise mode, unchanged repeat output and rejection semantics |
 | `genie-integration` | Processes/species, partial files, capacity limit, missing/wrong branches, empty/unsupported input, 300-particle arrays, broken later chain file | Correct records/counts and no completed manifest on failures |
 | `simulation-integration` | Dry runs, index selection, count propagation, successful stubs, failing GEMC | No dry-run writes, correct argument counts, reconstruction skipped on failure, locks preserved |
-| `uniform-legacy-parity` | 1e/ep/en/tester at 2.07052/4.02962/5.98636 GeV; additional target geometries | Exact LUND bytes and numerical histograms for matching 1e/tester contracts; ep/en must differ because the pinned upstream reference now samples nucleon momentum uniformly |
+| `uniform-legacy-parity` | 1e/ep/en/tester at 2.07052/4.02962/5.98636 GeV; additional target geometries | Exact LUND bytes and numerical histograms with explicit matching upstream settings |
 | `genie-legacy-parity` | 10000 accepted events at each legacy energy and associated C12 geometry; all retained species/processes; short fixture | Exact LUND bytes/full-file diagnostics; explicitly confirmed short-input correction |
 | `nucleon-distributions` | 20000 sampled en and 20000 sampled ep events | Bounds and empirical-CDF distance <0.025 from expected phi, angular and momentum distributions |
 | `submission-legacy-parity` | Uniform and physical Bash payloads at 2/4/6 GeV | Exact argv after normalizing temporary run-directory paths; 10000-event entries retain legacy arguments |

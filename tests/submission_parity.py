@@ -27,7 +27,8 @@ assert unified_payload.split(b'JOB_TARGET=')[0] == legacy_payload.split(b'JOB_TA
 generalized_tail = unified_payload[unified_payload.index(b'NEVENTS=${JOB_NEVENTS:?JOB_NEVENTS is required}'):]
 generalized_tail = generalized_tail.replace(b'NEVENTS=${JOB_NEVENTS:?JOB_NEVENTS is required}', b'NEVENTS=10000', 1)
 assert generalized_tail.split(b'#set output file path location', 1)[1] == legacy_payload.split(b'#set output file path location', 1)[1]
-assert b'NEVENTS=10000\n#-1.0 for inbending (6,4 GeV) 0.5 for outbending (2 Gev)\nTORUS=${TORUS_FIELD}' in generalized_tail
+assert generalized_tail.startswith(b'NEVENTS=10000\n')
+assert b'TORUS=${TORUS_FIELD}' in generalized_tail
 
 # Test execution ------------------------------------------------
 # region Execution

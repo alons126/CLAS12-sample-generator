@@ -17,7 +17,7 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 
 The default `lund-format=legacy` restores historical whitespace, precision and uniform per-file IDs. The default `mass-convention=legacy` restores the archived pion values. `nucleon-momentum=fixed` preserves the 1 GeV/c mode. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
 
-`legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture the active archived launch settings. Their counts are production-sized; override `--events` for local tests. `events-per-file` defaults to 25,000 for uniform generation and 10,000 for physical conversion, matching their respective creation workflows.
+`legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture active reference launch settings. Their counts are production-sized; override `--events` for local tests. The maintained uniform default remains 25,000 events per file, while the pinned upstream uniform generator and physical conversion currently use 10,000; the compatibility profile selects the upstream value explicitly.
 
 The earlier refactor's output remains available through `--lund-format precise`, `--mass-convention standard`, and runner `--output-naming indexed`. Default runner filenames now follow the legacy `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo` convention.
 

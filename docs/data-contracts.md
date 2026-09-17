@@ -64,7 +64,7 @@ The legacy π⁰ value is the one in the restored [converter utilities](../legac
 
 ## 6. File splitting and completion
 
-Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. `events-per-file` controls rollover: it defaults to the active archived uniform value of 25,000 for uniform generation and 10,000 for physical conversion. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and legacy-format uniform event IDs restart from zero in each file.
+Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. `events-per-file` controls rollover: the maintained uniform default is 25,000, retained from the earlier imported launcher, while the pinned upstream generator currently defaults to 10,000; physical conversion also defaults to 10,000. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and legacy-format uniform event IDs restart from zero in each file.
 
 For submission, the coordinator validates each manifest entry's positive `events` value and exports it as `JOB_NEVENTS`. The GEMC payload uses that exact count for both GEMC and reconstruction. Consequently, the 25,000-event uniform default, the 10,000-event physical default and final partial physical files are all processed without a separate submission-specific split size.
 

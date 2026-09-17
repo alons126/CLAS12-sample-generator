@@ -69,7 +69,7 @@ The executables, `clas12-simulate` and `clas12-submit` are installed under `bin/
 
 CTest generates small temporary samples and checks LUND header/particle counts, mass-shell energies, target vertices, channel prescriptions, deterministic seeds, configuration rejection, overwrite protection, and GENIE process selection/file splitting. A synthetic GST fixture exercises all retained species and a skipped process. Simulation tests use executable stubs to verify argument handling, exact per-file counts, dry runs, and stopping after GEMC failure.
 
-Independent adapters also execute external reference kernels/conversion. They compare LUND bytes and original histogram bins where the contracts still match, explicitly check the newer upstream ep/en divergence, and compare legacy job-command arguments. The sampling tests compare generated output to analytic CDFs for neutron isotropy and both proton mixture components. See the [validation matrix](validation.md).
+Independent adapters also execute external reference kernels/conversion. They compare LUND bytes and original histogram bins with explicitly matched settings and compare legacy job-command arguments. The sampling tests separately compare the maintained neutron-isotropic and proton-mixture extensions to their analytic CDFs. See the [validation matrix](validation.md).
 
 These are local software checks. They do not establish detector-card suitability or replace running GEMC/reconstruction and validating acceptance maps at JLab.
 
