@@ -1,0 +1,3 @@
+[submodule "legacy/Uniform-sample-generator"]
+	path = legacy/Uniform-sample-generator
+	url = https://github.com/alons126/Uniform-sample-generator.git
