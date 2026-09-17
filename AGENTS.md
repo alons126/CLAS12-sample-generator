@@ -6,7 +6,7 @@ Apply this layered style to all maintained code objects, not just functions: cla
 
 ## Maintained C++ formatting
 
-Apply these rules to maintained C++ source and header files. Do not apply them to protected external or archived sources.
+Apply these rules to maintained C++ source and header files. Do not apply them to protected external or archived sources. Unless a later instruction explicitly says otherwise, none of the code-format or ownership-header rules in this section apply to `.clang-format`, `.vscode/c_cpp_properties.json`, `.vscode/settings.json`, or any `*.conf` file.
 
 - Begin every maintained C++ source and header file with this ownership header, using the file's actual creation date:
 
@@ -23,7 +23,7 @@ Apply these rules to maintained C++ source and header files. Do not apply them t
 - Make every separator-banner line, including its label and repeated `-` characters, exactly 170 columns wide.
 - Always enclose the body of every C++ `if`, `else if`, `else`, `for`, range-based `for`, `while`, and `do while` statement in braces, even when the body contains only one statement.
 
-Every maintained code file in another language must begin with the analogous `Created by Alon Sportes on <creation date>.` ownership header using that language's comment syntax. When a file begins with an interpreter directive such as `#!/usr/bin/env python3`, keep the shebang on the first line and put the ownership header immediately below it. Use the actual creation date recorded in an existing header or recover it from repository history; never guess or silently substitute the modification date. These ownership-header requirements do not apply to protected external or archived files.
+Every maintained code file in another language must begin with the analogous `Created by Alon Sportes on <creation date>.` ownership header using that language's comment syntax. When a file begins with an interpreter directive such as `#!/usr/bin/env python3` or `#!/bin/tcsh`, keep the shebang on the first line, leave exactly one blank line, and then place the ownership header. Use the actual creation date recorded in an existing header or recover it from repository history; never guess or silently substitute the modification date. These ownership-header requirements do not apply to protected external or archived files or to `.clang-format`, `.vscode/c_cpp_properties.json`, `.vscode/settings.json`, and `*.conf` files unless explicitly requested.
 
 Use module/function docstrings and `# region` / `# endregion` comment markers for Python. Use description, purpose, workflow, inputs/outputs, usage and named comment regions for shell scripts. Keep shebangs first and preserve sourced-shell exit-status behavior.
 
