@@ -12,9 +12,10 @@
  *   writer.
  *
  * Workflow:
- *   Construct from a validated RunConfig -> guard and replace the exact resolved run directory -> write
- *   nonempty Event records into 10,000-event LUND files -> let the workflow save diagnostics -> close
- *   output and atomically publish manifest.json through finish().
+ *   Construct from a validated RunConfig -> guard and replace the exact resolved run directory -> create
+ *   the common layout plus archived uniform directories when applicable -> write nonempty Event records
+ *   into configured-size LUND files -> let the workflow save diagnostics -> close output and atomically
+ *   publish manifest.json through finish().
  *
  * Data contract:
  *   Particle momentum is in GeV/c, mass is in GeV/c², derived energy and beam energy are in GeV, and
@@ -94,8 +95,8 @@ class LundWriter {
      *              preserved. The writer derives particle energy from momentum and mass.
      * @throws std::exception If capacity is exhausted, the event is empty or non-finite, or file output
      *         fails. Counters advance only after serialization succeeds.
-     * @note Opens the first file lazily and rotates after 10,000 events. Uniform legacy formatting may
-     *       display per-file event IDs; count() remains run-global.
+     * @note Opens the first file lazily and rotates after RunConfig::events-per-file events. Uniform
+     *       legacy formatting may display per-file event IDs; count() remains run-global.
      */
     void write(const Event& event);
 
@@ -164,7 +165,7 @@ class LundWriter {
 
     // Owned counters and serialization policy ---------------------------------------------------------------------------------------------------------------------------
     std::uint64_t count_ = 0;        ///< Successfully serialized run-global event count.
-    std::uint64_t events_per_file_;  ///< Split threshold, currently fixed to 10,000 events.
+    std::uint64_t events_per_file_;  ///< Positive source-specific split threshold from RunConfig.
     std::uint64_t capacity_;         ///< Maximum written events requested by RunConfig::events.
     bool legacy_format_;             ///< Select archived precision/spacing/ID behavior when true.
 };

@@ -33,6 +33,7 @@ NEVENTS=10000
 #-1.0 for inbending (6,4 GeV) 0.5 for outbending (2 Gev)
 TORUS=${TORUS_FIELD}
 echo "TORUS = ${TORUS}"
+echo
 
 #set output file path location, don't forget to set up dir using setupdir.sh
 JOB_OUT_PATH=${OUTPATH}

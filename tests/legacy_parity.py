@@ -85,7 +85,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
                 run(legacy,channel,original,beam,64,1,67890,12345,'Ar')
                 extra = ['--electron-momentum','beam','--target','point'] if channel=='tester' else []
                 run(current,'--channel','1e' if channel=='tester' else channel,'--beam-energy',beam,'--events',64,
-                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--output',new_root,*extra)
+                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--render-plots','false','--output',new_root,*extra)
                 run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
                 m=json.loads((new/'manifest.json').read_text())
                 assert len(m['files']) == 1
@@ -94,7 +94,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             original,new_root=root/(target+'-old'),root/(target+'-new')
             new=uniform_output(new_root,'1e','2.07052')
             run(legacy,'1e',original,2.07052,64,1,67890,12345,target)
-            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--A',1,'--Z',1,'--events',64,'--output',new_root)
+            run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--A',1,'--Z',1,'--events',64,'--render-plots','false','--output',new_root)
             m=json.loads((new/'manifest.json').read_text())
             compare(new/m['files'][0]['path'],original/'legacy_1.txt')
     else:

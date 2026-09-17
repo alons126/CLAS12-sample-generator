@@ -118,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         for channel, pid in [('1e',11),('ep',2212),('en',2112)]:
             output_root = root / channel
             output = output_root / f'Uniform_sample_{channel}_5986MeV'
-            settings = ['--channel', channel, '--events', '10001', '--seed', '17', '--vertex-seed', '23']
+            settings = ['--channel', channel, '--events', '10001', '--events-per-file', '10000', '--seed', '17', '--vertex-seed', '23', '--render-plots', 'false']
             run(executable, *settings, '--output', output_root)
             manifest, events = read_run(output)
             assert [f['events'] for f in manifest['files']] == [10000,1]
@@ -148,11 +148,25 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             assert 'Replacing existing run directory (legacy behavior):' in rerun.stdout
             assert not sentinel.exists()
         config = root/'sample.conf'
-        config.write_text('# test precedence\nchannel = en\nevents = 3\nbeam-energy = 2.07052\n')
+        # A small default-rendering run verifies the archived uniform output layout and default split.
+        artifacts_parent = root/'artifacts'
+        artifacts = artifacts_parent/'Uniform_sample_1e_5986MeV'
+        run(executable, '--events', '3', '--output', artifacts_parent)
+        artifact_manifest,_ = read_run(artifacts)
+        assert artifact_manifest['config']['events-per-file'] == '25000'
+        for directory in ['lundfiles', 'mchipo', 'reconhipo', 'rootfiles', 'MonitoringPlotsPath']:
+            assert (artifacts/directory).is_dir()
+        assert (artifacts/'Uniform_sample_1e_5986MeV_plots.root').is_file()
+        assert (artifacts/'legacy_histograms.root').is_file()
+        assert (artifacts/'MonitoringPlotsPath/Uniform_1e_plots_5986MeV.pdf').is_file()
+        assert list((artifacts/'MonitoringPlotsPath').glob('[0-9]*_*.png'))
+
+        config.write_text('# test precedence\nchannel = en\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
         configured = root/'configured'/ 'Uniform_sample_en_2070MeV'
         run(executable, '--config', config, '--events', '5', '--output', configured.parent)
         m,_ = read_run(configured)
         assert m['written_events'] == 5 and m['config']['trigger-phi-offset'] == '16'
+        assert [entry['events'] for entry in m['files']] == [2, 2, 1]
         variable = root/'variable'/ 'Uniform_sample_ep_5986MeV'
         run(executable, '--channel', 'ep', '--nucleon-momentum', 'uniform', '--events', '100', '--output', variable.parent)
         _,events=read_run(variable)
@@ -177,7 +191,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             manifest,_=read_run(parent/'Uniform_sample_1e_5986MeV')
             assert manifest['config']['A']==str(A) and manifest['config']['Z']==str(Z)
             assert manifest['config']['target']==geometry
-        for key,value in [('channel','bad'),('seed','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
+        for key,value in [('channel','bad'),('seed','0'),('events-per-file','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
             output=root/('invalid-'+key)
             run(executable, '--'+key, value, '--output', output, ok=False)
             assert not output.exists()

@@ -13,8 +13,9 @@
  *
  * Workflow:
  *   Validate and cache settings -> initialize independent RNG streams and outputs -> sample one vertex
- *   and the selected particle content per event -> serialize successful events -> fill modern and
- *   legacy diagnostics -> save diagnostics -> finalize LUND files and publish the manifest.
+ *   and the selected particle content per event -> serialize successful events with the configured split
+ *   size -> fill modern and legacy diagnostics -> save maintained and archived artifact layouts ->
+ *   finalize LUND files and publish the manifest.
  *
  * Units and conventions:
  *   Momentum uses GeV/c and mass uses GeV/c², polar and azimuthal angles enter the sampler in degrees, and vertices
@@ -52,6 +53,24 @@ namespace samples {
  * other workflows from depending on prescriptions that are specific to uniform acceptance samples.
  */
 namespace {
+
+// legacyBeamLabel --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* legacyBeamLabel */
+/**
+ * @brief Return the archived monitoring filename token for one beam energy.
+ * @param beam Configured beam energy in GeV.
+ * @return Legacy MeV label for established RG-M energies, or a rounded MeV label otherwise.
+ */
+std::string legacyBeamLabel(double beam) {
+    if (std::abs(beam - 2.07052) < 1e-6) { return "2070MeV"; }
+    if (std::abs(beam - 4.02962) < 1e-6) { return "4029MeV"; }
+    if (std::abs(beam - 5.98636) < 1e-6) { return "5986MeV"; }
+    if (std::abs(beam - 10.6) < 1e-6) { return "10600MeV"; }
+
+    return std::to_string(static_cast<long long>(std::llround(beam * 1000))) + "MeV";
+}
+#pragma endregion
 
 // momentum --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -149,8 +168,8 @@ double triggerPhi(double phi, double offset) {
  *   3. Build one Event per iteration with configured A/Z and beam metadata plus one shared vertex.
  *   4. Sample the electron-only or artificial trigger-electron+nucleon channel in stable draw order.
  *   5. Serialize the event before adding it to either diagnostic set.
- *   6. Stop at the writer's configured event capacity, save diagnostics, finalize LUND output, publish
- *      the manifest, and print the completion summary.
+ *   6. Stop at the writer's configured event capacity, save modern and archived-layout diagnostics,
+ *      finalize LUND output, publish the manifest, and print the completion summary.
  *
  * @param c Borrowed configuration returned by RunConfig::parse(..., true). It supplies channel, beam
  *          energy in GeV, momenta in GeV/c, angles in degrees, vertices in cm, target/header metadata,
@@ -185,8 +204,8 @@ void generateUniform(const RunConfig& c) {
     // its valid point helper but bypasses sample() below and uses the configured coordinates directly.
     TargetGeometry geometry(c.get("vertex-mode") == "target" ? c.get("target") : "point");
 
-    // Construction validates the final path, warns and removes an existing exact run directory, creates
-    // lundfiles/, and sets the requested total-event capacity with 10,000 events per output file.
+    // Construction validates the final path, replaces an existing exact run, creates the legacy uniform
+    // directory layout, and stores the requested total capacity and per-file split threshold.
     LundWriter writer(c, "uniform");
 
     // Monitoring ranges use the beam-energy scale. LegacyMonitoring selects its historical Tester_e
@@ -261,7 +280,16 @@ void generateUniform(const RunConfig& c) {
     // Persist both diagnostic contracts before making the run consumable. Optional rendering adds
     // legacy PDF/PNG views without changing histogram filling or LUND content.
     monitoring.save(std::filesystem::path(c.get("output")) / "monitoring.root");
-    legacy_monitoring.save(std::filesystem::path(c.get("output")) / "legacy_histograms.root", c.get("render-plots") == "true");
+    const auto output = std::filesystem::path(c.get("output"));
+    const auto legacy_root = output / (c.get("prefix") + "_plots.root");
+    const auto plot_directory = output / "MonitoringPlotsPath";
+    const auto plot_channel = c.get("electron-momentum") == "beam" ? "Tester_e" : c.get("channel");
+    const auto pdf_name = "Uniform_" + plot_channel + "_plots_" + legacyBeamLabel(beam) + ".pdf";
+    legacy_monitoring.save(legacy_root, c.get("render-plots") == "true", plot_directory, pdf_name);
+
+    // Keep the maintained stable diagnostic name as an exact copy while making the archived prefix-based
+    // filename the primary output artifact. Downstream validation can therefore retain one fixed path.
+    std::filesystem::copy_file(legacy_root, output / "legacy_histograms.root", std::filesystem::copy_options::overwrite_existing);
 
     // Uniform generation scans and writes the same number of events, so the written count is also the
     // completion count supplied to the manifest. finish() closes files before publishing readiness.

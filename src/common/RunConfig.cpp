@@ -196,10 +196,11 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"vertex-z", "-3"},
                  {"output", ""},
                  {"events", ""},
+                 {"events-per-file", uniform ? "25000" : "10000"},
                  {"seed", "67890"},
                  {"lund-format", "legacy"},
                  {"mass-convention", "legacy"},
-                 {"render-plots", "false"},
+                 {"render-plots", uniform ? "true" : "false"},
                  {"vertex-seed", "12345"},
                  {"prefix", "auto"}};
 
@@ -514,9 +515,10 @@ void RunConfig::validate(bool uniform) const {
     // Beam energy must be a finite, strictly positive GeV value. number() owns lexical/finite checks.
     if (number("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
 
-    // Event count and the two independent RNG seeds must fit the unsigned type used downstream and be
-    // nonzero. Separate kinematic and vertex seeds preserve deliberate reproducibility boundaries.
-    for (auto k : {"events", "seed", "vertex-seed"}) {
+    // Total capacity, per-file split size, and the two independent RNG seeds must fit the unsigned type
+    // used downstream and be nonzero. Source-specific defaults preserve 25,000-event archived uniform
+    // files and 10,000-event physical files; explicit values remain available for submission compatibility.
+    for (auto k : {"events", "events-per-file", "seed", "vertex-seed"}) {
         auto n = integer(k);
         if (!n || n > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
     }
@@ -683,7 +685,7 @@ std::string help(bool uniform) {
     // compatibility, and optional plot rendering. Units are stated at the option boundary.
     result +=
         "Settings: --config FILE, --beam-energy GeV, --rgm-target ID, --target GEOMETRY, --A N, --Z N,\n"
-        "--events N, --seed N, --vertex-seed N, --prefix NAME,\n"
+        "--events N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
         "--vertex-mode target|fixed, --vertex-x/y/z CM,\n"
         "--lund-format legacy|precise, --mass-convention legacy|standard, --render-plots true|false.\n"
         "Files use key = value; CLI values override file settings. Existing output is replaced after a warning.\n";

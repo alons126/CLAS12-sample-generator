@@ -49,7 +49,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-distributions-') as temp:
     for channel in ['en','ep']:
         output_root=Path(temp)/channel
         out=output_root/f'Uniform_sample_{channel}_5986MeV'
-        subprocess.run([sys.argv[1],'--channel',channel,'--nucleon-momentum','sampled','--nucleon-p-min','0.3','--nucleon-p-max','3',
+        subprocess.run([sys.argv[1],'--channel',channel,'--nucleon-momentum','sampled','--nucleon-p-min','0.3','--nucleon-p-max','3','--render-plots','false',
                         '--events','20000','--lund-format','precise','--output',str(output_root)],check=True,capture_output=True)
         m=json.loads((out/'manifest.json').read_text())
         lines=(out/m['files'][0]['path']).read_text().splitlines()

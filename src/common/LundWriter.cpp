@@ -70,9 +70,8 @@ namespace samples {
  *
  * @return Nothing. Text is written to standard output with ANSI color sequences.
  *
- * @note Presentation only: derived mchipo/reconhipo/rootfiles/monitoring paths reproduce legacy status
- *       text but are not created here. LundWriter construction creates only the run and `lundfiles/`
- *       directories; later simulation and monitoring stages own their outputs.
+ * @note Presentation only: this function creates no paths. LundWriter construction creates `lundfiles/`
+ *       for both sources and the archived downstream/plot directory layout for uniform runs.
  *
  * @note The historical uniform `nParticles: 2` line is retained as legacy monitoring text even though
  *       the 1e channel writes one particle. Event serialization always uses Event::particles.size().
@@ -80,14 +79,14 @@ namespace samples {
 void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned, std::uint64_t written, bool final) {
     // These are display paths below the already resolved final run directory. Constructing path values
     // has no filesystem side effects.
+    // Maintained callers use exactly `uniform` or `physical`; only the former selects the uniform block.
+    const bool uniform = workflow == "uniform";
     const auto output = std::filesystem::path(config.get("output"));
     const auto lund_dir = output / "lundfiles";
     const auto mchipo_dir = output / "mchipo";
     const auto recon_dir = output / "reconhipo";
     const auto rootfiles_dir = output / "rootfiles";
-    const auto monitoring_dir = output / "monitoring_plots";
-    // Maintained callers use exactly `uniform` or `physical`; only the former selects the uniform block.
-    const bool uniform = workflow == "uniform";
+    const auto monitoring_dir = output / (uniform ? "MonitoringPlotsPath" : "monitoring_plots");
 
     // Keep the archived yellow separator style so long interactive and Slurm logs expose run boundaries.
     std::cout << "\033[33m\n=============================================================\n\033[0m";
@@ -98,7 +97,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         // Reproduce CodeRun-style labels and constants alongside the resolved channel/mode. Several
         // listed downstream paths are planning information for later GEMC/reconstruction workflows.
         std::cout << "\033[33m\nOutputFileNamePrefix:\033[0m " << config.get("prefix") << '\n';
-        std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m 10000\n";
+        std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m " << config.get("events-per-file") << '\n';
         std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
         std::cout << "\033[33mGenerateLundFiles:\033[0m true\n";
         std::cout << "\033[33mnParticles:\033[0m 2\n";
@@ -130,7 +129,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << "\033[33mGenerating monitoring plots directory:\033[0m " << monitoring_dir << '\n';
         std::cout << "\033[33mSaving lundfiles into\033[0m " << lund_dir << '\n';
         std::cout << "\033[33mNumber of events\033[0m " << config.get("events") << '\n';
-        std::cout << "\033[33mEvents per output file:\033[0m 10000\n";
+        std::cout << "\033[33mEvents per output file:\033[0m " << config.get("events-per-file") << '\n';
     }
 
     // Shared fields make uniform and physical logs comparable without erasing their source semantics.
@@ -140,17 +139,18 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     std::cout << "\033[33mOutput prefix:\033[0m " << config.get("prefix") << '\n';
     std::cout << "\033[33mBeam energy [GeV]:\033[0m " << config.get("beam-energy") << '\n';
     std::cout << "\033[33mTarget:\033[0m " << config.get("target") << "  \033[33mA:\033[0m " << config.get("A") << "  \033[33mZ:\033[0m " << config.get("Z") << '\n';
-    std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m 10000\n";
+    std::cout << "\033[33mRequested events:\033[0m " << config.get("events") << "  \033[33mEvents per file:\033[0m " << config.get("events-per-file") << '\n';
     std::cout << "\033[33mLUND format:\033[0m " << config.get("lund-format") << "  \033[33mMass convention:\033[0m " << config.get("mass-convention") << '\n';
 
     if (final) {
         // Uniform generation writes every generated event, so scanned equals written. Physical scanned
-        // includes unsupported interactions skipped before serialization; `written` alone determines
-        // the number of 10,000-event LUND files, including a possible partial last file.
+        // includes unsupported interactions skipped before serialization; `written` and the resolved
+        // split threshold determine the number of files, including a possible partial last file.
         std::cout << "\033[33m\n- Completion summary ----------------------------------------\n\033[0m";
         std::cout << "\033[33mTotal entries scanned:\033[0m " << scanned << '\n';
         std::cout << "\033[33mEvents passing cuts:\033[0m " << written << '\n';
-        const auto output_files = (written + 9999) / 10000;
+        const auto events_per_file = config.integer("events-per-file");
+        const auto output_files = (written + events_per_file - 1) / events_per_file;
         std::cout << "\033[33mOutput files written:\033[0m " << output_files << '\n';
         std::cout << "\033[33m\nOperation finished!\033[0m\n";
     }
@@ -185,7 +185,12 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
  *       source-specific run name; this constructor reports and removes only that exact resolved path.
  */
 LundWriter::LundWriter(const RunConfig& c, std::string workflow)
-    : config_(c), workflow_(std::move(workflow)), directory_(c.get("output")), events_per_file_(10000), capacity_(c.integer("events")), legacy_format_(c.get("lund-format") == "legacy") {
+    : config_(c),
+      workflow_(std::move(workflow)),
+      directory_(c.get("output")),
+      events_per_file_(c.integer("events-per-file")),
+      capacity_(c.integer("events")),
+      legacy_format_(c.get("lund-format") == "legacy") {
     // Re-normalize defensively at the destructive-operation boundary even though RunConfig::parse()
     // already returns an absolute output path.
     directory_ = std::filesystem::absolute(directory_).lexically_normal();
@@ -220,6 +225,12 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
 
     // LUND streams are opened lazily by write(); no empty numbered file is created at construction.
     std::filesystem::create_directories(directory_ / "lundfiles");
+
+    // Uniform creation historically prepared the complete downstream directory layout and plot folder
+    // before event generation. Keep that default artifact contract without running GEMC or reconstruction.
+    if (workflow_ == "uniform") {
+        for (const auto* child : {"mchipo", "reconhipo", "rootfiles", "MonitoringPlotsPath"}) { std::filesystem::create_directories(directory_ / child); }
+    }
 }
 #pragma endregion
 
@@ -277,7 +288,7 @@ void LundWriter::write(const Event& e) {
     if (e.particles.empty()) { throw std::runtime_error("Cannot write an empty event"); }
 
     // Open a new file only when the next event actually needs one. This avoids empty trailing files for
-    // exact multiples of 10,000 and allows a partially filled final physical file at end of input.
+    // exact multiples of the configured split size and allows a partially filled final file.
     if (files_.empty() || files_.back().events == events_per_file_) {
         // Closing the previous stream flushes it before a new manifest record and path are selected.
         if (stream_.is_open()) { stream_.close(); }

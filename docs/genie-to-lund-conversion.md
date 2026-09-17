@@ -38,7 +38,7 @@ Field 10 is a legacy process tag, **not a generator cross-section weight**. Do n
 
 ## Splitting and completion
 
-`events` is the maximum number of **written** events. Skipped processes do not count toward it. Output files are split automatically at 10,000 events, and conversion retains a final partial file instead of stopping early when fewer than 10,000 input entries remain.
+`events` is the maximum number of **written** events. Skipped processes do not count toward it. `events-per-file` defaults to 10,000 for physical conversion and may be overridden; conversion retains a final partial file instead of stopping early when fewer than one full output file of input entries remains.
 
 For six accepted events with `--events 6`, output contains one file with count 6. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
 

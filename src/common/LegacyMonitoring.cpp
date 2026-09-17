@@ -310,11 +310,13 @@ void LegacyMonitoring::fill(const Event& event) {
  * Algorithm:
  *   Create the ROOT file without overwriting an existing result, enable stored
  *   sum-of-weights errors, write every histogram, and close the file. If render
- *   is enabled, enter ROOT batch mode, create `monitoring_plots`, then draw every
- *   entry into a multipage PDF and an individually named PNG.
+ *   is enabled, enter ROOT batch mode, create the selected plot directory, then draw every entry into
+ *   the named multipage PDF and a numbered PNG preserving archived histogram order.
  *
  * @param path Destination for the new compatibility ROOT file.
- * @param render Whether to create `monitoring_plots/uniform.pdf` and PNG files.
+ * @param render Whether to create the requested PDF and PNG files.
+ * @param plot_directory Rendering destination; empty selects `monitoring_plots` beside path.
+ * @param pdf_name Multipage PDF filename inside the rendering destination.
  *
  * @throws std::runtime_error If ROOT cannot create the file or write a histogram.
  * @throws std::filesystem::filesystem_error If the plot directory cannot be created.
@@ -322,7 +324,7 @@ void LegacyMonitoring::fill(const Event& event) {
  * @note The workflow saves diagnostics before publishing its completion manifest,
  *       so a reported failure prevents the run from being marked complete.
  */
-void LegacyMonitoring::save(const std::filesystem::path& path, bool render) {
+void LegacyMonitoring::save(const std::filesystem::path& path, bool render, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
     TFile out(path.string().c_str(), "CREATE");
 
     if (out.IsZombie()) { throw std::runtime_error("Cannot create legacy monitoring file"); }
@@ -337,17 +339,18 @@ void LegacyMonitoring::save(const std::filesystem::path& path, bool render) {
     // Rendering is optional and follows successful numerical ROOT output.
     if (render) {
         gROOT->SetBatch(true);
-        const auto directory = path.parent_path() / "monitoring_plots";
-        std::filesystem::create_directory(directory);
-        const auto pdf = (directory / "uniform.pdf").string();
+        const auto directory = plot_directory.empty() ? path.parent_path() / "monitoring_plots" : plot_directory;
+        std::filesystem::create_directories(directory);
+        const auto pdf = (directory / pdf_name).string();
         TCanvas canvas("sample_monitoring", "Uniform sample monitoring", 1000, 750);
         canvas.Print((pdf + "[").c_str());
+        std::size_t index = 0;
         for (auto& entry : impl_->entries) {
             canvas.Clear();
             canvas.SetGrid();
             entry.histogram->Draw(entry.y.empty() ? "hist" : "colz");
             canvas.Print(pdf.c_str());
-            canvas.Print((directory / (std::string(entry.histogram->GetName()) + ".png")).string().c_str());
+            canvas.Print((directory / (std::to_string(++index) + "_" + entry.histogram->GetName() + ".png")).string().c_str());
         }
         canvas.Print((pdf + "]").c_str());
     }

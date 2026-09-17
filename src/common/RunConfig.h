@@ -108,7 +108,7 @@ class RunConfig {
 
     /**
      * @brief Convert a decimal-digits-only setting to an unsigned 64-bit integer.
-     * @param key Count, seed, or nuclear-metadata key to read.
+     * @param key Total count, per-file count, seed, or nuclear-metadata key to read.
      * @return The parsed unsigned value.
      * @throws std::exception If the key is absent, malformed, negative, or out of range.
      */

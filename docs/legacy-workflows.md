@@ -12,7 +12,7 @@ source Uniform-sample-generator/run.sh
         -> LUND + monitoring products
 ```
 
-`CodeRun.cpp` selects the channel through three booleans and passes beam energy, output directory and counts. Its currently active archived call is **1e, 2.07052 GeV, Ar output label, 100,000,000 total events**. The maintained generator uses a fixed 10,000-event file split, while the archived configuration expressed this as 4000 files × 25000 events. The generator itself hardcodes Ar vertex geometry and A=Z=1 header metadata. Its local kinematic `TRandom3(0)` is automatically seeded; the target helper uses a global seed of 12345.
+`CodeRun.cpp` selects the channel through three booleans and passes beam energy, output directory and counts. Its currently active archived call is **1e, 2.07052 GeV, Ar output label, 100,000,000 total events**, expressed as 4000 files × 25000 events. The maintained uniform default now uses the same 25,000-event split through `events-per-file`; physical conversion retains 10,000. The generator itself hardcodes Ar vertex geometry and A=Z=1 header metadata. Its local kinematic `TRandom3(0)` is automatically seeded; the target helper uses a global seed of 12345.
 
 Current equivalent with small counts:
 

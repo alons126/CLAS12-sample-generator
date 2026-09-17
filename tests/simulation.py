@@ -34,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     root = Path(tmp)
     output_root = root/'run'
     output = output_root/'Uniform_sample_1e_5986MeV'
-    call(exe, '--output', output_root, '--events', '20000')
+    call(exe, '--output', output_root, '--events', '20000', '--events-per-file', '10000', '--render-plots', 'false')
     card = root/'detector.gcard'; card.write_text('<gcard/>')
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner = project/'scripts/simulation/run.py'
@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     options = ['--manifest', output/'manifest.json', '--gcard', card, '--reconstruction', yaml, '--torus', '-1']
     preview = call(sys.executable, runner, *options)
     assert preview.stdout.count('-N=10000') == 2
-    assert not (output/'mchipo').exists()
+    assert (output/'mchipo').is_dir() and (output/'reconhipo').is_dir()
     call(sys.executable, runner, *options, '--file-index', '3', ok=False)
     call(sys.executable, runner, *options, '--solenoid', '1', ok=False)
     call(sys.executable, runner, *options, '--output-naming', 'indexed', ok=False)

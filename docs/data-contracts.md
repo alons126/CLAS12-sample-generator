@@ -64,7 +64,9 @@ The legacy π⁰ value is the one in the restored [converter utilities](../legac
 
 ## 6. File splitting and completion
 
-Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. The writer automatically splits output after 10,000 events per file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available.
+Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. `events-per-file` controls rollover: it defaults to the active archived uniform value of 25,000 for uniform generation and 10,000 for physical conversion. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and legacy-format uniform event IDs restart from zero in each file.
+
+The protected GEMC payload still processes exactly 10,000 events. Uniform runs intended for that submission workflow must therefore override `--events-per-file 10000`; the coordinator rejects 25,000-event files rather than silently simulating only their first 10,000 records.
 
 The writer warns, removes and recreates an existing run directory before generation. It writes `manifest.json.tmp` only after LUND and diagnostics finish, then renames it to `manifest.json`. Failure leaves partial output for inspection without publishing a completed manifest; rerunning the same resolved output replaces those partial results.
 

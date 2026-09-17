@@ -36,14 +36,18 @@ runs/example/
         PREFIX_1.txt
         PREFIX_2.txt
     monitoring.root     # Per-particle diagnostic histograms
-    legacy_histograms.root # Original named diagnostics and correlations
-    monitoring_plots/   # Optional PDF/PNG rendering (--render-plots true)
-    mchipo/             # Created when simulation executes
-    reconhipo/          # Created when reconstruction executes
+    legacy_histograms.root # Stable copy of original named diagnostics
+    PREFIX_plots.root   # Archived uniform histogram filename (uniform only)
+    MonitoringPlotsPath/ # Archived PDF/numbered PNG layout (uniform default)
+    mchipo/             # Prepared by uniform creation; filled by simulation
+    reconhipo/          # Prepared by uniform creation; filled by reconstruction
+    rootfiles/          # Prepared legacy uniform downstream directory
     simulation/         # Command records and detector-config hashes
 ```
 
 A failed generation may leave partial files but no completed manifest. On rerun, the resolved run directory is validated, reported, recursively removed, and recreated, preserving the legacy generator lifecycle.
+
+Uniform LUND files default to 25,000 events per file; physical conversion defaults to 10,000. The protected GEMC payload processes 10,000 events, so create submission-ready uniform files with `--events-per-file 10000`.
 
 All documented shell examples start at the repository root. Executables and scripts also work from other directories when supplied appropriate paths; relative sample configuration paths are interpreted from the caller's working directory.
 

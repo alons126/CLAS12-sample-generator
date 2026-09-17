@@ -30,7 +30,7 @@ The executable installs built-in defaults, reads the named profile, then applies
 
 ## Available common options
 
-`output`, `beam-energy`, `rgm-target`, `target`, `A`, `Z`, `gemc-target-variation`, `vertex-mode`, `vertex-x`, `vertex-y`, `vertex-z`, `events`, `seed`, `vertex-seed`, `prefix`, `lund-format`, `mass-convention`, and `render-plots` are common configuration keys. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
+`output`, `beam-energy`, `rgm-target`, `target`, `A`, `Z`, `gemc-target-variation`, `vertex-mode`, `vertex-x`, `vertex-y`, `vertex-z`, `events`, `events-per-file`, `seed`, `vertex-seed`, `prefix`, `lund-format`, `mass-convention`, and `render-plots` are common configuration keys. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
 
 ## Available uniform options
 

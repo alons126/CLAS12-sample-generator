@@ -21,6 +21,8 @@ Add `--execute` to run. `--solenoid` defaults to −1. `--file-index 2` selects 
 
 By default the runner preserves legacy names: `mchipo/mc_LUNDSTEM_torusSCALE.hipo` and `reconhipo/recon_LUNDSTEM_torusSCALE.hipo`. The restored payload fixes 10000 events per file and solenoid -1; the coordinator rejects partial files, indexed naming and whitespace/glob-containing paths. Bash -e stops the coordinator-launched payload on command failure; the coordinator then checks both outputs. A successful `simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files and `payload_sha256` for the executed Bash payload.
 
+Physical conversion already defaults to `events-per-file=10000`. Uniform creation defaults to the archived generator's 25,000-event files, which are rejected here because the protected payload would process only 10,000 records. Add `--events-per-file 10000` when creating a uniform run intended for submission.
+
 Existing outputs are rejected. A per-file lock prevents two processes from executing the same task concurrently. Failed jobs retain their locks/partial output for inspection; there is no automatic cleanup or resume. Use a fresh run directory, or deliberately resolve the failed file's state before retrying. A single run directory supports one simulation configuration.
 
 ## Slurm array

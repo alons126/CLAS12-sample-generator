@@ -106,17 +106,18 @@ class LegacyMonitoring {
     /**
      * @brief Persist compatibility histograms and optionally render visualizations.
      *
-     * The ROOT file is created at path. When render is true, the implementation
-     * also creates a `monitoring_plots` directory beside it containing one
-     * multipage `uniform.pdf` and one PNG per histogram.
+     * The ROOT file is created at path. When render is true, the implementation creates the selected
+     * plot directory containing one named multipage PDF and numbered PNGs in historical histogram order.
      *
      * @param path Destination for the new compatibility ROOT file.
      * @param render Whether to render PDF and PNG plots after writing ROOT data.
+     * @param plot_directory Rendering destination. An empty path selects `monitoring_plots` beside path.
+     * @param pdf_name Multipage PDF filename inside plot_directory.
      *
      * @throws std::runtime_error If ROOT cannot create the file or write a histogram.
      * @throws std::filesystem::filesystem_error If the rendering directory cannot be created.
      */
-    void save(const std::filesystem::path& path, bool render);
+    void save(const std::filesystem::path& path, bool render, const std::filesystem::path& plot_directory = {}, const std::string& pdf_name = "uniform.pdf");
 
     // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:

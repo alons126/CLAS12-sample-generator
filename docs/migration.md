@@ -17,7 +17,7 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 
 The default `lund-format=legacy` restores historical whitespace, precision and uniform per-file IDs. The default `mass-convention=legacy` restores the archived pion values. `nucleon-momentum=fixed` preserves the 1 GeV/c mode. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
 
-`legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture the active archived launch settings. Their counts are production-sized; override `--events` for local tests. Output splitting is automatic at 10,000 events per file.
+`legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture the active archived launch settings. Their counts are production-sized; override `--events` for local tests. `events-per-file` defaults to 25,000 for uniform generation and 10,000 for physical conversion, matching their respective creation workflows.
 
 The earlier refactor's output remains available through `--lund-format precise`, `--mass-convention standard`, and runner `--output-naming indexed`. Default runner filenames now follow the legacy `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo` convention.
 
@@ -32,7 +32,7 @@ Both keep the original azimuth and trigger-electron prescription. See [sampling 
 
 ## Diagnostics
 
-`monitoring.root` retains the common per-PDG diagnostics introduced by the refactor. `legacy_histograms.root` additionally restores the original uniform names/correlations and the original GENIE electron diagnostic. `--render-plots true` creates PDF/PNG products; plot styles and names are standardized. Numerical parity is checked by independent tests.
+`monitoring.root` retains the common per-PDG diagnostics introduced by the refactor. Uniform generation also writes the archived `<prefix>_plots.root`, keeps `legacy_histograms.root` as a stable copy for maintained consumers, creates `MonitoringPlotsPath/`, and renders the archived PDF/numbered-PNG names by default. It also prepares the legacy empty `mchipo/`, `reconhipo/`, and `rootfiles/` directories. Numerical histogram parity is checked by independent tests.
 
 ## Retained corrections
 

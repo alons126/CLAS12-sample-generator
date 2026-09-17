@@ -34,7 +34,7 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### LundWriter
 
-[LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at 10,000 events; `finish(scanned)` publishes the manifest. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
+[LundWriter.h](../src/common/LundWriter.h) / [LundWriter.cpp](../src/common/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at the resolved `events-per-file` threshold; `finish(scanned)` publishes the manifest. Uniform construction also prepares the archived downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
 `Version.h.in` embeds project version, target-header SHA-256 and the configure-time Git revision into the manifest. This is build provenance, not a runtime Git dependency.
 
@@ -44,7 +44,7 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### LegacyMonitoring
 
-[LegacyMonitoring.h](../src/common/LegacyMonitoring.h) / [LegacyMonitoring.cpp](../src/common/LegacyMonitoring.cpp): owns the original uniform histogram definitions as run-local objects. Constructor selects `1e`, `ep`, `en`, or `Tester_e`. Each entry maps histogram x/y quantities to particle values. `fill` includes original inter-particle correlations; `save(path,render)` writes numerical histograms and optionally renders PNG/PDF products. The definitions are migrated source, not runtime imports from `legacy/`.
+[LegacyMonitoring.h](../src/common/LegacyMonitoring.h) / [LegacyMonitoring.cpp](../src/common/LegacyMonitoring.cpp): owns the original uniform histogram definitions as run-local objects. Constructor selects `1e`, `ep`, `en`, or `Tester_e`. Each entry maps histogram x/y quantities to particle values. `fill` includes original inter-particle correlations; `save` writes numerical histograms and optionally renders a caller-selected legacy PDF/numbered-PNG layout. The definitions are migrated source, not runtime imports from `legacy/`.
 
 ## 3. Uniform code
 

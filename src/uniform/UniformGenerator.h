@@ -41,7 +41,8 @@ namespace samples {
  *   3. Safely prepare the resolved output directory and initialize both monitoring systems.
  *   4. Generate 1e events or artificial trigger-electron+nucleon ep/en events until the requested
  *      event capacity is written, sampling exactly one shared vertex per event.
- *   5. Save modern and legacy-compatible monitoring, finalize LUND output, and publish the manifest.
+ *   5. Save modern monitoring plus the archived prefix-based ROOT/PDF/PNG artifacts, retain the stable
+ *      legacy_histograms.root copy, finalize LUND output, and publish the manifest.
  *
  * @param config Borrowed configuration returned by RunConfig::parse(..., true). The function reads it
  *               for the duration of the call and neither retains nor modifies it. Momentum values
@@ -56,6 +57,9 @@ namespace samples {
  *
  * @note Every particle in an ep/en event receives the same sampled interaction vertex. Kinematic and
  *       vertex RNG ownership remains separate so target draws do not change the kinematic sequence.
+ *
+ * @note Uniform files default to 25,000 events each. `events-per-file` remains configurable; submission
+ *       through the protected 10,000-event GEMC payload requires an explicit value of 10,000.
  *
  * @note Fixed 1 GeV/c nucleons and the configured legacy angular prescriptions remain available. In
  *       sampled mode, ep alternates uniform-p and uniform-1/p events; non-fixed en may sample uniformly

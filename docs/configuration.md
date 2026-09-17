@@ -22,20 +22,21 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `gemc-target-variation` | `auto` | GCARD target variation resolved from `rgm-target` |
 | `vertex-mode` | `target` | Sample the selected target or use explicit `fixed` coordinates |
 | `vertex-x/y/z` | `0` / `0` / `-3` | Fixed-vertex coordinates in cm |
-| `events` | Required | Total number of accepted events to write; files split automatically at 10,000 events |
+| `events` | Required | Total number of accepted events to write |
+| `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold recorded in the manifest; use `10000` for the protected GEMC submission payload |
 | `seed` | `67890` | Uniform kinematic RNG seed; unused in GENIE conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
 | `lund-format` | `legacy` | Legacy text precision/numbering, or `precise` |
 | `mass-convention` | `legacy` | Restored constants, or `standard` pion constants |
-| `render-plots` | `false` | `true` additionally writes diagnostic PDF/PNG files |
+| `render-plots` | `true` uniform / `false` physical | Render legacy-named uniform PDF/PNG artifacts or optional physical plots |
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
 | `event-generator` | `genie` | Physical adapter name; GENIE is currently implemented |
 | `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |
 | `tune`, `q2-cut` | `unknown` / energy-based | Generator provenance and naming components |
 | `gemc-version` | `unknown` | Planned detector-simulation version and naming component |
 
-Counts and seeds must be integers from 1 through 4294967295. Production Ar defaults resolve to A=40/Z=18. Legacy parity tests explicitly request the archived A=1/Z=1 uniform headers.
+Counts, the split threshold, and seeds must be integers from 1 through 4294967295. Production Ar defaults resolve to A=40/Z=18. Legacy parity tests explicitly request the archived A=1/Z=1 uniform headers.
 
 ## Uniform settings
 
