@@ -201,19 +201,32 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert am['config']['seed'] == '0' and am['config']['vertex-seed'] == '0'
         # Every material-bearing RG-M target resolves nuclear metadata and one external geometry key.
         targets = {
-            'H1':(1,1,'liquid'), 'D2':(2,1,'liquid'), 'He4':(4,2,'liquid'),
-            'C12-four-foil':(12,6,'4-foil'), 'Sn-nat-four-foil':(119,50,'4-foil'),
-            'Ca40':(40,20,'Ca'), 'Ca48':(48,20,'Ca'), 'C12-small':(12,6,'1-foil-small'),
-            'C12-large':(12,6,'1-foil-large'), 'Ar40':(40,18,'Ar'),
-            'Sn120-large':(120,50,'1-foil-large'), 'C12-legacy':(12,6,'1-foil'),
-            'Sn120-legacy':(120,50,'1-foil'),
+            'H1':(1,1,'liquid','rga_spring2019'), 'D2':(2,1,'liquid','rgb_fall2019'),
+            'He4':(4,2,'liquid','rgm_fall2021_He'),
+            'C12-four-foil':(12,6,'4-foil','rgm_fall2021_Cx4'),
+            'Sn-nat-four-foil':(119,50,'4-foil','rgm_fall2021_Snx4'),
+            'Ca40':(40,20,'Ca','rgm_fall2021_Ca'), 'Ca48':(48,20,'Ca','rgm_fall2021_Ca'),
+            'C12-small':(12,6,'1-foil-small','rgm_fall2021_C_S'),
+            'C12-large':(12,6,'1-foil-large','rgm_fall2021_C_L'),
+            'Ar40':(40,18,'Ar','rgm_fall2021_Ar'),
+            'Sn120-large':(120,50,'1-foil-large','rgm_fall2021_Sn_L'),
+            'C12-legacy':(12,6,'1-foil','rgm_fall2021_C'),
+            'Sn120-legacy':(120,50,'1-foil','rgm_fall2021_Sn'),
         }
-        for name,(A,Z,geometry) in targets.items():
+        for name,(A,Z,geometry,variation) in targets.items():
             parent=root/'targets'/name
             run(executable,'--rgm-target',name,'--events','1','--output',parent)
             manifest,_=read_run(parent/'Uniform_sample_1e_5986MeV')
             assert manifest['config']['A']==str(A) and manifest['config']['Z']==str(Z)
             assert manifest['config']['target']==geometry
+            assert manifest['config']['gemc-target-variation']==variation
+        override_parent=root/'target-overrides'
+        run(executable,'--rgm-target','Ar40','--target','point','--A','1','--Z','1',
+            '--gemc-target-variation','custom_variation','--events','1','--output',override_parent)
+        override_manifest,_=read_run(override_parent/'Uniform_sample_1e_5986MeV')
+        assert override_manifest['config']['target']=='point'
+        assert override_manifest['config']['A']=='1' and override_manifest['config']['Z']=='1'
+        assert override_manifest['config']['gemc-target-variation']=='custom_variation'
         for key,value in [('channel','bad'),('seed','4294967296'),('events-per-file','0'),('files','0'),('target','missing'),('beam-energy','nan'),('electron-theta-min','50'),('A','0'),('unknown','1'),('prefix','../bad')]:
             output=root/('invalid-'+key)
             run(executable, '--'+key, value, '--output', output, ok=False)

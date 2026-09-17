@@ -11,9 +11,9 @@
  *   geometry key, and GEMC target-variation label normally used together for that target.
  *
  * Workflow:
- *   RunConfig reads `rgm-target` -> findRgmTarget() performs an exact catalog lookup -> fields whose
- *   individual setting is `auto` inherit catalog defaults -> explicit geometry, A/Z, or GEMC-variation
- *   overrides remain independent -> TargetGeometry validates/samples the selected external geometry.
+ *   RunConfig reads `rgm-target` -> findRgmTarget() performs an exact catalog lookup -> the complete
+ *   catalog record supplies geometry, A/Z, and GEMC-variation defaults -> explicit field overrides are
+ *   applied afterward -> TargetGeometry validates and samples the final external geometry.
  *
  * Scope:
  *   This catalog describes target identity and defaults; it does not implement vertex shapes, modify

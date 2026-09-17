@@ -324,14 +324,26 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // treats that as an explicit request to recompute the context-dependent value.
     for (const auto& [k, v] : overrides) { assign(k, v); }
 
-    // Resolve target identity through the maintained RG-M table. Geometry and nuclear A/Z metadata
-    // remain independent: each inherits from the identity only when its own value is `auto`, allowing
-    // documented unusual studies to override them separately.
+    // Resolve the complete default target definition first, analogous to the legacy target-selection
+    // block but centralized for every supported RG-M identity. Preserve the four pre-resolution values
+    // so an explicitly configured geometry, A/Z pair, or GEMC variation can overwrite its catalog
+    // default only after the coherent identity defaults have been installed.
+    const std::string target_override = c.get("target");
+    const std::string A_override = c.get("A");
+    const std::string Z_override = c.get("Z");
+    const std::string variation_override = c.get("gemc-target-variation");
     const auto& rgm_target = findRgmTarget(c.get("rgm-target"));
-    if (c.get("target") == "auto") { c.values_["target"] = rgm_target.geometry; }
-    if (c.get("A") == "auto") { c.values_["A"] = std::to_string(rgm_target.A); }
-    if (c.get("Z") == "auto") { c.values_["Z"] = std::to_string(rgm_target.Z); }
-    if (c.get("gemc-target-variation") == "auto") { c.values_["gemc-target-variation"] = rgm_target.gemc_variation; }
+    c.values_["target"] = rgm_target.geometry;
+    c.values_["A"] = std::to_string(rgm_target.A);
+    c.values_["Z"] = std::to_string(rgm_target.Z);
+    c.values_["gemc-target-variation"] = rgm_target.gemc_variation;
+
+    // Independent overrides are deliberately applied last. Normal profiles therefore need only
+    // `rgm-target`, while compatibility studies may replace any one field without changing identity.
+    if (target_override != "auto") { c.values_["target"] = target_override; }
+    if (A_override != "auto") { c.values_["A"] = A_override; }
+    if (Z_override != "auto") { c.values_["Z"] = Z_override; }
+    if (variation_override != "auto") { c.values_["gemc-target-variation"] = variation_override; }
 
     if (uniform) {
         // Resolve the species/region acceptance contract. CD pions stop at 140 degrees; CD nucleons

@@ -4,6 +4,8 @@ Sample settings use UTF-8 text with one `key = value` per line. Blank lines and 
 
 The two C++ LUND applications pass these settings through the shared `RunConfig` layer. It installs common and source-specific defaults, applies the optional profile and CLI overrides, resolves every `auto` value, validates the complete result, and constructs normalized paths before event processing starts. Uniform-only keys are unavailable to physical conversion and physical-only keys are unavailable to uniform generation.
 
+Target resolution has one deliberate order. `rgm-target` first selects the catalog default geometry, A, Z, and GEMC target variation. Explicit `target`, `A`, `Z`, or `gemc-target-variation` values are then applied as independent overrides. Normal profiles therefore specify only `rgm-target`; derived values still appear in the completed manifest. Compatibility profiles retain an override only when they intentionally differ from the catalog, such as the archived uniform A=1/Z=1 header.
+
 `RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `manifest.json`.
 
 The launcher does not select a sample profile implicitly. Pass `--config config/samples/NAME.conf` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build/test defaults only.
@@ -16,10 +18,10 @@ Relative paths are interpreted from the caller's working directory. The output p
 | --- | --- | --- |
 | `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
-| `rgm-target` | `Ar40` | Catalog identity resolving nucleus, vertex geometry and GEMC variation |
-| `target` | `auto` | Protected `targets.h` geometry key; normally resolved from `rgm-target` |
-| `A`, `Z` | `auto` | LUND nuclear metadata resolved from `rgm-target`; require 1≤A≤300, 0≤Z≤A |
-| `gemc-target-variation` | `auto` | GCARD target variation resolved from `rgm-target` |
+| `rgm-target` | `Ar40` | Catalog identity that first supplies geometry, A/Z, and GEMC-variation defaults |
+| `target` | `auto` | Optional override of the protected `targets.h` geometry selected by `rgm-target` |
+| `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
+| `gemc-target-variation` | `auto` | Optional GCARD target-variation override applied after the catalog default |
 | `vertex-mode` | `target` | Sample the selected target or use explicit `fixed` coordinates |
 | `vertex-x/y/z` | `0` / `0` / `-3` | Fixed-vertex coordinates in cm |
 | `events` | Required | Total number of accepted events to write |
@@ -79,7 +81,7 @@ Unknown geometries fail instead of writing sentinel coordinates. Geometry does n
 
 ## RG-M target catalog
 
-The maintained catalog maps target identity onto the protected geometry source and official GEMC variation. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
+The maintained catalog centralizes the same kind of selection that the legacy submission script performed with target/beam conditionals. Each identity supplies the protected geometry key, nuclear metadata, and official default GEMC variation. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
 
 | Identifier | A/Z | Vertex geometry | GEMC target variation |
 | --- | --- | --- | --- |

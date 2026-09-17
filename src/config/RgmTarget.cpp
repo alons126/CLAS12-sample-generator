@@ -45,7 +45,8 @@ namespace samples {
  *
  * @note Shared geometry keys are deliberate. For example, isotopes may use the same spatial assembly
  *       while retaining different nuclear metadata, and several identities may use one foil shape with
- *       distinct GEMC variations. RunConfig applies each field independently only when set to `auto`.
+ *       distinct GEMC variations. RunConfig installs the record as one default set before applying any
+ *       explicitly configured field overrides.
  */
 const std::vector<RgmTarget>& rgmTargets() {
     // Catalog order controls help/error presentation only; lookup is by exact identifier. Records are

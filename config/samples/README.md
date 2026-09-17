@@ -14,6 +14,8 @@ source run.csh --workflow create-lund --source physical \
 
 The executable installs built-in defaults, reads the named profile, then applies explicit `--key value` overrides. Unknown and repeated keys fail. Blank lines and lines beginning with `#` are ignored; inline comments, sections, quoting, and environment expansion are unsupported.
 
+Profiles normally specify only `rgm-target`. The maintained target catalog first resolves its vertex geometry, A/Z metadata, and default GEMC target variation. Explicit `target`, `A`, `Z`, or `gemc-target-variation` settings are optional overrides applied afterward and should appear only when the run intentionally departs from the selected identity. All resolved values are recorded in `manifest.json` even when they are absent from the profile.
+
 ## Uniform production matrix
 
 Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, legacy-derived angular conventions, current PDG masses, and 25,000 events per file. Uniform profiles request 50,000,000 events, following the legacy production scale; tester profiles request 1,000,000 events, following its server default. Override `--events` for smaller studies.
@@ -47,7 +49,7 @@ The electron tester profiles use a fixed `(0,0,-3 cm)` vertex and scan electron 
 
 ## Available common options
 
-`output`, `beam-energy`, `rgm-target`, `target`, `A`, `Z`, `gemc-target-variation`, `vertex-mode`, `vertex-x`, `vertex-y`, `vertex-z`, `events`, `events-per-file`, `seed`, `vertex-seed`, `prefix`, `lund-format`, `mass-convention`, and `render-plots` are common configuration keys. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
+`output`, `beam-energy`, `rgm-target`, optional target-field overrides (`target`, `A`, `Z`, `gemc-target-variation`), `vertex-mode`, `vertex-x`, `vertex-y`, `vertex-z`, `events`, `events-per-file`, `seed`, `vertex-seed`, `prefix`, `lund-format`, `mass-convention`, and `render-plots` are common configuration keys. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
 
 ## Available uniform options
 
