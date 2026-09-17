@@ -1,3 +1,7 @@
+#
+# Created by Alon Sportes on 14/09/2026.
+#
+
 """Check the maintained coordinator against the unchanged legacy payload contract.
 
 Purpose:

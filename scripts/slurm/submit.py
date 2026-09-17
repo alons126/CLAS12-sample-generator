@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+#
+# Created by Alon Sportes on 14/09/2026.
+#
+
 """Submit one Slurm array task per completed LUND file.
 
 Purpose:

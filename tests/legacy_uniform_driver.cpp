@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 14/09/2026.
+//
+
 /**
  * @file legacy_uniform_driver.cpp
  * @brief Maintained test adapter for archived uniform kernels.
@@ -22,10 +26,12 @@
 #include <string>
 #include <vector>
 using namespace std;
+
 #include "legacy/Uniform-sample-generator/Generate_uniform_event.C"
 #include "legacy/Uniform-sample-generator/Generate_uniform_event_e_tester.C"
 #include "legacy/Uniform-sample-generator/Histograms.cpp"
-// main ----------------------------------------------------------------------
+
+// main ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* main */
 /**
@@ -40,7 +46,7 @@ using namespace std;
  * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
  */
 int main(int argc, char** argv) {
-    if (argc != 9) return 2;
+    if (argc != 9) { return 2; }
     const string channel = argv[1], output = argv[2], target = argv[8];
     const double beam = stod(argv[3]);
     const int events = stoi(argv[4]), files = stoi(argv[5]);
@@ -48,21 +54,23 @@ int main(int argc, char** argv) {
     ran.SetSeed(stoul(argv[7]));
     filesystem::create_directories(output);
     const bool tester = channel == "tester";
-    if (tester)
+    if (tester) {
         InitHistograms_Tester_e(beam);
-    else
+    } else {
         InitHistograms(channel == "1e", channel == "ep", channel == "en", beam);
+    }
     auto h1 = tester ? TH1_hist_list_Tester_e : channel == "1e" ? TH1_hist_list_1e : channel == "ep" ? TH1_hist_list_ep : TH1_hist_list_en;
     auto h2 = tester ? TH2_hist_list_Tester_e : channel == "1e" ? TH2_hist_list_1e : channel == "ep" ? TH2_hist_list_ep : TH2_hist_list_en;
     for (int i = 1; i <= files; ++i) {
         ofstream out(output + "/legacy_" + to_string(i) + ".txt");
-        if (tester)
+        if (tester) {
             Generate_uniform_event_e_tester(TVector3(0, 0, -3), h1, h2, out, "", "", kinematics, events, 0, 0, 1, 11, beam, beam, 1, mass_e, 5, 40);
-        else if (channel == "1e")
+        } else if (channel == "1e") {
             Generate_uniform_event(target, h1, h2, out, "", "", kinematics, events, 0, 0, 1, 11, beam, beam, 1, mass_e, 5, 40);
-        else
+        } else {
             Generate_uniform_event(TString(ConfigBeamE(beam)), target, h1, h2, out, "", "", kinematics, channel == "ep" ? 2212 : 2112, events, 2, 0, 0, 1, 11, beam, beam, 1, mass_e,
                                    channel == "ep" ? mass_p : mass_n, 5, 40, 5, channel == "ep" ? 45 : 35);
+        }
     }
     TFile hist((output + "/histograms.root").c_str(), "RECREATE");
     for (auto* h : h1) {

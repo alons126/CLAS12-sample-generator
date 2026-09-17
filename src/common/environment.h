@@ -7,6 +7,10 @@
 
 #include <string>
 
+// Terminal color constants ----------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* Terminal color constants */
+
 /**
  * @namespace environment
  * @brief A namespace for defining color codes for terminal output, including error, completion, system, warning, and informational messages.
@@ -26,5 +30,7 @@ inline const std::string INFO_COLOR = "\033[35m";        // Magenta
 inline const std::string WARNING_COLOR = "\033[36m";     // Cyan
 inline const std::string RESET_COLOR = "\033[0m";        // Reset color
 };  // namespace environment
+
+#pragma endregion
 
 #endif  // ENVIRONMENT_H

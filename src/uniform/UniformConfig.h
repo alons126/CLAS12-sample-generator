@@ -25,11 +25,11 @@
 
 namespace samples {
 
-// Public interface -------------------------------------------------------------
+// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Public interface */
 
-// UniformChannel object ------------------------------------------------
+// UniformChannel object -------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* UniformChannel object */
 /**
@@ -56,7 +56,8 @@ enum class UniformChannel {
 #pragma endregion
 
 // Resolve string settings once, outside the production event loop.
-// UniformConfig object ------------------------------------------------
+
+// UniformConfig object --------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* UniformConfig object */
 /**
@@ -83,14 +84,14 @@ enum class UniformChannel {
  *   target metadata, and mode/channel compatibility were checked by RunConfig::validate(true).
  */
 struct UniformConfig {
-    // Channel and resolved prescriptions ---------------------------------------
+    // Channel and resolved prescriptions --------------------------------------------------------------------------------------------------------------------------------
     UniformChannel channel;          ///< Particle content and electron/nucleon branch.
     bool uniform_electron_momentum;  ///< True: p~U(0,Ebeam); false: p uses the beam value under c=1.
     bool uniform_nucleon_momentum;   ///< True: p~U(p_min,p_max); mutually exclusive with mixed mode.
     bool mixed_nucleon_momentum;     ///< True: ep alternates uniform-p and uniform-1/p by event ID.
     bool isotropic_nucleon_angle;    ///< True: cos(theta) is uniform within the configured bounds.
 
-    // Physical ranges and trigger settings -------------------------------------
+    // Physical ranges and trigger settings ------------------------------------------------------------------------------------------------------------------------------
     double beam;                ///< Beam energy in GeV; also supplies the c=1 momentum-scale value.
     double electron_theta_min;  ///< Inclusive lower electron polar-angle bound in degrees.
     double electron_theta_max;  ///< Upper electron polar-angle bound in degrees.

@@ -31,10 +31,12 @@
 
 namespace samples {
 
-// Public interface -------------------------------------------------------------
+// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* Public interface */
 
-// LundWriter object ------------------------------------------------
+// LundWriter object -----------------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* LundWriter object */
 /**
  * @class LundWriter
@@ -123,9 +125,9 @@ class LundWriter {
      */
     static void printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned = 0, std::uint64_t written = 0, bool final = false);
 
-    // Owned state --------------------------------------------------------------
+    // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:
-    // Output object ------------------------------------------------
+    // Output object -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Output object */
     /**
@@ -151,16 +153,16 @@ class LundWriter {
     };
 #pragma endregion
 
-    // Borrowed configuration ----------------------------------------------------
+    // Borrowed configuration --------------------------------------------------------------------------------------------------------------------------------------------
     const RunConfig& config_;  ///< Immutable source of resolved settings and manifest provenance.
 
-    // Owned run identity and filesystem state ----------------------------------
+    // Owned run identity and filesystem state ---------------------------------------------------------------------------------------------------------------------------
     std::string workflow_;             ///< Manifest/summary source label: uniform or physical.
     std::filesystem::path directory_;  ///< Absolute normalized final run directory.
     std::ofstream stream_;             ///< Active LUND stream; opened lazily and closed by finish().
     std::vector<Output> files_;        ///< Ordered manifest records; the last corresponds to stream_.
 
-    // Owned counters and serialization policy ---------------------------------
+    // Owned counters and serialization policy ---------------------------------------------------------------------------------------------------------------------------
     std::uint64_t count_ = 0;        ///< Successfully serialized run-global event count.
     std::uint64_t events_per_file_;  ///< Split threshold, currently fixed to 10,000 events.
     std::uint64_t capacity_;         ///< Maximum written events requested by RunConfig::events.

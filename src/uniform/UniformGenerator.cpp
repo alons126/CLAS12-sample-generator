@@ -41,7 +41,7 @@
 
 namespace samples {
 
-// Private kinematic helpers --------------------------------------------------
+// Private kinematic helpers ---------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Private kinematic helpers */
 /**
@@ -52,7 +52,8 @@ namespace samples {
  * other workflows from depending on prescriptions that are specific to uniform acceptance samples.
  */
 namespace {
-// momentum ----------------------------------------------------------------------
+
+// momentum --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* momentum */
 /**
@@ -83,7 +84,7 @@ TVector3 momentum(double p, double theta, double phi) {
 }
 #pragma endregion
 
-// triggerPhi ----------------------------------------------------------------------
+// triggerPhi ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* triggerPhi */
 /**
@@ -131,7 +132,7 @@ double triggerPhi(double phi, double offset) {
 }  // namespace
 #pragma endregion
 
-// generateUniform ----------------------------------------------------------------------
+// generateUniform -------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* generateUniform */
 /**

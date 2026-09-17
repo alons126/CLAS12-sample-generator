@@ -44,7 +44,7 @@
 
 namespace samples {
 
-// LundWriter::printWorkflowSummary ----------------------------------------------------------------------
+// LundWriter::printWorkflowSummary --------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::printWorkflowSummary */
 /**
@@ -159,7 +159,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 }
 #pragma endregion
 
-// LundWriter::LundWriter ----------------------------------------------------------------------
+// LundWriter::LundWriter ------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::LundWriter */
 /**
@@ -206,8 +206,9 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     // Refuse paths whose recursive removal could erase a filesystem root, user home, active working
     // directory, the source checkout, or an ancestor containing that checkout.
     if (directory_.empty() || directory_ == root || (!home.empty() && directory_ == home) || directory_.filename().empty() || directory_ == std::filesystem::current_path() ||
-        contains_checkout)
+        contains_checkout) {
         throw std::runtime_error("Refusing unsafe output-directory replacement: " + directory_.string());
+    }
 
     // Ensure the parent exists before checking/replacing the final run. Existing contents at the exact
     // final path are disposable by the documented legacy rerun contract.
@@ -222,7 +223,7 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
 }
 #pragma endregion
 
-// LundWriter::full ----------------------------------------------------------------------
+// LundWriter::full ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::full */
 /**
@@ -241,7 +242,7 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
 bool LundWriter::full() const { return count_ >= capacity_; }
 #pragma endregion
 
-// LundWriter::write ----------------------------------------------------------------------
+// LundWriter::write -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::write */
 /**
@@ -272,14 +273,14 @@ bool LundWriter::full() const { return count_ >= capacity_; }
 void LundWriter::write(const Event& e) {
     // Enforce capacity internally even when a caller forgets to check full(). LUND events must contain
     // at least one particle because the header multiplicity and following records form one unit.
-    if (full()) throw std::runtime_error("Run file limit reached");
-    if (e.particles.empty()) throw std::runtime_error("Cannot write an empty event");
+    if (full()) { throw std::runtime_error("Run file limit reached"); }
+    if (e.particles.empty()) { throw std::runtime_error("Cannot write an empty event"); }
 
     // Open a new file only when the next event actually needs one. This avoids empty trailing files for
     // exact multiples of 10,000 and allows a partially filled final physical file at end of input.
     if (files_.empty() || files_.back().events == events_per_file_) {
         // Closing the previous stream flushes it before a new manifest record and path are selected.
-        if (stream_.is_open()) stream_.close();
+        if (stream_.is_open()) { stream_.close(); }
 
         // Number files from one in creation order and store a run-relative path for portable manifests.
         files_.push_back({"lundfiles/" + config_.get("prefix") + "_" + std::to_string(files_.size() + 1) + ".txt", 0});
@@ -317,7 +318,7 @@ void LundWriter::write(const Event& e) {
 
         // A non-finite momentum or mass propagates into energy; checking vertex magnitude catches any
         // non-finite coordinate. Reject before emitting that particle record.
-        if (!std::isfinite(energy) || !std::isfinite(p.vertex.Mag2())) throw std::runtime_error("Non-finite particle data");
+        if (!std::isfinite(energy) || !std::isfinite(p.vertex.Mag2())) { throw std::runtime_error("Non-finite particle data"); }
         if (legacy_format_) {
             // Legacy particle records retain tabs, status/parent zeros, active flag 1, and five decimal
             // places for momentum, energy, mass, and vertex fields.
@@ -336,7 +337,7 @@ void LundWriter::write(const Event& e) {
 }
 #pragma endregion
 
-// LundWriter::finish ----------------------------------------------------------------------
+// LundWriter::finish ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::finish */
 /**
@@ -371,7 +372,7 @@ void LundWriter::write(const Event& e) {
 void LundWriter::finish(std::uint64_t scanned) {
     // Close first so every numbered LUND file is flushed and no further event can be appended through
     // the active stream while its counts are being published.
-    if (stream_.is_open()) stream_.close();
+    if (stream_.is_open()) { stream_.close(); }
 
     // Write completion metadata to a temporary sibling so consumers never observe a partially written
     // final manifest. Stream exceptions turn open, serialization, flush, and close failures into the

@@ -1,3 +1,7 @@
+#
+# Created by Alon Sportes on 14/09/2026.
+#
+
 """Check generator and converter output contracts.
 
 Purpose:

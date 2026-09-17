@@ -1,5 +1,9 @@
 #!/bin/tcsh
 
+#
+# Created by Alon Sportes on 14/09/2026.
+#
+
 # print_logo.csh --------------------------------------------------------------
 # Description:
 #   Presentation-only CLAS12 sample-generator startup banner.

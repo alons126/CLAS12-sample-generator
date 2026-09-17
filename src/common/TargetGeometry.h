@@ -29,11 +29,11 @@
 
 namespace samples {
 
-// Public interface -------------------------------------------------------------
+// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Public interface */
 
-// TargetGeometry object ------------------------------------------------
+// TargetGeometry object -------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* TargetGeometry object */
 /**
@@ -98,7 +98,7 @@ class TargetGeometry {
      */
     TVector3 sample(TRandom3& random) const;
 
-    // Owned state --------------------------------------------------------------
+    // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:
     /** @brief Validated external map key or artificial `point` mode, owned for object lifetime. */
     std::string name_;

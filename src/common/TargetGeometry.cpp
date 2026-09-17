@@ -35,7 +35,7 @@
 #include <stdexcept>
 #include <vector>
 
-// External geometry bridge --------------------------------------------------
+// External geometry bridge ----------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* External geometry bridge */
 /**
@@ -46,7 +46,8 @@
  * samples namespace and prevents multiple-definition problems in other translation units.
  */
 namespace {
-// External targets namespace -------------------------------------------------
+
+// External targets namespace --------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* External targets namespace */
 /**
@@ -62,6 +63,7 @@ using std::endl;
 using std::sqrt;
 using std::string;
 #include "common/external/targets.h"
+
 }  // namespace external_targets
 #pragma endregion
 
@@ -77,7 +79,8 @@ std::mutex geometry_mutex;
 #pragma endregion
 
 namespace samples {
-// TargetGeometry::validate ----------------------------------------------------------------------
+
+// TargetGeometry::validate ----------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* TargetGeometry::validate */
 /**
@@ -102,15 +105,15 @@ namespace samples {
 void TargetGeometry::validate(const std::string& name) {
     // The point vertex is a maintained compatibility mode for the electron tester, not an entry added
     // to or expected from the protected external target map.
-    if (name == "point") return;
+    if (name == "point") { return; }
 
     // Use find rather than operator[] so validation cannot insert a missing key into external state.
     const auto found = external_targets::targets.find(name);
-    if (found == external_targets::targets.end() || found->second.empty()) throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name);
+    if (found == external_targets::targets.end() || found->second.empty()) { throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name); }
 }
 #pragma endregion
 
-// TargetGeometry::sample ----------------------------------------------------------------------
+// TargetGeometry::sample ------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* TargetGeometry::sample */
 /**
@@ -139,7 +142,7 @@ void TargetGeometry::validate(const std::string& name) {
  */
 TVector3 TargetGeometry::sample(TRandom3& random) const {
     // Point mode preserves the archived tester location and does not contend on external global state.
-    if (name_ == "point") return {0, 0, -3};
+    if (name_ == "point") { return {0, 0, -3}; }
 
     // Upstream randomVertex uses a global TRandom3 named ran. Transfer full state rather than reseeding,
     // so streams remain reproducible and independent when geometry instances are interleaved.
@@ -149,7 +152,7 @@ TVector3 TargetGeometry::sample(TRandom3& random) const {
     random = external_targets::ran;
 
     // Mag2 covers all three coordinates in one check; non-finite inputs or overflow are invalid output.
-    if (!std::isfinite(vertex.Mag2())) throw std::runtime_error("Non-finite vertex from targets.h");
+    if (!std::isfinite(vertex.Mag2())) { throw std::runtime_error("Non-finite vertex from targets.h"); }
     return vertex;
 }
 #pragma endregion

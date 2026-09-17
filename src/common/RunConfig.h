@@ -21,10 +21,12 @@
 
 namespace samples {
 
-// Public interface -------------------------------------------------------------
+// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* Public interface */
 
-// RunConfig object ------------------------------------------------
+// RunConfig object ------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* RunConfig object */
 /**
  * @class RunConfig
@@ -126,7 +128,7 @@ class RunConfig {
      */
     void validate(bool uniform) const;
 
-    // Owned state --------------------------------------------------------------
+    // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:
     /**
      * @brief Complete resolved key/value state owned by this object.
@@ -152,4 +154,5 @@ std::string help(bool uniform);
  */
 std::string jsonString(const std::string& text);
 #pragma endregion
+
 }  // namespace samples

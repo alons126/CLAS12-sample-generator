@@ -36,7 +36,7 @@
 
 namespace samples {
 
-// Translation-unit helpers ---------------------------------------------------
+// Translation-unit helpers ----------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Translation-unit helpers */
 /**
@@ -47,7 +47,8 @@ namespace samples {
  * construction without becoming part of the public configuration API.
  */
 namespace {
-// trim ----------------------------------------------------------------------
+
+// trim ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* trim */
 /**
@@ -76,7 +77,8 @@ std::string trim(std::string s) {
 }
 #pragma endregion
 
-// pathToken ------------------------------------------------------------------
+// pathToken -------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* pathToken */
 /**
  * @brief Convert explicit provenance text into one portable output-directory component.
@@ -101,16 +103,17 @@ std::string trim(std::string s) {
 std::string pathToken(std::string value) {
     // Cast through unsigned char before the cctype call to avoid undefined behavior for negative char
     // values. The three explicit punctuation characters are the only non-alphanumerics retained.
-    for (char& ch : value)
-        if (!(std::isalnum(static_cast<unsigned char>(ch)) || ch == '.' || ch == '_' || ch == '-')) ch = '-';
+    for (char& ch : value) {
+        if (!(std::isalnum(static_cast<unsigned char>(ch)) || ch == '.' || ch == '_' || ch == '-')) { ch = '-'; }
+    }
 
     // Exclude empty and navigation-like names even though ordinary punctuation has been normalized.
-    if (value.empty() || value == "." || value == "..") throw std::runtime_error("Invalid empty output-name component");
+    if (value.empty() || value == "." || value == "..") { throw std::runtime_error("Invalid empty output-name component"); }
     return value;
 }
 #pragma endregion
 
-// beamMeV --------------------------------------------------------------------
+// beamMeV ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* beamMeV */
 /**
@@ -132,9 +135,9 @@ std::string pathToken(std::string value) {
  *       the generic rounded value `2071`.
  */
 long long beamMeV(double energy) {
-    if (std::abs(energy - 2.07052) < 1e-6) return 2070;
-    if (std::abs(energy - 4.02962) < 1e-6) return 4029;
-    if (std::abs(energy - 5.98636) < 1e-6) return 5986;
+    if (std::abs(energy - 2.07052) < 1e-6) { return 2070; }
+    if (std::abs(energy - 4.02962) < 1e-6) { return 4029; }
+    if (std::abs(energy - 5.98636) < 1e-6) { return 5986; }
     return std::llround(energy * 1000.0);
 }
 #pragma endregion
@@ -142,7 +145,7 @@ long long beamMeV(double energy) {
 }  // namespace
 #pragma endregion
 
-// RunConfig::parse ----------------------------------------------------------------------
+// RunConfig::parse ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::parse */
 /**
@@ -274,7 +277,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
             line = trim(line);
 
             // Empty lines and full-line comments are ignored. Inline `#` remains part of the value.
-            if (line.empty() || line[0] == '#') continue;
+            if (line.empty() || line[0] == '#') { continue; }
 
             // Split at the first equals sign so later equals characters remain available in the value.
             auto eq = line.find('=');
@@ -297,22 +300,22 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Automatic-value resolution */
     // Apply explicit options last. A CLI value may itself be `auto`, in which case the resolution below
     // treats that as an explicit request to recompute the context-dependent value.
-    for (const auto& [k, v] : overrides) assign(k, v);
+    for (const auto& [k, v] : overrides) { assign(k, v); }
 
     // Resolve target identity through the maintained RG-M table. Geometry and nuclear A/Z metadata
     // remain independent: each inherits from the identity only when its own value is `auto`, allowing
     // documented unusual studies to override them separately.
     const auto& rgm_target = findRgmTarget(c.get("rgm-target"));
-    if (c.get("target") == "auto") c.values_["target"] = rgm_target.geometry;
-    if (c.get("A") == "auto") c.values_["A"] = std::to_string(rgm_target.A);
-    if (c.get("Z") == "auto") c.values_["Z"] = std::to_string(rgm_target.Z);
-    if (c.get("gemc-target-variation") == "auto") c.values_["gemc-target-variation"] = rgm_target.gemc_variation;
+    if (c.get("target") == "auto") { c.values_["target"] = rgm_target.geometry; }
+    if (c.get("A") == "auto") { c.values_["A"] = std::to_string(rgm_target.A); }
+    if (c.get("Z") == "auto") { c.values_["Z"] = std::to_string(rgm_target.Z); }
+    if (c.get("gemc-target-variation") == "auto") { c.values_["gemc-target-variation"] = rgm_target.gemc_variation; }
 
     if (uniform) {
         // Preserve legacy channel acceptance: neutron theta ends at 35 degrees; proton/other uniform
         // channel defaults end at 45 degrees. Sampled momentum in GeV/c may extend numerically to the beam energy in GeV under the c=1 convention.
-        if (c.get("nucleon-theta-max") == "auto") c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45";
-        if (c.get("nucleon-p-max") == "auto") c.values_["nucleon-p-max"] = c.get("beam-energy");
+        if (c.get("nucleon-theta-max") == "auto") { c.values_["nucleon-theta-max"] = c.get("channel") == "en" ? "35" : "45"; }
+        if (c.get("nucleon-p-max") == "auto") { c.values_["nucleon-p-max"] = c.get("beam-energy"); }
 
         // Trigger-electron sector offsets are legacy beam-setting values in degrees. Unknown beam
         // energies receive zero offset rather than an inferred experimental configuration.
@@ -345,8 +348,8 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         // `sampled` is a user-facing convenience profile: ep selects the required 50/50 momentum/
         // inverse-momentum mixture, while en selects uniform momentum. Non-fixed en directions default
         // to isotropic sampling within the separately resolved legacy angular acceptance.
-        if (c.get("nucleon-momentum") == "sampled") c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform";
-        if (c.get("nucleon-angle") == "auto") c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta";
+        if (c.get("nucleon-momentum") == "sampled") { c.values_["nucleon-momentum"] = c.get("channel") == "ep" ? "mixed" : "uniform"; }
+        if (c.get("nucleon-angle") == "auto") { c.values_["nucleon-angle"] = c.get("channel") == "en" && c.get("nucleon-momentum") != "fixed" ? "isotropic" : "theta"; }
     }
 #pragma endregion
 
@@ -357,7 +360,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 
     // Preserve URI-like physical inputs for adapters that understand them. Normalize local files and
     // glob patterns against the current directory so downstream behavior is independent of later cwd.
-    if (!uniform && c.get("input").find("://") == std::string::npos) c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string();
+    if (!uniform && c.get("input").find("://") == std::string::npos) { c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string(); }
 
     if (uniform) {
         // Uniform output keeps the legacy recognizable channel/beam directory below the user-selected
@@ -384,7 +387,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 }
 #pragma endregion
 
-// RunConfig::get ----------------------------------------------------------------------
+// RunConfig::get --------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::get */
 /**
@@ -403,7 +406,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 std::string RunConfig::get(const std::string& k) const { return values_.at(k); }
 #pragma endregion
 
-// RunConfig::number ----------------------------------------------------------------------
+// RunConfig::number -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::number */
 /**
@@ -438,7 +441,7 @@ double RunConfig::number(const std::string& k) const {
 }
 #pragma endregion
 
-// RunConfig::integer ----------------------------------------------------------------------
+// RunConfig::integer ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::integer */
 /**
@@ -471,7 +474,7 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
 }
 #pragma endregion
 
-// RunConfig::validate ----------------------------------------------------------------------
+// RunConfig::validate ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::validate */
 /**
@@ -538,8 +541,8 @@ void RunConfig::validate(bool uniform) const {
     // inactive values keeps the resolved manifest reusable. Target mode additionally requires a key
     // implemented by the protected external geometry source.
     if (get("vertex-mode") != "target" && get("vertex-mode") != "fixed") { throw std::runtime_error("vertex-mode must be target or fixed"); }
-    for (auto k : {"vertex-x", "vertex-y", "vertex-z"}) number(k);
-    if (get("vertex-mode") == "target") TargetGeometry::validate(get("target"));
+    for (auto k : {"vertex-x", "vertex-y", "vertex-z"}) { number(k); }
+    if (get("vertex-mode") == "target") { TargetGeometry::validate(get("target")); }
 #pragma endregion
 
 #pragma region /* Source-specific contract */
@@ -551,8 +554,9 @@ void RunConfig::validate(bool uniform) const {
 
         // These fields form the physical output-directory contract and manifest provenance. Tokens
         // such as `unknown` or `none` remain explicit valid values; omission is not allowed.
-        for (auto k : {"event-generator-version", "tune", "q2-cut", "gemc-version", "gemc-target-variation"})
+        for (auto k : {"event-generator-version", "tune", "q2-cut", "gemc-version", "gemc-target-variation"}) {
             if (get(k).empty()) { throw std::runtime_error(std::string(k) + " must not be empty"); }
+        }
 
         // Physical configurations do not contain uniform-only keys, so finish after their own branch.
         return;
@@ -592,7 +596,7 @@ void RunConfig::validate(bool uniform) const {
 }
 #pragma endregion
 
-// jsonString ----------------------------------------------------------------------
+// jsonString ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* jsonString */
 /**
@@ -647,7 +651,7 @@ std::string jsonString(const std::string& s) {
 }
 #pragma endregion
 
-// help ----------------------------------------------------------------------
+// help ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* help */
 /**

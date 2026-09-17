@@ -27,7 +27,7 @@
 
 namespace samples {
 
-// RG-M catalog ---------------------------------------------------------------
+// RG-M catalog ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Catalog */
 /**
@@ -72,7 +72,7 @@ const std::vector<RgmTarget>& rgmTargets() {
 }
 #pragma endregion
 
-// Exact target lookup --------------------------------------------------------
+// Exact target lookup ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Exact target lookup */
 /**
@@ -91,14 +91,15 @@ const std::vector<RgmTarget>& rgmTargets() {
 const RgmTarget& findRgmTarget(const std::string& identifier) {
     // Linear lookup keeps the catalog representation direct and readable; its fixed small size does not
     // justify a second index whose contents or ordering could diverge.
-    for (const auto& target : rgmTargets())
-        if (target.identifier == identifier) return target;
+    for (const auto& target : rgmTargets()) {
+        if (target.identifier == identifier) { return target; }
+    }
 
     throw std::runtime_error("Unknown RG-M target '" + identifier + "'; choose one of: " + rgmTargetNames());
 }
 #pragma endregion
 
-// Target-name presentation --------------------------------------------------
+// Target-name presentation ----------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Target-name presentation */
 /**

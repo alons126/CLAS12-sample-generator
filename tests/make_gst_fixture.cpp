@@ -1,3 +1,7 @@
+//
+// Created by Alon Sportes on 14/09/2026.
+//
+
 /**
  * @file make_gst_fixture.cpp
  * @brief Create synthetic GST inputs for converter tests.
@@ -13,7 +17,8 @@
 #include <TTree.h>
 
 #include <string>
-// main ----------------------------------------------------------------------
+
+// main ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* main */
 /**
@@ -28,7 +33,7 @@
  * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
  */
 int main(int argc, char** argv) {
-    if (argc < 2) return 1;
+    if (argc < 2) { return 1; }
     TFile file(argv[1], "RECREATE");
     TTree tree("gst", "Synthetic conversion fixture");
     Bool_t qel = true, mec = false, res = false, dis = false;
@@ -53,10 +58,11 @@ int main(int argc, char** argv) {
     tree.Branch("El", &El, "El/D");
     tree.Branch("Ef", Ef, "Ef[nf]/D");
     Float_t wrong_pzl = 2;
-    if (mode == "wrong-type")
+    if (mode == "wrong-type") {
         tree.Branch("pzl", &wrong_pzl, "pzl/F");
-    else if (mode != "missing")
+    } else if (mode != "missing") {
         tree.Branch("pzl", &pzl, "pzl/D");
+    }
     // Four supported processes plus a skipped event and a final partial file.
     for (int i = 0; i < (mode == "empty" ? 0 : mode == "parity" ? 24000 : 7); ++i) {
         qel = (i == 0 || i >= 5);
@@ -72,7 +78,7 @@ int main(int argc, char** argv) {
             pyl = -0.1 + (i % 13) * 0.01;
             pzl = 1 + (i % 17) * 0.03;
         }
-        if (mode == "unsupported") qel = mec = res = dis = false;
+        if (mode == "unsupported") { qel = mec = res = dis = false; }
         tree.Fill();
     }
     tree.Write();

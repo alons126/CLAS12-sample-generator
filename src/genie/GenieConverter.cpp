@@ -33,8 +33,10 @@
 #include "common/LundWriter.h"
 #include "common/Monitoring.h"
 #include "common/TargetGeometry.h"
+
 namespace samples {
-// convertGenie ----------------------------------------------------------------------
+
+// convertGenie ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* convertGenie */
 /**
@@ -56,13 +58,15 @@ namespace samples {
 void convertGenie(const RunConfig& c) {
     c.validate(false);
     LundWriter::printWorkflowSummary(c, "physical");
+
 #pragma region /* GST input preparation */
     // Validate the input chain before constructing any output products.
     TChain chain("gst");
-    if (!chain.Add(c.get("input").c_str()) || chain.GetEntries() == 0) throw std::runtime_error("No GST entries found for: " + c.get("input"));
-    if (chain.LoadTree(0) < 0) throw std::runtime_error("Cannot load GST tree");
-    for (const char* branch : {"qel", "mec", "res", "dis", "resid", "nf", "pdgf", "pxf", "pyf", "pzf", "pxl", "pyl", "pzl"})
-        if (!chain.GetBranch(branch)) throw std::runtime_error(std::string("Missing GST branch: ") + branch);
+    if (!chain.Add(c.get("input").c_str()) || chain.GetEntries() == 0) { throw std::runtime_error("No GST entries found for: " + c.get("input")); }
+    if (chain.LoadTree(0) < 0) { throw std::runtime_error("Cannot load GST tree"); }
+    for (const char* branch : {"qel", "mec", "res", "dis", "resid", "nf", "pdgf", "pxf", "pyf", "pzf", "pxl", "pyl", "pzl"}) {
+        if (!chain.GetBranch(branch)) { throw std::runtime_error(std::string("Missing GST branch: ") + branch); }
+    }
     // Use typed, dynamically sized readers rather than fixed final-state buffers.
     TTreeReader reader(&chain);
     TTreeReaderValue<Bool_t> qel(reader, "qel"), mec(reader, "mec"), res(reader, "res"), dis(reader, "dis");
@@ -82,23 +86,26 @@ void convertGenie(const RunConfig& c) {
     legacy_electron.SetDirectory(nullptr);
     LundWriter writer(c, "physical");
     std::uint64_t scanned = 0;
+
 #pragma region /* Event conversion */
     // Scan until output capacity or input exhaustion; counts distinguish scanned and accepted events.
     while (!writer.full() && reader.Next()) {
         if (qel.GetSetupStatus() < 0 || mec.GetSetupStatus() < 0 || res.GetSetupStatus() < 0 || dis.GetSetupStatus() < 0 || resid.GetSetupStatus() < 0 || nf.GetSetupStatus() < 0 ||
             pxl.GetSetupStatus() < 0 || pyl.GetSetupStatus() < 0 || pzl.GetSetupStatus() < 0 || pdgf.GetSetupStatus() < 0 || pxf.GetSetupStatus() < 0 || pyf.GetSetupStatus() < 0 ||
-            pzf.GetSetupStatus() < 0)
+            pzf.GetSetupStatus() < 0) {
             throw std::runtime_error("GST branch type mismatch");
+        }
         ++scanned;
-        if (*nf < 0 || pdgf.GetSize() != static_cast<std::size_t>(*nf) || pxf.GetSize() != pdgf.GetSize() || pyf.GetSize() != pdgf.GetSize() || pzf.GetSize() != pdgf.GetSize())
+        if (*nf < 0 || pdgf.GetSize() != static_cast<std::size_t>(*nf) || pxf.GetSize() != pdgf.GetSize() || pyf.GetSize() != pdgf.GetSize() || pzf.GetSize() != pdgf.GetSize()) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
+        }
         // The archived diagnostic includes all scanned events, before process selection.
         const double p = std::sqrt(*pxl * *pxl + *pyl * *pyl + *pzl * *pzl);
         const double theta = p > 0 ? std::acos(std::clamp(*pzl / p, -1.0, 1.0)) * TMath::RadToDeg() : 0;
         legacy_electron.Fill(std::atan2(*pyl, *pxl) * TMath::RadToDeg(), theta);
         // Retain the historical process-tag convention in the LUND header.
         double code = *qel ? 1 : *mec ? 2 : *res ? 3 : *dis ? 4 : 0;
-        if (!code) continue;
+        if (!code) { continue; }
         Event event;
         event.id = scanned - 1;
         event.A = A;
@@ -111,8 +118,9 @@ void convertGenie(const RunConfig& c) {
         // Copy only supported final-state species while preserving the input momenta.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
-            if (pid == 2212 || pid == 2112 || pid == 211 || pid == -211 || pid == 111 || pid == 22)
+            if (pid == 2212 || pid == 2112 || pid == 211 || pid == -211 || pid == 111 || pid == 22) {
                 event.particles.push_back({pid, particleMass(pid, legacy_mass), {pxf[i], pyf[i], pzf[i]}, vertex});
+            }
         }
         writer.write(event);
         monitoring.fill(event);
@@ -120,13 +128,13 @@ void convertGenie(const RunConfig& c) {
 #pragma endregion
 
     // Distinguish normal input exhaustion from a schema or later-chain read failure.
-    if (!writer.full() && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) throw std::runtime_error("Failed reading GST entries (check branch types and input files)");
-    if (!writer.count()) throw std::runtime_error("No supported QE/MEC/RES/DIS events in input");
+    if (!writer.full() && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) { throw std::runtime_error("Failed reading GST entries (check branch types and input files)"); }
+    if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
     // Save numerical diagnostics before publishing the completed manifest.
     monitoring.save(std::filesystem::path(c.get("output")) / "monitoring.root");
     const auto output = std::filesystem::path(c.get("output"));
     TFile legacy_file((output / "legacy_histograms.root").string().c_str(), "CREATE");
-    if (legacy_file.IsZombie() || legacy_electron.Write() <= 0) throw std::runtime_error("Cannot write legacy GENIE diagnostic");
+    if (legacy_file.IsZombie() || legacy_electron.Write() <= 0) { throw std::runtime_error("Cannot write legacy GENIE diagnostic"); }
     legacy_file.Close();
     if (c.get("render-plots") == "true") {
         gROOT->SetBatch(true);

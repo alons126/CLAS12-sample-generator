@@ -15,9 +15,11 @@
 
 #pragma once
 #include "common/RunConfig.h"
+
 namespace samples {
 
-// Public interface -------------------------------------------------------------
+// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #pragma region /* Public interface */
 
 /**
@@ -27,4 +29,5 @@ namespace samples {
  */
 void convertGenie(const RunConfig& config);
 #pragma endregion
-}
+
+}  // namespace samples
