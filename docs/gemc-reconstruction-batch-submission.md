@@ -36,7 +36,7 @@ python3 src/slurm-submission/submit.py \
   --site config/sites/jlab.json
 ```
 
-This previews `sbatch`. Add `--execute` to submit. One array task is created per manifest file; each invokes the same runner with `$SLURM_ARRAY_TASK_ID`. The worker environment must provide Python 3.9+, GEMC, reconstruction and access to the script/config/input paths. The submitter does not install software or source environment scripts.
+This previews one direct `sbatch` command per manifest file. Each command ends with the protected `submit_GEMC_sample.sh` payload and uses a single-element array so `$SLURM_ARRAY_TASK_ID` selects that manifest file. Add `--execute` to submit. The submitter exports each file's exact event count, so partial final files are supported. The worker environment must provide GEMC, reconstruction and access to the payload/config/input paths; Slurm runs the payload directly and no Python worker is placed inside `--wrap`.
 
 Edit site JSON for scheduler resources and executable paths. Optional site `slurm.output` and `slurm.error` select log paths. The JLab example preserves the archived `/farm_out/%u/%x-%j-%N` convention and uses 2000M memory for the single-task job. Use `--runner /shared/path/run.py` if the default source/install path is not the one workers should use.
 

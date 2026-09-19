@@ -103,9 +103,9 @@ The converter stops at the configured output capacity or end of input. The final
 
 ## Simulation boundary
 
-`src/slurm-submission/run.py` consumes `lundfiles/lund-gen-monitoring/lund-gen-log.json` and explicit detector/site settings. It delegates detector execution to the protected Bash payload `src/slurm-submission/external/submit_GEMC_sample.sh`, adapted from the two legacy job scripts. Python validates the manifest and owns locks/provenance; the payload owns sample monitoring and the GEMC/reconstruction sequence. Dry runs print the commands without creating simulation directories. Execution checks return codes and output files and writes one record per completed file.
+`src/slurm-submission/run.py` consumes `lundfiles/lund-gen-monitoring/lund-gen-log.json` and explicit detector/site settings. It provides shared validation and optional local payload execution for development. The protected Bash payload `src/slurm-submission/external/submit_GEMC_sample.sh`, adapted from the two legacy job scripts, owns sample monitoring and the GEMC/reconstruction sequence.
 
-`src/slurm-submission/submit.py` uses the same planning validation and submits an array with one task per manifest file. Each task invokes the runner with its one-based index. CMake never submits jobs.
+`src/slurm-submission/submit.py` uses the same planning validation and submits one direct single-element Slurm array per manifest file. It exports that file's validated payload environment and ends each command with `submit_GEMC_sample.sh`; it does not place Python inside `sbatch --wrap`. CMake never submits jobs.
 
 ## Adding functionality
 

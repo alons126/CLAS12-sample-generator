@@ -4,16 +4,17 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Run GEMC and reconstruction for a completed LUND run.
+"""Validate or locally run the GEMC payload for a completed LUND run.
 
 Purpose:
     Validate exact manifest file counts and delegate detector execution and monitoring to the protected legacy-derived Bash payload.
 
 Workflow:
-    Parse -> validate and plan -> preview, or lock and invoke submit_GEMC_sample.sh -> record hashes.
+    Parse -> validate and plan -> preview, or lock and invoke submit_GEMC_sample.sh locally -> record hashes.
 
-Notes:
-    Arguments are passed as argv lists; callers select execution explicitly where supported.
+    Notes:
+    Slurm submission is owned by submit.py, which invokes the protected payload directly with sbatch.
+    This module remains the shared validation/local execution implementation.
 """
 
 import argparse

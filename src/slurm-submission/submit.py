@@ -4,7 +4,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Submit one Slurm array task per completed LUND file.
+"""Submit one direct Slurm payload job per completed LUND file.
 
 Purpose:
     Implement the second user-facing workflow: submit an ifarm Slurm array that
@@ -13,12 +13,13 @@ Purpose:
     simulation directly in its own process.
 
 Workflow:
-    1. Locate the simulation worker beside this script, unless --runner overrides it.
-    2. Reuse the worker's load_plan() function to validate the manifest, detector
-       inputs, site configuration, payload, and one-task-per-LUND-file plan.
-    3. Validate the site's Slurm resource block.
-    4. Build and print one quoted sbatch command whose array index selects a LUND file.
-    5. Submit only when the caller explicitly supplies --execute.
+     1. Locate the shared validation and payload-environment implementation beside this script.
+     2. Reuse its load_plan() function to validate the manifest, detector inputs,
+         site configuration, payload, and one-task-per-LUND-file plan.
+     3. Validate the site's Slurm resource block and prepare output directories.
+     4. Build and print one direct sbatch command per LUND file, ending with the
+         protected submit_GEMC_sample.sh payload.
+     5. Submit only when the caller explicitly supplies --execute.
 
 Inputs:
     A completed LUND manifest, GCARD, reconstruction YAML, site JSON, the protected
@@ -27,15 +28,15 @@ Inputs:
     GeV; solenoid is always -1 by default.
 
 Outputs:
-    Preview mode prints the exact sbatch command. Execution mode additionally
-    submits that command; each array worker writes GEMC and reconstruction output
-    according to the shared simulation plan.
+    Preview mode prints the exact direct sbatch commands. Execution mode additionally
+    submits one single-element array job per LUND file; the payload writes GEMC and
+    reconstruction output according to the shared simulation plan.
 
 Safety and failure behavior:
-    All fixed arguments are assembled as argv lists and shell-quoted before they
-    enter sbatch --wrap. Validation errors, filesystem errors, malformed imported
-    worker interfaces, and failed sbatch execution produce a colored-neutral
-    ``Error:`` message on stderr and exit status 1. Preview is the default.
+    All fixed arguments are assembled as argv lists and shell-quoted for display.
+    Validation errors, filesystem errors, malformed imported worker interfaces,
+    and failed sbatch execution produce a colored-neutral ``Error:`` message on
+    stderr and exit status 1. Preview is the default.
 """
 
 import argparse
@@ -51,7 +52,7 @@ import sys
 
 # region main
 def main():
-    """Preview or submit a manifest-sized Slurm array.
+    """Preview or submit direct payload jobs for a completed manifest.
 
     Purpose:
         Keep scheduler construction small and reuse the simulation worker as the
@@ -62,10 +63,10 @@ def main():
            ``run.py`` and falling back to the installed ``clas12-simulate`` name.
         2. Parse command-line inputs and import the worker with runpy.
         3. Call load_plan() in preview mode to validate inputs without running GEMC.
-        4. Require the four Slurm resource strings and reject unknown resource keys.
-        5. Construct a worker argv list shared by every task and append the Slurm
-           array index as the per-task LUND selector.
-        6. Print the exact sbatch command, then execute it only with --execute.
+          4. Require the four Slurm resource strings and reject unknown resource keys.
+          5. Create one direct sbatch command per plan entry, exporting that file's
+              payload environment and selecting its one-element Slurm array index.
+          6. Print every command, then execute them only with --execute.
 
     Args:
         No arguments: options come from sys.argv.
@@ -81,8 +82,8 @@ def main():
         subprocess.CalledProcessError: If sbatch returns a nonzero status.
 
     Side Effects:
-        Always prints the scheduler command. With --execute, submits one Slurm
-        array job; otherwise it performs validation and preview only.
+        Always prints the scheduler commands. With --execute, submits one direct
+        payload job per manifest file; otherwise it performs validation and preview only.
     """
 
     # Resolve source-tree and installed layouts without requiring a separate mode.
@@ -116,8 +117,6 @@ def main():
     check.execute = False
     check.file_index = None
     plan, site = module['load_plan'](check)
-    # load_plan resolves an omitted torus from the manifest's beam-energy provenance.
-    args.torus = check.torus
     slurm = site.get('slurm', {})
     required = {'account', 'partition', 'time', 'mem'}
 
@@ -126,31 +125,44 @@ def main():
     if not required.issubset(slurm) or set(slurm) - required - {'output', 'error'} or not all(isinstance(v, str) and v for v in slurm.values()):
         raise ValueError('Site slurm must specify account, partition, time and mem strings')
 
-    # Worker command -----------------------------------------------------------
-    # Each worker reuses the simulation runner with its own manifest file index.
-    # resolve() makes paths independent of the directory from which Slurm starts a task.
-    command = ['python3', str(args.runner.resolve()), '--manifest', str(args.manifest.resolve()),
-               '--gcard', str(args.gcard.resolve()), '--reconstruction', str(args.reconstruction.resolve()),
-               '--site', str(args.site.resolve()), '--output-naming', args.output_naming, '--torus', str(args.torus), '--solenoid', str(args.solenoid), '--execute']
-
     # payload_path() applies the same default/override rules used during plan validation.
-    command += ['--payload', str(module['payload_path'](check))]
+    payload = module['payload_path'](check)
+    export_names = ('OUTPATH', 'SAMPLE_FILE_PREFIX', 'JOB_NEVENTS', 'GCARD_FILE',
+                    'YAML_FILE', 'TORUS_FIELD', 'SAMPLE_GENERATOR', 'GENERATOR_TUNE',
+                    'SAMPLE_TARGET_NUCLEUS', 'Q2_CUT', 'TEMP_BEAM_E',
+                    'TEMP_OUTPATH_PARTICLE', 'PATH')
 
-    # Quote fixed arguments now, but retain the literal shell variable so Slurm
-    # expands a different one-based array index inside each worker environment.
-    wrap = shlex.join(command) + ' --file-index "$SLURM_ARRAY_TASK_ID"'
+    # Prepare one direct payload command per file. A single-element array preserves the
+    # manifest index in SLURM_ARRAY_TASK_ID while allowing each file's event count to be
+    # exported independently, including a partial final file.
+    commands = []
+    for index, _, mc, reco, record, environment in plan:
+        for directory in (mc.parent, reco.parent, record.parent):
+            directory.mkdir(exist_ok=True)
 
-    # Slurm command ------------------------------------------------------------
-    # One task is created for every validated manifest file. Site keys already
-    # match their long sbatch option names and remain argv elements until --wrap.
-    sbatch = ['sbatch', '--nodes=1', '--ntasks=1', '--job-name=clas12-samples', f'--array=1-{len(plan)}']
-    sbatch += [f'--{key}={value}' for key, value in slurm.items()]
-    sbatch += ['--wrap', wrap]
-    print(shlex.join(sbatch), flush=True)
+        exports = []
+        for name in export_names:
+            value = environment.get(name)
+            if value is None:
+                continue
+            if any(character in str(value) for character in (',', '\n', '\r')):
+                raise ValueError(f'Payload environment value for {name} contains an unsupported delimiter')
+            exports.append(f'{name}={value}')
 
-    # Submission remains opt-in after the exact scheduler command is printed.
+        prefix = environment['SAMPLE_FILE_PREFIX']
+        sbatch = ['sbatch', '--nodes=1', '--ntasks=1', f'--job-name=clas12-{prefix}',
+                  f'--array={index}']
+        sbatch += [f'--{key}={value}' for key, value in slurm.items()]
+        sbatch += [f'--export=ALL,{",".join(exports)}', str(payload)]
+        commands.append(sbatch)
+
+    for command in commands:
+        print(shlex.join(command), flush=True)
+
+    # Submission remains opt-in after every command has been printed and validated.
     if args.execute:
-        subprocess.run(sbatch, check=True)
+        for command in commands:
+            subprocess.run(command, check=True)
 
     return 0
 # endregion

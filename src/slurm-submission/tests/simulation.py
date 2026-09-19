@@ -21,9 +21,9 @@ import runpy
 
 # Command helper ---------------------------------------------------------------
 # region Command helper
-def call(*args, ok=True):
+def call(*args, ok=True, env=None):
     """Capture a test command and require the expected process exit status."""
-    result = subprocess.run([str(a) for a in args], text=True, capture_output=True)
+    result = subprocess.run([str(a) for a in args], env=env, text=True, capture_output=True)
     assert (result.returncode == 0) == ok, result.stdout + result.stderr
     return result
 # endregion
@@ -63,7 +63,19 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     site = root/'site.json'
     site.write_text(json.dumps({'gemc':str(gemc),'recon':str(recon),'slurm':{'account':'clas12','partition':'production','time':'01:00:00','mem':'2G'}}))
     submission = call(sys.executable, project/'src/slurm-submission/submit.py', *options, '--site', site)
-    assert '--array=1-2' in submission.stdout and 'submit_GEMC_sample.sh' in submission.stdout
+    assert submission.stdout.count('submit_GEMC_sample.sh') == 2
+    assert '--array=1' in submission.stdout and '--array=2' in submission.stdout
+    assert '--wrap' not in submission.stdout and 'run.py' not in submission.stdout
+    assert 'JOB_NEVENTS=25000' in submission.stdout and 'JOB_NEVENTS=1' in submission.stdout
+    sbatch_log = root/'sbatch.jsonl'
+    sbatch = binaries/'sbatch'
+    sbatch.write_text('#!'+sys.executable+'\nimport json, os, sys\nwith open(os.environ["SBATCH_LOG"], "a") as log: log.write(json.dumps(sys.argv[1:]) + "\\n")\n')
+    sbatch.chmod(0o755)
+    execute_environment = dict(os.environ, PATH=str(binaries)+os.pathsep+os.environ['PATH'], SBATCH_LOG=str(sbatch_log))
+    executed = call(sys.executable, project/'src/slurm-submission/submit.py', *options, '--site', site, '--execute', env=execute_environment)
+    submitted_commands = [json.loads(line) for line in sbatch_log.read_text().splitlines()]
+    assert len(submitted_commands) == 2
+    assert all(command[-1].endswith('submit_GEMC_sample.sh') for command in submitted_commands)
     result = call(sys.executable, runner, *options, '--site', site, '--file-index', '1', '--execute')
     assert 'JOB_GENERATOR = uniform' in result.stdout and 'GEMC_DATA_DIR =' in result.stdout
     record = json.loads((output/'simulation/1.json').read_text())

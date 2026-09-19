@@ -137,7 +137,7 @@ The current archived selection is uniform submission. Its active loop is **en at
 | `mc_PREFIX_INDEX_torusFIELD.hipo` | Default `--output-naming legacy` |
 | Git reset/cleanup and farm-output cleanup | No supported automatic equivalent |
 
-Use `src/slurm-submission/run.py` for a local preview/execution or `src/slurm-submission/submit.py` for the corresponding array. Commands and detailed examples are in the [execution guide](gemc-reconstruction-batch-submission.md).
+Use `src/slurm-submission/run.py` for a local preview/execution or `src/slurm-submission/submit.py` for direct `sbatch` submission of the protected unified payload. Commands and detailed examples are in the [execution guide](gemc-reconstruction-batch-submission.md).
 
 The new software does not log into the server, set up modules, or reproduce an unspecified detector RNG state. Those are necessary external conditions for detector-level reproducibility.
 
