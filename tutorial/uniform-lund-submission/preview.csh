@@ -6,7 +6,7 @@ foreach label (1e enFD epFD)
       --gcard config/detector/Generation_files_2GeV/5.14/rgm_fall2021_Ar_2GeV.gcard \
       --reconstruction config/detector/Generation_files_2GeV/5.14/rgm_fall2021-cv.yaml \
       --site config/sites/jlab.json \
-      --torus 0.5 --solenoid -1 --execute
+      --torus 0.5 --solenoid -1
 end
 
 foreach label (1e enFD epFD)
@@ -15,7 +15,7 @@ foreach label (1e enFD epFD)
       --gcard config/detector/Generation_files_4GeV/5.14/rgm_fall2021_Ar_4GeV.gcard \
       --reconstruction config/detector/Generation_files_4GeV/5.14/rgm_fall2021-ai_4Gev.yaml \
       --site config/sites/jlab.json \
-      --torus -1 --solenoid -1 --execute
+      --torus -1 --solenoid -1
 end
 
 foreach label (1e enFD epFD)
@@ -24,5 +24,5 @@ foreach label (1e enFD epFD)
       --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
       --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
       --site config/sites/jlab.json \
-      --torus -1 --solenoid -1 --execute
+      --torus -1 --solenoid -1
 end
