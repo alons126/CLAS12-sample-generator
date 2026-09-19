@@ -44,11 +44,71 @@ import json
 from pathlib import Path
 import runpy
 import shlex
+import shutil
 import subprocess
 import sys
 
 
 # main --------------------------------------------------------------------
+
+# presentation -------------------------------------------------------------
+
+# region presentation
+SEPARATOR = '=' * 100
+
+
+def banner(title):
+    """Print a legacy-style section banner for the submission log."""
+    print(SEPARATOR)
+    print(f'= {title}')
+    print(SEPARATOR)
+    print()
+
+
+def reset_simulation_directory(manifest):
+    """Remove prior submission bookkeeping after warning the operator."""
+    manifest = Path(manifest).resolve(strict=True)
+    if (manifest.name != 'lund-gen-log.json' or
+            manifest.parent.name != 'lund-gen-monitoring' or
+            manifest.parent.parent.name != 'lundfiles'):
+        raise ValueError('Expected RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json')
+
+    simulation = manifest.parent.parent.parent / 'reconhipo' / 'simulation'
+    if simulation.exists():
+        print(f'WARNING: Removing previous simulation bookkeeping directory: {simulation}', flush=True)
+        print('WARNING: Existing locks and local completion records will be discarded.', flush=True)
+        shutil.rmtree(simulation)
+
+
+def print_submission(index, total, environment, command, payload):
+    """Print one readable file submission without collapsing it into one long line."""
+    export_values = {}
+    for item in command:
+        if item.startswith('--export=ALL,'):
+            for assignment in item[len('--export=ALL,'):].split(','):
+                name, value = assignment.split('=', 1)
+                export_values[name] = value
+
+    print(f'[{index}/{total}] LUND file: {environment["SAMPLE_FILE_PREFIX"]}_{index}.txt')
+    print(f'  Output directory: {environment["OUTPATH"]}')
+    print(f'  Events: {environment["JOB_NEVENTS"]}')
+    print(f'  Torus: {environment["TORUS_FIELD"]}')
+    print(f'  Solenoid: -1')
+    print(f'  Payload: {payload}')
+    print('  Exported payload settings:')
+    for name, value in export_values.items():
+        if name == 'PATH':
+            value = '<inherited ifarm PATH with configured executable directories>'
+        print(f'    {name}: {value}')
+
+    print('  sbatch command:')
+    displayed = [item for item in command if not item.startswith('--export=ALL,')]
+    print('    ' + ' \\')
+    for position, item in enumerate(displayed):
+        suffix = ' \\' if position < len(displayed) - 1 else ''
+        print(f'      {shlex.quote(item)}{suffix}')
+    print()
+# endregion
 
 # region main
 def main():
@@ -109,6 +169,9 @@ def main():
     p.add_argument('--execute', action='store_true', help='Submit to Slurm')
     args = p.parse_args()
 
+    banner('Preparing direct GEMC and reconstruction submission')
+    reset_simulation_directory(args.manifest)
+
     # Shared validation and scheduler resources -------------------------------
     # Use the runner's identical manifest/config validation without running GEMC.
     # file_index=None asks for the complete validated plan; each entry becomes one
@@ -155,14 +218,16 @@ def main():
                   f'--array={index}']
         sbatch += [f'--{key}={value}' for key, value in slurm.items()]
         sbatch += [f'--export=ALL,{",".join(exports)}', str(payload)]
-        commands.append(sbatch)
+        commands.append((index, environment, sbatch))
 
-    for command in commands:
-        print(shlex.join(command), flush=True)
+    banner('Resolved submission plan')
+    for index, environment, command in commands:
+        print_submission(index, len(commands), environment, command, payload)
 
     # Submission remains opt-in after every command has been printed and validated.
     if args.execute:
-        for command in commands:
+        banner('Submitting jobs with sbatch')
+        for _, _, command in commands:
             subprocess.run(command, check=True)
 
     return 0

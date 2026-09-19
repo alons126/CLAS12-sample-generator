@@ -63,10 +63,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     site = root/'site.json'
     site.write_text(json.dumps({'gemc':str(gemc),'recon':str(recon),'slurm':{'account':'clas12','partition':'production','time':'01:00:00','mem':'2G'}}))
     submission = call(sys.executable, project/'src/slurm-submission/submit.py', *options, '--site', site)
-    assert submission.stdout.count('submit_GEMC_sample.sh') == 2
+    assert submission.stdout.count('submit_GEMC_sample.sh') == 4
     assert '--array=1' in submission.stdout and '--array=2' in submission.stdout
     assert '--wrap' not in submission.stdout and 'run.py' not in submission.stdout
-    assert 'JOB_NEVENTS=25000' in submission.stdout and 'JOB_NEVENTS=1' in submission.stdout
+    assert 'JOB_NEVENTS: 25000' in submission.stdout and 'JOB_NEVENTS: 1' in submission.stdout
     sbatch_log = root/'sbatch.jsonl'
     sbatch = binaries/'sbatch'
     sbatch.write_text('#!'+sys.executable+'\nimport json, os, sys\nwith open(os.environ["SBATCH_LOG"], "a") as log: log.write(json.dumps(sys.argv[1:]) + "\\n")\n')

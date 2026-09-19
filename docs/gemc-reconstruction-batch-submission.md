@@ -22,7 +22,7 @@ By default the runner preserves legacy names: `mchipo/mc_LUNDSTEM_torusSCALE.hip
 
 Physical conversion defaults to `events-per-file=10000`; uniform creation defaults to the archived generator's 25,000-event files. Both can be submitted directly because each array task uses its manifest entry's exact event count.
 
-Existing outputs are rejected. Local execution stores per-file locks and completion records under `reconhipo/simulation/`, preventing two processes from executing the same task concurrently. Failed local jobs retain their locks/partial output for inspection; direct Slurm jobs are asynchronous and are monitored through Slurm and their HIPO outputs. There is no automatic cleanup or resume. Use a fresh run directory, or deliberately resolve the failed file's state before retrying. A single run directory supports one simulation configuration.
+Each `submit` invocation warns and removes any existing `reconhipo/simulation/` bookkeeping directory before preparing the new submission plan; this discards old locks and local completion records but does not remove HIPO files. Existing HIPO outputs are still rejected. Local execution stores per-file locks and completion records under `reconhipo/simulation/`, preventing two processes from executing the same task concurrently. Failed local jobs retain their locks/partial output for inspection; direct Slurm jobs are asynchronous and are monitored through Slurm and their HIPO outputs. There is no automatic HIPO cleanup or resume. Use a fresh run directory, or deliberately resolve the failed file's state before retrying. A single run directory supports one simulation configuration.
 
 ## Slurm array
 
