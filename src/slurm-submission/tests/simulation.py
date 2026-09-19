@@ -78,7 +78,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     assert all(command[-1].endswith('submit_GEMC_sample.sh') for command in submitted_commands)
     result = call(sys.executable, runner, *options, '--site', site, '--file-index', '1', '--execute')
     assert 'JOB_GENERATOR = uniform' in result.stdout and 'GEMC_DATA_DIR =' in result.stdout
-    record = json.loads((output/'simulation/1.json').read_text())
+    record = json.loads((output/'reconhipo/simulation/1.json').read_text())
     assert record['payload_sha256'] == hashlib.sha256(payload.read_bytes()).hexdigest()
     call(sys.executable, runner, *options, '--site', site, '--file-index', '1', '--execute', ok=False)
 
@@ -104,7 +104,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     # Coordinator uses bash -e without adding error-handling logic to the external script.
     gemc.write_text('#!'+sys.executable+'\nimport sys\nsys.exit(9)\n')
     call(sys.executable, runner, *options, '--site', site, '--file-index', '2', '--execute', ok=False)
-    assert (output/'simulation/2.lock').exists()
+    assert (output/'reconhipo/simulation/2.lock').exists()
     assert len(list((output/'reconhipo').glob('*.hipo'))) == 1
 print('Legacy payload coordinator integration passed')
 # endregion

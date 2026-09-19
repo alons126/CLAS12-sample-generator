@@ -12,7 +12,7 @@ Purpose:
 Workflow:
     Parse -> validate and plan -> preview, or lock and invoke submit_GEMC_sample.sh locally -> record hashes.
 
-    Notes:
+Notes:
     Slurm submission is owned by submit.py, which invokes the protected payload directly with sbatch.
     This module remains the shared validation/local execution implementation.
 """
@@ -208,7 +208,7 @@ def load_plan(args):
         suffix = f'{path.stem}_torus{args.torus}' if args.output_naming == 'legacy' else str(index)
         mc = root / 'mchipo' / f'mc_{suffix}.hipo'
         reco = root / 'reconhipo' / f'recon_{suffix}.hipo'
-        record = root / 'simulation' / f'{index}.json'
+        record = root / 'reconhipo' / 'simulation' / f'{index}.json'
 
         if any(p.exists() for p in (mc, reco, record, record.with_suffix(".lock"))):
             raise ValueError(f'Simulation output already exists for file {index}; use a fresh run')

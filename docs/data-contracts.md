@@ -84,4 +84,4 @@ The archived converter's short-input and near-end early termination is intention
 
 Local input patterns and output paths are resolved to absolute paths in configuration. The manifest does not hash or freeze original GST inputs; preserve them and the source checkout. A dirty revision identifies a modified checkout but is not a complete source snapshot.
 
-Simulation records at `simulation/INDEX.json` contain executed argument lists and gcard/reconstruction-YAML SHA-256 hashes, plus `payload_sha256` identifying the executed external Bash payload. They do not yet capture every environment variable, external database or detector RNG state. Those must be recorded separately for production provenance.
+Simulation records at `reconhipo/simulation/INDEX.json` contain executed argument lists and gcard/reconstruction-YAML SHA-256 hashes, plus `payload_sha256` identifying the executed external Bash payload. Per-file lock files use the same directory while local execution is in progress. They do not yet capture every environment variable, external database or detector RNG state. Those must be recorded separately for production provenance.

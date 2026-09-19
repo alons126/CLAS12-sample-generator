@@ -1,3 +1,5 @@
+# This script validates and prints direct sbatch commands. Add --execute to each
+# run.csh invocation only after reviewing the generated commands.
 set OUT = /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
 foreach label (1e enFD epFD)

@@ -58,7 +58,7 @@ runs/example/
             MonitoringPlotsPath/    # Required PDF/numbered PNG layout for every uniform run
     mchipo/             # Prepared by uniform creation; filled by simulation
     reconhipo/          # Prepared by uniform creation; filled by reconstruction
-    simulation/         # Command records and detector-config hashes
+        simulation/     # Command records, locks and detector-config hashes
 ```
 
 A failed generation may leave partial files but no completed `lund-gen-log.json`. On rerun, the resolved run directory is validated, reported, recursively removed, and recreated, preserving the legacy generator lifecycle.

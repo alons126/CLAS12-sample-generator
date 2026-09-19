@@ -13,13 +13,13 @@ Purpose:
     simulation directly in its own process.
 
 Workflow:
-     1. Locate the shared validation and payload-environment implementation beside this script.
-     2. Reuse its load_plan() function to validate the manifest, detector inputs,
-         site configuration, payload, and one-task-per-LUND-file plan.
-     3. Validate the site's Slurm resource block and prepare output directories.
-     4. Build and print one direct sbatch command per LUND file, ending with the
-         protected submit_GEMC_sample.sh payload.
-     5. Submit only when the caller explicitly supplies --execute.
+    1. Locate the shared validation and payload-environment implementation beside this script.
+    2. Reuse its load_plan() function to validate the manifest, detector inputs,
+       site configuration, payload, and one-task-per-LUND-file plan.
+    3. Validate the site's Slurm resource block and prepare output directories.
+    4. Build and print one direct sbatch command per LUND file, ending with the
+       protected submit_GEMC_sample.sh payload.
+    5. Submit only when the caller explicitly supplies --execute.
 
 Inputs:
     A completed LUND manifest, GCARD, reconstruction YAML, site JSON, the protected
@@ -62,11 +62,11 @@ def main():
         1. Resolve the default worker next to this file, preferring the source
            ``run.py`` and falling back to the installed ``clas12-simulate`` name.
         2. Parse command-line inputs and import the worker with runpy.
-        3. Call load_plan() in preview mode to validate inputs without running GEMC.
-          4. Require the four Slurm resource strings and reject unknown resource keys.
-          5. Create one direct sbatch command per plan entry, exporting that file's
-              payload environment and selecting its one-element Slurm array index.
-          6. Print every command, then execute them only with --execute.
+                3. Call load_plan() in preview mode to validate inputs without running GEMC.
+                4. Require the four Slurm resource strings and reject unknown resource keys.
+                5. Create one direct sbatch command per plan entry, exporting that file's
+                     payload environment and selecting its one-element Slurm array index.
+                6. Print every command, then execute them only with --execute.
 
     Args:
         No arguments: options come from sys.argv.
@@ -111,7 +111,8 @@ def main():
 
     # Shared validation and scheduler resources -------------------------------
     # Use the runner's identical manifest/config validation without running GEMC.
-    # file_index=None asks for the complete plan so its length becomes the array size.
+    # file_index=None asks for the complete validated plan; each entry becomes one
+    # direct single-element array submission below.
     module = runpy.run_path(str(args.runner))
     check = argparse.Namespace(**vars(args))
     check.execute = False
