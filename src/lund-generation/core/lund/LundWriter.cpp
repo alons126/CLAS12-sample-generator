@@ -27,7 +27,7 @@
  *   may leave partial output for inspection; absence of lund-gen-log.json marks the run incomplete.
  */
 
-#include "lund/LundWriter.h"
+#include "core/lund/LundWriter.h"
 
 #include <TROOT.h>
 #include <TString.h>
@@ -40,8 +40,8 @@
 #include <stdexcept>
 
 #include "Version.h"
-#include "support/constants.h"
-#include "support/environment.h"
+#include "core/support/constants.h"
+#include "core/support/environment.h"
 
 namespace env = environment;
 

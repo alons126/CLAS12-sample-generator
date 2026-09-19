@@ -18,7 +18,7 @@
 #include <string>
 
 #include "clas12-uniform/UniformGenerator.h"
-#include "support/environment.h"
+#include "core/support/environment.h"
 
 namespace env = environment;
 

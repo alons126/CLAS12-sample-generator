@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include "lund/Event.h"
+#include "core/lund/Event.h"
 
 namespace samples {
 

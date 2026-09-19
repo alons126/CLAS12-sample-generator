@@ -74,7 +74,7 @@ add_custom_command(OUTPUT ${REPLACEMENT_TARGETS}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py
         ${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h ${REPLACEMENT_TARGETS}
     DEPENDS ${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py VERBATIM)
-add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/lund-generation/geometry/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
+add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/lund-generation/core/geometry/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
 target_include_directories(replacement-geometry PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/replacement ${PROJECT_SOURCE_DIR}/src/lund-generation)
 target_link_libraries(replacement-geometry PRIVATE ROOT::Core ROOT::Physics Threads::Threads)
 add_test(NAME replacement-geometry COMMAND replacement-geometry)

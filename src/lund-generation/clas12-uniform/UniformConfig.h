@@ -20,8 +20,8 @@
  */
 
 #pragma once
-#include "config/RunConfig.h"
-#include "support/constants.h"
+#include "core/config/RunConfig.h"
+#include "core/support/constants.h"
 
 namespace samples {
 

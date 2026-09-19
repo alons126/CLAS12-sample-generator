@@ -29,8 +29,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "lund/Event.h"
-#include "support/constants.h"
+#include "core/lund/Event.h"
+#include "core/support/constants.h"
 
 namespace samples {
 

@@ -23,27 +23,27 @@ Production sources compile once into conventional targets. References to archive
 
 The shared LUND pipeline is organized by responsibility inside `src/lund-generation/`. These directories compile into the single `LundCore` target because they are small and always used together. Protected target geometry is isolated under `src/lund-generation/external/`; the protected simulation payload belongs separately to `src/slurm-submission/external/`.
 
-### Configuration (`src/lund-generation/config/`)
+### Configuration (`src/lund-generation/core/config/`)
 
-[RunConfig.h](../src/lund-generation/config/RunConfig.h) declares the shared, read-only handoff from each C++ command-line entry point to its generator/converter and writer. [RunConfig.cpp](../src/lund-generation/config/RunConfig.cpp) implements the accepted common and source-specific key sets, strict `--key value` and `key = value` parsing, precedence, RG-M target lookup, automatic sampling/provenance settings, output naming, path normalization, and validation. Typed readers expose checked values and `values` supplies the exact resolved strings for manifest provenance.
+[RunConfig.h](../src/lund-generation/core/config/RunConfig.h) declares the shared, read-only handoff from each C++ command-line entry point to its generator/converter and writer. [RunConfig.cpp](../src/lund-generation/core/config/RunConfig.cpp) implements the accepted common and source-specific key sets, strict `--key value` and `key = value` parsing, precedence, RG-M target lookup, automatic sampling/provenance settings, output naming, path normalization, and validation. Typed readers expose checked values and `values` supplies the exact resolved strings for manifest provenance.
 
 Configuration is parsed once; `UniformConfig` converts frequently used settings to typed values before the event loop. `RunConfig` does not inspect event data, own RNGs, mutate output directories, serialize LUND, monitor events, or submit simulation. Unknown/duplicate keys and invalid ranges fail before those operations can begin. Config syntax and defaults are in [configuration](configuration.md).
 
-### LUND records and serialization (`src/lund-generation/lund/`)
+### LUND records and serialization (`src/lund-generation/core/lund/`)
 
-[Event.h](../src/lund-generation/lund/Event.h) declares `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../src/lund-generation/lund/Particle.cpp) reads the centralized rounded mass table and rejects unsupported species.
+[Event.h](../src/lund-generation/core/lund/Event.h) declares `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../src/lund-generation/core/lund/Particle.cpp) reads the centralized rounded mass table and rejects unsupported species.
 
-[LundWriter.h](../src/lund-generation/lund/LundWriter.h) / [LundWriter.cpp](../src/lund-generation/lund/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at the resolved `events-per-file` threshold; `finish(scanned)` publishes the manifest. Uniform construction also prepares the archived downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
+[LundWriter.h](../src/lund-generation/core/lund/LundWriter.h) / [LundWriter.cpp](../src/lund-generation/core/lund/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at the resolved `events-per-file` threshold; `finish(scanned)` publishes the manifest. Uniform construction also prepares the archived downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
-### Geometry (`src/lund-generation/geometry/`)
+### Geometry (`src/lund-generation/core/geometry/`)
 
-[RgmTarget.h](../src/lund-generation/config/RgmTarget.h) / [RgmTarget.cpp](../src/lund-generation/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/lund-generation/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../src/lund-generation/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock. Fixed tester coordinates bypass target sampling. The adapter includes the protected `src/lund-generation/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained geometry code.
+[RgmTarget.h](../src/lund-generation/core/config/RgmTarget.h) / [RgmTarget.cpp](../src/lund-generation/core/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/lund-generation/core/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../src/lund-generation/core/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock. Fixed tester coordinates bypass target sampling. The adapter includes the protected `src/lund-generation/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained geometry code.
 
-### Support (`src/lund-generation/support/`)
+### Support (`src/lund-generation/core/support/`)
 
-[constants.h](../src/lund-generation/support/constants.h) is the single maintained catalog of supported PDG identifiers, current PDG 2026 masses, and explicitly separated archived compatibility masses consumed by the LUND layer and generators. [environment.h](../src/lund-generation/support/environment.h) is the only maintained C++ source of ANSI color definitions. It exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. Shell and Python launchers retain their separate environment-variable palette because they cannot include a C++ header.
+[constants.h](../src/lund-generation/core/support/constants.h) is the single maintained catalog of supported PDG identifiers, current PDG 2026 masses, and explicitly separated archived compatibility masses consumed by the LUND layer and generators. [environment.h](../src/lund-generation/core/support/environment.h) is the only maintained C++ source of ANSI color definitions. It exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. Shell and Python launchers retain their separate environment-variable palette because they cannot include a C++ header.
 
-[Version.h.in](../src/lund-generation/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
+[Version.h.in](../src/lund-generation/core/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 
 ## 3. `clas12-uniform` implementation
 

@@ -4,7 +4,7 @@
 
 `Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one selected hadron. Converted events contain the scattered electron followed by retained GST particles in their input order.
 
-These types are defined in [Event.h](../src/lund-generation/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../src/lund-generation/lund/LundWriter.cpp).
+These types are defined in [Event.h](../src/lund-generation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../src/lund-generation/core/lund/LundWriter.cpp).
 
 ## 2. LUND header: ten fields
 
@@ -47,7 +47,7 @@ Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`.
 
 ## 5. Mass convention
 
-All maintained particle identities and masses come from [`src/lund-generation/support/constants.h`](../src/lund-generation/support/constants.h). The values below are based on the [Particle Data Group 2026](https://pdg.lbl.gov/2026/listings/particle_properties.html), converted to GeV/c² and rounded to the five decimal places stored by the LUND writer. The electron is deliberately approximated as massless.
+All maintained particle identities and masses come from [`src/lund-generation/core/support/constants.h`](../src/lund-generation/core/support/constants.h). The values below are based on the [Particle Data Group 2026](https://pdg.lbl.gov/2026/listings/particle_properties.html), converted to GeV/c² and rounded to the five decimal places stored by the LUND writer. The electron is deliberately approximated as massless.
 
 | Species (PDG) | LUND mass (GeV/c²) |
 | --- | ---: |

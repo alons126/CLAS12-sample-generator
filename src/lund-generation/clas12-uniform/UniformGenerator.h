@@ -21,7 +21,7 @@
  */
 
 #pragma once
-#include "config/RunConfig.h"
+#include "core/config/RunConfig.h"
 
 namespace samples {
 

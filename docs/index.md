@@ -34,10 +34,10 @@ For the scientific and implementation reference, start at the [technical-note ou
 | `src/lund-generation/` | Complete LUND-creation workflow, applications, external geometry, and tests |
 | `src/slurm-submission/` | Manifest runner, Slurm submitter, external GEMC payload, and tests |
 | `src/launcher/` | Shared dispatcher, ifarm checkout helpers, terminal presentation, and launcher test |
-| `src/lund-generation/config/` | Run-option parsing, validation, and RG-M target metadata |
-| `src/lund-generation/lund/` | Event records, particle masses, LUND writing, file splitting, and manifests |
-| `src/lund-generation/geometry/` | The maintained adapter around external target geometry |
-| `src/lund-generation/support/` | Shared constants, terminal colors, and compiled provenance template |
+| `src/lund-generation/core/config/` | Run-option parsing, validation, and RG-M target metadata |
+| `src/lund-generation/core/lund/` | Event records, particle masses, LUND writing, file splitting, and manifests |
+| `src/lund-generation/core/geometry/` | The maintained adapter around external target geometry |
+| `src/lund-generation/core/support/` | Shared constants, terminal colors, and compiled provenance template |
 | `src/lund-generation/clas12-uniform/` | Uniform kinematic generation |
 | `src/lund-generation/clas12-generator-to-lund/` | Physical-source dispatch, with generator adapters such as `genie/` nested below it |
 | `src/lund-generation/external/` | Protected imported target geometry used during LUND creation |

@@ -17,7 +17,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "geometry/TargetGeometry.h"
+#include "core/geometry/TargetGeometry.h"
 
 // main ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

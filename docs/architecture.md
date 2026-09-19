@@ -9,23 +9,23 @@ Maintained code is grouped first by the two user-facing workflows. `src/lund-gen
 | `src/lund-generation/` | Both uniform and physical LUND creation, their entry points, external geometry, and tests |
 | `src/slurm-submission/` | Simulation runner, Slurm array submitter, protected GEMC payload, and submission tests |
 | `src/launcher/` | Shared Python dispatcher and sourced-shell support used by `run.csh` |
-| `src/lund-generation/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
-| `src/lund-generation/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
-| `src/lund-generation/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
-| `src/lund-generation/support/` | Central PDG constants, terminal presentation, and the generated-version template |
+| `src/lund-generation/core/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
+| `src/lund-generation/core/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
+| `src/lund-generation/core/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
+| `src/lund-generation/core/support/` | Central PDG constants, terminal presentation, and the generated-version template |
 | `src/lund-generation/clas12-uniform/` | Produce deliberately unphysical acceptance-map events and their monitoring |
 | `src/lund-generation/clas12-generator-to-lund/` | Dispatch a physical input source to its event-generator adapter |
 | `src/lund-generation/clas12-generator-to-lund/genie/` | Read GENIE GST as the currently implemented physical adapter |
 | `src/lund-generation/external/` | Protected imported target geometry |
 | `src/slurm-submission/external/` | Protected GEMC/reconstruction worker payload |
 
-The two source-specific directories intentionally match the installed executable names. The GENIE reader is nested under `clas12-generator-to-lund` because it implements one physical-input adapter rather than an independent workflow. A future adapter belongs beside it, such as `src/lund-generation/clas12-generator-to-lund/gibuu/`. Cross-layer includes state dependencies directly, for example `config/RunConfig.h`, `lund/Event.h`, and `support/constants.h`.
+The two source-specific directories intentionally match the installed executable names. The GENIE reader is nested under `clas12-generator-to-lund` because it implements one physical-input adapter rather than an independent workflow. A future adapter belongs beside it, such as `src/lund-generation/clas12-generator-to-lund/gibuu/`. Cross-layer includes state dependencies directly, for example `core/config/RunConfig.h`, `core/lund/Event.h`, and `core/support/constants.h`.
 
 ## Build targets
 
 | Target | Source | Responsibility |
 | --- | --- | --- |
-| `LundCore` | `src/lund-generation/config/`, `src/lund-generation/lund/`, `src/lund-generation/geometry/`, `src/lund-generation/support/` | Shared configuration-to-manifest LUND pipeline |
+| `LundCore` | `src/lund-generation/core/config/`, `src/lund-generation/core/lund/`, `src/lund-generation/core/geometry/`, `src/lund-generation/core/support/` | Shared configuration-to-manifest LUND pipeline |
 | `UniformGeneration` | `src/lund-generation/clas12-uniform/` | Uniform sampling prescriptions and uniform-only monitoring |
 | `GenieConversion` | `src/lund-generation/clas12-generator-to-lund/genie/` | GENIE GST input adapter |
 | `PhysicalConversion` | `src/lund-generation/clas12-generator-to-lund/` | Select the configured physical event-generator adapter |

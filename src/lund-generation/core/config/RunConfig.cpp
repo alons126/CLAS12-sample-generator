@@ -21,7 +21,7 @@
  *   after RunConfig::parse() returns successfully.
  */
 
-#include "config/RunConfig.h"
+#include "core/config/RunConfig.h"
 
 #include <cctype>
 #include <cmath>
@@ -31,8 +31,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "config/RgmTarget.h"
-#include "geometry/TargetGeometry.h"
+#include "core/config/RgmTarget.h"
+#include "core/geometry/TargetGeometry.h"
 
 namespace samples {
 

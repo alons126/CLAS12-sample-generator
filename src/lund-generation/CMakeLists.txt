@@ -20,14 +20,14 @@
 # Shared LUND pipeline -------------------------------------------------------
 
 # region Shared LUND pipeline
-# Purpose: Join configuration, geometry, LUND records/serialization, and support definitions without hiding their source boundaries.
+# Purpose: Join the core configuration, geometry, LUND records/serialization, and support layers without hiding their source boundaries.
 add_library(
     LundCore STATIC
-    config/RunConfig.cpp
-    config/RgmTarget.cpp
-    geometry/TargetGeometry.cpp
-    lund/Particle.cpp
-    lund/LundWriter.cpp)
+    core/config/RunConfig.cpp
+    core/config/RgmTarget.cpp
+    core/geometry/TargetGeometry.cpp
+    core/lund/Particle.cpp
+    core/lund/LundWriter.cpp)
 target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${PROJECT_BINARY_DIR}/generated)
 target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO)
 # endregion

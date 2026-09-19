@@ -34,7 +34,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
-Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers and the single rounded mass table come from `src/lund-generation/support/constants.h`; the electron is approximated as massless. See the [data contract](data-contracts.md).
+Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers and the single rounded mass table come from `src/lund-generation/core/support/constants.h`; the electron is approximated as massless. See the [data contract](data-contracts.md).
 
 ## Splitting and completion
 
