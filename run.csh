@@ -105,7 +105,7 @@ if ($#argv == 0) then
     echo "    --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
     echo ""
     echo "Submit completed LUND files:"
-    echo "  source run.csh --workflow submit --manifest RUN/manifest.json [submission options]"
+    echo "  source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json [submission options]"
     echo ""
     echo "Build and test without running a workflow payload:"
     echo "  source run.csh --workflow create-lund --source uniform --build true --test true --run false"

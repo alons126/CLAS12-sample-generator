@@ -8,7 +8,7 @@ After generating `runs/first-electron` using the README example:
 
 ```bash
 python3 scripts/simulation/run.py \
-  --manifest runs/first-electron/manifest.json \
+  --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
   --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
   --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
   --site config/sites/local.json \
@@ -31,7 +31,7 @@ Run from a configured cluster login environment with files on shared storage:
 
 ```bash
 python3 scripts/slurm/submit.py \
-  --manifest runs/first-electron/manifest.json \
+  --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
   --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
   --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
   --site config/sites/jlab.json \

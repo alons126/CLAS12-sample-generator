@@ -57,7 +57,7 @@ The configuration files remain separate because they have different owners and l
 | --- | --- | --- |
 | `config/run.json` or `--run-settings FILE` | `workflow.py` | Stable build, test, and stage defaults |
 | `config/samples/*.conf` | Selected C++ application | Sample physics, target, event count, naming, and generator provenance |
-| Completed `manifest.json` | Submission and simulation coordinators | Exact completed LUND files, counts, resolved configuration, and provenance |
+| Completed `lundfiles/lund-gen-monitoring/lund-gen-log.json` | Submission and simulation coordinators | Exact completed LUND files, counts, resolved configuration, and provenance |
 | `config/sites/*.json` | Submission and simulation coordinators | Worker-visible programs and Slurm resources |
 | Explicit GCARD and YAML | GEMC and reconstruction payload | Detector and reconstruction configuration |
 
@@ -78,7 +78,7 @@ shared + source-specific built-in defaults
     -> normalized input path and final absolute run-directory path
 ```
 
-The object retains values as strings so the spelling actually used by the run can be written to `manifest.json`. Consumers use `get`, `number`, and `integer` for checked access; the writer uses `values` to serialize the full resolved configuration. Target identity may supply automatic geometry, A/Z, and GEMC variation values, but explicit overrides remain independent. Source-specific options are rejected in the wrong mode rather than accepted and ignored.
+The object retains values as strings so the spelling actually used by the run can be written to `lundfiles/lund-gen-monitoring/lund-gen-log.json`. Consumers use `get`, `number`, and `integer` for checked access; the writer uses `values` to serialize the full resolved configuration. Target identity may supply automatic geometry, A/Z, and GEMC variation values, but explicit overrides remain independent. Source-specific options are rejected in the wrong mode rather than accepted and ignored.
 
 This boundary is intentionally side-effect-free with respect to run products: parsing may read the selected profile, but it does not inspect GST event contents, sample kinematics or vertices, create or replace the run directory, write LUND or monitoring files, or submit simulation. Those responsibilities begin only after parsing succeeds and remain with the uniform generator, physical adapter, writer, and submission workflow respectively.
 
@@ -100,7 +100,7 @@ The converter stops at the configured output capacity or end of input. The final
 
 ## Simulation boundary
 
-`scripts/simulation/run.py` consumes `manifest.json` and explicit detector/site settings. It delegates detector execution to the protected Bash payload `src/common/external/submit_GEMC_sample.sh`, adapted from the two legacy job scripts. Python validates the manifest and owns locks/provenance; the payload owns sample monitoring and the GEMC/reconstruction sequence. Dry runs print the commands without creating simulation directories. Execution checks return codes and output files and writes one record per completed file.
+`scripts/simulation/run.py` consumes `lundfiles/lund-gen-monitoring/lund-gen-log.json` and explicit detector/site settings. It delegates detector execution to the protected Bash payload `src/common/external/submit_GEMC_sample.sh`, adapted from the two legacy job scripts. Python validates the manifest and owns locks/provenance; the payload owns sample monitoring and the GEMC/reconstruction sequence. Dry runs print the commands without creating simulation directories. Execution checks return codes and output files and writes one record per completed file.
 
 `scripts/slurm/submit.py` uses the same planning validation and submits an array with one task per manifest file. Each task invokes the runner with its one-based index. CMake never submits jobs.
 

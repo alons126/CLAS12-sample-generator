@@ -56,7 +56,7 @@ def read_run(directory):
     Returns:
         Manifest and parsed event collection; malformed output raises an assertion.
     """
-    manifest = json.loads((directory / 'manifest.json').read_text())
+    manifest = json.loads((directory / 'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
     events = []
     for entry in manifest['files']:
         lines = iter((directory / entry['path']).read_text().splitlines())
@@ -75,7 +75,11 @@ def read_run(directory):
             count += 1
         assert count == entry['events']
     assert len(events) == manifest['written_events']
-    assert (directory / 'monitoring.root').stat().st_size > 0
+    diagnostics = directory / 'lundfiles/lund-gen-monitoring'
+    assert (diagnostics / 'monitoring.root').stat().st_size > 0
+    assert (diagnostics / 'legacy_histograms.root').stat().st_size > 0
+    for retired_path in ['manifest.json', 'monitoring.root', 'legacy_histograms.root', 'MonitoringPlotsPath']:
+        assert not (directory / retired_path).exists()
     return manifest, events
 # endregion
 
@@ -166,20 +170,22 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable, '--events', '3', '--output', artifacts_parent)
         artifact_manifest,_ = read_run(artifacts)
         assert artifact_manifest['config']['events-per-file'] == '25000'
-        for directory in ['lundfiles', 'mchipo', 'reconhipo', 'rootfiles', 'MonitoringPlotsPath']:
+        for directory in ['lundfiles', 'mchipo', 'reconhipo', 'rootfiles']:
             assert (artifacts/directory).is_dir()
-        assert (artifacts/'Uniform_sample_1e_5986MeV_plots.root').is_file()
-        assert (artifacts/'legacy_histograms.root').is_file()
-        assert (artifacts/'MonitoringPlotsPath/Uniform_1e_plots_5986MeV.pdf').is_file()
-        assert list((artifacts/'MonitoringPlotsPath').glob('[0-9]*_*.png'))
+        diagnostics = artifacts/'lundfiles/lund-gen-monitoring'
+        assert (diagnostics/'Uniform_sample_1e_5986MeV_plots.root').is_file()
+        assert (diagnostics/'legacy_histograms.root').is_file()
+        assert (diagnostics/'MonitoringPlotsPath/Uniform_1e_plots_5986MeV.pdf').is_file()
+        assert list((diagnostics/'MonitoringPlotsPath').glob('[0-9]*_*.png'))
 
         # Rendered electron-hadron artifacts use the maintained region-bearing sample label while the
         # compatibility ROOT histogram names remain available for archived numerical comparisons.
         labeled_parent = root/'labeled-artifacts'
         labeled = labeled_parent/'Uniform_sample_epFD_5986MeV'
         run(executable, '--channel', 'eh', '--hadron', 'proton', '--hadron-region', 'FD', '--events', '3', '--output', labeled_parent)
-        assert (labeled/'MonitoringPlotsPath/Uniform_epFD_plots_5986MeV.pdf').is_file()
-        assert list((labeled/'MonitoringPlotsPath').glob('[0-9]*_epFD_*.png'))
+        labeled_plots = labeled/'lundfiles/lund-gen-monitoring/MonitoringPlotsPath'
+        assert (labeled_plots/'Uniform_epFD_plots_5986MeV.pdf').is_file()
+        assert list(labeled_plots.glob('[0-9]*_epFD_*.png'))
 
         config.write_text('# test precedence\nchannel = eh\nhadron = neutron\nhadron-region = FD\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
         configured = root/'configured'/ 'Uniform_sample_enFD_2070MeV'
@@ -272,7 +278,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             run(fixture,root/(kind+'.root'),kind)
             bad=root/(kind+'-output')
             run(executable,'--input',root/(kind+'.root'),'--output',bad,ok=False)
-            assert not (physical_output(bad)/'manifest.json').exists()
+            assert not (physical_output(bad)/'lundfiles/lund-gen-monitoring/lund-gen-log.json').exists()
         run(fixture,root/'large.root','large')
         large_root=root/'large-output'
         run(executable,'--input',root/'large.root','--output',large_root,'--events','4')
@@ -281,7 +287,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(fixture,root/'chain-a.root')
         run(fixture,root/'chain-b.root','missing')
         run(executable,'--input',root/'chain-*.root','--output',root/'chain-output',ok=False)
-        assert not (physical_output(root/'chain-output')/'manifest.json').exists()
+        assert not (physical_output(root/'chain-output')/'lundfiles/lund-gen-monitoring/lund-gen-log.json').exists()
 
 print(mode+' integration passed')
 

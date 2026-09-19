@@ -95,7 +95,7 @@ For example, generate a 2 GeV sample, then preview outbending processing:
 source run.csh --workflow create-lund --source uniform \
   --config config/samples/uniform-1e-2070MeV.conf --output runs/electron-2gev
 source run.csh --workflow submit --build false \
-  --manifest runs/electron-2gev/Uniform_sample_1e_2070MeV/manifest.json \
+  --manifest runs/electron-2gev/Uniform_sample_1e_2070MeV/lundfiles/lund-gen-monitoring/lund-gen-log.json \
   --gcard config/detector/Generation_files_2GeV/5.14/rgm_fall2021_Ar_2GeV.gcard \
   --reconstruction config/detector/Generation_files_2GeV/5.14/rgm_fall2021-cv.yaml \
   --site config/sites/local.json --torus 0.5 --solenoid -1

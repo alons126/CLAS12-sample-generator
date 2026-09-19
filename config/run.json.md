@@ -25,7 +25,7 @@ source run.csh --workflow create-lund --source physical \
 Submit an existing completed LUND run with the submission inputs:
 
 ```tcsh
-source run.csh --workflow submit --manifest RUN/manifest.json [submission options]
+source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json [submission options]
 ```
 
 `--workflow` is always required. `--source uniform|physical` is required for `create-lund` and is rejected for `submit`. Child options are forwarded exactly as written; the launcher no longer injects a hidden sample profile or output path.

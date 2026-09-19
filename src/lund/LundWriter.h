@@ -15,7 +15,7 @@
  *   Construct from a validated RunConfig -> guard and replace the exact resolved run directory -> create
  *   the common layout plus archived uniform directories when applicable -> write nonempty Event records
  *   into configured-size LUND files -> let the workflow save diagnostics -> close output and atomically
- *   publish manifest.json through finish().
+ *   publish lundfiles/lund-gen-monitoring/lund-gen-log.json through finish().
  *
  * Data contract:
  *   Particle momentum is in GeV/c, mass is in GeV/c², derived energy and beam energy are in GeV, and
@@ -54,7 +54,7 @@ namespace samples {
  *   3. Call write() in source-defined event order until full() becomes true or physical input ends.
  *   4. Save required monitoring outside this class.
  *   5. Call finish() once to close LUND output, write provenance and file counts to a temporary
- *      manifest, and rename it to `manifest.json` as the run-completion marker.
+ *      log, and rename it to `lund-gen-log.json` as the run-completion marker.
  *
  * Ownership and lifetime:
  *   The RunConfig is borrowed by const reference and must outlive the writer. The workflow label,
@@ -68,7 +68,7 @@ namespace samples {
  *
  * Failure behavior:
  *   Construction or I/O failures throw. A failed run may intentionally leave its partial directory and
- *   LUND files for inspection, but it is not consumable because only finish() publishes manifest.json.
+ *   LUND files for inspection, but it is not consumable because only finish() publishes lund-gen-log.json.
  */
 class LundWriter {
    public:
@@ -105,7 +105,7 @@ class LundWriter {
      * @param scanned Number of source events examined. It equals count() for uniform generation and may
      *                exceed count() when physical conversion rejects unsupported input interactions.
      * @throws std::exception If manifest writing, stream closure, or final rename fails.
-     * @note Call only after required diagnostics are saved; manifest.json declares the run consumable.
+     * @note Call only after required diagnostics are saved; lund-gen-log.json declares the run consumable.
      */
     void finish(std::uint64_t scanned);
 

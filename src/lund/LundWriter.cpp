@@ -14,7 +14,8 @@
  * Workflow:
  *   Print resolved setup -> validate and claim the exact run directory -> lazily open/rotate LUND files
  *   -> serialize headers and ordered particles -> let the source save diagnostics -> close the active
- *   stream -> write manifest.json.tmp -> atomically rename it to manifest.json.
+ *   stream -> write lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp -> atomically rename it to
+ *   lund-gen-log.json.
  *
  * Compatibility:
  *   The LUND format preserves archived whitespace, precision, and uniform per-file IDs. Particle
@@ -23,7 +24,7 @@
  *
  * Failure behavior:
  *   Unsafe replacement targets are rejected before deletion. Stream and filesystem failures throw and
- *   may leave partial output for inspection; absence of manifest.json marks the run incomplete.
+ *   may leave partial output for inspection; absence of lund-gen-log.json marks the run incomplete.
  */
 
 #include "lund/LundWriter.h"
@@ -88,7 +89,8 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto mchipo_dir = output / "mchipo";
     const auto recon_dir = output / "reconhipo";
     const auto rootfiles_dir = output / "rootfiles";
-    const auto monitoring_dir = output / (uniform ? "MonitoringPlotsPath" : "monitoring_plots");
+    const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
+    const auto monitoring_dir = diagnostics / (uniform ? "MonitoringPlotsPath" : "monitoring_plots");
 
     // Keep the archived yellow separator style so long interactive and Slurm logs expose run boundaries.
     std::cout << env::SYSTEM_COLOR << "\n=============================================================\n" << env::RESET_COLOR;
@@ -113,7 +115,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << env::SYSTEM_COLOR << "reconhipoPath:" << env::RESET_COLOR << " " << recon_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "rootfilesPath:" << env::RESET_COLOR << " " << rootfiles_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "MonitoringPlotsPath:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Plot list path:" << env::RESET_COLOR << " " << output / (config.get("prefix") + "_plots.root") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Plot list path:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_plots.root") << '\n';
         std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << "  " << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " "
                   << config.get("electron-momentum") << "  " << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
         std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed") << "  " << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " "
@@ -230,12 +232,13 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     }
 
     // LUND streams are opened lazily by write(); no empty numbered file is created at construction.
-    std::filesystem::create_directories(directory_ / "lundfiles");
+    std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring");
 
     // Uniform creation historically prepared the complete downstream directory layout and plot folder
     // before event generation. Keep that default artifact contract without running GEMC or reconstruction.
     if (workflow_ == "uniform") {
-        for (const auto* child : {"mchipo", "reconhipo", "rootfiles", "MonitoringPlotsPath"}) { std::filesystem::create_directories(directory_ / child); }
+        for (const auto* child : {"mchipo", "reconhipo", "rootfiles"}) { std::filesystem::create_directories(directory_ / child); }
+        std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring" / "MonitoringPlotsPath");
     }
 }
 #pragma endregion
@@ -353,10 +356,10 @@ void LundWriter::write(const Event& e) {
  *
  * Workflow:
  *   1. Close and flush the active LUND stream.
- *   2. Open `manifest.json.tmp` with exceptions enabled.
+ *   2. Open `lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp` with exceptions enabled.
  *   3. Write schema/software/ROOT/target provenance plus scanned and written counters.
  *   4. Serialize every resolved RunConfig entry and ordered split-file record as strict JSON.
- *   5. Close the temporary file and rename it within the run directory to `manifest.json`.
+ *   5. Close the temporary file and rename it to `lund-gen-log.json` in the monitoring directory.
  *
  * @param scanned Number of source events examined. Uniform generation supplies count(); physical
  *                conversion includes rejected input entries, so scanned may exceed written_events.
@@ -369,8 +372,8 @@ void LundWriter::write(const Event& e) {
  * @pre Required diagnostic files have already been saved successfully. Calling finish() is the final
  *      publication step and maintained workflows call it once.
  *
- * @note A failure can leave `manifest.json.tmp` and partial run data for inspection. Consumers must
- *       require `manifest.json`; the temporary name never declares completion.
+ * @note A failure can leave `lund-gen-log.json.tmp` and partial run data for inspection. Consumers
+ *       must require `lund-gen-log.json`; the temporary name never declares completion.
  */
 void LundWriter::finish(std::uint64_t scanned) {
     // Close first so every numbered LUND file is flushed and no further event can be appended through
@@ -382,7 +385,10 @@ void LundWriter::finish(std::uint64_t scanned) {
     // same workflow error path used by LUND output.
     std::ofstream manifest;
     manifest.exceptions(std::ios::badbit | std::ios::failbit);
-    manifest.open(directory_ / "manifest.json.tmp");
+    const auto monitoring_directory = directory_ / "lundfiles" / "lund-gen-monitoring";
+    const auto temporary_log = monitoring_directory / "lund-gen-log.json.tmp";
+    const auto completed_log = monitoring_directory / "lund-gen-log.json";
+    manifest.open(temporary_log);
 
     // Fixed top-level provenance identifies the manifest schema, this project build/revision, the ROOT
     // runtime, and the exact protected targets.h content compiled into the application. count_ records
@@ -410,9 +416,9 @@ void LundWriter::finish(std::uint64_t scanned) {
     manifest << "\n  ]\n}\n";
 
     // Explicit close verifies buffered manifest output before publication. The sibling rename is the
-    // visibility boundary: only after it succeeds does manifest.json advertise a completed run.
+    // visibility boundary: only after it succeeds does lund-gen-log.json advertise a completed run.
     manifest.close();
-    std::filesystem::rename(directory_ / "manifest.json.tmp", directory_ / "manifest.json");
+    std::filesystem::rename(temporary_log, completed_log);
 }
 #pragma endregion
 

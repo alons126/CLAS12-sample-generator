@@ -105,8 +105,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
                 run(current,'--channel','electron-tester' if channel == 'tester' else '1e' if channel == '1e' else 'eh','--beam-energy',beam,'--events',64,
                     '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--render-plots','false','--output',new_root,*selection,*extra)
                 if channel != 'tester':
-                    run(sys.argv[4], original/'histograms.root', new/'legacy_histograms.root')
-                m=json.loads((new/'manifest.json').read_text())
+                    run(sys.argv[4], original/'histograms.root', new/'lundfiles/lund-gen-monitoring/legacy_histograms.root')
+                m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
                 assert len(m['files']) == 1
                 compare(new/m['files'][0]['path'],original/'legacy_1.txt', channel == 'tester')
         for target in ['liquid','4-foil','1-foil','1-foil-small','1-foil-large','Ca']:
@@ -116,7 +116,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--A',1,'--Z',1,'--events',64,
                 '--electron-momentum','uniform','--electron-p-min',0,'--electron-p-max',2.07052,
                 '--render-plots','false','--output',new_root)
-            m=json.loads((new/'manifest.json').read_text())
+            m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
             compare(new/m['files'][0]['path'],original/'legacy_1.txt')
     else:
         fixture=sys.argv[4]
@@ -128,8 +128,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--output',new_root)
             q2={'2.07052':'Q2_0_02','4.02962':'Q2_0_25','5.98636':'Q2_0_40'}[beam]
             new=new_root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{label}_GEMC-unknown'
-            m=json.loads((new/'manifest.json').read_text())
-            run(sys.argv[5], original/'histograms.root', new/'legacy_histograms.root')
+            m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
+            run(sys.argv[5], original/'histograms.root', new/'lundfiles/lund-gen-monitoring/legacy_histograms.root')
             old=list((original/'lundfiles').glob('*.txt'))
             assert len(old)==1 and m['written_events']==10000
             compare(new/m['files'][0]['path'],old[0])
@@ -141,7 +141,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         run(current,'--input',gst,'--beam-energy',2.07052,'--target','1-foil-small','--A',12,'--Z',6,'--events',10000,'--output',new_root)
         new=new_root/'rgm_fall2021_Ar__genie-unknown__unknown__Q2_0_02__2070MeV_GEMC-unknown'
         old=next((original/'lundfiles').glob('*.txt')).read_text().splitlines()
-        m=json.loads((new/'manifest.json').read_text())
+        m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
         assert len(old)==8 and m['written_events']==6
         print('Confirmed intentional difference: legacy short-input truncation writes 1 event; new writes all 6 accepted events.')
 print(mode+' legacy LUND parity passed')

@@ -42,7 +42,7 @@ Field 10 is a legacy process tag, **not a generator cross-section weight**. Do n
 
 For six accepted events with `--events 6`, output contains one file with count 6. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
 
-The resolved metadata-named run directory is recreated when it already exists, matching the legacy lifecycle. `monitoring.root` contains per-PDG diagnostics for written particles. The additional `legacy_histograms.root` contains the original electron theta-versus-phi diagnostic, filled before process selection. `--render-plots true` adds PDF/PNG output. Rendering filenames/styles are standardized; histogram contents are tested against the archived converter.
+The resolved metadata-named run directory is recreated when it already exists, matching the legacy lifecycle. `lundfiles/lund-gen-monitoring/monitoring.root` contains per-PDG diagnostics for written particles. The additional `lundfiles/lund-gen-monitoring/legacy_histograms.root` contains the original electron theta-versus-phi diagnostic, filled before process selection. `--render-plots true` adds PDF/PNG output. Rendering filenames/styles are standardized; histogram contents are tested against the archived converter.
 
 ## Reproduce the legacy wrapper settings
 

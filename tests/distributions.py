@@ -50,7 +50,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-distributions-') as temp:
     output_root=Path(temp)/'1e'
     out=output_root/'Uniform_sample_1e_5986MeV'
     subprocess.run([sys.argv[1],'--channel','1e','--render-plots','false','--events','20000','--output',str(output_root)],check=True,capture_output=True)
-    m=json.loads((out/'manifest.json').read_text())
+    m=json.loads((out/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
     lines=(out/m['files'][0]['path']).read_text().splitlines()
     momenta=[]
     for i in range(0,len(lines),2):
@@ -68,7 +68,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-distributions-') as temp:
         hadron='neutron' if channel=='enFD' else 'proton'
         subprocess.run([sys.argv[1],'--channel','eh','--hadron',hadron,'--hadron-region','FD','--hadron-momentum','sampled','--hadron-p-min',p_min,'--render-plots','false',
                         '--events','20000','--output',str(output_root)],check=True,capture_output=True)
-        m=json.loads((out/'manifest.json').read_text())
+        m=json.loads((out/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
         lines=(out/m['files'][0]['path']).read_text().splitlines()
         momenta,cosines,phis=[],[],[]
         for i in range(0,len(lines),3):

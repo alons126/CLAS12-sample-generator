@@ -138,18 +138,19 @@ void convertGenie(const RunConfig& c) {
     if (!writer.full() && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) { throw std::runtime_error("Failed reading GST entries (check branch types and input files)"); }
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
     // Save numerical diagnostics before publishing the completed manifest.
-    monitoring.save(std::filesystem::path(c.get("output")) / "monitoring.root");
     const auto output = std::filesystem::path(c.get("output"));
-    TFile legacy_file((output / "legacy_histograms.root").string().c_str(), "CREATE");
+    const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
+    monitoring.save(diagnostics / "monitoring.root");
+    TFile legacy_file((diagnostics / "legacy_histograms.root").string().c_str(), "CREATE");
     if (legacy_file.IsZombie() || legacy_electron.Write() <= 0) { throw std::runtime_error("Cannot write legacy GENIE diagnostic"); }
     legacy_file.Close();
     if (c.get("render-plots") == "true") {
         gROOT->SetBatch(true);
-        std::filesystem::create_directory(output / "monitoring_plots");
+        std::filesystem::create_directory(diagnostics / "monitoring_plots");
         TCanvas canvas("genie_monitoring", "GENIE electron monitoring", 800, 600);
         legacy_electron.Draw("colz");
-        canvas.Print((output / "monitoring_plots/genie.pdf").string().c_str());
-        canvas.Print((output / "monitoring_plots/theta_e_VS_phi_e.png").string().c_str());
+        canvas.Print((diagnostics / "monitoring_plots/genie.pdf").string().c_str());
+        canvas.Print((diagnostics / "monitoring_plots/theta_e_VS_phi_e.png").string().c_str());
     }
     writer.finish(scanned);
     LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);

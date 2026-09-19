@@ -304,17 +304,18 @@ void generateUniform(const RunConfig& c) {
 #pragma region /* Run completion */
     // Persist both diagnostic contracts before making the run consumable. Optional rendering adds
     // legacy PDF/PNG views without changing histogram filling or LUND content.
-    monitoring.save(std::filesystem::path(c.get("output")) / "monitoring.root");
     const auto output = std::filesystem::path(c.get("output"));
-    const auto legacy_root = output / (c.get("prefix") + "_plots.root");
-    const auto plot_directory = output / "MonitoringPlotsPath";
+    const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
+    monitoring.save(diagnostics / "monitoring.root");
+    const auto legacy_root = diagnostics / (c.get("prefix") + "_plots.root");
+    const auto plot_directory = diagnostics / "MonitoringPlotsPath";
     const auto plot_channel = sampleLabel(c);
     const auto pdf_name = "Uniform_" + plot_channel + "_plots_" + legacyBeamLabel(beam) + ".pdf";
     legacy_monitoring.save(legacy_root, c.get("render-plots") == "true", plot_directory, pdf_name, plot_channel);
 
     // Keep the maintained stable diagnostic name as an exact copy while making the archived prefix-based
     // filename the primary output artifact. Downstream validation can therefore retain one fixed path.
-    std::filesystem::copy_file(legacy_root, output / "legacy_histograms.root", std::filesystem::copy_options::overwrite_existing);
+    std::filesystem::copy_file(legacy_root, diagnostics / "legacy_histograms.root", std::filesystem::copy_options::overwrite_existing);
 
     // Uniform generation scans and writes the same number of events, so the written count is also the
     // completion count supplied to the manifest. finish() closes files before publishing readiness.

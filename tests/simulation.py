@@ -39,7 +39,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner = project/'scripts/simulation/run.py'
     payload = project/'src/common/external/submit_GEMC_sample.sh'
-    options = ['--manifest', output/'manifest.json', '--gcard', card, '--reconstruction', yaml, '--torus', '-1']
+    options = ['--manifest', output/'lundfiles/lund-gen-monitoring/lund-gen-log.json', '--gcard', card, '--reconstruction', yaml, '--torus', '-1']
     preview = call(sys.executable, runner, *options)
     assert preview.stdout.count('-N=25000') == 1 and preview.stdout.count('-N=1') == 1
     assert ' -n 25000 ' in preview.stdout and ' -n 1 ' in preview.stdout
@@ -68,9 +68,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     installed = root/'installed'; installed.mkdir()
     for source, name in [(runner,'clas12-simulate'),(project/'scripts/slurm/submit.py','clas12-submit'),(payload,payload.name)]:
         shutil.copy2(source, installed/name)
-    custom = root/'custom'; (custom/'lundfiles').mkdir(parents=True)
+    custom = root/'custom'; (custom/'lundfiles/lund-gen-monitoring').mkdir(parents=True)
     (custom/'lundfiles/other_1.txt').write_text('command fixture\n')
-    manifest = custom/'manifest.json'
+    manifest = custom/'lundfiles/lund-gen-monitoring/lund-gen-log.json'
     data = {'schema_version':1,'workflow':'physical','written_events':3,
             'config':{'event-generator':'other-generator','q2-cut':'Q2_0_02'},
             'files':[{'path':'lundfiles/other_1.txt','events':3}]}

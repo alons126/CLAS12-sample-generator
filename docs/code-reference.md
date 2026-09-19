@@ -38,7 +38,7 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### Monitoring (`src/monitoring/`)
 
-[Monitoring.h](../src/monitoring/Monitoring.h) / [Monitoring.cpp](../src/monitoring/Monitoring.cpp): an owned implementation allocates per-PDG histograms on first use. `fill` records all written particles and `save` writes `monitoring.root`. Histograms are detached from the ROOT directory during generation to avoid global ownership conflicts.
+[Monitoring.h](../src/monitoring/Monitoring.h) / [Monitoring.cpp](../src/monitoring/Monitoring.cpp): an owned implementation allocates per-PDG histograms on first use. `fill` records all written particles and `save` writes `lundfiles/lund-gen-monitoring/monitoring.root`. Histograms are detached from the ROOT directory during generation to avoid global ownership conflicts.
 
 [LegacyMonitoring.h](../src/monitoring/LegacyMonitoring.h) / [LegacyMonitoring.cpp](../src/monitoring/LegacyMonitoring.cpp): owns the original uniform histogram definitions as run-local objects. Constructor selects `1e`, `ep`, `en`, or `Tester_e`. Each entry maps histogram x/y quantities to particle values. `fill` includes original inter-particle correlations; `save` writes numerical histograms and optionally renders a caller-selected legacy PDF/numbered-PNG layout. The definitions are migrated source, not runtime imports from `legacy/`.
 

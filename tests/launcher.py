@@ -80,7 +80,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
           '--config','config/samples/uniform-1e-5986MeV.conf','--events','4','--output',output]
     sourced(args)
     output = output/'Uniform_sample_1e_5986MeV'
-    m=json.loads((output/'manifest.json').read_text())
+    m=json.loads((output/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
     assert m['written_events']==4
     assert m['targets_sha256'] == hashlib.sha256((project/'src/common/external/targets.h').read_bytes()).hexdigest()
     sourced(args)  # legacy behavior replaces the resolved run directory

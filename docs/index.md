@@ -46,21 +46,22 @@ The first five directories build together as `LundCore`. They remain separate fo
 
 ```text
 runs/example/
-    manifest.json       # Published only after successful generation/conversion
     lundfiles/
         PREFIX_1.txt
         PREFIX_2.txt
-    monitoring.root     # Per-particle diagnostic histograms
-    legacy_histograms.root # Stable copy of original named diagnostics
-    PREFIX_plots.root   # Archived uniform histogram filename (uniform only)
-    MonitoringPlotsPath/ # Archived PDF/numbered PNG layout (uniform default)
+        lund-gen-monitoring/
+            lund-gen-log.json       # Published only after successful generation/conversion
+            monitoring.root         # Per-particle diagnostic histograms
+            legacy_histograms.root  # Stable copy of original named diagnostics
+            PREFIX_plots.root       # Archived uniform histogram filename (uniform only)
+            MonitoringPlotsPath/    # Archived PDF/numbered PNG layout (uniform default)
     mchipo/             # Prepared by uniform creation; filled by simulation
     reconhipo/          # Prepared by uniform creation; filled by reconstruction
     rootfiles/          # Prepared legacy uniform downstream directory
     simulation/         # Command records and detector-config hashes
 ```
 
-A failed generation may leave partial files but no completed manifest. On rerun, the resolved run directory is validated, reported, recursively removed, and recreated, preserving the legacy generator lifecycle.
+A failed generation may leave partial files but no completed `lund-gen-log.json`. On rerun, the resolved run directory is validated, reported, recursively removed, and recreated, preserving the legacy generator lifecycle.
 
 Uniform LUND files default to 25,000 events per file; physical conversion defaults to 10,000. Submission reads each file's exact event count from the completed manifest and passes it to both GEMC and reconstruction.
 

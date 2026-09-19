@@ -34,7 +34,7 @@ The resolved uniform run is written below `runs/first-electron/Uniform_sample_1e
 
 LUND output always preserves the established text conventions. Masses are rounded PDG-based values centralized in `constants.h`, with a massless electron. Production momentum defaults are mixed p/1-p for the 1e electron and charged hadrons, and uniform p for neutrons. Sampled hadron momentum always extends to the beam energy; fixed 1 GeV/c momentum is a neutron-only option. Select electron–hadron samples with `--channel eh --hadron proton|neutron|pip|pim --hadron-region FD|CD`.
 
-Open `runs/first-electron/Uniform_sample_1e_5986MeV/manifest.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `monitoring.root`.
+Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-gen-monitoring/lund-gen-log.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `lundfiles/lund-gen-monitoring/monitoring.root`.
 
 ## Where to start
 

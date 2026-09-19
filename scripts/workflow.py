@@ -129,7 +129,7 @@ WORKFLOW_GUIDANCE = """Choose one of these forms:
     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
   source run.csh --workflow create-lund --source physical \\
     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
-  source run.csh --workflow submit --manifest RUN/manifest.json [submission options]
+  source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json [submission options]
   source run.csh --workflow create-lund --source uniform --build true --test true --run false
 Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
 create-lund source to see that executable's sample options."""

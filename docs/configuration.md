@@ -6,7 +6,7 @@ The two C++ LUND applications pass these settings through the shared `RunConfig`
 
 Target resolution has one deliberate order. `rgm-target` first selects the catalog default geometry, A, Z, and GEMC target variation. Explicit `target`, `A`, `Z`, or `gemc-target-variation` values are then applied as independent overrides. Normal profiles therefore specify only `rgm-target`; derived values still appear in the completed manifest. Compatibility profiles retain an override only when they intentionally differ from the catalog, such as the archived uniform A=1/Z=1 header.
 
-`RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `manifest.json`.
+`RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `lundfiles/lund-gen-monitoring/lund-gen-log.json`.
 
 The launcher does not select a sample profile implicitly. Pass `--config config/samples/NAME.conf` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build/test defaults only.
 

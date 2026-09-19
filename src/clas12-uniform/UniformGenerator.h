@@ -42,7 +42,8 @@ namespace samples {
  *   4. Generate 1e events or artificial trigger-electron+hadron events until the requested
  *      event capacity is written, sampling exactly one shared vertex per event.
  *   5. Save modern monitoring plus the archived prefix-based ROOT/PDF/PNG artifacts, retain the stable
- *      legacy_histograms.root copy, finalize LUND output, and publish the manifest.
+ *      lundfiles/lund-gen-monitoring/legacy_histograms.root copy, finalize LUND output, and publish
+ *      the completion log in that monitoring directory.
  *
  * @param config Borrowed configuration returned by RunConfig::parse(..., true). The function reads it
  *               for the duration of the call and neither retains nor modifies it. Momentum values

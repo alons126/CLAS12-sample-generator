@@ -91,7 +91,8 @@ def parser():
     """
 
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--manifest', type=Path, required=True)
+    p.add_argument('--manifest', type=Path, required=True,
+                   help='completed RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json')
     p.add_argument('--gcard', type=Path, required=True)
     p.add_argument('--reconstruction', type=Path, required=True)
     p.add_argument('--site', type=Path)
@@ -130,6 +131,10 @@ def load_plan(args):
         raise ValueError('Field scales must be finite')
 
     manifest = args.manifest.resolve(strict=True)
+    if (manifest.name != 'lund-gen-log.json' or
+            manifest.parent.name != 'lund-gen-monitoring' or
+            manifest.parent.parent.name != 'lundfiles'):
+        raise ValueError('Expected RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json')
     data = json.loads(manifest.read_text())
 
     if data.get('schema_version') != 1 or not data.get('files'):
@@ -157,7 +162,9 @@ def load_plan(args):
     if args.file_index is not None and not 1 <= args.file_index <= len(files):
         raise ValueError('file-index outside manifest range')
 
-    root = manifest.parent
+    # Manifest paths remain relative to the run directory even though generation diagnostics and the
+    # completion log live together below lundfiles/lund-gen-monitoring.
+    root = manifest.parent.parent.parent
     plan = []
     seen = set()
     total = 0
