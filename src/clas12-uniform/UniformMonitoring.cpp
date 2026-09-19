@@ -254,7 +254,7 @@ void UniformMonitoring::save(const std::filesystem::path& path, const std::files
     gROOT->SetBatch(true);
     std::filesystem::create_directories(plot_directory);
     const auto pdf = (plot_directory / pdf_name).string();
-    TCanvas canvas("canvas", "canvas", 1000 * 2, 750 * 2);
+    TCanvas canvas("canvas", "canvas", 1000, 750);
     canvas.SetGrid();
     canvas.SetBottomMargin(0.14);
     canvas.SetLeftMargin(0.16);
@@ -266,7 +266,7 @@ void UniformMonitoring::save(const std::filesystem::path& path, const std::files
     for (auto& entry : impl_->entries) {
         auto* histogram = entry.histogram.get();
         histogram->Draw(entry.y_metric.empty() ? "" : "colz");
-        canvas.SaveAs((plot_directory / (std::to_string(++index) + "_" + histogram->GetName() + ".png")).string().c_str());
+        canvas.SaveAs((plot_directory / (std::to_string(++index) + "_" + histogram->GetName() + ".pdf")).string().c_str());
         canvas.Print(pdf.c_str());
         canvas.Clear();
     }
