@@ -22,7 +22,7 @@ Existing GENIE GST --> conversion --+
 2. [Architecture](architecture.md): source layout and a run through the code.
 3. Choose [uniform generation](uniform-samples.md) or [physical event-generator conversion](genie-to-lund-conversion.md).
 4. [Configuration](configuration.md): units, defaults, seeds and target settings.
-5. [Simulation and Slurm](gemc-reconstruction-batch-submission.md): preview commands before execution.
+5. [Simulation and Slurm](gemc-reconstruction-batch-submission.md): configure the sourced setup and submit one array per sample.
 6. [Migration](migration.md): old-to-new entry points and deliberate behavioral changes.
 
 For the scientific and implementation reference, start at the [technical-note outline](technical-note.md). It links the sampling equations, data contracts, source inventory, legacy launch-chain mapping, and validation evidence.
@@ -32,7 +32,7 @@ For the scientific and implementation reference, start at the [technical-note ou
 | Directory | What to look for there |
 | --- | --- |
 | `src/lund-generation/` | Complete LUND-creation workflow, applications, external geometry, and tests |
-| `src/slurm-submission/` | Manifest runner, Slurm submitter, external GEMC payload, and tests |
+| `src/slurm-submission/` | Sourced setup/submission, external GEMC payload, and tests |
 | `src/launcher/` | Shared dispatcher, ifarm checkout helpers, terminal presentation, and launcher test |
 | `src/lund-generation/core/config/` | Run-option parsing, validation, and RG-M target metadata |
 | `src/lund-generation/core/lund/` | Event records, particle masses, LUND writing, file splitting, and manifests |
@@ -73,4 +73,4 @@ Every LUND-creation command explicitly selects `--workflow create-lund`, `--sour
 
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with sourced-shell setup.

@@ -1,6 +1,6 @@
 # Local editing and SSH execution
 
-Edit and validate the checkout locally, commit the changes, then transfer them through your normal Git remote or file-copy workflow. On the SSH server, load the site's compiler, ROOT, CMake and Python 3.9+ environment. For detector processing also load GEMC and reconstruction, and use a shared filesystem visible to workers. The launcher inherits this environment; it does not SSH, choose modules, or install software.
+Edit and validate the checkout locally, commit the changes, then transfer them through your normal Git remote or file-copy workflow. On the SSH server, load the site's compiler, ROOT, CMake and Python 3.9+ environment. For submission, initialize the login shell’s module command and reconstruction environment and use shared storage visible to workers. The sourced setup script loads the configured GEMC version. The launcher does not SSH or install software.
 
 ## Sourced entry point
 
@@ -52,13 +52,13 @@ A failed command stops subsequent stages and returns a nonzero `$status` without
 
 ## Run settings and build controls
 
-`config/run.json` contains only stable build/test controls. Use `--run-settings path/to/settings.json` to select another strict JSON build profile explicitly. Workflow, source, sample configuration, input and output remain visible on the command line. Use `--key value` syntax, not `--key=value`.
+`config/run.json` contains only LUND build/test controls; submission does not read it. Use `--run-settings path/to/settings.json` to select another strict JSON build profile explicitly. Workflow, source, sample configuration, input and output remain visible on the command line. Use `--key value` syntax, not `--key=value`.
 
 There is no automatic `config/run.local.json`. The normal ifarm refresh removes untracked files, so an implicit local profile could disappear immediately before execution. Keep a reusable alternative profile in a deliberate location and select it with `--run-settings FILE`.
 
 | JSON key | Default | CLI override and purpose |
 | --- | --- | --- |
-| `build` | `true` for `create-lund`; `false` for `submit` | `--build true` or `--build false`: explicitly select compilation behavior |
+| `build` | `true` for `create-lund` | `--build true` or `--build false`: explicitly select compilation behavior |
 | `run` | `true` | `--run false`: build/test only |
 | `test` | `false` | `--test true`: enable BUILD_TESTING and run CTest before execution |
 | `build_dir` | `build/release` | `--build-dir build/debug` or an absolute path |
@@ -67,15 +67,7 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 
 `--workflow create-lund|submit` is required. `--source uniform|physical` is required for `create-lund` and invalid for `submit`.
 
-`workflow.py` separates its options from child options with `parse_known_args()`. It consumes the workflow, source, run-profile, and build/test flags. It forwards every other token unchanged to the selected executable or submitter; a single bare `--` may mark the boundary and is removed before forwarding. Submission defaults to `--build false` because it consumes completed LUND output; pass `--build true` when the LUND applications must be rebuilt. The dispatch is:
-
-| Selection | Child command |
-| --- | --- |
-| `--workflow create-lund --source uniform` | `BUILD/apps/clas12-uniform` |
-| `--workflow create-lund --source physical` | `BUILD/apps/clas12-generator-to-lund` |
-| `--workflow submit` | `python3 src/slurm-submission/submit.py` |
-
-Run-profile precedence is built-in defaults, then the selected strict JSON, then explicit launcher options. Sample-profile values have their own C++ precedence: application defaults, then `--config FILE`, then explicit sample options. Site JSON, the completed manifest, GCARD, and reconstruction YAML are submission inputs rather than launcher settings. This keeps build policy, sample physics, completed output inventory, server resources, and detector configuration independently reviewable.
+`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/slurm-submission/setup_and_submit.csh` directly; its settings live in that file, and it accepts no build flags, site files or manifest options. See the [submission guide](gemc-reconstruction-batch-submission.md).
 
 Building always invokes CMake dependency checking, so replacing an uncommitted `src/lund-generation/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
 
@@ -89,22 +81,14 @@ The refresh requires a configured Git upstream and network access to any not-yet
 
 ## Detector processing and submission
 
-For example, generate a 2 GeV sample, then preview outbending processing:
+First create the LUND files. Edit the selected samples, shared-storage paths, detector settings, GEMC version and job count in `src/slurm-submission/setup_and_submit.csh` locally; commit and push. Then, from a csh/tcsh login shell on ifarm:
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-1e-2070MeV.conf --output runs/electron-2gev
-source run.csh --workflow submit --build false \
-  --manifest runs/electron-2gev/Uniform_sample_1e_2070MeV/lundfiles/lund-gen-monitoring/lund-gen-log.json \
-  --gcard config/detector/Generation_files_2GeV/5.14/rgm_fall2021_Ar_2GeV.gcard \
-  --reconstruction config/detector/Generation_files_2GeV/5.14/rgm_fall2021-cv.yaml \
-  --site config/sites/local.json --torus 0.5 --solenoid -1
+source run.csh --workflow submit
 ```
 
-Select the actual reconstruction YAML path from your checkout. Submission previews the Slurm array until `--execute` is supplied. The local simulation runner is an internal array-worker/validation component, not a third user-facing workflow. See [simulation and Slurm](gemc-reconstruction-batch-submission.md) for complete options and [external inputs](external-inputs.md) for the required 2/4/6 GeV fields.
+This performs setup and submits the selected arrays. **It replaces the selected simulation output directories, preserving LUND input.** There is no preview-by-default or `--execute` switch. The setup checks inputs and prints the legacy report before calling `sbatch`. Tests intercept that final call in temporary fixtures. See the [submission guide](gemc-reconstruction-batch-submission.md) for settings and failure behavior.
 
 ## Supporting shell files
 
-`run.csh` owns the intentional disposable-clone refresh and forwards to `src/launcher/workflow.py`. `src/launcher/build_and_run.csh` uses the same driver without the refresh. `src/launcher/code_updater.sh` performs the checked clean/reset/pull/submodule-update sequence in a child shell. `src/launcher/printers/` supplies project start/success/failure banners.
-
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/build_and_run.csh` is a LUND build helper without refresh. `src/launcher/code_updater.sh` performs checked Git operations in a child shell. Submission is sourced so login-shell module aliases and environment updates remain available to `sbatch`.

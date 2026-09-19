@@ -4,68 +4,24 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Configure, build, and dispatch the two CLAS12 sample-generator workflows.
+"""Configure, build, test and dispatch LUND creation behind run.csh.
 
 Purpose:
-    Provide one maintained Python entry point behind ``run.csh``. The module resolves launcher
-    configuration, prepares the CMake applications, optionally validates them, and then starts either
-    LUND creation or ifarm simulation-job submission.
-
+    Keep LUND build controls separate from sample physics and detector submission settings.
 Workflow:
-    1. ``run.csh`` calls this module after repository synchronization and environment setup.
-    2. Parse launcher-owned options with ``parse_known_args()``. Retain every unknown token, remove one
-       optional ``--`` boundary, and later append those tokens unchanged to the selected child command.
-    3. Load stable build/test defaults from ``config/run.json`` or an explicitly selected
-       ``--run-settings`` file. Apply values in the order built-ins < JSON < explicit launcher options.
-       There is no automatic ``config/run.local.json`` because normal ifarm synchronization removes
-       untracked files. Workflow, source, sample profile, input, and output stay explicit on the command.
-    4. When ``build`` is true, configure CMake with both LUND applications enabled and build them in the
-       selected directory and build type, using the configured parallel-worker count.
-    5. When ``test`` is true, verify that the build tree has testing enabled and require CTest to pass.
-    6. When ``run`` is true, dispatch exactly one user-facing workflow:
-       - ``create-lund --source uniform`` generates configured random acceptance samples;
-       - ``create-lund --source physical`` converts supported event-generator truth into LUND; or
-       - ``submit`` sends existing LUND, GCARD, and YAML inputs to ifarm Slurm jobs.
-
-    Submission defaults to ``build=false`` because it consumes already-built submission
-    infrastructure and completed LUND files. An explicit ``--build true`` still enables a build.
-
-Dispatch map:
-    ``create-lund --source uniform``  -> ``BUILD/apps/clas12-uniform``
-    ``create-lund --source physical`` -> ``BUILD/apps/clas12-generator-to-lund``
-    ``submit``                         -> ``src/slurm-submission/submit.py``
-
-Configuration boundaries:
-    ``config/run.json`` controls only build, run, test, build_dir, build_type, and jobs. A
-    ``config/samples/*.conf`` file is read by the selected C++ application and describes sample physics,
-    target, event count, naming, and physical-input provenance. A ``config/sites/*.json`` file is read by
-    the submission stack and describes worker-visible programs and Slurm resources. The completed LUND
-    manifest identifies the files submitted; explicit GCARD and YAML arguments select detector simulation
-    and reconstruction settings. Keeping these layers separate prevents machine/build choices from being
-    mistaken for scientific sample definitions.
-
+    Parse launcher flags -> load config/run.json -> configure/build -> optional CTest ->
+    run clas12-uniform or clas12-generator-to-lund with the original sample arguments.
 Inputs:
-    Launcher arguments, one strict JSON build profile, optional terminal-color environment variables,
-    and the selected child workflow's own explicit files and forwarded options. Relative launcher paths
-    and every child process are anchored to the repository root by this module.
-
+    Explicit create-lund source, strict build JSON, optional color environment and forwarded
+    sample options. Paths are anchored to the repository root.
 Outputs:
-    CMake build products when building is enabled, plus the outputs owned by the selected child:
-    completed LUND files for creation or submitted Slurm jobs for simulation. Creation and submission
-    remain separate; finishing LUND creation never submits GEMC automatically.
-
-Execution context:
-    ``run.csh`` normally invokes this module after intentionally synchronizing the disposable ifarm
-    checkout and sourcing the server environment. Direct local invocation is useful for building,
-    testing, and previewing configuration; GEMC and reconstruction execute through ifarm submission.
-
-Failure behavior:
-    Invalid launcher/profile input and failed checked subprocesses stop later stages, print the stop
-    banner and a colored ``Error:`` diagnostic, and return a nonzero status to ``run.csh``.
-
+    Build products and completed LUND files. Creation never submits simulation jobs.
+Failure:
+    Invalid settings and failed child commands stop subsequent stages and return a nonzero
+    status to the sourced launcher. Arguments are passed as argv lists without shell evaluation.
 Notes:
-    Commands are passed to subprocesses as argv lists without shell evaluation. Generator-specific
-    physics options remain owned by the selected executable rather than this launcher.
+    run.csh handles --workflow submit itself by sourcing setup_and_submit.csh in the login shell.
+    It bypasses this Python driver, CMake, and the LUND build settings entirely.
 """
 
 import argparse
@@ -132,7 +88,7 @@ WORKFLOW_GUIDANCE = """Choose one of these forms:
     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
   source run.csh --workflow create-lund --source physical \\
     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
-  source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json [submission options]
+  source run.csh --workflow submit
   source run.csh --workflow create-lund --source uniform --build true --test true --run false
 Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
 create-lund source to see that executable's sample options."""
@@ -335,14 +291,7 @@ def settings(args):
         if override is not None:
             result[key] = override
 
-    # Submission consumes completed LUND output and does not need to rebuild the LUND applications.
-    # Keep an explicit CLI value authoritative so `--build true` remains available for a fresh or
-    # changed checkout; the general run profile continues to default creation workflows to building.
-    if args.workflow == 'submit' and args.build is None:
-        result['build'] = False
-
-    # Workflow is required by argparse. Source is required only for LUND creation and rejected for
-    # submission so every command states exactly the inputs relevant to its selected workflow.
+    # This driver handles LUND creation. run.csh dispatches submission directly in its shell.
     if args.workflow is None:
         raise ValueError(error_message('Missing required --workflow.\n\n' + WORKFLOW_GUIDANCE))
 
@@ -350,8 +299,6 @@ def settings(args):
     result['source'] = args.source
     if result['workflow'] == 'create-lund' and result['source'] is None:
         raise ValueError(error_message('--source uniform|physical is required for create-lund.\n\n' + WORKFLOW_GUIDANCE))
-    if result['workflow'] == 'submit' and result['source'] is not None:
-        raise ValueError(error_message('--source applies only to create-lund'))
 
     # Require real JSON booleans. Python considers bool a subclass of int, so exact type checks keep
     # values such as 0 and 1 from silently acting as false and true in a profile.
@@ -513,9 +460,9 @@ def main():
         Zero when all enabled stages succeed, including a valid no-build/no-test/no-run configuration.
 
     Outputs:
-        May create or update the configured CMake build tree, run tests, create LUND output, or submit
-        Slurm jobs, according to the selected settings. Commands and stage banners are printed as an
-        inspectable execution record.
+        May create or update the configured CMake build tree, run tests, or create LUND output.
+        Commands and stage banners are printed as an inspectable execution record. This driver
+        does not submit Slurm jobs.
 
     Raises:
         OSError, ValueError, TypeError, RuntimeError: For invalid configuration or unavailable files.
@@ -528,6 +475,9 @@ def main():
     args, forwarded = parser().parse_known_args()
     if forwarded[:1] == ['--']:
         forwarded = forwarded[1:]
+
+    if args.workflow == 'submit':
+        raise ValueError('Use source run.csh --workflow submit; edit src/slurm-submission/setup_and_submit.csh.')
 
     # Resolve and validate the complete launcher configuration before performing any external action.
     config = settings(args)
@@ -610,9 +560,7 @@ def main():
 
             command = [str(executable)]
         else:
-            # Submission is a maintained Python coordinator. It validates inputs and invokes the
-            # protected GEMC/reconstruction payload; it does not run detector simulation locally.
-            command = [sys.executable, str(ROOT / 'src/slurm-submission/submit.py')]
+            raise ValueError('Submission must be sourced through run.csh --workflow submit.')
 
         # Append the already validated child argv without shell parsing or string reconstruction.
         execute(command + arguments)

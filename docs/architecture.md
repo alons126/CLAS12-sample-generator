@@ -7,7 +7,7 @@ Maintained code is grouped first by the two user-facing workflows. `src/lund-gen
 | Directory | Responsibility |
 | --- | --- |
 | `src/lund-generation/` | Both uniform and physical LUND creation, their entry points, external geometry, and tests |
-| `src/slurm-submission/` | Simulation runner, Slurm array submitter, protected GEMC payload, and submission tests |
+| `src/slurm-submission/` | Sourced setup/submission script, protected GEMC payload, and parity tests |
 | `src/launcher/` | Shared Python dispatcher and sourced-shell support used by `run.csh` |
 | `src/lund-generation/core/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
 | `src/lund-generation/core/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
@@ -36,35 +36,16 @@ The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt`
 
 ## Workflow dispatcher
 
-`run.csh` performs the checked disposable-server refresh and environment setup, then calls `src/launcher/workflow.py` with the original argument boundaries preserved. The Python dispatcher owns build/test staging and selects one child; it does not interpret sample physics or detector settings.
+The two workflows start at `run.csh`, after the guarded disposable-server refresh:
 
 ```text
-src/launcher/workflow.py
-    ├── --workflow create-lund --source uniform
-    │       └── BUILD/apps/clas12-uniform
-    ├── --workflow create-lund --source physical
-    │       └── BUILD/apps/clas12-generator-to-lund
-    └── --workflow submit
-            └── src/slurm-submission/submit.py
+run.csh
+  --workflow create-lund -> launcher/workflow.py -> selected LUND application
+  --workflow submit      -> source slurm-submission/setup_and_submit.csh
+                            -> sbatch array -> protected GEMC/reconstruction payload
 ```
 
-The dispatcher calls `parse_known_args()`: its own options become launcher settings, while unknown tokens become the selected child's argument vector. One optional bare `--` separator is removed. The remaining tokens are appended unchanged and executed as an argv list from the repository root, without shell evaluation. Thus `--config`, `--input`, and `--output` reach a LUND executable, while `--manifest`, `--gcard`, `--reconstruction`, and `--site` reach the submitter.
-
-Launcher settings have three precedence levels: built-in fallbacks, the strict JSON selected by `--run-settings` (default `config/run.json`), and explicit launcher options. The JSON may contain only `build`, `run`, `test`, `build_dir`, `build_type`, and `jobs`. Workflow and source are required command selections. Submission has a workflow-specific `build=false` default because it consumes completed LUND output; explicit `--build true|false` remains authoritative. There is no automatic `config/run.local.json`; an alternative profile must be named explicitly because ifarm synchronization normally removes untracked files.
-
-When enabled, the stages run in dependency order: configure/build both LUND applications, run CTest, then dispatch the selected child. A failed checked stage prevents every later stage. `--run false` gives a build/test-only invocation. LUND creation never submits jobs automatically.
-
-The configuration files remain separate because they have different owners and lifetimes:
-
-| Input | Consumer | Responsibility |
-| --- | --- | --- |
-| `config/run.json` or `--run-settings FILE` | `workflow.py` | Stable build, test, and stage defaults |
-| `config/samples/*.conf` | Selected C++ application | Sample physics, target, event count, naming, and generator provenance |
-| Completed `lundfiles/lund-gen-monitoring/lund-gen-log.json` | Submission and simulation coordinators | Exact completed LUND files, counts, resolved configuration, and provenance |
-| `config/sites/*.json` | Submission and simulation coordinators | Worker-visible programs and Slurm resources |
-| Explicit GCARD and YAML | GEMC and reconstruction payload | Detector and reconstruction configuration |
-
-This separation keeps the selected action visible in the command and prevents scheduler or build settings from changing the scientific definition of a sample.
+The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver and reads its editable shell settings. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](gemc-reconstruction-batch-submission.md) for the full call chain and editable settings.
 
 ## Sample configuration boundary
 
@@ -103,9 +84,7 @@ The converter stops at the configured output capacity or end of input. The final
 
 ## Simulation boundary
 
-`src/slurm-submission/run.py` consumes `lundfiles/lund-gen-monitoring/lund-gen-log.json` and explicit detector/site settings. It provides shared validation and optional local payload execution for development. The protected Bash payload `src/slurm-submission/external/submit_GEMC_sample.sh`, adapted from the two legacy job scripts, owns sample monitoring and the GEMC/reconstruction sequence.
-
-`src/slurm-submission/submit.py` uses the same planning validation and submits one direct single-element Slurm array per manifest file. It exports that file's validated payload environment and ends each command with `submit_GEMC_sample.sh`; it does not place Python inside `sbatch --wrap`. CMake never submits jobs.
+`src/slurm-submission/setup_and_submit.csh` combines the legacy uniform/GENIE setup workflows. It loads GEMC in the sourced login shell, prints the legacy setup report, checks inputs, resets the selected simulation output directories, and submits one array per sample. The protected payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
 
 ## Adding functionality
 
@@ -113,7 +92,7 @@ The converter stops at the configured output capacity or end of input. The final
 - Add another physical adapter under `src/lund-generation/clas12-generator-to-lund/<generator>/` and register it behind `convertPhysical`; keep the public executable and manifest contract unchanged.
 - Replace or extend `src/lund-generation/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
-- Keep machine paths, scheduler resources and binary names in site configuration.
+- Keep submission paths and sample settings in the setup script; use the protected payload’s scheduler defaults.
 
 Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 

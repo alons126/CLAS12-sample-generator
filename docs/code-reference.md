@@ -65,20 +65,14 @@ The reader arrays replace the archived fixed 250-element buffers. Input errors, 
 
 ## 5. Execution scripts
 
-| File/function | Contract |
+| File | Contract |
 | --- | --- |
-| `src/launcher/workflow.py: parser` | Defines launcher-owned workflow/source and build/test options; child options remain unknown for forwarding |
-| `workflow.py: settings` | Merges built-ins, one explicit/default strict run JSON, and CLI overrides; applies the submit-specific `build=false` default; validates workflow/source and build controls |
-| `workflow.py: execute` | Prints a safely quoted representation, then runs the original argv list from the repository root with checked failure propagation |
-| `workflow.py: main` | Optionally configures/builds both LUND applications, optionally runs CTest, and dispatches uniform, physical, or submission child commands |
-| `src/slurm-submission/run.py: parser` | CLI for manifest, detector files, site, field scales, file index, naming and execution |
-| `run.py: load_plan` | Validates manifest schema/counts/paths, finite field scales, existing configuration files, output conflicts, site executable names; prepares a preview of the fixed legacy commands and validates compatible inputs |
-| `run.py: main` | Prints a local dry run, or acquires a per-file exclusive lock, invokes submit_GEMC_sample.sh locally and records command/config/payload hashes |
-| `src/slurm-submission/submit.py: main` | Reuses runner validation, validates site scheduler fields, constructs one direct single-element Slurm array per file, exports the payload environment and submits only with --execute |
+| `run.csh` | Guarded ifarm refresh; source submission directly or dispatch LUND creation |
+| `src/launcher/workflow.py` | LUND configuration, build/test stages and application dispatch |
+| `src/slurm-submission/setup_and_submit.csh` | Editable sample settings, GEMC module, legacy report/checks, output reset and one array per sample |
+| `src/slurm-submission/external/submit_GEMC_sample.sh` | Protected Slurm task payload; GEMC followed by reconstruction |
 
-`workflow.py` maps `create-lund/uniform` to `clas12-uniform`, `create-lund/physical` to `clas12-generator-to-lund`, and `submit` to `src/slurm-submission/submit.py`. It forwards child options unchanged after removing one optional bare `--`; it does not choose a sample profile, input, output, site, GCARD, or YAML. Its run JSON contains only build/test stage controls, and no `run.local.json` is loaded implicitly.
-
-The local runner can call the external `src/slurm-submission/external/submit_GEMC_sample.sh` Bash payload with resolved environment values. The payload retains the original GEMC/reconstruction command lines. The Slurm submitter instead passes those values through `sbatch --export` and submits the payload as the final command argument, without `--wrap` or a Python worker. Scripts do not send SSH commands, clean repositories or source environment modules. Local failures retain locks/partial outputs for inspection; Slurm execution is asynchronous and is monitored through Slurm and the payload outputs.
+The setup script consumes completed LUND files with an explicit prefix and task count. It exports a configured event limit for the array. The payload retains its original scheduler defaults. See the [submission guide](gemc-reconstruction-batch-submission.md).
 
 ## 6. Configuration and resources
 
@@ -86,8 +80,6 @@ The local runner can call the external `src/slurm-submission/external/submit_GEM
 - `electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and target-sampled vertices.
 - `genie.conf`: an explicit Ar conversion example.
 - `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
-- `config/sites/local.json`: executable names for local processing.
-- `config/sites/jlab.json`: executable names and the historical scheduler/log conventions; the caller must load the correct software environment.
 - `config/detector/Generation_files_*`: unchanged 2/4/6 GeV cards and reconstruction YAML for the archived versions. They are resources, not generated models. Matching detector/data dependencies are external.
 
 ## 7. Test code
@@ -95,18 +87,17 @@ The local runner can call the external `src/slurm-submission/external/submit_GEM
 | File | Role |
 | --- | --- |
 | `src/lund-generation/tests/CMakeLists.txt` | Registers LUND integration, parity, distribution, and geometry tests |
-| `src/slurm-submission/tests/` | Submission runner integration and archived command-parity tests |
+| `src/slurm-submission/tests/` | Legacy setup transcript, environment and failure tests |
 | `src/launcher/tests/launcher.py` | Shared sourced/direct launcher, argument, build, and update-safety checks |
 | `integration.py` | LUND invariants, channel behavior, config validation, deterministic output, conversion splitting/schema errors |
 | `check_monitoring.cpp` | Checks representative FD/CD proton, neutron, pip and pim ROOT names, titles, axis labels, styles and histogram counts |
 | `make_gst_fixture.cpp` | Generates normal, long parity, short, missing/wrong-type, empty, unsupported and >250-particle GST fixtures |
-| `src/slurm-submission/tests/simulation.py` | Dry runs, file selection, exact counts, installed-style execution stubs and failure behavior |
 | `legacy_uniform_driver.cpp` | Calls archived uniform/tester kernels and archived histogram initialization with controlled seeds and temporary files |
 | `prepare_legacy_genie.py` | Builds a redirected reference converter without changing its event loop |
 | `legacy_parity.py` | Compares reference/current LUND bytes and invokes histogram comparison; demonstrates the short-input correction |
 | `compare_histograms.cpp` | Compares ROOT histogram names/counts, axes, entries, contents/errors including flow bins |
 | `distributions.py` | Compares new neutron/proton draws to analytic CDFs |
-| `src/slurm-submission/tests/submission_parity.py` | Runs archived payloads with fake binaries and compares GEMC/reconstruction argv |
+| `src/slurm-submission/tests/submission_parity.py` | Compares full archived setup stdout and Slurm environment using temporary fixtures |
 
 Exact test scope and acceptance criteria are in [validation](validation.md).
 
@@ -120,10 +111,10 @@ The archived root `genie_job_submission_script.csh` is another historical submis
 
 ## 9. SSH checkout orchestration
 
-[SSH workflow](ssh-workflow.md) documents the disposable ifarm checkout refresh and `config/run.json`. `src/launcher/workflow.py` reads build/test defaults, requires an explicit workflow and LUND source, builds/tests, and dispatches either LUND creation or Slurm submission. Sample profiles and child arguments are explicit; the simulation runner is an internal array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
+[SSH workflow](ssh-workflow.md) documents the disposable ifarm checkout refresh and `config/run.json`. `src/launcher/workflow.py` reads build/test defaults, requires an explicit workflow and LUND source, builds/tests, and dispatches LUND creation. Submission is sourced directly by `run.csh`; the protected Bash payload is the array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
 
 `src/launcher/tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `src/lund-generation/tests/prepare_replacement_geometry.py` creates a changed target header; `src/lund-generation/tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
 
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with sourced-shell setup.

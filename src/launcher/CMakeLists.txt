@@ -8,7 +8,7 @@
 # Purpose:
 #   Verify sourced-shell behavior, build dispatch, argument preservation, and disposable-clone safeguards.
 # Workflow:
-#   run.csh -> launcher/workflow.py -> selected LUND or Slurm workflow.
+#   run.csh -> launcher/workflow.py -> selected LUND source; submission is sourced directly.
 # Inputs:
 #   Python 3.9+, tcsh/csh when available, both enabled LUND applications, and the configured build tree.
 # Outputs:

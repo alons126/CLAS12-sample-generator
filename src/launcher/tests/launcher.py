@@ -76,11 +76,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     assert '--workflow' in help_result.stdout and 'Choose one of these forms:' in help_result.stdout
     assert 'Updating disposable ifarm checkout' not in help_result.stdout
 
-    # Submission reuses completed LUND output by default; an explicit build flag still overrides it.
-    submitted=sourced(['--workflow','submit','--run','false'])
-    assert 'Compiling applications' not in submitted.stdout
-    submitted_build=sourced(['--workflow','submit','--build','true','--run','false'])
-    assert 'Compiling applications' in submitted_build.stdout
+    # Submission no longer accepts LUND build flags or touches build settings.
+    submitted=sourced(['--workflow','submit','--run','false'],success=False)
+    assert 'submission settings belong' in submitted.stdout
+    assert 'Updating disposable ifarm checkout' not in submitted.stdout
 
     output=root/'output with spaces'
     args=['--workflow','create-lund','--source','uniform','--build','false','--build-dir',build,

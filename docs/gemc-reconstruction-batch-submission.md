@@ -1,51 +1,66 @@
-# GEMC, reconstruction and Slurm
+# Create LUND files, then submit ifarm simulation
 
-Generation and conversion produce the same manifest schema, so these commands work with either workflow.
+The project has two separate workflows. `create-lund` produces completed LUND files from uniform kinematics or physical generator output. `submit` consumes those files and submits GEMC followed by reconstruction to ifarm Slurm.
 
-## Preview one run
+```text
+source run.csh --workflow create-lund --source uniform|physical ...
+  -> launcher/workflow.py -> LUND application -> completed OUTPATH/lundfiles
 
-After generating `runs/first-electron` using the README example:
-
-```bash
-python3 src/slurm-submission/run.py \
-  --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
-  --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
-  --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
-  --site config/sites/local.json
+source run.csh --workflow submit
+  -> guarded server-checkout update
+  -> source src/slurm-submission/setup_and_submit.csh
+  -> settings, GEMC module, checks, output preparation, legacy setup report
+  -> sbatch --job-name=NAME --array=1-N src/slurm-submission/external/submit_GEMC_sample.sh
+  -> Slurm task: GEMC -> recon-util
 ```
 
-This is a dry run. It validates the manifest totals, file paths and configuration-file existence and prints the exact GEMC/reconstruction commands. It creates no simulation output and does not require installed GEMC binaries. It does not inspect the physical compatibility of detector-card contents; select cards, energy, geometry and field settings consistently.
+Creation may run locally or on the server. Submission setup runs in the server login shell; detector execution runs only in Slurm jobs. The setup script does not generate LUND or run GEMC locally.
 
-Add `--execute` to run. `--torus` defaults to +0.5 for the 2 GeV manifest and −1 for the 4 and 6 GeV manifests; `--solenoid` defaults to −1 for all three. `--file-index 2` selects the second manifest file; otherwise the runner processes all files sequentially. The preserved unquoted legacy command paths require paths without whitespace or glob characters.
+## What to edit
 
-By default the runner preserves legacy names: `mchipo/mc_LUNDSTEM_torusSCALE.hipo` and `reconhipo/recon_LUNDSTEM_torusSCALE.hipo`. For each file, the coordinator reads the validated `events` value from the manifest and exports it as `JOB_NEVENTS`; the payload uses that value for both GEMC and reconstruction. This supports the 25,000-event uniform default, 10,000-event physical default and final partial physical files. The payload retains solenoid -1, so the coordinator still rejects other solenoid settings, indexed naming and whitespace/glob-containing paths. Bash -e stops the local coordinator-launched payload on command failure; the coordinator then checks both outputs. A successful `reconhipo/simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files and `payload_sha256` for the executed Bash payload.
+Edit **`src/slurm-submission/setup_and_submit.csh`** in the local checkout, commit and push. At the top, select named samples with `set samples = ( uniform-example )`, `physical-example`, or both. The following `Sample settings` section supplies one plain `switch` case per sample; copy a case to add another run. These are examples to edit for the actual completed samples, not automatically discovered datasets.
 
-Physical conversion defaults to `events-per-file=10000`; uniform creation defaults to the archived generator's 25,000-event files. Both can be submitted directly because each array task uses its manifest entry's exact event count.
+The common settings select `GEMC_VERSION`, optional module loading, `CLAS12TAGS_DIR`, and optional farm-output clearing. Each sample explicitly supplies:
 
-Each `submit` invocation warns and removes any existing `reconhipo/simulation/` bookkeeping directory before preparing the new submission plan; this discards old locks and local completion records but does not remove HIPO files. Existing HIPO outputs are still rejected. Local execution stores per-file locks and completion records under `reconhipo/simulation/`, preventing two processes from executing the same task concurrently. Failed local jobs retain their locks/partial output for inspection; direct Slurm jobs are asynchronous and are monitored through Slurm and their HIPO outputs. There is no automatic HIPO cleanup or resume. Use a fresh run directory, or deliberately resolve the failed file's state before retrying. A single run directory supports one simulation configuration.
+| Setting | Meaning |
+| --- | --- |
+| `source` | `uniform` or `physical`; selects the corresponding legacy report |
+| `OUTPATH_BASE`, `OUTPATH` | Existing shared-storage base and exact completed sample directory |
+| `SAMPLE_FILE_PREFIX` | Exact LUND prefix, without `_INDEX.txt`; do not infer metadata from it |
+| `NUM_OF_JOBS` | Number of array tasks; requires every file numbered 1 through N |
+| `JOB_NEVENTS` | Event limit passed to both GEMC and reconstruction in every task |
+| `TEMP_BEAM_E`, `TEMP_OUTPATH_PARTICLE` | Beam and uniform channel labels |
+| `SAMPLE_TARGET_NUCLEUS`, `TARGET_VARIATION` | Nuclear label and independently selected detector geometry |
+| `SAMPLE_GENERATOR`, `GENERATOR_TUNE`, `Q2_CUT` | Explicit physical provenance or `none` for inapplicable fields |
+| `SLURM_JOB_NAME` | Recognizable sample/job name |
+| `GCARD_FILE`, `YAML_FILE` | Detector configuration and reconstruction configuration |
 
-## Slurm array
+The small beam switch supplies the archived detector-file conventions: 2070 MeV uses torus +0.5 and `rgm_fall2021-cv.yaml`; 4029/5986 MeV use torus −1.0 and their `ai_4Gev`/`ai_6Gev` YAML files. Solenoid is −1.0 in the protected payload. Review the selected GCARD/YAML and their compatibility with the loaded version. The script never edits detector resources.
 
-Run from a configured cluster login environment with files on shared storage:
+For maintained uniform output, the default directory and prefix are `Uniform_sample_CHANNEL_ENERGY`, for example `Uniform_sample_enFD_2070MeV`. For physical output, copy the exact directory and prefix reported by creation. Archived LUND files are also accepted: set their actual prefix explicitly. A manifest is useful provenance but is not a submission configuration or a prerequisite for archived input.
 
-```bash
-python3 src/slurm-submission/submit.py \
-  --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
-  --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
-  --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
-  --site config/sites/jlab.json
+Set `JOB_NEVENTS` to the intended per-task limit (normally 25000 for uniform files or 10000 for physical files), and select the actual completed file count with `NUM_OF_JOBS`. A shorter final file remains in the same array with the same limit; processing reaches input EOF. The setup does not claim an exact per-file event count or introduce a separate submission for that file. Confirm EOF handling with the selected GEMC/reconstruction versions during server validation.
+
+## Run on ifarm
+
+Use a csh/tcsh login shell with its module command initialized and reconstruction available:
+
+```tcsh
+source run.csh --workflow submit
 ```
 
-This previews one direct `sbatch` command per manifest file. Each command ends with the protected `submit_GEMC_sample.sh` payload and uses a single-element array so `$SLURM_ARRAY_TASK_ID` selects that manifest file. Add `--execute` to submit. The submitter exports each file's exact event count, so partial final files are supported. The worker environment must provide GEMC, reconstruction and access to the payload/config/input paths; Slurm runs the payload directly and no Python worker is placed inside `--wrap`.
+`run.csh` first refreshes the disposable server clone from the remote. **Server edits are discarded; commit and push settings from the local clone first.** Keep completed LUND/output directories on shared storage outside that disposable checkout. See [SSH execution](ssh-workflow.md) for the updater's build exclusions and failure handling.
 
-Edit site JSON for scheduler resources and executable paths. Optional site `slurm.output` and `slurm.error` select log paths. The JLab example preserves the archived `/farm_out/%u/%x-%j-%N` convention and uses 2000M memory for each submitted payload job. Use `--runner /shared/path/run.py` only when the submitter's shared validation/payload-environment implementation is installed at a different location; the Slurm worker itself is always `submit_GEMC_sample.sh`.
+The sourced setup prints the legacy banners, variables, module-loading messages, path checks, directory counts and final command. It runs `module unload gemc` and `module load gemc/VERSION` when enabled, then validates `GEMC_DATA_DIR`. The login-shell environment and all `setenv` settings reach `sbatch`; `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` prevent an inherited restrictive export policy from dropping them. Scheduler resource and log defaults come from the protected payload's existing `#SBATCH` directives.
 
-## Scope of validation
+**Submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo`; uniform submission also replaces `OUTPATH/rootfiles`.** It preserves `lundfiles`. Before replacement it validates selected LUND inputs, detector files, the payload, and required executables; unsafe paths and output-directory symlinks are rejected. Optional `CLEAR_FAR_OUT=true` deletes files directly in the configured farm-output directory. It defaults to false.
 
-Local automated tests use fake executables and tiny samples. Actual GEMC and reconstruction execution must be checked in the intended environment. The repository preserves imported gcard/YAML files; it does not silently assign detector versions based on output names.
+One `sbatch --array=1-N` call is made per selected sample. Each sample repeats the setup/report, making its environment explicit even when uniform and physical samples are selected together. Setup or submission failure stops later samples, returns a nonzero `$status`, and keeps the sourced shell alive. Already accepted Slurm jobs remain submitted. There is no automatic cancellation or resume.
 
-The [legacy launch-chain mapping](legacy-workflows.md) traces `setup_and_submit_jobs.csh` and its manual workflow selection. [Command parity tests](validation.md) execute the archived Bash payloads with fake binaries and compare their argument lists to the new runner. They never submit jobs.
+Paths must be absolute and contain only letters, digits, `/`, `.`, `_`, and `-`, because the protected worker retains its legacy unquoted detector command arguments. Sample prefixes must be single safe filename components. Unsupported beam/channel settings fail explicitly.
 
-The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).
+## Validation
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+`submission-legacy-parity` runs relocated temporary copies of both archived setup scripts with fake module and Slurm commands. It compares full stdout byte-for-byte (including color bytes and whitespace), array arguments, module operations and exported settings. Only fixture paths, selected sample settings, and the common payload location are substituted. It also checks maintained channel extensions, multiple samples, input failures, module/submission failures, output replacement and shell survival. It never submits real jobs.
+
+These tests establish the setup/handoff contract. They do not establish detector-level equivalence or prove that the server's installed modules and databases are available. Validate a small array on ifarm before production. The [payload interface](gemc-payload.md) and [legacy comparison](legacy-workflows.md) describe the preserved detector chain.

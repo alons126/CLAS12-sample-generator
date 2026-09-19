@@ -22,10 +22,10 @@ source run.csh --workflow create-lund --source physical \
   --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 ```
 
-Submit an existing completed LUND run with the submission inputs:
+Select completed LUND samples in `src/slurm-submission/setup_and_submit.csh`, then submit:
 
 ```tcsh
-source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json [submission options]
+source run.csh --workflow submit
 ```
 
 `--workflow` is always required. `--source uniform|physical` is required for `create-lund` and is rejected for `submit`. Child options are forwarded exactly as written; the launcher no longer injects a hidden sample profile or output path.
@@ -34,7 +34,7 @@ source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lu
 
 | JSON key | Checked-in value | CLI override and purpose |
 | --- | --- | --- |
-| `build` | `true` for `create-lund`; `false` for `submit` | `--build true` or `--build false` explicitly selects whether to configure/build |
+| `build` | `true` for `create-lund` | `--build true` or `--build false` explicitly selects whether to configure/build |
 | `run` | `true` | `--run false` stops after the requested build/test stages |
 | `test` | `false` | `--test true` enables tests in CMake and requires CTest to pass before dispatch |
 | `build_dir` | `build/release` | `--build-dir PATH` selects the CMake binary directory |
@@ -49,9 +49,7 @@ workflow.py built-in build defaults
     -> explicit launcher options
 ```
 
-For `--workflow submit`, the effective default is `build=false` because submission consumes completed
-LUND files and existing workflow infrastructure. An explicit `--build true` overrides that
-workflow-specific default. LUND creation retains the checked-in `build=true` default.
+For `--workflow submit`, run.csh directly sources the shell setup script. Build/run/test settings do not apply to submission.
 
 Use `--run-settings FILE` to select a different strict JSON build profile explicitly. There is no automatic `config/run.local.json`: normal ifarm synchronization removes untracked files, so an implicit local profile would be unreliable.
 
@@ -59,8 +57,8 @@ Use `--run-settings FILE` to select a different strict JSON build profile explic
 
 The file keeps stable operational defaults out of scientific sample profiles and avoids repeating build controls in every command. It does not hide the action being performed. A reader can determine the selected workflow, source, sample definition, input and output directly from the command line.
 
-Sample physics and generation settings belong in [samples](samples/). Site-specific Slurm settings belong in [sites](sites/). Protected GCARD and reconstruction resources belong in [detector](detector/).
+Sample physics and generation settings belong in [samples](samples/). Submission settings belong in `src/slurm-submission/setup_and_submit.csh`; scheduler defaults remain in the protected payload. Protected GCARD and reconstruction resources belong in [detector](detector/).
 
 ## Failure behavior
 
-Unknown keys, non-Boolean stage controls, unsupported build types, empty build paths, and nonpositive job counts fail before CMake or a child workflow runs. A failed checked build or test prevents LUND creation and submission.
+Unknown keys, non-Boolean stage controls, unsupported build types, empty build paths, and nonpositive job counts fail before CMake or a child workflow runs. A failed checked build or test prevents LUND creation. Submission bypasses these build controls.

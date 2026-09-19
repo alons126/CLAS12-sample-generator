@@ -42,11 +42,10 @@ The full suite currently registers nine tests when both workflows are enabled an
 | --- | --- | --- |
 | `uniform-integration` | 1e plus all proton/neutron/pip/pim FD/CD labels, seed repeat, tester, config overrides, invalid inputs | Output counts/PDGs, bounds, one monitoring ROOT file, rounded-record mass-shell relation, unchanged repeat output and rejection semantics |
 | `genie-integration` | Processes/species, partial files, capacity limit, missing/wrong branches, empty/unsupported input, 300-particle arrays, broken later chain file | Correct records/counts, no monitoring ROOT files, and no completed manifest on failures |
-| `simulation-integration` | Dry runs, index selection, count propagation, successful stubs, failing GEMC | No dry-run writes, correct argument counts, reconstruction skipped on failure, locks preserved |
 | `uniform-legacy-parity` | 1e/ep/en/tester at 2.07052/4.02962/5.98636 GeV; additional target geometries | Exact LUND bytes with matching upstream settings; exact archived 1e histogram numerics; intentional FD/CD naming for hadrons |
 | `genie-legacy-parity` | 10000 accepted events at each legacy energy and associated C12 geometry; all retained species/processes; short fixture | Exact LUND bytes, no maintained physical monitoring file, and explicitly confirmed short-input correction |
 | `uniform-distributions` | 20000 default 1e events plus 20000 sampled enFD and epFD events | Bounds and empirical-CDF distance <0.025 for electron/proton mixture components, uniform neutron momentum, phi and flat theta |
-| `submission-legacy-parity` | Uniform and physical Bash payloads at 2/4/6 GeV | Exact argv after normalizing temporary run-directory paths; 10000-event entries retain legacy arguments |
+| `submission-legacy-parity` | Legacy uniform/physical setup at 2/4/6 GeV, FC labels, FD/CD channels, failures | Exact full stdout and array/environment handoff, one array per sample, safe failure and shell survival |
 
 Uniform reference seeds are kinematic 67890 and vertex 12345. Target checks cover Ar plus liquid, 4-foil, 1-foil, 1-foil-small, 1-foil-large and Ca; maintained tester events use the configured target geometry. Photon and all pion/nucleon species are included in the GENIE fixture. Comparisons use the restored archived pion constants, including π⁰=0.13957 GeV.
 
@@ -68,6 +67,4 @@ The `replacement-geometry` test verifies header-only geometry updates, new targe
 
 Use a small matched legacy/current LUND sample, identical GEMC/reconstruction versions, identical card/YAML/database resources and explicit detector RNG control if supported by the production setup. Compare event counts, generated banks, reconstructed particle yields and acceptance distributions, retaining logs and resource hashes. Document tolerances and statistical uncertainties. No server jobs are submitted by the repository's tests.
 
-The simulation integration test also checks external-payload monitoring, its recorded hash, installed discovery, a non-GENIE generator and explicit rejection of partial files or incompatible settings. Submission parity compares detector argv to both protected originals at all three beam energies, including their monitoring labels. No real jobs are submitted.
-
-The unified payload is checked against the legacy GENIE script after normalizing its single generalized event-count assignment back to `NEVENTS=10000`. For a 10000-event manifest entry, detector and reconstruction argv remain identical. Coordinator integration separately verifies that shorter manifest entries reach both commands with their exact count.
+The setup parity test reads archived scripts into temporary fixtures and intercepts module and Slurm calls. Fifteen reference cases compare entire stdout byte-for-byte, with relocated paths and the unified payload location. Additional cases cover channel extensions, shorter final files with a shared event limit, multiple samples, output replacement and failures. No actual Slurm or detector jobs run during these tests. Input EOF behavior with the selected detector software remains part of server validation.

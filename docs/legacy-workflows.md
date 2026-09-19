@@ -127,20 +127,13 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Uncomment uniform vs GENIE setup line | Choose generation/conversion CLI; both yield the same manifest contract |
 | Hardcoded output/input prefixes | `--output`, `--prefix`, manifest file list |
 | `NUM_OF_FILES` / Slurm array | Actual number of completed manifest files |
-| `NEVENTS=10000` in archived payloads | `JOB_NEVENTS` from each validated manifest entry; old argument parity holds when that entry contains 10000 events |
-| `TARGET_VARIATION`, `GCARD_FILE` | Explicit `--gcard` path |
-| `YAML_FILE` | Explicit `--reconstruction` path |
-| `TORUS_FIELD` | `--torus 0.5` at 2 GeV, `--torus -1` at 4/6 GeV for the legacy setup |
-| Solenoid −1.0 | Default `--solenoid -1` |
-| `module load gemc/VERSION`, `GEMC_DATA_DIR` | Load matching server environment before running/submitting |
-| Scheduler account/partition/time/memory/logs | Site JSON `slurm` fields |
-| `mc_PREFIX_INDEX_torusFIELD.hipo` | Default `--output-naming legacy` |
-| Git reset/cleanup and farm-output cleanup | No supported automatic equivalent |
+| `NEVENTS=10000` in archived payloads | Configured `JOB_NEVENTS` shared by each sample array |
+| `TARGET_VARIATION`, `GCARD_FILE`, `YAML_FILE` | Explicit settings in the unified shell script |
+| `TORUS_FIELD` | Retained +0.5 at 2 GeV; −1.0 at 4/6 GeV |
+| Solenoid −1.0 | Unchanged in the protected payload |
+| GEMC modules and `GEMC_DATA_DIR` | Loaded and checked by the sourced setup |
+| Scheduler resources and logs | Existing protected payload directives |
+| Simulation output reset | Recreate `mchipo`/`reconhipo`, plus uniform `rootfiles`; preserve LUND |
+| Repository update | Guarded disposable-clone refresh in `run.csh` |
 
-Use `src/slurm-submission/run.py` for a local preview/execution or `src/slurm-submission/submit.py` for direct `sbatch` submission of the protected unified payload. Commands and detailed examples are in the [execution guide](gemc-reconstruction-batch-submission.md).
-
-The new software does not log into the server, set up modules, or reproduce an unspecified detector RNG state. Those are necessary external conditions for detector-level reproducibility.
-
-The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).
-
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+`source run.csh --workflow submit` sources the unified setup directly. Select uniform or physical samples in its editable settings. Full archived setup stdout and exported Slurm settings are compared in isolated tests; see the [submission guide](gemc-reconstruction-batch-submission.md). Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.

@@ -32,7 +32,7 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | Variable | Purpose |
 | --- | --- |
 | `SAMPLE_FILE_PREFIX` | Complete filename prefix, without the `_INDEX.txt` suffix |
-| `JOB_NEVENTS` | Validated number of events in this manifest file; required |
+| `JOB_NEVENTS` | Configured per-task event limit shared by the array; required |
 | `SAMPLE_GENERATOR`, `GENERATOR_TUNE` | Generator/tune monitoring labels |
 | `SAMPLE_TARGET_NUCLEUS`, `Q2_CUT` | Target and Q² monitoring labels |
 | `TEMP_BEAM_E`, `TEMP_OUTPATH_PARTICLE`, `GEMC_DATA_DIR` | Beam/channel/environment monitoring |
@@ -40,14 +40,10 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | `TORUS_FIELD` | +0.5 at 2 GeV; −1 at 4/6 GeV |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction configurations |
 
-The maintained coordinator builds the payload environment from the shared validation implementation in `src/slurm-submission/run.py`. `src/slurm-submission/submit.py` then passes the validated values directly to `sbatch --export` and submits the protected payload as the final command argument. Each manifest file gets a single-element array, so Slurm creates the matching `SLURM_ARRAY_TASK_ID`; `JOB_NEVENTS` comes from that entry's validated `events` value, including a partial final file. Sample labels come from manifest configuration with documented environment overrides; this includes `Q2_CUT`, whose fallback is `config.q2-cut`.
+The sourced `src/slurm-submission/setup_and_submit.csh` exports these settings, loads the selected GEMC module, checks inputs, recreates simulation output directories and submits one array per sample. Slurm exports the configured environment and supplies the task index. The configured event limit is shared by the array, including a shorter final LUND file; it is not an exact per-file count.
 
 ## Integration with the maintained launcher
 
-`run.csh` still selects simulation or submission. Python validates the manifest, prepares a preview, and supplies the variables above. Actual Slurm submission invokes this Bash script directly; `run.py` remains available for local validation/execution and shared planning but is not embedded in the submitted command. `GENIE_TUNE` inherited by the Python coordinator maps to `GENERATOR_TUNE` for compatibility.
+`source run.csh --workflow submit` refreshes the disposable server checkout and sources the setup script directly in the login shell. All submission settings are in that script. There is no site JSON, Python coordinator, local detector runner, lock database or generated wrapper. The payload retains its scheduler directives and detector commands unchanged.
 
-The coordinator requires positive per-file manifest counts, matching `lundfiles/PREFIX_INDEX.txt` names, legacy output naming and solenoid -1. It exports each selected file's count as `JOB_NEVENTS`, and also supplies `Q2_CUT` from manifest configuration unless the calling environment overrides it. Because the original reconstruction command leaves paths unquoted, whitespace/glob-containing paths are rejected. Site executable paths must end in `gemc` and `recon-util`; their directories are added to PATH.
-
-The local runner creates output directories, retains per-file locks under `reconhipo/simulation/`, invokes Bash with `-e`, checks both outputs and records command/configuration/payload hashes there. The Slurm submitter warns and removes that bookkeeping directory at the start of each submission, creates required output directories and performs pre-submission HIPO conflict checks; Slurm owns the asynchronous payload execution. Those protections live outside the unchanged payload. The script has no `--print-commands` or explicit input/output-path interface.
-
-CMake installs `submit_GEMC_sample.sh` under `bin/` beside the Python runners. `--payload` can select another worker-visible copy. The maintained submitter gets scheduler resources from site JSON; direct sbatch invocation uses the script's original directives unless overridden.
+CMake installs only this protected payload under `bin/`. The setup workflow runs from the checkout through `run.csh`. Review the [submission guide](gemc-reconstruction-batch-submission.md) for settings, output replacement and tests.

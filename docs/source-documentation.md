@@ -20,8 +20,6 @@ Strict JSON does not support comments. CMake presets use their supported `displa
 | --- | --- |
 | `CMakePresets.json` | [Preset commands and fields](../CMakePresets.json.md), plus descriptions inside the presets |
 | `config/run.json` | [Launcher build/test defaults and precedence](../config/run.json.md) |
-| `config/sites/local.json` | [Local executable selection](../config/sites/local.json.md) |
-| `config/sites/jlab.json` | [Server executables and scheduler resources](../config/sites/jlab.json.md) |
 | `.vscode/c_cpp_properties.json` | Inline comments explain compile-command-based editor configuration |
 | `.vscode/settings.json` | Inline comments explain language associations, formatting, folding and highlighting |
 

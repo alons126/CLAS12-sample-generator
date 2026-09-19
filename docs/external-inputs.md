@@ -48,6 +48,6 @@ For 4 and 6 GeV:
 <option name="SCALE_FIELD" value="binary_solenoid, -1"/>
 ```
 
-The checked-in gcards already contain these scales. The simulation runner passes field scales on the command line and defaults them from the completed manifest's resolved `beam-energy`: torus `0.5` and solenoid `-1` at 2 GeV, torus `-1` and solenoid `-1` at 4 and 6 GeV. Explicit `--torus` and `--solenoid` settings remain available for deliberate studies and must agree with the selected campaign; defaults come from manifest provenance, never from path or card filenames.
+The checked-in gcards contain these scales. The sourced submission settings select torus `0.5` at 2 GeV and `-1.0` at 4/6 GeV; the protected payload applies the chosen torus scale and fixed solenoid `-1.0` on the GEMC command line. Review these explicit settings together with the selected card, YAML and GEMC module. No detector settings are inferred from a LUND filename.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with sourced-shell setup.

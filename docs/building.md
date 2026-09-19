@@ -63,7 +63,7 @@ Use `-DBUILD_TESTING=OFF` to omit tests and their Python dependency. Build setti
 cmake --install build/release --prefix /path/to/install
 ```
 
-The executables, `clas12-simulate` and `clas12-submit` are installed under `bin/`; example settings and detector resources are under `share/clas12-samples/config/`. ROOT must remain available at runtime. The Slurm runner path and inputs must be visible on worker nodes.
+The LUND executables and protected `submit_GEMC_sample.sh` payload are installed under `bin/`; example settings and detector resources are under `share/clas12-samples/config/`. ROOT must remain available for LUND generation. Submission uses the checkout’s sourced setup script; its payload and inputs must be visible on worker nodes.
 
 ## What tests establish
 
@@ -75,4 +75,4 @@ These are local software checks. They do not establish detector-card suitability
 
 The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with sourced-shell setup.

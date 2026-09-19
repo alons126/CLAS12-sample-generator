@@ -17,10 +17,10 @@
 #      The updater validates the Git worktree, cleans untracked/ignored files except build/, resets
 #      tracked server changes, pulls the configured upstream, initializes pinned submodules, and
 #      prints the resulting HEAD/branch.
-#   3. If synchronization succeeds, source the server environment into the caller's shell so its
-#      compiler, ROOT, GEMC, reconstruction, and site variables reach the workflow and its children.
-#   4. Forward the original quoted argument vector to src/launcher/workflow.py, which owns configuration,
-#      build, tests, LUND-source selection, and ifarm-submission dispatch.
+#   3. After synchronization, initialize the LUND environment or let the sourced submission script
+#      load its GEMC module in the login shell, retaining that environment for sbatch.
+#   4. Source the single submission script for submit; otherwise forward the original quoted
+#      arguments to src/launcher/workflow.py for building, testing and LUND creation.
 #   5. Restore the caller's directory and return the captured result as both CLAS12_SAMPLE_STATUS and
 #      immediate tcsh `$status`, without using `exit` in this normally sourced launcher.
 # Usage:
@@ -28,7 +28,7 @@
 #     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 #   source run.csh --workflow create-lund --source physical \
 #     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
-#   source run.csh --workflow submit [submission options]
+#   source run.csh --workflow submit
 # Inputs:
 #   $argv carries launcher and child options. CLAS12_SAMPLES_DIR is an optional environment variable
 #   set by the user with `setenv`; when present, it supplies the absolute checkout path and overrides
@@ -105,7 +105,7 @@ if ($#argv == 0) then
     echo "    --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
     echo ""
     echo "Submit completed LUND files:"
-    echo "  source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lund-gen-log.json [submission options]"
+    echo "  source run.csh --workflow submit"
     echo ""
     echo "Build and test without running a workflow payload:"
     echo "  source run.csh --workflow create-lund --source uniform --build true --test true --run false"
@@ -116,6 +116,27 @@ if ($#argv == 0) then
     goto clas12_launcher_finish
 endif
 # endregion
+
+# Submission selection -------------------------------------------------------
+
+# region Submission selection
+# Submission settings live in the sourced script, with no build flags, site files or Python coordinator.
+set _clas12_submit = 0
+if ($#argv >= 1) then
+    if ("$argv[1]" == "--workflow=submit") set _clas12_submit = 1
+endif
+if ($#argv >= 2) then
+    if ("$argv[1]" == "--workflow" && "$argv[2]" == "submit") set _clas12_submit = 1
+endif
+if ($_clas12_submit == 1) then
+    if ($#argv > 2 || ($#argv == 2 && "$argv[1]" == "--workflow=submit")) then
+        echo "Error: submission settings belong in src/slurm-submission/setup_and_submit.csh."
+        echo "Usage: source run.csh --workflow submit"
+        set CLAS12_SAMPLE_STATUS = 2
+        goto clas12_launcher_finish
+    endif
+endif
+# endregion Submission selection
 
 # Server mirror update --------------------------------------------------------
 
@@ -166,7 +187,7 @@ endif
 # Source the environment only from the successfully updated checkout. Sourcing is required here so
 # compiler, ROOT, GEMC, reconstruction, and site variables remain available to the Python driver and
 # its child processes. A setup failure prevents the workflow from running.
-if ($CLAS12_SAMPLE_STATUS == 0 && -f src/launcher/environment/set_environment.csh) then
+if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/launcher/environment/set_environment.csh) then
     source src/launcher/environment/set_environment.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
@@ -175,17 +196,16 @@ endif
 # Workflow dispatch -----------------------------------------------------------
 
 # region Workflow dispatch
-# Responsibility 4: call the maintained Python workflow driver.
-#
-# Dispatch only after checkout synchronization and environment setup have both succeeded. Quoting
-# the argument vector with tcsh's `:q` modifier preserves each user-supplied argument when forwarding
-# commands such as `create-lund` or `submit` to the single maintained Python workflow entry point.
+# Submission is sourced in the login shell so module aliases and exported settings reach sbatch.
+# LUND creation retains its existing Python build/creation driver.
 if ($CLAS12_SAMPLE_STATUS == 0) then
-    python3 src/launcher/workflow.py $argv:q
-
-    # Capture the driver result immediately, before popd or any later cleanup command can replace
-    # `$status`. The caller-status block returns this value to the sourced interactive shell.
-    set CLAS12_SAMPLE_STATUS = $status
+    if ($_clas12_submit == 1) then
+        source src/slurm-submission/setup_and_submit.csh
+        set CLAS12_SAMPLE_STATUS = $status
+    else
+        python3 src/launcher/workflow.py $argv:q
+        set CLAS12_SAMPLE_STATUS = $status
+    endif
 endif
 
 # Balance the earlier pushd for every path that reaches this block and restore the directory from
@@ -208,6 +228,7 @@ clas12_launcher_finish:
 # this file in the caller's tcsh process. Keep CLAS12_SAMPLE_STATUS available so the user can inspect
 # the named workflow result after control returns.
 unset _clas12_invocation _clas12_root
+if ($?_clas12_submit) unset _clas12_submit
 if ($?_clas12_skip_server_sync) unset _clas12_skip_server_sync
 
 # Run a child shell that exits with the captured workflow result. A direct `exit` here would close the

@@ -1,15 +1,22 @@
 # CLAS12 sample generator
 
-One compiled project for two sources of CLAS12 simulation input:
+Two separate workflows:
 
-- **Uniform samples** for acceptance-map studies: $(e,e')$, electron–hadron samples with proton, neutron, pip, or pim in FD or CD.
-- **Physical samples**: conversion of existing GENIE `gst` ROOT trees to LUND.
+1. **Create LUND files:** uniform acceptance samples or conversion of physical GENIE GST truth.
+2. **Submit simulation on ifarm:** consume completed LUND files, configure GEMC/detector inputs, and submit GEMC followed by reconstruction as Slurm array jobs.
 
-Both write LUND files and a run manifest. The submission workflow sends completed files through GEMC and reconstruction on ifarm Slurm. This repository does not run the physical event generator itself or calculate final acceptance maps.
+```text
+run.csh --workflow create-lund -> Python build driver -> LUND application -> completed files
+run.csh --workflow submit      -> sourced setup_and_submit.csh -> sbatch array -> GEMC -> recon-util
+```
+
+Edit submission settings in `src/slurm-submission/setup_and_submit.csh` locally, commit and push, then use `source run.csh --workflow submit` on ifarm. Submission replaces the selected simulation output directories and preserves LUND inputs. See the [setup and submission guide](docs/gemc-reconstruction-batch-submission.md).
+
+This repository does not run the physical event generator or calculate final acceptance maps.
 
 ## First build and sample
 
-Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, and Python 3.9+ for tests and simulation scripts. GEMC and `recon-util` are needed only when executing simulation.
+Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, and Python 3.9+ for tests and the LUND build driver, and csh/tcsh for sourced ifarm submission. GEMC and `recon-util` are needed only when executing simulation.
 
 Clone with the pinned legacy reference submodule, or initialize it after an existing clone:
 

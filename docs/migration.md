@@ -9,7 +9,7 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 | Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `clas12-uniform --config FILE --channel ... --output NEW_DIR` |
 | `Uniform_sample_generator_e_tester.C` | `electron-tester-{2070,4029,5986}MeV.conf` |
 | `GENIE_to_LUND_converter.csh` → ROOT macro | `clas12-generator-to-lund --event-generator genie --input ... --config ... --output ...` |
-| Sourced `setup_and_submit_jobs.csh` → selected setup script | Common simulation runner or Slurm submitter consuming a manifest |
+| Sourced `setup_and_submit_jobs.csh` → selected setup script | `source run.csh --workflow submit` → unified sourced setup → one Slurm array per sample |
 | Per-energy detector resources | `config/detector/Generation_files_*` |
 | Current-directory-dependent output rewrites | Explicit output path |
 
@@ -37,6 +37,6 @@ Uniform generation writes one `lundfiles/lund-gen-monitoring/<prefix>_monitoring
 
 ## Retained corrections
 
-The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. It propagates actual file counts to simulation, validates input/configuration, warns before replacing existing outputs, and publishes a manifest only after success. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](ssh-workflow.md).
+The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. Creation publishes a manifest only after success. Submission uses an explicitly configured array size and event limit, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](ssh-workflow.md).
 
 Full parity scope and limitations—including unknown historical random states and untested detector execution—are listed in [validation](validation.md).

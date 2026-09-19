@@ -96,8 +96,6 @@ Schema version 1 contains `workflow`, project `version`, configure-time Git `rev
 
 It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Rounded masses and all LUND fields/precision are defined in the [data contract](data-contracts.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
 
-## Detector and site settings
+## Detector and submission settings
 
-Gcards and reconstruction YAML live under `config/detector/Generation_files_{2,4,6}GeV/{devGEMC5.12,5.14}/`. Their contents are retained from the imported repository. Select actual files with the runner's `--gcard` and `--reconstruction` options; field scales are explicit. Gcards originate from JeffersonLab/clas12-config; [provenance and required field settings](external-inputs.md) specify outbending at 2 GeV and inbending at 4/6 GeV.
-
-Site JSON accepts `gemc` and `recon` executable names/paths. Optional `slurm` requires `account`, `partition`, `time`, and `mem` strings and accepts `output`/`error` log-path strings. The JLab file is an editable example of the imported resources, not a claim that those allocations suit every run. Load the necessary environment before executing/submitting.
+Edit `src/slurm-submission/setup_and_submit.csh` for selected samples, paths, GEMC version, event limit and array size. It selects GCARD/YAML resources explicitly and uses the protected payload’s scheduler defaults. There are no site JSON files. See the [submission guide](gemc-reconstruction-batch-submission.md).
