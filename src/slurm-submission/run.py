@@ -41,6 +41,15 @@ def payload_path(args):
     return Path(supplied or (source if source.is_file() else installed)).resolve(strict=True)
 
 
+def default_torus(beam_energy):
+    """Return the established torus scale for a supported beam energy in GeV."""
+    if abs(beam_energy - 2.07052) < 1e-6:
+        return 0.5
+    if abs(beam_energy - 4.02962) < 1e-6 or abs(beam_energy - 5.98636) < 1e-6:
+        return -1.0
+    raise ValueError(f'No default torus scale is defined for beam energy {beam_energy}; pass --torus explicitly')
+
+
 def payload_environment(data, index, path, count, mc, reco, gcard, reconstruction, gemc, recon, args):
     """Supply the original payload's environment and generalized sample labels.
 
@@ -84,7 +93,8 @@ def parser():
     """Define manifest-driven detector-processing options.
 
     Algorithm:
-        Require input manifest, card, reconstruction YAML and torus scale; keep execution opt-in.
+        Require input manifest, card and reconstruction YAML; resolve the torus scale from manifest
+        beam energy when omitted and keep execution opt-in. Solenoid defaults to -1.
 
     Returns:
         ArgumentParser used by main.
@@ -96,7 +106,7 @@ def parser():
     p.add_argument('--gcard', type=Path, required=True)
     p.add_argument('--reconstruction', type=Path, required=True)
     p.add_argument('--site', type=Path)
-    p.add_argument('--torus', type=float, required=True)
+    p.add_argument('--torus', type=float, help='torus scale; defaults to 0.5 at 2 GeV and -1 at 4/6 GeV')
     p.add_argument('--solenoid', type=float, default=-1.0)
     p.add_argument('--file-index', type=int, help='One-based manifest index; default: all files')
     p.add_argument('--output-naming', choices=['legacy', 'indexed'], default='legacy')
@@ -127,9 +137,6 @@ def load_plan(args):
     import math
     payload = payload_path(args)
 
-    if not all(math.isfinite(v) for v in (args.torus, args.solenoid)):
-        raise ValueError('Field scales must be finite')
-
     manifest = args.manifest.resolve(strict=True)
     if (manifest.name != 'lund-gen-log.json' or
             manifest.parent.name != 'lund-gen-monitoring' or
@@ -139,6 +146,16 @@ def load_plan(args):
 
     if data.get('schema_version') != 1 or not data.get('files'):
         raise ValueError('Expected a completed schema_version=1 manifest with files')
+
+    if args.torus is None:
+        try:
+            beam_energy = float(data.get('config', {})['beam-energy'])
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError('Manifest config must contain a numeric beam-energy to default --torus') from error
+        args.torus = default_torus(beam_energy)
+
+    if not all(math.isfinite(v) for v in (args.torus, args.solenoid)):
+        raise ValueError('Field scales must be finite')
 
     gcard = args.gcard.resolve(strict=True)
     reconstruction = args.reconstruction.resolve(strict=True)

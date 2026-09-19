@@ -58,7 +58,7 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 
 | JSON key | Default | CLI override and purpose |
 | --- | --- | --- |
-| `build` | `true` | `--build false`: reuse existing binaries or skip compilation for simulation |
+| `build` | `true` for `create-lund`; `false` for `submit` | `--build true` or `--build false`: explicitly select compilation behavior |
 | `run` | `true` | `--run false`: build/test only |
 | `test` | `false` | `--test true`: enable BUILD_TESTING and run CTest before execution |
 | `build_dir` | `build/release` | `--build-dir build/debug` or an absolute path |
@@ -67,7 +67,7 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 
 `--workflow create-lund|submit` is required. `--source uniform|physical` is required for `create-lund` and invalid for `submit`.
 
-`workflow.py` separates its options from child options with `parse_known_args()`. It consumes the workflow, source, run-profile, and build/test flags. It forwards every other token unchanged to the selected executable or submitter; a single bare `--` may mark the boundary and is removed before forwarding. The dispatch is:
+`workflow.py` separates its options from child options with `parse_known_args()`. It consumes the workflow, source, run-profile, and build/test flags. It forwards every other token unchanged to the selected executable or submitter; a single bare `--` may mark the boundary and is removed before forwarding. Submission defaults to `--build false` because it consumes completed LUND output; pass `--build true` when the LUND applications must be rebuilt. The dispatch is:
 
 | Selection | Child command |
 | --- | --- |

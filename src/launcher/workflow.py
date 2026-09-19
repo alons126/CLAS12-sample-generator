@@ -27,6 +27,9 @@ Workflow:
        - ``create-lund --source physical`` converts supported event-generator truth into LUND; or
        - ``submit`` sends existing LUND, GCARD, and YAML inputs to ifarm Slurm jobs.
 
+    Submission defaults to ``build=false`` because it consumes already-built submission
+    infrastructure and completed LUND files. An explicit ``--build true`` still enables a build.
+
 Dispatch map:
     ``create-lund --source uniform``  -> ``BUILD/apps/clas12-uniform``
     ``create-lund --source physical`` -> ``BUILD/apps/clas12-generator-to-lund``
@@ -331,6 +334,12 @@ def settings(args):
         override = getattr(args, key, None)
         if override is not None:
             result[key] = override
+
+    # Submission consumes completed LUND output and does not need to rebuild the LUND applications.
+    # Keep an explicit CLI value authoritative so `--build true` remains available for a fresh or
+    # changed checkout; the general run profile continues to default creation workflows to building.
+    if args.workflow == 'submit' and args.build is None:
+        result['build'] = False
 
     # Workflow is required by argparse. Source is required only for LUND creation and rejected for
     # submission so every command states exactly the inputs relevant to its selected workflow.

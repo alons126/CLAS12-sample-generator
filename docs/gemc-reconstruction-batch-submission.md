@@ -11,13 +11,12 @@ python3 src/slurm-submission/run.py \
   --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
   --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
   --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
-  --site config/sites/local.json \
-  --torus -1
+  --site config/sites/local.json
 ```
 
 This is a dry run. It validates the manifest totals, file paths and configuration-file existence and prints the exact GEMC/reconstruction commands. It creates no simulation output and does not require installed GEMC binaries. It does not inspect the physical compatibility of detector-card contents; select cards, energy, geometry and field settings consistently.
 
-Add `--execute` to run. `--solenoid` defaults to −1. `--file-index 2` selects the second manifest file; otherwise the runner processes all files sequentially. The preserved unquoted legacy command paths require paths without whitespace or glob characters.
+Add `--execute` to run. `--torus` defaults to +0.5 for the 2 GeV manifest and −1 for the 4 and 6 GeV manifests; `--solenoid` defaults to −1 for all three. `--file-index 2` selects the second manifest file; otherwise the runner processes all files sequentially. The preserved unquoted legacy command paths require paths without whitespace or glob characters.
 
 By default the runner preserves legacy names: `mchipo/mc_LUNDSTEM_torusSCALE.hipo` and `reconhipo/recon_LUNDSTEM_torusSCALE.hipo`. For each file, the coordinator reads the validated `events` value from the manifest and exports it as `JOB_NEVENTS`; the payload uses that value for both GEMC and reconstruction. This supports the 25,000-event uniform default, 10,000-event physical default and final partial physical files. The payload retains solenoid -1, so the coordinator still rejects other solenoid settings, indexed naming and whitespace/glob-containing paths. Bash -e stops the coordinator-launched payload on command failure; the coordinator then checks both outputs. A successful `simulation/INDEX.json` records commands and SHA-256 hashes of both detector configuration files and `payload_sha256` for the executed Bash payload.
 
@@ -34,8 +33,7 @@ python3 src/slurm-submission/submit.py \
   --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
   --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
   --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
-  --site config/sites/jlab.json \
-  --torus -1
+  --site config/sites/jlab.json
 ```
 
 This previews `sbatch`. Add `--execute` to submit. One array task is created per manifest file; each invokes the same runner with `$SLURM_ARRAY_TASK_ID`. The worker environment must provide Python 3.9+, GEMC, reconstruction and access to the script/config/input paths. The submitter does not install software or source environment scripts.

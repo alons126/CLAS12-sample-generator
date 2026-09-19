@@ -34,7 +34,7 @@ source run.csh --workflow submit --manifest RUN/lundfiles/lund-gen-monitoring/lu
 
 | JSON key | Checked-in value | CLI override and purpose |
 | --- | --- | --- |
-| `build` | `true` | `--build false` reuses existing binaries instead of configuring/building |
+| `build` | `true` for `create-lund`; `false` for `submit` | `--build true` or `--build false` explicitly selects whether to configure/build |
 | `run` | `true` | `--run false` stops after the requested build/test stages |
 | `test` | `false` | `--test true` enables tests in CMake and requires CTest to pass before dispatch |
 | `build_dir` | `build/release` | `--build-dir PATH` selects the CMake binary directory |
@@ -48,6 +48,10 @@ workflow.py built-in build defaults
     -> selected run JSON
     -> explicit launcher options
 ```
+
+For `--workflow submit`, the effective default is `build=false` because submission consumes completed
+LUND files and existing workflow infrastructure. An explicit `--build true` overrides that
+workflow-specific default. LUND creation retains the checked-in `build=true` default.
 
 Use `--run-settings FILE` to select a different strict JSON build profile explicitly. There is no automatic `config/run.local.json`: normal ifarm synchronization removes untracked files, so an implicit local profile would be unreliable.
 

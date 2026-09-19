@@ -68,7 +68,7 @@ The reader arrays replace the archived fixed 250-element buffers. Input errors, 
 | File/function | Contract |
 | --- | --- |
 | `src/launcher/workflow.py: parser` | Defines launcher-owned workflow/source and build/test options; child options remain unknown for forwarding |
-| `workflow.py: settings` | Merges built-ins, one explicit/default strict run JSON, and CLI overrides; validates the required workflow/source and build controls |
+| `workflow.py: settings` | Merges built-ins, one explicit/default strict run JSON, and CLI overrides; applies the submit-specific `build=false` default; validates workflow/source and build controls |
 | `workflow.py: execute` | Prints a safely quoted representation, then runs the original argv list from the repository root with checked failure propagation |
 | `workflow.py: main` | Optionally configures/builds both LUND applications, optionally runs CTest, and dispatches uniform, physical, or submission child commands |
 | `src/slurm-submission/run.py: parser` | CLI for manifest, detector files, site, field scales, file index, naming and execution |

@@ -21,8 +21,10 @@ Workflow:
     5. Submit only when the caller explicitly supplies --execute.
 
 Inputs:
-    A completed LUND manifest, GCARD, reconstruction YAML, site JSON, magnetic
-    field scales, the protected GEMC payload, and optional runner/output settings.
+    A completed LUND manifest, GCARD, reconstruction YAML, site JSON, the protected
+    GEMC payload, and optional field-scale, runner and output settings. Missing field
+    scales use the manifest beam-energy defaults: torus +0.5 at 2 GeV and -1 at 4/6
+    GeV; solenoid is always -1 by default.
 
 Outputs:
     Preview mode prints the exact sbatch command. Execution mode additionally
@@ -98,7 +100,7 @@ def main():
     p.add_argument('--gcard', type=Path, required=True)
     p.add_argument('--reconstruction', type=Path, required=True)
     p.add_argument('--site', type=Path, required=True)
-    p.add_argument('--torus', type=float, required=True)
+    p.add_argument('--torus', type=float, help='torus scale; defaults from manifest beam energy')
     p.add_argument('--solenoid', type=float, default=-1)
     p.add_argument('--payload', type=Path, help='External submit_GEMC_sample.sh path visible to workers')
     p.add_argument('--runner', type=Path, default=default_runner)
@@ -114,6 +116,8 @@ def main():
     check.execute = False
     check.file_index = None
     plan, site = module['load_plan'](check)
+    # load_plan resolves an omitted torus from the manifest's beam-energy provenance.
+    args.torus = check.torus
     slurm = site.get('slurm', {})
     required = {'account', 'partition', 'time', 'mem'}
 

@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import runpy
 
 # Command helper ---------------------------------------------------------------
 # region Command helper
@@ -39,10 +40,15 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner = project/'src/slurm-submission/run.py'
     payload = project/'src/slurm-submission/external/submit_GEMC_sample.sh'
-    options = ['--manifest', output/'lundfiles/lund-gen-monitoring/lund-gen-log.json', '--gcard', card, '--reconstruction', yaml, '--torus', '-1']
+    defaults = runpy.run_path(str(runner))['default_torus']
+    assert defaults(2.07052) == 0.5
+    assert defaults(4.02962) == -1.0
+    assert defaults(5.98636) == -1.0
+    options = ['--manifest', output/'lundfiles/lund-gen-monitoring/lund-gen-log.json', '--gcard', card, '--reconstruction', yaml]
     preview = call(sys.executable, runner, *options)
     assert preview.stdout.count('-N=25000') == 1 and preview.stdout.count('-N=1') == 1
     assert ' -n 25000 ' in preview.stdout and ' -n 1 ' in preview.stdout
+    assert 'binary_torus, -1.0' in preview.stdout and 'binary_solenoid, -1.0' in preview.stdout
     assert (output/'mchipo').is_dir() and (output/'reconhipo').is_dir()
     call(sys.executable, runner, *options, '--file-index', '3', ok=False)
     call(sys.executable, runner, *options, '--solenoid', '1', ok=False)
