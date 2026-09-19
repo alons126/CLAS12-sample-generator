@@ -254,7 +254,7 @@ void UniformMonitoring::save(const std::filesystem::path& path, const std::files
     gROOT->SetBatch(true);
     std::filesystem::create_directories(plot_directory);
     const auto pdf = (plot_directory / pdf_name).string();
-    TCanvas canvas("canvas", "canvas", 1000, 750);
+    TCanvas canvas("canvas", "canvas", 1000 * 2, 750 * 2);
     canvas.SetGrid();
     canvas.SetBottomMargin(0.14);
     canvas.SetLeftMargin(0.16);
