@@ -88,7 +88,6 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto lund_dir = output / "lundfiles";
     const auto mchipo_dir = output / "mchipo";
     const auto recon_dir = output / "reconhipo";
-    const auto rootfiles_dir = output / "rootfiles";
     const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
     const auto monitoring_dir = diagnostics / "MonitoringPlotsPath";
 
@@ -113,7 +112,6 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << env::SYSTEM_COLOR << "lundPath:" << env::RESET_COLOR << " " << lund_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "mchipoPath:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "reconhipoPath:" << env::RESET_COLOR << " " << recon_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "rootfilesPath:" << env::RESET_COLOR << " " << rootfiles_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "MonitoringPlotsPath:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "Plot list path:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_monitoring_plots.root") << '\n';
         std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << "  " << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " "
@@ -235,9 +233,10 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring");
 
     // Uniform creation historically prepared the complete downstream directory layout and plot folder
-    // before event generation. Keep that default artifact contract without running GEMC or reconstruction.
+    // before event generation. Keep the directories consumed by later simulation and reconstruction
+    // workflows without running either workflow here.
     if (workflow_ == "uniform") {
-        for (const auto* child : {"mchipo", "reconhipo", "rootfiles"}) { std::filesystem::create_directories(directory_ / child); }
+        for (const auto* child : {"mchipo", "reconhipo"}) { std::filesystem::create_directories(directory_ / child); }
         std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring" / "MonitoringPlotsPath");
     }
 }

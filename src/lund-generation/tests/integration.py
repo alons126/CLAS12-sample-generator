@@ -191,7 +191,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable, '--events', '3', '--output', artifacts_parent)
         artifact_manifest,_ = read_run(artifacts)
         assert artifact_manifest['config']['events-per-file'] == '25000'
-        for directory in ['lundfiles', 'mchipo', 'reconhipo', 'rootfiles']:
+        for directory in ['lundfiles', 'mchipo', 'reconhipo']:
             assert (artifacts/directory).is_dir()
         diagnostics = artifacts/'lundfiles/lund-gen-monitoring'
         assert (diagnostics/'Uniform_sample_1e_5986MeV_monitoring_plots.root').is_file()

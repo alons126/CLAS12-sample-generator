@@ -58,7 +58,6 @@ runs/example/
             MonitoringPlotsPath/    # Required PDF/numbered PNG layout for every uniform run
     mchipo/             # Prepared by uniform creation; filled by simulation
     reconhipo/          # Prepared by uniform creation; filled by reconstruction
-    rootfiles/          # Prepared legacy uniform downstream directory
     simulation/         # Command records and detector-config hashes
 ```
 
