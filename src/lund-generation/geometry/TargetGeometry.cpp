@@ -62,7 +62,7 @@ using std::cout;
 using std::endl;
 using std::sqrt;
 using std::string;
-#include "common/external/targets.h"
+#include "external/targets.h"
 
 }  // namespace external_targets
 #pragma endregion

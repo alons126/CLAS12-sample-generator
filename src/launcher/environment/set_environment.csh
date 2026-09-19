@@ -30,7 +30,7 @@ echo "${COLOR_START}= Updating environment                                      
 echo "${COLOR_START}====================================================================================================${COLOR_END}"
 echo ""
 
-source ./scripts/environment/set_colors.csh
+source ./src/launcher/environment/set_colors.csh
 
 # Section header
 

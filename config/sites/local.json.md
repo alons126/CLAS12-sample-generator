@@ -2,7 +2,7 @@
 
 ## Description and purpose
 
-[local.json](local.json) selects the programs used by `scripts/simulation/run.py` for GEMC and reconstruction. It is strict JSON: the runner rejects unknown site keys, so documentation belongs in this companion.
+[local.json](local.json) selects the programs used by `src/slurm-submission/run.py` for GEMC and reconstruction. It is strict JSON: the runner rejects unknown site keys, so documentation belongs in this companion.
 
 ## Workflow
 

@@ -74,7 +74,7 @@ The tester always scans electron θ from 5–40° and all φ at beam momentum, a
 
 `seed` controls kinematics and `vertex-seed` controls geometry. Defaults 67890 and 12345 are repeatable. `TRandom3(0)` asks ROOT to choose an automatic seed; a manifest that records zero therefore cannot reproduce the event sequence. The streams are separate so geometry draws do not shift kinematics.
 
-Masses come only from `src/support/constants.h`: PDG 2026-based values rounded to LUND's five decimal places, with the electron approximated as massless.
+Masses come only from `src/lund-generation/support/constants.h`: PDG 2026-based values rounded to LUND's five decimal places, with the electron approximated as massless.
 
 ## Output and diagnostics
 

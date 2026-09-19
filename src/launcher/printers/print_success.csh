@@ -28,7 +28,7 @@
 
 # region Color initialization
 # Reload the palette so direct invocation and calls from different shells render consistently.
-source ./scripts/environment/set_colors.csh
+source ./src/launcher/environment/set_colors.csh
 # endregion
 
 # Banner rendering ------------------------------------------------------------

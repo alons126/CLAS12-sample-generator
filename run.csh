@@ -19,7 +19,7 @@
 #      prints the resulting HEAD/branch.
 #   3. If synchronization succeeds, source the server environment into the caller's shell so its
 #      compiler, ROOT, GEMC, reconstruction, and site variables reach the workflow and its children.
-#   4. Forward the original quoted argument vector to scripts/workflow.py, which owns configuration,
+#   4. Forward the original quoted argument vector to src/launcher/workflow.py, which owns configuration,
 #      build, tests, LUND-source selection, and ifarm-submission dispatch.
 #   5. Restore the caller's directory and return the captured result as both CLAS12_SAMPLE_STATUS and
 #      immediate tcsh `$status`, without using `exit` in this normally sourced launcher.
@@ -72,7 +72,7 @@ set _clas12_root = `cd "$_clas12_root" && pwd`
 # Require both a Git worktree marker and this project's maintained Python driver. Checking `.git`
 # alone could accept an unrelated repository; checking only `workflow.py` could permit destructive
 # cleanup in a copied source directory that is not the intended disposable clone.
-if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/scripts/workflow.py") then
+if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
     echo "Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
 
     # Record failure and jump to the shared status-return block. Avoid `exit` because run.csh is
@@ -87,7 +87,7 @@ endif
 # configures CMake, creates LUND files, or submits jobs.
 if ($#argv == 1) then
     if ("$argv[1]" == "--help") then
-        python3 "$_clas12_root/scripts/workflow.py" --help
+        python3 "$_clas12_root/src/launcher/workflow.py" --help
         set CLAS12_SAMPLE_STATUS = $status
         goto clas12_launcher_finish
     endif
@@ -126,8 +126,8 @@ pushd "$_clas12_root" > /dev/null
 
 # Colors and the logo are presentation helpers. Missing helpers do not block synchronization; the
 # updater and Python driver remain responsible for returning the operational status.
-if (-f scripts/environment/set_colors.csh) source scripts/environment/set_colors.csh
-if (-f scripts/printers/print_logo.csh) source scripts/printers/print_logo.csh
+if (-f src/launcher/environment/set_colors.csh) source src/launcher/environment/set_colors.csh
+if (-f src/launcher/printers/print_logo.csh) source src/launcher/printers/print_logo.csh
 
 # Resolve the local/test bypass without expanding an undefined tcsh variable. Normal ifarm use
 # leaves CLAS12_SKIP_SERVER_SYNC unset, so synchronization remains the default behavior.
@@ -141,7 +141,7 @@ endif
 # Automated launcher tests and deliberate local debugging may bypass destructive Git operations.
 # Otherwise run the updater in a child tcsh: its `exit` calls cannot terminate the sourced parent
 # shell, and its exit status becomes the gate for environment setup and workflow execution.
-# `scripts/code_updater.sh` performs, in order:
+# `src/launcher/code_updater.sh` performs, in order:
 #   - `git rev-parse --show-toplevel` to require a recognized worktree;
 #   - `git clean -fxd -e build/ -e build` to remove server-only untracked and ignored content while
 #     retaining the reusable build tree;
@@ -157,7 +157,7 @@ if ($_clas12_skip_server_sync == 1) then
     set CLAS12_SAMPLE_STATUS = 0
 else
     echo "Updating disposable ifarm checkout at $_clas12_root"
-    tcsh -f scripts/code_updater.sh
+    tcsh -f src/launcher/code_updater.sh
     set CLAS12_SAMPLE_STATUS = $status
 endif
 
@@ -166,8 +166,8 @@ endif
 # Source the environment only from the successfully updated checkout. Sourcing is required here so
 # compiler, ROOT, GEMC, reconstruction, and site variables remain available to the Python driver and
 # its child processes. A setup failure prevents the workflow from running.
-if ($CLAS12_SAMPLE_STATUS == 0 && -f scripts/environment/set_environment.csh) then
-    source scripts/environment/set_environment.csh
+if ($CLAS12_SAMPLE_STATUS == 0 && -f src/launcher/environment/set_environment.csh) then
+    source src/launcher/environment/set_environment.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
 # endregion
@@ -181,7 +181,7 @@ endif
 # the argument vector with tcsh's `:q` modifier preserves each user-supplied argument when forwarding
 # commands such as `create-lund` or `submit` to the single maintained Python workflow entry point.
 if ($CLAS12_SAMPLE_STATUS == 0) then
-    python3 scripts/workflow.py $argv:q
+    python3 src/launcher/workflow.py $argv:q
 
     # Capture the driver result immediately, before popd or any later cleanup command can replace
     # `$status`. The caller-status block returns this value to the sourced interactive shell.

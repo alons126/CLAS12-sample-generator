@@ -37,8 +37,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     call(exe, '--output', output_root, '--events', '25001')
     card = root/'detector.gcard'; card.write_text('<gcard/>')
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
-    runner = project/'scripts/simulation/run.py'
-    payload = project/'src/common/external/submit_GEMC_sample.sh'
+    runner = project/'src/slurm-submission/run.py'
+    payload = project/'src/slurm-submission/external/submit_GEMC_sample.sh'
     options = ['--manifest', output/'lundfiles/lund-gen-monitoring/lund-gen-log.json', '--gcard', card, '--reconstruction', yaml, '--torus', '-1']
     preview = call(sys.executable, runner, *options)
     assert preview.stdout.count('-N=25000') == 1 and preview.stdout.count('-N=1') == 1
@@ -56,7 +56,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     gemc.chmod(0o755); recon.chmod(0o755)
     site = root/'site.json'
     site.write_text(json.dumps({'gemc':str(gemc),'recon':str(recon),'slurm':{'account':'clas12','partition':'production','time':'01:00:00','mem':'2G'}}))
-    submission = call(sys.executable, project/'scripts/slurm/submit.py', *options, '--site', site)
+    submission = call(sys.executable, project/'src/slurm-submission/submit.py', *options, '--site', site)
     assert '--array=1-2' in submission.stdout and 'submit_GEMC_sample.sh' in submission.stdout
     result = call(sys.executable, runner, *options, '--site', site, '--file-index', '1', '--execute')
     assert 'JOB_GENERATOR = uniform' in result.stdout and 'GEMC_DATA_DIR =' in result.stdout
@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
 
     # Other generators use the same prefix contract and installed payload location.
     installed = root/'installed'; installed.mkdir()
-    for source, name in [(runner,'clas12-simulate'),(project/'scripts/slurm/submit.py','clas12-submit'),(payload,payload.name)]:
+    for source, name in [(runner,'clas12-simulate'),(project/'src/slurm-submission/submit.py','clas12-submit'),(payload,payload.name)]:
         shutil.copy2(source, installed/name)
     custom = root/'custom'; (custom/'lundfiles/lund-gen-monitoring').mkdir(parents=True)
     (custom/'lundfiles/other_1.txt').write_text('command fixture\n')

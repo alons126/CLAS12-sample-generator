@@ -171,10 +171,10 @@ echo ""
 # # Source the screen helper script that defines aliases and functions for
 # # launching analysis runs inside detached screen sessions.
 
-# if ( -f ./scripts/screen/setup_screen_commands.csh ) then
-#     source ./scripts/screen/setup_screen_commands.csh
+# if ( -f ./src/launcher/screen/setup_screen_commands.csh ) then
+#     source ./src/launcher/screen/setup_screen_commands.csh
 # else
-#     echo "${COLOR_ERR}Missing screen setup script: ./scripts/screen/setup_screen_commands.csh${COLOR_END}"
+#     echo "${COLOR_ERR}Missing screen setup script: ./src/launcher/screen/setup_screen_commands.csh${COLOR_END}"
 # endif
 
 echo ""

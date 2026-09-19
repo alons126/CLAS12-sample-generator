@@ -266,7 +266,7 @@ void UniformMonitoring::save(const std::filesystem::path& path, const std::files
     for (auto& entry : impl_->entries) {
         auto* histogram = entry.histogram.get();
         histogram->Draw(entry.y_metric.empty() ? "" : "colz");
-        canvas.SaveAs((plot_directory / (std::to_string(++index) + "_" + histogram->GetName() + ".pdf")).string().c_str());
+        canvas.SaveAs((plot_directory / (std::to_string(++index) + "_" + histogram->GetName() + ".png")).string().c_str());
         canvas.Print(pdf.c_str());
         canvas.Clear();
     }

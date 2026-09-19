@@ -45,7 +45,7 @@ def main():
     """
     
     here = Path(__file__).resolve()
-    default_runner = here.parents[1] / 'simulation' / 'run.py'
+    default_runner = here.with_name('run.py')
     
     if not default_runner.exists():
         default_runner = here.with_name('clas12-simulate')

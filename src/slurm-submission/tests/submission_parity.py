@@ -22,7 +22,7 @@ import tempfile
 
 project=Path(sys.argv[1])
 legacy_payload=(project/'legacy/GEMC-samples/scripts/job_submission_scripts/submit_GEMC_GENIE_sample.sh').read_bytes()
-unified_payload=(project/'src/common/external/submit_GEMC_sample.sh').read_bytes()
+unified_payload=(project/'src/slurm-submission/external/submit_GEMC_sample.sh').read_bytes()
 assert unified_payload.split(b'JOB_TARGET=')[0] == legacy_payload.split(b'JOB_TARGET=')[0]
 generalized_tail = unified_payload[unified_payload.index(b'NEVENTS=${JOB_NEVENTS:?JOB_NEVENTS is required}'):]
 generalized_tail = generalized_tail.replace(b'NEVENTS=${JOB_NEVENTS:?JOB_NEVENTS is required}', b'NEVENTS=10000', 1)
@@ -65,7 +65,7 @@ pathlib.Path(path).write_text('stub output')
                 if implementation=='old':
                     cmd=['bash',str(project/f'legacy/GEMC-samples/scripts/job_submission_scripts/submit_GEMC_{workflow}_sample.sh')]
                 else:
-                    cmd=[sys.executable,str(project/'scripts/simulation/run.py'),'--manifest',str(run/'lundfiles/lund-gen-monitoring/lund-gen-log.json'),'--gcard',str(card),'--reconstruction',str(reco),'--torus',torus,'--execute']
+                    cmd=[sys.executable,str(project/'src/slurm-submission/run.py'),'--manifest',str(run/'lundfiles/lund-gen-monitoring/lund-gen-log.json'),'--gcard',str(card),'--reconstruction',str(reco),'--torus',torus,'--execute']
                 result=subprocess.run(cmd,env=env,capture_output=True,text=True)
                 assert result.returncode==0,result.stdout+result.stderr
                 if implementation=='new':

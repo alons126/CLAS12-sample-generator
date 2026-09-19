@@ -1,6 +1,6 @@
 # Unified legacy GEMC payload
 
-`src/common/external/submit_GEMC_sample.sh` follows the structure of the external `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` scripts under `legacy/GEMC-samples/scripts/job_submission_scripts/`. The archived originals remain untouched. The unified script is also protected from routine edits; only minimal integration changes outside the payload should be needed when updating the external source.
+`src/slurm-submission/external/submit_GEMC_sample.sh` follows the structure of the external `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` scripts under `legacy/GEMC-samples/scripts/job_submission_scripts/`. The archived originals remain untouched. The unified script is also protected from routine edits; only minimal integration changes outside the payload should be needed when updating the external source.
 
 ## What is generalized
 
@@ -40,7 +40,7 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | `TORUS_FIELD` | +0.5 at 2 GeV; −1 at 4/6 GeV |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction configurations |
 
-The maintained coordinator builds the payload environment in `scripts/simulation/run.py`. It first copies the current process environment, preserving variables established by the ifarm software setup such as `GEMC_DATA_DIR`. It then sets the run-controlled paths, field scale, array index and filename prefix from the submission arguments and selected manifest entry. `JOB_NEVENTS` always comes from that entry's validated `events` value, so an exported shell value cannot disagree with the LUND file. Sample labels come from manifest configuration with documented environment overrides; this includes `Q2_CUT`, whose fallback is `config.q2-cut`. Slurm creates `SLURM_ARRAY_TASK_ID` for an array task, and the coordinator passes the validated selected index to the payload under the same name.
+The maintained coordinator builds the payload environment in `src/slurm-submission/run.py`. It first copies the current process environment, preserving variables established by the ifarm software setup such as `GEMC_DATA_DIR`. It then sets the run-controlled paths, field scale, array index and filename prefix from the submission arguments and selected manifest entry. `JOB_NEVENTS` always comes from that entry's validated `events` value, so an exported shell value cannot disagree with the LUND file. Sample labels come from manifest configuration with documented environment overrides; this includes `Q2_CUT`, whose fallback is `config.q2-cut`. Slurm creates `SLURM_ARRAY_TASK_ID` for an array task, and the coordinator passes the validated selected index to the payload under the same name.
 
 ## Integration with the maintained launcher
 

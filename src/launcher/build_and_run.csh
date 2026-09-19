@@ -14,7 +14,7 @@
 #   2. Forward quoted arguments to the shared Python driver.
 #   3. Return its status without exiting the sourced parent shell.
 # Usage (csh/tcsh, including files named .sh):
-#   source scripts/build_and_run.csh --output runs/example
+#   source src/launcher/build_and_run.csh --workflow create-lund --source uniform --output runs/example
 # Inputs:
 #   $argv carries launcher/child options; CLAS12_SAMPLES_DIR overrides the root.
 # Outputs:
@@ -31,7 +31,7 @@
 set _clas12_invocation = "$0"
 set _clas12_root = "$cwd"
 if ("$_clas12_invocation:t" != "tcsh" && "$_clas12_invocation:t" != "csh" && "$_clas12_invocation" !~ "-*") then
-    set _clas12_root = "$_clas12_invocation:h:h"
+    set _clas12_root = "$_clas12_invocation:h:h:h"
 endif
 if ($?CLAS12_SAMPLES_DIR) then
     set _clas12_root = "$CLAS12_SAMPLES_DIR"
@@ -41,11 +41,11 @@ endif
 # Driver invocation ------------------------------------------------------------
 
 # region Driver invocation
-if (-f "$_clas12_root/scripts/workflow.py") then
-    python3 "$_clas12_root/scripts/workflow.py" $argv:q
+if (-f "$_clas12_root/src/launcher/workflow.py") then
+    python3 "$_clas12_root/src/launcher/workflow.py" $argv:q
     set CLAS12_SAMPLE_STATUS = $status
 else
-    echo "Cannot find scripts/workflow.py. Source from the checkout root or set CLAS12_SAMPLES_DIR."
+    echo "Cannot find src/launcher/workflow.py. Source from the checkout root or set CLAS12_SAMPLES_DIR."
     set CLAS12_SAMPLE_STATUS = 1
 endif
 # endregion

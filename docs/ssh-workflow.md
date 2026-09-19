@@ -22,7 +22,7 @@ source run.csh --workflow create-lund --source uniform --build true --test true 
 
 GENIE glob patterns must be quoted so they reach ROOT unchanged. Options after `--config` override matching sample-profile values. `workflow.py` forwards child options exactly as written and does not inject a hidden sample profile or output path. All workflow paths are interpreted from the repository root, including when the wrapper is launched elsewhere. This differs from directly invoking the C++ executables, which use the caller's directory.
 
-Use `source run.csh --help` for launcher options. Use `source run.csh --workflow create-lund --source uniform --build false -- --help` for the selected executable's help. Bash users can execute `./run.csh` with tcsh installed, or call `python3 scripts/workflow.py`; do not source csh syntax into Bash.
+Use `source run.csh --help` for launcher options. Use `source run.csh --workflow create-lund --source uniform --build false -- --help` for the selected executable's help. Bash users can execute `./run.csh` with tcsh installed, or call `python3 src/launcher/workflow.py`; do not source csh syntax into Bash.
 
 An empty `source run.csh` prints uniform, physical, submission, and build/test examples and returns status 2. Both the empty-command guidance and `source run.csh --help` run before the disposable-clone synchronization, so asking for usage does not clean, reset, pull, build, create output, or submit jobs. A nonempty command that omits `--workflow` receives the same examples from `workflow.py`.
 
@@ -73,11 +73,11 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 | --- | --- |
 | `--workflow create-lund --source uniform` | `BUILD/apps/clas12-uniform` |
 | `--workflow create-lund --source physical` | `BUILD/apps/clas12-generator-to-lund` |
-| `--workflow submit` | `python3 scripts/slurm/submit.py` |
+| `--workflow submit` | `python3 src/slurm-submission/submit.py` |
 
 Run-profile precedence is built-in defaults, then the selected strict JSON, then explicit launcher options. Sample-profile values have their own C++ precedence: application defaults, then `--config FILE`, then explicit sample options. Site JSON, the completed manifest, GCARD, and reconstruction YAML are submission inputs rather than launcher settings. This keeps build policy, sample physics, completed output inventory, server resources, and detector configuration independently reviewable.
 
-Building always invokes CMake dependency checking, so replacing an uncommitted `src/common/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
+Building always invokes CMake dependency checking, so replacing an uncommitted `src/lund-generation/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
 
 After transferring committed changes to the remote, a server refresh/build/test is:
 
@@ -105,6 +105,6 @@ Select the actual reconstruction YAML path from your checkout. Submission previe
 
 ## Supporting shell files
 
-`run.csh` owns the intentional disposable-clone refresh and forwards to `scripts/workflow.py`. `scripts/build_and_run.csh` uses the same driver without the refresh. `scripts/code_updater.sh` performs the checked clean/reset/pull/submodule-update sequence in a child shell. `scripts/printers/` supplies project start/success/failure banners.
+`run.csh` owns the intentional disposable-clone refresh and forwards to `src/launcher/workflow.py`. `src/launcher/build_and_run.csh` uses the same driver without the refresh. `src/launcher/code_updater.sh` performs the checked clean/reset/pull/submodule-update sequence in a child shell. `src/launcher/printers/` supplies project start/success/failure banners.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

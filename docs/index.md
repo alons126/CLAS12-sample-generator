@@ -31,13 +31,17 @@ For the scientific and implementation reference, start at the [technical-note ou
 
 | Directory | What to look for there |
 | --- | --- |
-| `src/config/` | Run-option parsing, validation, and RG-M target metadata |
-| `src/lund/` | Event records, particle masses, LUND writing, file splitting, and manifests |
-| `src/geometry/` | The maintained adapter around external target geometry |
-| `src/support/` | Shared constants, terminal colors, and compiled provenance template |
-| `src/clas12-uniform/` | Uniform kinematic generation |
-| `src/clas12-generator-to-lund/` | Physical-source dispatch, with generator adapters such as `genie/` nested below it |
-| `src/common/external/` | Protected imported files; do not treat this as maintained common code |
+| `src/lund-generation/` | Complete LUND-creation workflow, applications, external geometry, and tests |
+| `src/slurm-submission/` | Manifest runner, Slurm submitter, external GEMC payload, and tests |
+| `src/launcher/` | Shared dispatcher, ifarm checkout helpers, terminal presentation, and launcher test |
+| `src/lund-generation/config/` | Run-option parsing, validation, and RG-M target metadata |
+| `src/lund-generation/lund/` | Event records, particle masses, LUND writing, file splitting, and manifests |
+| `src/lund-generation/geometry/` | The maintained adapter around external target geometry |
+| `src/lund-generation/support/` | Shared constants, terminal colors, and compiled provenance template |
+| `src/lund-generation/clas12-uniform/` | Uniform kinematic generation |
+| `src/lund-generation/clas12-generator-to-lund/` | Physical-source dispatch, with generator adapters such as `genie/` nested below it |
+| `src/lund-generation/external/` | Protected imported target geometry used during LUND creation |
+| `src/slurm-submission/external/` | Protected GEMC/reconstruction worker payload |
 
 The shared configuration, LUND, geometry, and support directories build together as `LundCore`. Uniform sampling and monitoring build as `UniformGeneration`. The source-specific directories match their executable names, and physical generator adapters are subordinate to `clas12-generator-to-lund`. The detailed call chain is in the [architecture walkthrough](architecture.md).
 
@@ -51,7 +55,7 @@ runs/example/
         lund-gen-monitoring/
             lund-gen-log.json       # Published only after successful generation/conversion
             PREFIX_monitoring_plots.root # All uniform histograms; absent for physical runs
-            MonitoringPlotsPath/    # Archived PDF/numbered PNG layout (uniform default)
+            MonitoringPlotsPath/    # Required PDF/numbered PNG layout for every uniform run
     mchipo/             # Prepared by uniform creation; filled by simulation
     reconhipo/          # Prepared by uniform creation; filled by reconstruction
     rootfiles/          # Prepared legacy uniform downstream directory
@@ -70,4 +74,4 @@ Every LUND-creation command explicitly selects `--workflow create-lund`, `--sour
 
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.

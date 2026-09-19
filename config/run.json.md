@@ -2,7 +2,7 @@
 
 ## Purpose
 
-[run.json](run.json) supplies stable build/test controls to `scripts/workflow.py`. It deliberately does not select a user-facing workflow, a LUND source, a sample profile, input data, or output location. Those choices remain visible in every `source run.csh` command.
+[run.json](run.json) supplies stable build/test controls to `src/launcher/workflow.py`. It deliberately does not select a user-facing workflow, a LUND source, a sample profile, input data, or output location. Those choices remain visible in every `source run.csh` command.
 
 This is strict JSON. Its consumer rejects unknown keys, so explanations live in this adjacent Markdown file rather than comment properties inside the JSON object.
 

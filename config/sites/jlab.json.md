@@ -7,7 +7,7 @@
 ## Workflow
 
 1. Load the server's software environment and prepare a completed LUND manifest.
-2. Pass this profile to `scripts/slurm/submit.py` with manifest, detector and field options.
+2. Pass this profile to `src/slurm-submission/submit.py` with manifest, detector and field options.
 3. The submitter validates the plan and prints an `sbatch` array command.
 4. With `--execute`, submit one task per LUND file; each worker calls the common simulation runner.
 

@@ -30,7 +30,7 @@ Workflow:
 Dispatch map:
     ``create-lund --source uniform``  -> ``BUILD/apps/clas12-uniform``
     ``create-lund --source physical`` -> ``BUILD/apps/clas12-generator-to-lund``
-    ``submit``                         -> ``scripts/slurm/submit.py``
+    ``submit``                         -> ``src/slurm-submission/submit.py``
 
 Configuration boundaries:
     ``config/run.json`` controls only build, run, test, build_dir, build_type, and jobs. A
@@ -87,10 +87,10 @@ import os
 #     These values control build/test execution and presentation. Workflow, source, physics parameters,
 #     target selections, input, output, and sample profile remain explicit command-line arguments.
 
-# Absolute repository root derived from this file's stable scripts/ location. All maintained helper,
+# Absolute repository root derived from this file's stable src/launcher/ location. All maintained helper,
 # build, executable, and profile paths are resolved from this anchor, independent of the caller's
 # current working directory.
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 # Complete fallback build/test configuration used when the JSON profile or command line does not
 # override a field. Child-workflow argv is intentionally absent from this object.
@@ -451,7 +451,7 @@ def banner(name):
 
     Args:
         name: Trusted internal printer suffix, currently values such as ``success`` or ``stop``. It
-            selects ``scripts/printers/print_<name>.csh`` and is not shell-evaluated.
+            selects ``src/launcher/printers/print_<name>.csh`` and is not shell-evaluated.
 
     Returns:
         None. Banner completion or failure never changes the status chosen by the calling workflow.
@@ -471,7 +471,7 @@ def banner(name):
     try:
         # Printers are optional presentation helpers: inherit their output, but do not promote their
         # exit status into a build, generation, or submission failure.
-        subprocess.run(['tcsh', '-f', str(ROOT / 'scripts/printers' / f'print_{name}.csh')], check=False)
+        subprocess.run(['tcsh', '-f', str(ROOT / 'src/launcher/printers' / f'print_{name}.csh')], cwd=ROOT, check=False)
     except OSError:
         # Keep status transitions visible on systems where tcsh itself is unavailable.
         print(f'CLAS12 samples: {name}', flush=True)
@@ -603,7 +603,7 @@ def main():
         else:
             # Submission is a maintained Python coordinator. It validates inputs and invokes the
             # protected GEMC/reconstruction payload; it does not run detector simulation locally.
-            command = [sys.executable, str(ROOT / 'scripts/slurm/submit.py')]
+            command = [sys.executable, str(ROOT / 'src/slurm-submission/submit.py')]
 
         # Append the already validated child argv without shell parsing or string reconstruction.
         execute(command + arguments)

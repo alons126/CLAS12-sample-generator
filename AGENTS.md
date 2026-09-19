@@ -38,7 +38,7 @@ Every maintained code file in another language must begin with the analogous `Cr
 
 Use module/function docstrings and `# region` / `# endregion` comment markers for Python. Use description, purpose, workflow, inputs/outputs, usage and named comment regions for shell scripts. Keep shebangs first and preserve sourced-shell exit-status behavior.
 
-Use `src/support/environment.h` as the only source of ANSI color definitions in maintained C++. Other C++ files may select its semantic constants but must not define terminal escape sequences locally. Shell and Python launchers use their separate environment-variable palette because they cannot include a C++ header.
+Use `src/lund-generation/support/environment.h` as the only source of ANSI color definitions in maintained C++. Other C++ files may select its semantic constants but must not define terminal escape sequences locally. Shell and Python launchers use their separate environment-variable palette because they cannot include a C++ header.
 
 # Project architecture and scope
 
@@ -69,7 +69,7 @@ When unifying behavior, compare both implementations rather than assuming one ar
 
 ## LUND workflow invariants and differences
 
-Unify the mechanics of LUND creation without erasing the semantics of each source workflow. The common layer may own configuration validation, LUND record serialization, output-directory layout, file lifecycle, provenance, and summaries. Uniform monitoring remains inside `src/clas12-uniform/`; physical adapters create no monitoring plots. Each sample adapter must still define how events are obtained, which events and particles are retained, how header fields are populated, and how vertices and kinematics are produced.
+Unify the mechanics of LUND creation without erasing the semantics of each source workflow. The common layer may own configuration validation, LUND record serialization, output-directory layout, file lifecycle, provenance, and summaries. Uniform monitoring remains inside `src/lund-generation/clas12-uniform/`; physical adapters create no monitoring plots. Each sample adapter must still define how events are obtained, which events and particles are retained, how header fields are populated, and how vertices and kinematics are produced.
 
 Target geometry and target identity are related but distinct inputs. Use the protected external `targets.h` geometry implementation as the authoritative vertex source. A target-geometry key selects the spatial distribution, while nuclear `A` and `Z` are LUND header metadata; never infer one silently from the other. Sample exactly one interaction vertex for each written event and give that same vertex to every particle in the event.
 
@@ -92,7 +92,7 @@ The uniform adapter creates events rather than reading them. Its maintained chan
 
 The GENIE adapter converts existing GST truth and must not resample its particle kinematics. It retains only QE, MEC, RES, and DIS events, writes the interaction code as 1, 2, 3, or 4 in the final header field, places GST `resid` in the legacy target-polarization header position, and uses the configured `A`, `Z`, and beam energy. It writes the scattered electron plus supported final-state particles with PDG IDs 2212, 2112, 211, -211, 111, and 22; therefore multiplicity varies by event. Count and report scanned, rejected, and written events separately. The legacy fiducial-map query is commented out and must not be presented or applied as an active cut.
 
-Preserve the LUND particle-record contract shared by the archives: particles are active, momenta are in GeV/c, masses are in GeV/c², energy is in GeV and is calculated from the mass shell, vertices are in centimeters, and the remaining legacy status/parent fields are zero. Keep particle ordering stable: scattered electron first, followed by the selected uniform hadron or supported GST final-state particles in input order for GENIE. Centralize all maintained PDG identifiers and the single rounded PDG-based mass table in `src/support/constants.h`; approximate the electron as massless.
+Preserve the LUND particle-record contract shared by the archives: particles are active, momenta are in GeV/c, masses are in GeV/c², energy is in GeV and is calculated from the mass shell, vertices are in centimeters, and the remaining legacy status/parent fields are zero. Keep particle ordering stable: scattered electron first, followed by the selected uniform hadron or supported GST final-state particles in input order for GENIE. Centralize all maintained PDG identifiers and the single rounded PDG-based mass table in `src/lund-generation/support/constants.h`; approximate the electron as massless.
 
 File splitting and naming need a common interface but adapter-aware semantics. Uniform generation historically produced the requested number of files with the requested number of generated events and numbered events from zero within each file. GENIE historically scanned input until it filled 10,000 accepted events per file or reached the requested file limit; skipped events make input-entry counts differ from output-event counts. Its early-stop handling for a final partial file is legacy behavior that may be corrected, but a correction must be explicit, tested, and documented rather than copied accidentally. Keep recognizable uniform channel/beam names and physical target/tune/Q2/beam provenance in output names without deriving scientific metadata only from path substrings.
 
@@ -120,7 +120,7 @@ Keep the destructive synchronization explicit and narrowly scoped. It must first
 
 # Protected external and archived sources
 
-The user explicitly forbids editing external files or legacy code. Do not modify anything under `legacy/`, `src/common/external/targets.h`, `src/common/external/submit_GEMC_sample.sh`, or **any file anywhere under `config/detector/` (recursively, regardless of extension or provenance)**. Treat other identified third-party source snapshots as read-only as well. Do not format, annotate, rename, delete or replace these files. A geometry or payload change requiring replacement of a protected external file needs an explicit later user instruction superseding this restriction.
+The user explicitly forbids editing external files or legacy code. Do not modify anything under `legacy/`, `src/lund-generation/external/targets.h`, `src/slurm-submission/external/submit_GEMC_sample.sh`, or **any file anywhere under `config/detector/` (recursively, regardless of extension or provenance)**. Treat other identified third-party source snapshots as read-only as well. Do not format, annotate, rename, delete or replace these files. A geometry or payload change requiring replacement of a protected external file needs an explicit later user instruction superseding this restriction.
 
 Maintained wrappers and test adapters outside these paths may be documented. Existing tests may read protected inputs and create separate fixtures in temporary/build directories; they must not overwrite the protected originals. Do not manually edit generated build outputs.
 
@@ -130,4 +130,4 @@ Use comment-based purpose, workflow, input/output and failure descriptions plus 
 
 # External GEMC payloads
 
-The two archived job scripts `legacy/GEMC-samples/scripts/job_submission_scripts/submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` are external, including their monitoring modifications. Their unified, generator-independent adaptation `src/common/external/submit_GEMC_sample.sh` is also protected external code after the user-authorized initial adaptation. Do not edit, format, annotate or replace these files without explicit later authorization. Maintained Python coordinators may call the unified payload; detector-command implementation belongs to that payload.
+The two archived job scripts `legacy/GEMC-samples/scripts/job_submission_scripts/submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` are external, including their monitoring modifications. Their unified, generator-independent adaptation `src/slurm-submission/external/submit_GEMC_sample.sh` is also protected external code after the user-authorized initial adaptation. Do not edit, format, annotate or replace these files without explicit later authorization. Maintained Python coordinators may call the unified payload; detector-command implementation belongs to that payload.

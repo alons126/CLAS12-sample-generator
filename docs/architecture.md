@@ -2,46 +2,50 @@
 
 ## Source layout
 
-Maintained code is grouped by the responsibility a newcomer is looking for. The folders are ownership boundaries, while `LundCore` compiles the small shared layers together so the build does not introduce a library for every folder.
+Maintained code is grouped first by the two user-facing workflows. `src/lund-generation/` owns LUND creation, while `src/slurm-submission/` owns ifarm job submission. `src/launcher/` contains the shared entry-point machinery that selects either workflow. Inside LUND generation, responsibility folders remain ownership boundaries while `LundCore` compiles the small shared layers together.
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
-| `src/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
-| `src/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
-| `src/support/` | Central PDG constants, terminal presentation, and the generated-version template |
-| `src/clas12-uniform/` | Produce deliberately unphysical acceptance-map events and their monitoring |
-| `src/clas12-generator-to-lund/` | Dispatch a physical input source to its event-generator adapter |
-| `src/clas12-generator-to-lund/genie/` | Read GENIE GST as the currently implemented physical adapter |
-| `src/common/external/` | Protected imported geometry and GEMC worker payloads; these are not maintained source |
+| `src/lund-generation/` | Both uniform and physical LUND creation, their entry points, external geometry, and tests |
+| `src/slurm-submission/` | Simulation runner, Slurm array submitter, protected GEMC payload, and submission tests |
+| `src/launcher/` | Shared Python dispatcher and sourced-shell support used by `run.csh` |
+| `src/lund-generation/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
+| `src/lund-generation/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
+| `src/lund-generation/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
+| `src/lund-generation/support/` | Central PDG constants, terminal presentation, and the generated-version template |
+| `src/lund-generation/clas12-uniform/` | Produce deliberately unphysical acceptance-map events and their monitoring |
+| `src/lund-generation/clas12-generator-to-lund/` | Dispatch a physical input source to its event-generator adapter |
+| `src/lund-generation/clas12-generator-to-lund/genie/` | Read GENIE GST as the currently implemented physical adapter |
+| `src/lund-generation/external/` | Protected imported target geometry |
+| `src/slurm-submission/external/` | Protected GEMC/reconstruction worker payload |
 
-The two source-specific directories intentionally match the installed executable names. The GENIE reader is nested under `clas12-generator-to-lund` because it implements one physical-input adapter rather than an independent workflow. A future adapter belongs beside it, such as `src/clas12-generator-to-lund/gibuu/`. Cross-layer includes state dependencies directly, for example `config/RunConfig.h`, `lund/Event.h`, and `support/constants.h`.
+The two source-specific directories intentionally match the installed executable names. The GENIE reader is nested under `clas12-generator-to-lund` because it implements one physical-input adapter rather than an independent workflow. A future adapter belongs beside it, such as `src/lund-generation/clas12-generator-to-lund/gibuu/`. Cross-layer includes state dependencies directly, for example `config/RunConfig.h`, `lund/Event.h`, and `support/constants.h`.
 
 ## Build targets
 
 | Target | Source | Responsibility |
 | --- | --- | --- |
-| `LundCore` | `src/config/`, `src/lund/`, `src/geometry/`, `src/support/` | Shared configuration-to-manifest LUND pipeline |
-| `UniformGeneration` | `src/clas12-uniform/` | Uniform sampling prescriptions and uniform-only monitoring |
-| `GenieConversion` | `src/clas12-generator-to-lund/genie/` | GENIE GST input adapter |
-| `PhysicalConversion` | `src/clas12-generator-to-lund/` | Select the configured physical event-generator adapter |
-| `clas12-uniform` | `apps/uniform_main.cpp` | Parse CLI, call generator, report errors |
-| `clas12-generator-to-lund` | `apps/genie_to_lund_main.cpp` | Parse physical input settings and dispatch an adapter |
+| `LundCore` | `src/lund-generation/config/`, `src/lund-generation/lund/`, `src/lund-generation/geometry/`, `src/lund-generation/support/` | Shared configuration-to-manifest LUND pipeline |
+| `UniformGeneration` | `src/lund-generation/clas12-uniform/` | Uniform sampling prescriptions and uniform-only monitoring |
+| `GenieConversion` | `src/lund-generation/clas12-generator-to-lund/genie/` | GENIE GST input adapter |
+| `PhysicalConversion` | `src/lund-generation/clas12-generator-to-lund/` | Select the configured physical event-generator adapter |
+| `clas12-uniform` | `src/lund-generation/apps/uniform_main.cpp` | Parse CLI, call generator, report errors |
+| `clas12-generator-to-lund` | `src/lund-generation/apps/genie_to_lund_main.cpp` | Parse physical input settings and dispatch an adapter |
 
-The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. The test targets alone compile archived reference code; production libraries do not include archived implementations. `apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
+The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. The test targets alone compile archived reference code; production libraries do not include archived implementations. `src/lund-generation/apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
 
 ## Workflow dispatcher
 
-`run.csh` performs the checked disposable-server refresh and environment setup, then calls `scripts/workflow.py` with the original argument boundaries preserved. The Python dispatcher owns build/test staging and selects one child; it does not interpret sample physics or detector settings.
+`run.csh` performs the checked disposable-server refresh and environment setup, then calls `src/launcher/workflow.py` with the original argument boundaries preserved. The Python dispatcher owns build/test staging and selects one child; it does not interpret sample physics or detector settings.
 
 ```text
-scripts/workflow.py
+src/launcher/workflow.py
     ├── --workflow create-lund --source uniform
     │       └── BUILD/apps/clas12-uniform
     ├── --workflow create-lund --source physical
     │       └── BUILD/apps/clas12-generator-to-lund
     └── --workflow submit
-            └── scripts/slurm/submit.py
+            └── src/slurm-submission/submit.py
 ```
 
 The dispatcher calls `parse_known_args()`: its own options become launcher settings, while unknown tokens become the selected child's argument vector. One optional bare `--` separator is removed. The remaining tokens are appended unchanged and executed as an argv list from the repository root, without shell evaluation. Thus `--config`, `--input`, and `--output` reach a LUND executable, while `--manifest`, `--gcard`, `--reconstruction`, and `--site` reach the submitter.
@@ -99,15 +103,15 @@ The converter stops at the configured output capacity or end of input. The final
 
 ## Simulation boundary
 
-`scripts/simulation/run.py` consumes `lundfiles/lund-gen-monitoring/lund-gen-log.json` and explicit detector/site settings. It delegates detector execution to the protected Bash payload `src/common/external/submit_GEMC_sample.sh`, adapted from the two legacy job scripts. Python validates the manifest and owns locks/provenance; the payload owns sample monitoring and the GEMC/reconstruction sequence. Dry runs print the commands without creating simulation directories. Execution checks return codes and output files and writes one record per completed file.
+`src/slurm-submission/run.py` consumes `lundfiles/lund-gen-monitoring/lund-gen-log.json` and explicit detector/site settings. It delegates detector execution to the protected Bash payload `src/slurm-submission/external/submit_GEMC_sample.sh`, adapted from the two legacy job scripts. Python validates the manifest and owns locks/provenance; the payload owns sample monitoring and the GEMC/reconstruction sequence. Dry runs print the commands without creating simulation directories. Execution checks return codes and output files and writes one record per completed file.
 
-`scripts/slurm/submit.py` uses the same planning validation and submits an array with one task per manifest file. Each task invokes the runner with its one-based index. CMake never submits jobs.
+`src/slurm-submission/submit.py` uses the same planning validation and submits an array with one task per manifest file. Each task invokes the runner with its one-based index. CMake never submits jobs.
 
 ## Adding functionality
 
-- Add a sampling prescription in `src/clas12-uniform/` with validated settings and an output-level test of its distribution or invariants.
-- Add another physical adapter under `src/clas12-generator-to-lund/<generator>/` and register it behind `convertPhysical`; keep the public executable and manifest contract unchanged.
-- Replace or extend `src/common/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
+- Add a sampling prescription in `src/lund-generation/clas12-uniform/` with validated settings and an output-level test of its distribution or invariants.
+- Add another physical adapter under `src/lund-generation/clas12-generator-to-lund/<generator>/` and register it behind `convertPhysical`; keep the public executable and manifest contract unchanged.
+- Replace or extend `src/lund-generation/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
 - Keep machine paths, scheduler resources and binary names in site configuration.
 

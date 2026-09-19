@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# apps/CMakeLists.txt ------------------------------------------------------------
+# src/lund-generation/apps/CMakeLists.txt ----------------------------------------------------------------------------------------------------
 # Description:
 #   Command-line executable targets.
 # Purpose:
@@ -23,6 +23,7 @@
 if(BUILD_UNIFORM)
     add_executable(clas12-uniform uniform_main.cpp)
     target_link_libraries(clas12-uniform PRIVATE UniformGeneration)
+    set_target_properties(clas12-uniform PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
     install(TARGETS clas12-uniform RUNTIME DESTINATION bin)
 endif()
 # endregion
@@ -34,6 +35,7 @@ endif()
 if(BUILD_GENIE)
     add_executable(clas12-generator-to-lund genie_to_lund_main.cpp)
     target_link_libraries(clas12-generator-to-lund PRIVATE PhysicalConversion)
+    set_target_properties(clas12-generator-to-lund PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
     install(TARGETS clas12-generator-to-lund RUNTIME DESTINATION bin)
 endif()
 # endregion

@@ -60,9 +60,9 @@ if(NOT SAMPLE_REVISION)
     set(SAMPLE_REVISION "unknown")
 endif()
 # Reconfigure when the replaceable geometry source changes, including its manifest hash.
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/common/external/targets.h")
-file(SHA256 "${PROJECT_SOURCE_DIR}/src/common/external/targets.h" SAMPLE_TARGETS_SHA256)
-configure_file(src/support/Version.h.in generated/Version.h @ONLY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h")
+file(SHA256 "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h" SAMPLE_TARGETS_SHA256)
+configure_file(src/lund-generation/support/Version.h.in generated/Version.h @ONLY)
 # endregion
 
 # Build graph and tests -------------------------------------------------------
@@ -71,18 +71,11 @@ configure_file(src/support/Version.h.in generated/Version.h @ONLY)
 # Purpose: Order subdirectories so libraries exist before applications and tests reference them.
 include(CTest)
 add_subdirectory(src)
-add_subdirectory(apps)
-if(BUILD_TESTING)
-    add_subdirectory(tests)
-endif()
 # endregion
 
 # Installation -------------------------------------------------------
 
 # region Installation
-# Purpose: Install resources and Python runners; application installation is declared in apps/.
+# Purpose: Install shared configuration resources; each workflow source tree installs its own programs.
 install(DIRECTORY config/ DESTINATION share/clas12-samples/config)
-install(PROGRAMS src/common/external/submit_GEMC_sample.sh DESTINATION bin)
-install(PROGRAMS scripts/simulation/run.py DESTINATION bin RENAME clas12-simulate)
-install(PROGRAMS scripts/slurm/submit.py DESTINATION bin RENAME clas12-submit)
 # endregion

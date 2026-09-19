@@ -82,7 +82,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     output = output/'Uniform_sample_1e_5986MeV'
     m=json.loads((output/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
     assert m['written_events']==4
-    assert m['targets_sha256'] == hashlib.sha256((project/'src/common/external/targets.h').read_bytes()).hexdigest()
+    assert m['targets_sha256'] == hashlib.sha256((project/'src/lund-generation/external/targets.h').read_bytes()).hexdigest()
     sourced(args)  # legacy behavior replaces the resolved run directory
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false','--jobs','0'],success=False)
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false','--build-dir',root/'missing-build'])
@@ -90,12 +90,12 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     # From another directory, the documented environment variable identifies the checkout.
     env=dict(os.environ,CLAS12_SAMPLES_DIR=str(project))
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false'],cwd=root,env=env)
-    sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false'],entry='scripts/build_and_run.csh')
+    sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false'],entry='src/launcher/build_and_run.csh')
     # Direct execution also resolves the entry location.
     subprocess.run([str(project/'run.csh'),'--workflow','create-lund','--source','uniform','--build','false','--run','false'],cwd=root,env=dict(os.environ,CLAS12_SKIP_SERVER_SYNC='1'),check=True,capture_output=True)
     # Verify profile/CLI precedence and argv preservation using isolated fake build tools.
     checkout=root/'checkout'
-    shutil.copytree(project/'scripts',checkout/'scripts')
+    shutil.copytree(project/'src/launcher',checkout/'src/launcher')
     shutil.copytree(project/'config',checkout/'config')
     shutil.copy2(project/'run.csh',checkout/'run.csh')
     binary=root/'fake-bin';binary.mkdir()
@@ -104,7 +104,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     cmake.write_text('#!'+sys.executable+'\nimport json,os,sys\nwith open(os.environ["BUILD_LOG"],"a") as f: f.write(json.dumps(sys.argv[1:])+"\\n")\n')
     cmake.chmod(0o755)
     env=dict(os.environ,PATH=str(binary)+os.pathsep+os.environ['PATH'],BUILD_LOG=str(log))
-    result=subprocess.run([sys.executable,str(checkout/'scripts/workflow.py'),'--workflow','create-lund','--source','uniform','--run','false','--jobs','2'],env=env,check=True,capture_output=True)
+    result=subprocess.run([sys.executable,str(checkout/'src/launcher/workflow.py'),'--workflow','create-lund','--source','uniform','--run','false','--jobs','2'],env=env,check=True,capture_output=True)
     commands=[json.loads(line) for line in log.read_text().splitlines()]
     assert len(commands)==2 and '--parallel' in commands[1] and commands[1][-1]=='2'
     assert '-DBUILD_TESTING=OFF' in commands[0]

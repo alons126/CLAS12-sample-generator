@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# tests/CMakeLists.txt ------------------------------------------------------------
+# src/lund-generation/tests/CMakeLists.txt ---------------------------------------------------------------------------------------------------
 # Description:
 #   Test executables, isolated references and CTest registration.
 # Purpose:
@@ -34,15 +34,12 @@ endif()
 
 # Output integration tests -------------------------------------------------------
 # region Output integration tests
-# Purpose: Test enabled applications and the manifest-driven simulation interface.
+# Purpose: Test enabled LUND applications and their output contracts.
 if(BUILD_UNIFORM)
     add_test(NAME uniform-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py uniform $<TARGET_FILE:clas12-uniform> $<TARGET_FILE:check-monitoring>)
 endif()
 if(BUILD_GENIE)
     add_test(NAME genie-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py genie $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:make-gst-fixture>)
-endif()
-if(BUILD_UNIFORM)
-    add_test(NAME simulation-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/simulation.py $<TARGET_FILE:clas12-uniform> ${PROJECT_SOURCE_DIR})
 endif()
 # endregion
 
@@ -68,33 +65,17 @@ if(BUILD_GENIE)
 endif()
 # endregion
 
-# Detector command parity -------------------------------------------------------
-# region Detector command parity
-# Purpose: Compare historical and current argument lists using fake detector executables.
-add_test(NAME submission-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/submission_parity.py ${PROJECT_SOURCE_DIR})
-# endregion
-
 # Isolated geometry fixture -------------------------------------------------------
 # region Isolated geometry fixture
 # Purpose: Read the protected header into a separate test fixture; compile the actual adapter against that fixture.
 # Prove that replacing the external header alone changes the production adapter.
-set(REPLACEMENT_TARGETS ${CMAKE_CURRENT_BINARY_DIR}/replacement/common/external/targets.h)
+set(REPLACEMENT_TARGETS ${CMAKE_CURRENT_BINARY_DIR}/replacement/external/targets.h)
 add_custom_command(OUTPUT ${REPLACEMENT_TARGETS}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py
-        ${PROJECT_SOURCE_DIR}/src/common/external/targets.h ${REPLACEMENT_TARGETS}
-    DEPENDS ${PROJECT_SOURCE_DIR}/src/common/external/targets.h ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py VERBATIM)
-add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/geometry/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
-target_include_directories(replacement-geometry PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/replacement ${PROJECT_SOURCE_DIR}/src)
+        ${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h ${REPLACEMENT_TARGETS}
+    DEPENDS ${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py VERBATIM)
+add_executable(replacement-geometry replacement_geometry.cpp ${PROJECT_SOURCE_DIR}/src/lund-generation/geometry/TargetGeometry.cpp ${REPLACEMENT_TARGETS})
+target_include_directories(replacement-geometry PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/replacement ${PROJECT_SOURCE_DIR}/src/lund-generation)
 target_link_libraries(replacement-geometry PRIVATE ROOT::Core ROOT::Physics Threads::Threads)
 add_test(NAME replacement-geometry COMMAND replacement-geometry)
-# endregion
-
-# Sourced launcher integration -------------------------------------------------------
-# region Sourced launcher integration
-# Purpose: Register shell behavior checks only when csh/tcsh and both applications are available.
-find_program(TCSH_EXECUTABLE NAMES tcsh csh)
-if(TCSH_EXECUTABLE AND BUILD_UNIFORM AND BUILD_GENIE)
-    add_test(NAME ssh-launcher COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py
-        ${PROJECT_SOURCE_DIR} ${TCSH_EXECUTABLE} ${PROJECT_BINARY_DIR})
-endif()
 # endregion

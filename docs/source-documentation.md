@@ -6,9 +6,9 @@ C++ uses Doxygen blocks (`@file`, `@class`/`@struct`, `@brief`, `@param`, `@retu
 
 Descriptions follow each component's actual responsibilities. Small accessors need a short contract; event loops and orchestration functions need ordered stages. Names, units, ownership, configuration precedence and differences between preview and execution should be explicit. Comments must be updated when the implementation changes.
 
-Maintained C++ terminal colors are defined only in `src/support/environment.h`. Other C++ files select its semantic constants and must not contain literal ANSI escape definitions.
+Maintained C++ terminal colors are defined only in `src/lund-generation/support/environment.h`. Other C++ files select its semantic constants and must not contain literal ANSI escape definitions.
 
-External and archived files are excluded and protected from edits: `legacy/`, `src/common/external/targets.h`, `src/common/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Maintained test adapters can explain how they read the protected sources and create isolated reference fixtures. Repository instructions are recorded in `AGENTS.md`.
+External and archived files are excluded and protected from edits: `legacy/`, `src/lund-generation/external/targets.h`, `src/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Maintained test adapters can explain how they read the protected sources and create isolated reference fixtures. Repository instructions are recorded in `AGENTS.md`.
 
 ## Build and JSON configuration
 
@@ -33,4 +33,4 @@ The same layers apply to structs, classes, enums, private implementation records
 
 Every file under `config/detector/` is classified as external and read-only for the assistant, recursively and regardless of extension. This includes current and future files, not only recognized gcard/YAML resources.
 
-The unified `src/common/external/submit_GEMC_sample.sh` and its two archived source payloads are protected external code, including their monitoring modifications. Skip them in routine source-documentation passes; their interface is described in [the GEMC payload guide](gemc-payload.md).
+The unified `src/slurm-submission/external/submit_GEMC_sample.sh` and its two archived source payloads are protected external code, including their monitoring modifications. Skip them in routine source-documentation passes; their interface is described in [the GEMC payload guide](gemc-payload.md).

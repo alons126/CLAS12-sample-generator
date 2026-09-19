@@ -40,7 +40,7 @@ Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-gen-monitorin
 
 Read the [newcomer guide](docs/index.md), then [build instructions](docs/building.md) and the [architecture walkthrough](docs/architecture.md).
 
-Maintained shared C++ is grouped by responsibility under `src/config/`, `src/lund/`, `src/geometry/`, and `src/support/`. Uniform monitoring lives with uniform generation under `src/clas12-uniform/`. Source-specific implementations match the executable names in `src/clas12-uniform/` and `src/clas12-generator-to-lund/`; GENIE is nested under the latter as one physical-input adapter. Protected imported files remain under `src/common/external/`. The architecture walkthrough maps these directories to the build targets and runtime call chain.
+Maintained source is grouped first by workflow under `src/lund-generation/` and `src/slurm-submission/`; the shared dispatcher is under `src/launcher/`. The LUND workflow then separates configuration, geometry, serialization, uniform generation, and physical adapters by responsibility. Protected imported files live with the workflow that consumes them. The architecture walkthrough maps these directories to the build targets and runtime call chain.
 
 - [Uniform generation](docs/uniform-samples.md)
 - [Physical event-generator conversion](docs/genie-to-lund-conversion.md)

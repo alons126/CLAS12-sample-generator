@@ -7,7 +7,7 @@ Generation and conversion produce the same manifest schema, so these commands wo
 After generating `runs/first-electron` using the README example:
 
 ```bash
-python3 scripts/simulation/run.py \
+python3 src/slurm-submission/run.py \
   --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
   --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
   --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
@@ -30,7 +30,7 @@ Existing outputs are rejected. A per-file lock prevents two processes from execu
 Run from a configured cluster login environment with files on shared storage:
 
 ```bash
-python3 scripts/slurm/submit.py \
+python3 src/slurm-submission/submit.py \
   --manifest runs/first-electron/lundfiles/lund-gen-monitoring/lund-gen-log.json \
   --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
   --reconstruction config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
@@ -50,4 +50,4 @@ The [legacy launch-chain mapping](legacy-workflows.md) traces `setup_and_submit_
 
 The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/common/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python coordination.
