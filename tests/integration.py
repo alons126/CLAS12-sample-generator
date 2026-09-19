@@ -76,8 +76,12 @@ def read_run(directory):
         assert count == entry['events']
     assert len(events) == manifest['written_events']
     diagnostics = directory / 'lundfiles/lund-gen-monitoring'
-    assert (diagnostics / 'monitoring.root').stat().st_size > 0
-    assert (diagnostics / 'legacy_histograms.root').stat().st_size > 0
+    root_files = list(diagnostics.glob('*.root'))
+    if manifest['workflow'] == 'uniform':
+        expected = diagnostics / f"{manifest['config']['prefix']}_monitoring_plots.root"
+        assert root_files == [expected] and expected.stat().st_size > 0
+    else:
+        assert not root_files and not (diagnostics / 'MonitoringPlotsPath').exists()
     for retired_path in ['manifest.json', 'monitoring.root', 'legacy_histograms.root', 'MonitoringPlotsPath']:
         assert not (directory / retired_path).exists()
     return manifest, events
@@ -112,6 +116,7 @@ def angles(particle):
 
 
 mode, executable = sys.argv[1:3]
+monitoring_checker = sys.argv[3] if mode == 'uniform' else None
 # Test execution ------------------------------------------------
 # region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
@@ -135,6 +140,18 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             settings = selection + ['--events', '10001', '--events-per-file', '10000', '--seed', '17', '--vertex-seed', '23', '--render-plots', 'false']
             run(executable, *settings, '--output', output_root)
             manifest, events = read_run(output)
+            monitoring_file = output/'lundfiles/lund-gen-monitoring'/f"{manifest['config']['prefix']}_monitoring_plots.root"
+            if channel == '1e':
+                monitor_name, monitor_title, monitor_axis, monitor_count = 'P_e_1e', "P_{e} in (e,e') sample", 'P_{e} [GeV]', '9'
+            else:
+                particle = {'epFD':'pFD','enFD':'nFD','epipFD':'pipFD','epimFD':'pimFD','epCD':'pCD','enCD':'nCD','epipCD':'pipCD','epimCD':'pimCD'}[channel]
+                root_label = {'pip':'#pi^{+}','pim':'#pi^{-}'}.get(particle[:-2], particle[:-2]) + particle[-2:]
+                family = 'en' if channel.startswith('en') else 'ep'
+                monitor_name = f'P_{particle}_{family}'
+                monitor_title = f"P_{{{root_label}}} in (e,e'{root_label}) sample"
+                monitor_axis = f'P_{{{root_label}}} [GeV]'
+                monitor_count = '27'
+            run(monitoring_checker, monitoring_file, monitor_name, monitor_title, monitor_axis, monitor_count)
             assert [f['events'] for f in manifest['files']] == [10000,1]
             assert [int(h[8]) for h,p in events] == list(range(10000)) + [0]
             for header, particles in events:
@@ -173,19 +190,17 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         for directory in ['lundfiles', 'mchipo', 'reconhipo', 'rootfiles']:
             assert (artifacts/directory).is_dir()
         diagnostics = artifacts/'lundfiles/lund-gen-monitoring'
-        assert (diagnostics/'Uniform_sample_1e_5986MeV_plots.root').is_file()
-        assert (diagnostics/'legacy_histograms.root').is_file()
+        assert (diagnostics/'Uniform_sample_1e_5986MeV_monitoring_plots.root').is_file()
         assert (diagnostics/'MonitoringPlotsPath/Uniform_1e_plots_5986MeV.pdf').is_file()
         assert list((diagnostics/'MonitoringPlotsPath').glob('[0-9]*_*.png'))
 
-        # Rendered electron-hadron artifacts use the maintained region-bearing sample label while the
-        # compatibility ROOT histogram names remain available for archived numerical comparisons.
+        # Rendered electron-hadron artifacts carry the maintained region-bearing hadron label.
         labeled_parent = root/'labeled-artifacts'
         labeled = labeled_parent/'Uniform_sample_epFD_5986MeV'
         run(executable, '--channel', 'eh', '--hadron', 'proton', '--hadron-region', 'FD', '--events', '3', '--output', labeled_parent)
         labeled_plots = labeled/'lundfiles/lund-gen-monitoring/MonitoringPlotsPath'
         assert (labeled_plots/'Uniform_epFD_plots_5986MeV.pdf').is_file()
-        assert list(labeled_plots.glob('[0-9]*_epFD_*.png'))
+        assert list(labeled_plots.glob('[0-9]*_*pFD*_ep.png'))
 
         config.write_text('# test precedence\nchannel = eh\nhadron = neutron\nhadron-region = FD\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
         configured = root/'configured'/ 'Uniform_sample_enFD_2070MeV'

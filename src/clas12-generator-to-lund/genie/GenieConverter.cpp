@@ -11,29 +11,21 @@
  *   retain their momenta, and assign a target vertex.
  *
  * Workflow:
- *   Validate GST schema -> scan and select -> write events -> save diagnostics -> publish manifest.
+ *   Validate GST schema -> scan and select -> write events -> publish the LUND-generation log.
  */
 
 #include "clas12-generator-to-lund/genie/GenieConverter.h"
 
-#include <TCanvas.h>
 #include <TChain.h>
-#include <TFile.h>
-#include <TH2D.h>
-#include <TMath.h>
-#include <TROOT.h>
 #include <TTreeReader.h>
 #include <TTreeReaderArray.h>
 #include <TTreeReaderValue.h>
 
-#include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
 #include "geometry/TargetGeometry.h"
 #include "lund/LundWriter.h"
-#include "monitoring/Monitoring.h"
 #include "support/constants.h"
 #include "support/environment.h"
 
@@ -52,9 +44,9 @@ namespace samples {
  *
  * Algorithm:
  *   1. Validate required branches and construct typed readers.
- *   2. Scan entries, record pre-selection diagnostics, and select QE/MEC/RES/DIS events.
+ *   2. Scan entries and select QE/MEC/RES/DIS events.
  *   3. Assign a common target vertex and retain supported final-state species.
- *   4. Write through capacity or end of input; save diagnostics and publish the manifest.
+ *   4. Write through capacity or end of input and publish the generation log.
  *
  * @param c Resolved input, beam, metadata, target, mass and output settings.
  *
@@ -87,9 +79,6 @@ void convertGenie(const RunConfig& c) {
     TargetGeometry geometry(c.get("target"));
     const double beam = c.number("beam-energy");
     const int A = static_cast<int>(c.integer("A")), Z = static_cast<int>(c.integer("Z"));
-    Monitoring monitoring(beam);
-    TH2D legacy_electron("theta_e_VS_phi_e", "#theta_{e} vs. #phi_{e};#phi_{e} [#circ];#theta_{e}", 100, -180., 180., 100, 0., 50.);
-    legacy_electron.SetDirectory(nullptr);
     LundWriter writer(c, "physical");
     std::uint64_t scanned = 0;
 
@@ -105,10 +94,6 @@ void convertGenie(const RunConfig& c) {
         if (*nf < 0 || pdgf.GetSize() != static_cast<std::size_t>(*nf) || pxf.GetSize() != pdgf.GetSize() || pyf.GetSize() != pdgf.GetSize() || pzf.GetSize() != pdgf.GetSize()) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
         }
-        // The archived diagnostic includes all scanned events, before process selection.
-        const double p = std::sqrt(*pxl * *pxl + *pyl * *pyl + *pzl * *pzl);
-        const double theta = p > 0 ? std::acos(std::clamp(*pzl / p, -1.0, 1.0)) * TMath::RadToDeg() : 0;
-        legacy_electron.Fill(std::atan2(*pyl, *pxl) * TMath::RadToDeg(), theta);
         // Retain the historical process-tag convention in the LUND header.
         double code = *qel ? 1 : *mec ? 2 : *res ? 3 : *dis ? 4 : 0;
         if (!code) { continue; }
@@ -130,28 +115,12 @@ void convertGenie(const RunConfig& c) {
             }
         }
         writer.write(event);
-        monitoring.fill(event);
     }
 #pragma endregion
 
     // Distinguish normal input exhaustion from a schema or later-chain read failure.
     if (!writer.full() && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) { throw std::runtime_error("Failed reading GST entries (check branch types and input files)"); }
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
-    // Save numerical diagnostics before publishing the completed manifest.
-    const auto output = std::filesystem::path(c.get("output"));
-    const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
-    monitoring.save(diagnostics / "monitoring.root");
-    TFile legacy_file((diagnostics / "legacy_histograms.root").string().c_str(), "CREATE");
-    if (legacy_file.IsZombie() || legacy_electron.Write() <= 0) { throw std::runtime_error("Cannot write legacy GENIE diagnostic"); }
-    legacy_file.Close();
-    if (c.get("render-plots") == "true") {
-        gROOT->SetBatch(true);
-        std::filesystem::create_directory(diagnostics / "monitoring_plots");
-        TCanvas canvas("genie_monitoring", "GENIE electron monitoring", 800, 600);
-        legacy_electron.Draw("colz");
-        canvas.Print((diagnostics / "monitoring_plots/genie.pdf").string().c_str());
-        canvas.Print((diagnostics / "monitoring_plots/theta_e_VS_phi_e.png").string().c_str());
-    }
     writer.finish(scanned);
     LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);
     std::cout << env::SYSTEM_COLOR << "Scanned " << scanned << ", wrote " << writer.count() << " events to " << env::RESET_COLOR << c.get("output") << '\n';

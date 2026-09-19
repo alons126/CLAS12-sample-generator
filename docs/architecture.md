@@ -9,9 +9,8 @@ Maintained code is grouped by the responsibility a newcomer is looking for. The 
 | `src/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
 | `src/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
 | `src/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
-| `src/monitoring/` | Produce general and legacy-compatible ROOT diagnostics |
 | `src/support/` | Central PDG constants, terminal presentation, and the generated-version template |
-| `src/clas12-uniform/` | Produce deliberately unphysical acceptance-map events |
+| `src/clas12-uniform/` | Produce deliberately unphysical acceptance-map events and their monitoring |
 | `src/clas12-generator-to-lund/` | Dispatch a physical input source to its event-generator adapter |
 | `src/clas12-generator-to-lund/genie/` | Read GENIE GST as the currently implemented physical adapter |
 | `src/common/external/` | Protected imported geometry and GEMC worker payloads; these are not maintained source |
@@ -22,8 +21,8 @@ The two source-specific directories intentionally match the installed executable
 
 | Target | Source | Responsibility |
 | --- | --- | --- |
-| `LundCore` | `src/config/`, `src/lund/`, `src/geometry/`, `src/monitoring/`, `src/support/` | Shared configuration-to-manifest LUND pipeline |
-| `UniformGeneration` | `src/clas12-uniform/` | Uniform sampling prescriptions |
+| `LundCore` | `src/config/`, `src/lund/`, `src/geometry/`, `src/support/` | Shared configuration-to-manifest LUND pipeline |
+| `UniformGeneration` | `src/clas12-uniform/` | Uniform sampling prescriptions and uniform-only monitoring |
 | `GenieConversion` | `src/clas12-generator-to-lund/genie/` | GENIE GST input adapter |
 | `PhysicalConversion` | `src/clas12-generator-to-lund/` | Select the configured physical event-generator adapter |
 | `clas12-uniform` | `apps/uniform_main.cpp` | Parse CLI, call generator, report errors |
@@ -88,13 +87,13 @@ This boundary is intentionally side-effect-free with respect to run products: pa
 2. `generateUniform` receives the resolved `1e` or `eh` channel, selected hadron, and FD/CD region, then owns separate kinematic and vertex random streams. `TargetGeometry` samples a common interaction vertex for all particles in the event.
 3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
-5. `Monitoring` owns detached ROOT histograms. It fills per-PDG momentum, angles, vertices and angular/momentum correlations.
-6. `LegacyMonitoring` writes original histogram names and binning for 1e/tester/epFD/enFD compatibility. The common per-PDG monitor covers every pion and CD mode.
+5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It preserves the archived definitions and rendering style and generalizes hadron labels to proton, neutron, pip, and pim in FD or CD.
+6. It writes every histogram once to `<prefix>_monitoring_plots.root` and optionally renders the same objects to PDF and PNG.
 7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
 
 ## Following a physical run
 
-`convertPhysical` selects the `event-generator` adapter; GENIE is the implemented default. `convertGenie` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and dynamically sized `TTreeReaderArray` objects avoid the imported fixed arrays of 250 particles. The adapter assigns the legacy process code, filters supported PDG codes, creates an `Event`, and calls the same writer and monitoring code.
+`convertPhysical` selects the `event-generator` adapter; GENIE is the implemented default. `convertGenie` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and dynamically sized `TTreeReaderArray` objects avoid the imported fixed arrays of 250 particles. The adapter assigns the legacy process code, filters supported PDG codes, creates an `Event`, and calls the shared writer. Physical conversion creates no ROOT monitoring file or rendered monitoring plots.
 
 The converter stops at the configured output capacity or end of input. The final partial file is retained. No empty rollover file is opened. Errors reading later chain entries prevent publication of a completed manifest.
 

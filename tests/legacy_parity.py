@@ -104,9 +104,13 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
                 selection = [] if channel in ('1e','tester') else ['--hadron','proton' if channel=='ep' else 'neutron','--hadron-region','FD']
                 run(current,'--channel','electron-tester' if channel == 'tester' else '1e' if channel == '1e' else 'eh','--beam-energy',beam,'--events',64,
                     '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--render-plots','false','--output',new_root,*selection,*extra)
-                if channel != 'tester':
-                    run(sys.argv[4], original/'histograms.root', new/'lundfiles/lund-gen-monitoring/legacy_histograms.root')
                 m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
+                monitoring = new/'lundfiles/lund-gen-monitoring'/f"{m['config']['prefix']}_monitoring_plots.root"
+                assert monitoring.is_file()
+                # The 1e definitions retain exact archived names/ranges/content. Electron-hadron
+                # definitions deliberately add FD/CD to hadron names and titles.
+                if channel == '1e':
+                    run(sys.argv[4], original/'histograms.root', monitoring)
                 assert len(m['files']) == 1
                 compare(new/m['files'][0]['path'],original/'legacy_1.txt', channel == 'tester')
         for target in ['liquid','4-foil','1-foil','1-foil-small','1-foil-large','Ca']:
@@ -129,7 +133,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             q2={'2.07052':'Q2_0_02','4.02962':'Q2_0_25','5.98636':'Q2_0_40'}[beam]
             new=new_root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{label}_GEMC-unknown'
             m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
-            run(sys.argv[5], original/'histograms.root', new/'lundfiles/lund-gen-monitoring/legacy_histograms.root')
+            assert not list((new/'lundfiles/lund-gen-monitoring').glob('*.root'))
             old=list((original/'lundfiles').glob('*.txt'))
             assert len(old)==1 and m['written_events']==10000
             compare(new/m['files'][0]['path'],old[0])

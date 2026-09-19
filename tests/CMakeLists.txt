@@ -20,8 +20,12 @@
 # region Test tools and GST fixture
 # Purpose: Discover Python and build numerical comparison and synthetic-input helpers.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
-add_executable(compare-histograms compare_histograms.cpp)
-target_link_libraries(compare-histograms PRIVATE ROOT::RIO ROOT::Hist)
+if(BUILD_UNIFORM)
+    add_executable(compare-histograms compare_histograms.cpp)
+    target_link_libraries(compare-histograms PRIVATE ROOT::RIO ROOT::Hist)
+    add_executable(check-monitoring check_monitoring.cpp)
+    target_link_libraries(check-monitoring PRIVATE ROOT::RIO ROOT::Hist)
+endif()
 if(BUILD_GENIE)
     add_executable(make-gst-fixture make_gst_fixture.cpp)
     target_link_libraries(make-gst-fixture PRIVATE ROOT::Tree ROOT::RIO)
@@ -32,7 +36,7 @@ endif()
 # region Output integration tests
 # Purpose: Test enabled applications and the manifest-driven simulation interface.
 if(BUILD_UNIFORM)
-    add_test(NAME uniform-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py uniform $<TARGET_FILE:clas12-uniform>)
+    add_test(NAME uniform-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py uniform $<TARGET_FILE:clas12-uniform> $<TARGET_FILE:check-monitoring>)
 endif()
 if(BUILD_GENIE)
     add_test(NAME genie-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py genie $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:make-gst-fixture>)
@@ -60,7 +64,7 @@ if(BUILD_GENIE)
         DEPENDS ${LEGACY_CONVERTER} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_legacy_genie.py VERBATIM)
     add_executable(legacy-genie-reference ${CMAKE_CURRENT_BINARY_DIR}/legacy_genie_reference.cpp)
     target_link_libraries(legacy-genie-reference PRIVATE ROOT::Core ROOT::Physics ROOT::Tree ROOT::Hist ROOT::RIO ROOT::Gpad ROOT::Graf)
-    add_test(NAME genie-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/legacy_parity.py genie $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:legacy-genie-reference> $<TARGET_FILE:make-gst-fixture> $<TARGET_FILE:compare-histograms>)
+    add_test(NAME genie-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/legacy_parity.py genie $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:legacy-genie-reference> $<TARGET_FILE:make-gst-fixture>)
 endif()
 # endregion
 

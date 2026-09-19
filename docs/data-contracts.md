@@ -66,7 +66,7 @@ Uniform generation writes exactly the requested `events` count. GENIE conversion
 
 For submission, the coordinator validates each manifest entry's positive `events` value and exports it as `JOB_NEVENTS`. The GEMC payload uses that exact count for both GEMC and reconstruction. Consequently, the 25,000-event uniform default, the 10,000-event physical default and final partial physical files are all processed without a separate submission-specific split size.
 
-The writer warns, removes and recreates an existing run directory before generation. It writes `lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp` only after LUND and diagnostics finish, then renames it to `lundfiles/lund-gen-monitoring/lund-gen-log.json`. Failure leaves partial output for inspection without publishing a completed manifest; rerunning the same resolved output replaces those partial results.
+The writer warns, removes and recreates an existing run directory before generation. It writes `lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp` only after LUND output and any required uniform monitoring finish, then renames it to `lundfiles/lund-gen-monitoring/lund-gen-log.json`. Physical conversion has no monitoring stage. Failure leaves partial output for inspection without publishing a completed manifest; rerunning the same resolved output replaces those partial results.
 
 The archived converter's short-input and near-end early termination is intentionally not reproduced; see [validation](validation.md).
 

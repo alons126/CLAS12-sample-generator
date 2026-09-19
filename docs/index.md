@@ -34,13 +34,12 @@ For the scientific and implementation reference, start at the [technical-note ou
 | `src/config/` | Run-option parsing, validation, and RG-M target metadata |
 | `src/lund/` | Event records, particle masses, LUND writing, file splitting, and manifests |
 | `src/geometry/` | The maintained adapter around external target geometry |
-| `src/monitoring/` | ROOT histograms and legacy-compatible monitoring artifacts |
 | `src/support/` | Shared constants, terminal colors, and compiled provenance template |
 | `src/clas12-uniform/` | Uniform kinematic generation |
 | `src/clas12-generator-to-lund/` | Physical-source dispatch, with generator adapters such as `genie/` nested below it |
 | `src/common/external/` | Protected imported files; do not treat this as maintained common code |
 
-The first five directories build together as `LundCore`. They remain separate folders so configuration, data format, geometry, diagnostics, and low-level definitions are easy to find without adding unnecessary runtime abstractions. The two source-specific directories match their executable names, and physical generator adapters are subordinate to `clas12-generator-to-lund`. The detailed call chain is in the [architecture walkthrough](architecture.md).
+The shared configuration, LUND, geometry, and support directories build together as `LundCore`. Uniform sampling and monitoring build as `UniformGeneration`. The source-specific directories match their executable names, and physical generator adapters are subordinate to `clas12-generator-to-lund`. The detailed call chain is in the [architecture walkthrough](architecture.md).
 
 ## A run directory
 
@@ -51,9 +50,7 @@ runs/example/
         PREFIX_2.txt
         lund-gen-monitoring/
             lund-gen-log.json       # Published only after successful generation/conversion
-            monitoring.root         # Per-particle diagnostic histograms
-            legacy_histograms.root  # Stable copy of original named diagnostics
-            PREFIX_plots.root       # Archived uniform histogram filename (uniform only)
+            PREFIX_monitoring_plots.root # All uniform histograms; absent for physical runs
             MonitoringPlotsPath/    # Archived PDF/numbered PNG layout (uniform default)
     mchipo/             # Prepared by uniform creation; filled by simulation
     reconhipo/          # Prepared by uniform creation; filled by reconstruction

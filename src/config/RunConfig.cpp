@@ -212,7 +212,6 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"events", ""},
                  {"events-per-file", uniform ? "25000" : "10000"},
                  {"seed", "67890"},
-                 {"render-plots", uniform ? "true" : "false"},
                  {"vertex-seed", "12345"},
                  {"prefix", "auto"}};
 
@@ -224,6 +223,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         c.values_.insert({{"channel", "1e"},
                           {"hadron", "proton"},
                           {"hadron-region", "FD"},
+                          {"render-plots", "true"},
                           {"electron-theta-min", "5"},
                           {"electron-theta-max", "40"},
                           {"electron-p-min", "0.7"},
@@ -523,8 +523,7 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
  *   read-only and runs before a generator may replace or create the resolved output directory.
  *
  * Workflow:
- *   1. Check required shared values, beam energy, counts/seeds, nuclear metadata, filename prefix,
- *      and monitoring selection.
+ *   1. Check required shared values, beam energy, counts/seeds, nuclear metadata, and filename prefix.
  *   2. Validate the external target-geometry key used by every event.
  *   3. For physical conversion, require current GENIE GST input and complete naming provenance.
  *   4. For uniform generation, validate the channel, angular acceptance, momentum modes,
@@ -571,8 +570,6 @@ void RunConfig::validate(bool uniform) const {
         throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
     }
 
-    // Plot rendering remains the only shared Boolean output control.
-    if (get("render-plots") != "true" && get("render-plots") != "false") { throw std::runtime_error("render-plots must be true or false"); }
 #pragma endregion
 
 #pragma region /* Vertex contract */
@@ -604,6 +601,7 @@ void RunConfig::validate(bool uniform) const {
         throw std::runtime_error("hadron must be proton, neutron, pip or pim");
     }
     if (get("hadron-region") != "FD" && get("hadron-region") != "CD") { throw std::runtime_error("hadron-region must be FD or CD"); }
+    if (get("render-plots") != "true" && get("render-plots") != "false") { throw std::runtime_error("render-plots must be true or false"); }
 
     // Require ordered polar-angle bounds inside the full geometric domain. The resolved defaults carry
     // the legacy per-particle acceptance, while explicit profiles may narrow those ranges.
@@ -725,11 +723,11 @@ std::string help(bool uniform) {
     std::string result = uniform ? "clas12-uniform --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
                                  : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
-    // Shared settings control beam/target metadata, event and RNG counts, automatic naming, and plots.
+    // Shared settings control beam/target metadata, event and RNG counts, and automatic naming.
     result +=
         "Settings: --config FILE, --beam-energy GeV, --rgm-target ID, --target GEOMETRY, --A N, --Z N,\n"
         "--events N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
-        "--render-plots true|false. Every event samples the selected target geometry.\n"
+        "Every event samples the selected target geometry.\n"
         "Files use key = value; CLI values override file settings. Seed 0 requests ROOT automatic, nonrepeatable seeding.\n"
         "Existing output is replaced after a warning.\n";
 
@@ -740,7 +738,8 @@ std::string help(bool uniform) {
             "Uniform: --hadron proton|neutron|pip|pim, --hadron-region FD|CD, --electron-theta-min/max DEG, --electron-p-min/max GeV/c,\n"
             "--hadron-theta-min/max DEG, --electron-momentum auto|uniform|mixed|beam,\n"
             "--hadron-momentum auto|fixed|sampled|uniform|mixed,\n"
-            "--hadron-p GeV/c, --hadron-p-min GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG.\n"
+            "--hadron-p GeV/c, --hadron-p-min GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG,\n"
+            "--render-plots true|false.\n"
             "Hadron theta and phi are always sampled uniformly inside their configured ranges.\n"
             "Sampled hadron momentum extends to the beam energy.\n";
     } else {

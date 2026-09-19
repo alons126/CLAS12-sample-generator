@@ -38,12 +38,12 @@ namespace samples {
  * Workflow:
  *   1. Revalidate and cache the uniform configuration.
  *   2. Initialize independent kinematic and vertex random streams from their configured seeds.
- *   3. Safely prepare the resolved output directory and initialize both monitoring systems.
+ *   3. Safely prepare the resolved output directory and initialize uniform monitoring.
  *   4. Generate 1e events or artificial trigger-electron+hadron events until the requested
  *      event capacity is written, sampling exactly one shared vertex per event.
  *   5. Save modern monitoring plus the archived prefix-based ROOT/PDF/PNG artifacts, retain the stable
- *      lundfiles/lund-gen-monitoring/legacy_histograms.root copy, finalize LUND output, and publish
- *      the completion log in that monitoring directory.
+ *      single `<prefix>_monitoring_plots.root` file, finalize LUND output, and publish the completion
+ *      log in the same monitoring directory.
  *
  * @param config Borrowed configuration returned by RunConfig::parse(..., true). The function reads it
  *               for the duration of the call and neither retains nor modifies it. Momentum values

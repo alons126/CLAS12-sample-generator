@@ -14,7 +14,7 @@
  * Workflow:
  *   Validate and cache settings -> initialize independent RNG streams and outputs -> sample one vertex
  *   and the selected particle content per event -> serialize successful events with the configured split
- *   size -> fill modern and legacy diagnostics -> save maintained and archived artifact layouts ->
+ *   size -> fill unified legacy-style diagnostics -> save one monitoring ROOT file and rendered views ->
  *   finalize LUND files and publish the manifest.
  *
  * Units and conventions:
@@ -35,10 +35,9 @@
 #include <iostream>
 
 #include "clas12-uniform/UniformConfig.h"
+#include "clas12-uniform/UniformMonitoring.h"
 #include "geometry/TargetGeometry.h"
 #include "lund/LundWriter.h"
-#include "monitoring/LegacyMonitoring.h"
-#include "monitoring/Monitoring.h"
 #include "support/constants.h"
 #include "support/environment.h"
 
@@ -63,14 +62,6 @@ std::string sampleLabel(const RunConfig& c) {
     if (c.get("channel") == "electron-tester") { return "electron-tester"; }
     const std::string token = c.get("hadron") == "proton" ? "p" : c.get("hadron") == "neutron" ? "n" : c.get("hadron");
     return "e" + token + c.get("hadron-region");
-}
-
-std::string compatibilityMonitoringChannel(const RunConfig& c) {
-    if (c.get("channel") == "1e") { return "1e"; }
-    if (c.get("channel") == "electron-tester") { return "Tester_e"; }
-    if (c.get("hadron-region") == "FD" && c.get("hadron") == "proton") { return "ep"; }
-    if (c.get("hadron-region") == "FD" && c.get("hadron") == "neutron") { return "en"; }
-    return sampleLabel(c);
 }
 
 // legacyBeamLabel --------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -182,15 +173,15 @@ double triggerPhi(double phi, double offset) {
  * Purpose:
  *   Produce a fixed-size acceptance probe with configured 1e or electron–hadron content while preserving the
  *   legacy channel prescriptions, deterministic random-stream separation, shared writer contract, and
- *   both modern and archived monitoring views.
+ *   one generalized legacy-style monitoring view.
  *
  * Workflow:
  *   1. Revalidate settings, print the resolved run, cache typed values, and initialize output objects.
  *   2. Create independent seeded RNG streams for particle kinematics and target vertices.
  *   3. Build one Event per iteration with configured A/Z and beam metadata plus one shared vertex.
  *   4. Sample the electron-only or artificial trigger-electron+hadron channel in stable draw order.
- *   5. Serialize the event before adding it to either diagnostic set.
- *   6. Stop at the writer's configured event capacity, save modern and archived-layout diagnostics,
+ *   5. Serialize the event before adding it to the diagnostic set.
+ *   6. Stop at the writer's configured event capacity, save the single monitoring ROOT file,
  *      finalize LUND output, publish the manifest, and print the completion summary.
  *
  * @param c Borrowed configuration returned by RunConfig::parse(..., true). It supplies channel, beam
@@ -232,11 +223,9 @@ void generateUniform(const RunConfig& c) {
     // directory layout, and stores the requested total capacity and per-file split threshold.
     LundWriter writer(c, "uniform");
 
-    // Monitoring ranges use the beam-energy scale. LegacyMonitoring selects its historical Tester_e
-    // layout only for the electron channel whose momentum is fixed to the beam value.
+    // Monitoring retains the archived plot contract and extends hadron notation with FD/CD labels.
     const double beam = settings.beam;
-    Monitoring monitoring(beam);
-    LegacyMonitoring legacy_monitoring(compatibilityMonitoringChannel(c), beam);
+    UniformMonitoring monitoring(sampleLabel(c), settings.hadron_pid, beam);
 #pragma endregion
 
 #pragma region /* Event generation */
@@ -293,29 +282,23 @@ void generateUniform(const RunConfig& c) {
             event.particles.push_back({pid, particleMass(pid), momentum(p, theta, phi), vertex});
         }
 
-        // Serialize first so neither monitoring file counts an event rejected by the writer. A later
+        // Serialize first so monitoring does not count an event rejected by the writer. A later
         // monitoring failure leaves inspectable partial output but cannot publish a completion manifest.
         writer.write(event);
         monitoring.fill(event);
-        legacy_monitoring.fill(event);
     }
 #pragma endregion
 
 #pragma region /* Run completion */
-    // Persist both diagnostic contracts before making the run consumable. Optional rendering adds
-    // legacy PDF/PNG views without changing histogram filling or LUND content.
+    // Persist one diagnostic contract before making the run consumable. Optional rendering adds
+    // legacy-style PDF/PNG views without duplicating ROOT histogram storage.
     const auto output = std::filesystem::path(c.get("output"));
     const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
-    monitoring.save(diagnostics / "monitoring.root");
-    const auto legacy_root = diagnostics / (c.get("prefix") + "_plots.root");
+    const auto monitoring_root = diagnostics / (c.get("prefix") + "_monitoring_plots.root");
     const auto plot_directory = diagnostics / "MonitoringPlotsPath";
     const auto plot_channel = sampleLabel(c);
     const auto pdf_name = "Uniform_" + plot_channel + "_plots_" + legacyBeamLabel(beam) + ".pdf";
-    legacy_monitoring.save(legacy_root, c.get("render-plots") == "true", plot_directory, pdf_name, plot_channel);
-
-    // Keep the maintained stable diagnostic name as an exact copy while making the archived prefix-based
-    // filename the primary output artifact. Downstream validation can therefore retain one fixed path.
-    std::filesystem::copy_file(legacy_root, diagnostics / "legacy_histograms.root", std::filesystem::copy_options::overwrite_existing);
+    monitoring.save(monitoring_root, c.get("render-plots") == "true", plot_directory, pdf_name);
 
     // Uniform generation scans and writes the same number of events, so the written count is also the
     // completion count supplied to the manifest. finish() closes files before publishing readiness.

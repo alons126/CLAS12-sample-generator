@@ -20,18 +20,16 @@
 # Shared LUND pipeline -------------------------------------------------------
 
 # region Shared LUND pipeline
-# Purpose: Join configuration, geometry, LUND records/serialization, monitoring, and support definitions without hiding their source boundaries.
+# Purpose: Join configuration, geometry, LUND records/serialization, and support definitions without hiding their source boundaries.
 add_library(
     LundCore STATIC
     config/RunConfig.cpp
     config/RgmTarget.cpp
     geometry/TargetGeometry.cpp
     lund/Particle.cpp
-    lund/LundWriter.cpp
-    monitoring/Monitoring.cpp
-    monitoring/LegacyMonitoring.cpp)
+    lund/LundWriter.cpp)
 target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${PROJECT_BINARY_DIR}/generated)
-target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
+target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO)
 # endregion
 
 # Uniform generation -------------------------------------------------------
@@ -39,8 +37,8 @@ target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::
 # region Uniform generation
 # Purpose: Build the implementation behind the clas12-uniform executable as UniformGeneration.
 if(BUILD_UNIFORM)
-    add_library(UniformGeneration STATIC clas12-uniform/UniformGenerator.cpp)
-    target_link_libraries(UniformGeneration PUBLIC LundCore)
+    add_library(UniformGeneration STATIC clas12-uniform/UniformGenerator.cpp clas12-uniform/UniformMonitoring.cpp)
+    target_link_libraries(UniformGeneration PUBLIC LundCore PRIVATE ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
 endif()
 # endregion
 

@@ -34,13 +34,13 @@ The resolved uniform run is written below `runs/first-electron/Uniform_sample_1e
 
 LUND output always preserves the established text conventions. Masses are rounded PDG-based values centralized in `constants.h`, with a massless electron. Production momentum defaults are mixed p/1-p for the 1e electron and charged hadrons, and uniform p for neutrons. Sampled hadron momentum always extends to the beam energy; fixed 1 GeV/c momentum is a neutron-only option. Select electron–hadron samples with `--channel eh --hadron proton|neutron|pip|pim --hadron-region FD|CD`.
 
-Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-gen-monitoring/lund-gen-log.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; diagnostic histograms are in `lundfiles/lund-gen-monitoring/monitoring.root`.
+Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-gen-monitoring/lund-gen-log.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; uniform diagnostics are stored once in `lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root`. Physical conversion does not create monitoring histograms.
 
 ## Where to start
 
 Read the [newcomer guide](docs/index.md), then [build instructions](docs/building.md) and the [architecture walkthrough](docs/architecture.md).
 
-Maintained shared C++ is grouped by responsibility under `src/config/`, `src/lund/`, `src/geometry/`, `src/monitoring/`, and `src/support/`. Source-specific implementations match the executable names in `src/clas12-uniform/` and `src/clas12-generator-to-lund/`; GENIE is nested under the latter as one physical-input adapter. Protected imported files remain under `src/common/external/`. The architecture walkthrough maps these directories to the build targets and runtime call chain.
+Maintained shared C++ is grouped by responsibility under `src/config/`, `src/lund/`, `src/geometry/`, and `src/support/`. Uniform monitoring lives with uniform generation under `src/clas12-uniform/`. Source-specific implementations match the executable names in `src/clas12-uniform/` and `src/clas12-generator-to-lund/`; GENIE is nested under the latter as one physical-input adapter. Protected imported files remain under `src/common/external/`. The architecture walkthrough maps these directories to the build targets and runtime call chain.
 
 - [Uniform generation](docs/uniform-samples.md)
 - [Physical event-generator conversion](docs/genie-to-lund-conversion.md)

@@ -36,12 +36,6 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 [RgmTarget.h](../src/config/RgmTarget.h) / [RgmTarget.cpp](../src/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../src/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock. Fixed tester coordinates bypass target sampling. The adapter includes the protected `src/common/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained geometry code.
 
-### Monitoring (`src/monitoring/`)
-
-[Monitoring.h](../src/monitoring/Monitoring.h) / [Monitoring.cpp](../src/monitoring/Monitoring.cpp): an owned implementation allocates per-PDG histograms on first use. `fill` records all written particles and `save` writes `lundfiles/lund-gen-monitoring/monitoring.root`. Histograms are detached from the ROOT directory during generation to avoid global ownership conflicts.
-
-[LegacyMonitoring.h](../src/monitoring/LegacyMonitoring.h) / [LegacyMonitoring.cpp](../src/monitoring/LegacyMonitoring.cpp): owns the original uniform histogram definitions as run-local objects. Constructor selects `1e`, `ep`, `en`, or `Tester_e`. Each entry maps histogram x/y quantities to particle values. `fill` includes original inter-particle correlations; `save` writes numerical histograms and optionally renders a caller-selected legacy PDF/numbered-PNG layout. The definitions are migrated source, not runtime imports from `legacy/`.
-
 ### Support (`src/support/`)
 
 [constants.h](../src/support/constants.h) is the single maintained catalog of supported PDG identifiers, current PDG 2026 masses, and explicitly separated archived compatibility masses consumed by the LUND layer and generators. [environment.h](../src/support/environment.h) is the only maintained C++ source of ANSI color definitions. It exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. Shell and Python launchers retain their separate environment-variable palette because they cannot include a C++ header.
@@ -52,7 +46,9 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 [UniformConfig.h](../src/clas12-uniform/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
 
-[UniformGenerator.h](../src/clas12-uniform/UniformGenerator.h) / [UniformGenerator.cpp](../src/clas12-uniform/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, both monitoring sets and a writer. Internal `momentum` constructs Cartesian vectors; `triggerPhi` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves both ROOT products, optional plots, and the manifest.
+[UniformGenerator.h](../src/clas12-uniform/UniformGenerator.h) / [UniformGenerator.cpp](../src/clas12-uniform/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, one `UniformMonitoring` object and a writer. Internal `momentum` constructs Cartesian vectors; `triggerPhi` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves one ROOT product, optional rendered plots, and the generation log.
+
+[UniformMonitoring.h](../src/clas12-uniform/UniformMonitoring.h) / [UniformMonitoring.cpp](../src/clas12-uniform/UniformMonitoring.cpp) own the complete uniform-only monitoring contract. The implementation preserves legacy bins, axes, titles, correlations, axis text settings and canvas layout, then generalizes hadron tokens to `pFD`, `pCD`, `nFD`, `nCD`, `pipFD`, `pipCD`, `pimFD`, and `pimCD`. `save` writes all histograms once to `<prefix>_monitoring_plots.root` and optionally renders those same objects.
 
 The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p components using the run-global index. Neutrons use uniform momentum unless their optional fixed mode is selected. Hadron species and FD/CD region resolve the documented angular and threshold defaults. Mathematical definitions are in [sampling models](sampling-models.md).
 
@@ -60,7 +56,7 @@ The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p 
 
 [PhysicalConverter.h](../src/clas12-generator-to-lund/PhysicalConverter.h) / [PhysicalConverter.cpp](../src/clas12-generator-to-lund/PhysicalConverter.cpp) provide the stable physical-source dispatch. `event-generator=genie` selects the current adapter; future adapters join here without changing the public executable.
 
-[GenieConverter.h](../src/clas12-generator-to-lund/genie/GenieConverter.h) / [GenieConverter.cpp](../src/clas12-generator-to-lund/genie/GenieConverter.cpp) are nested below the physical dispatcher because GENIE is one adapter of the `clas12-generator-to-lund` executable. They expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, fills the original pre-selection electron diagnostic, selects process/species, and writes an `Event`. It also fills the common written-particle diagnostics.
+[GenieConverter.h](../src/clas12-generator-to-lund/genie/GenieConverter.h) / [GenieConverter.cpp](../src/clas12-generator-to-lund/genie/GenieConverter.cpp) are nested below the physical dispatcher because GENIE is one adapter of the `clas12-generator-to-lund` executable. They expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, selects process/species, and writes an `Event`. Physical conversion creates no monitoring histograms.
 
 The reader arrays replace the archived fixed 250-element buffers. Input errors, unsupported-only input and output failures do not publish a manifest. Complete splitting retains partial files; the capacity limit counts accepted events, not scanned entries. Schema and process conventions are in the [GENIE guide](genie-to-lund-conversion.md).
 
@@ -97,6 +93,7 @@ The runner calls the external `src/common/external/submit_GEMC_sample.sh` Bash p
 | --- | --- |
 | `tests/CMakeLists.txt` | Registers integration, parity, distribution and command tests |
 | `integration.py` | LUND invariants, channel behavior, config validation, deterministic output, conversion splitting/schema errors |
+| `check_monitoring.cpp` | Checks representative FD/CD proton, neutron, pip and pim ROOT names, titles, axis labels, styles and histogram counts |
 | `make_gst_fixture.cpp` | Generates normal, long parity, short, missing/wrong-type, empty, unsupported and >250-particle GST fixtures |
 | `simulation.py` | Dry runs, file selection, exact counts, installed-style execution stubs and failure behavior |
 | `legacy_uniform_driver.cpp` | Calls archived uniform/tester kernels and archived histogram initialization with controlled seeds and temporary files |

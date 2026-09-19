@@ -90,7 +90,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto recon_dir = output / "reconhipo";
     const auto rootfiles_dir = output / "rootfiles";
     const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
-    const auto monitoring_dir = diagnostics / (uniform ? "MonitoringPlotsPath" : "monitoring_plots");
+    const auto monitoring_dir = diagnostics / "MonitoringPlotsPath";
 
     // Keep the archived yellow separator style so long interactive and Slurm logs expose run boundaries.
     std::cout << env::SYSTEM_COLOR << "\n=============================================================\n" << env::RESET_COLOR;
@@ -115,7 +115,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << env::SYSTEM_COLOR << "reconhipoPath:" << env::RESET_COLOR << " " << recon_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "rootfilesPath:" << env::RESET_COLOR << " " << rootfiles_dir << '\n';
         std::cout << env::SYSTEM_COLOR << "MonitoringPlotsPath:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Plot list path:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_plots.root") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Plot list path:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_monitoring_plots.root") << '\n';
         std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << "  " << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " "
                   << config.get("electron-momentum") << "  " << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
         std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed") << "  " << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " "
