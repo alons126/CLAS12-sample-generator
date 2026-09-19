@@ -146,12 +146,13 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             else:
                 particle = {'epFD':'pFD','enFD':'nFD','epipFD':'pipFD','epimFD':'pimFD','epCD':'pCD','enCD':'nCD','epipCD':'pipCD','epimCD':'pimCD'}[channel]
                 root_label = {'pip':'#pi^{+}','pim':'#pi^{-}'}.get(particle[:-2], particle[:-2]) + particle[-2:]
-                family = 'en' if channel.startswith('en') else 'ep'
-                monitor_name = f'P_{particle}_{family}'
+                monitor_name = f'P_{particle}_{channel}'
                 monitor_title = f"P_{{{root_label}}} in (e,e'{root_label}) sample"
                 monitor_axis = f'P_{{{root_label}}} [GeV]'
                 monitor_count = '27'
             run(monitoring_checker, monitoring_file, monitor_name, monitor_title, monitor_axis, monitor_count)
+            if channel == 'epipCD':
+                run(monitoring_checker, monitoring_file, 'Theta_pipCD_epipCD', "#theta_{#pi^{+}CD} in (e,e'#pi^{+}CD) sample", '#theta_{#pi^{+}CD} [#circ]', monitor_count)
             assert [f['events'] for f in manifest['files']] == [10000,1]
             assert [int(h[8]) for h,p in events] == list(range(10000)) + [0]
             for header, particles in events:
@@ -200,7 +201,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable, '--channel', 'eh', '--hadron', 'proton', '--hadron-region', 'FD', '--events', '3', '--output', labeled_parent)
         labeled_plots = labeled/'lundfiles/lund-gen-monitoring/MonitoringPlotsPath'
         assert (labeled_plots/'Uniform_epFD_plots_5986MeV.pdf').is_file()
-        assert list(labeled_plots.glob('[0-9]*_*pFD*_ep.png'))
+        assert list(labeled_plots.glob('[0-9]*_*pFD*_epFD.png'))
 
         config.write_text('# test precedence\nchannel = eh\nhadron = neutron\nhadron-region = FD\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
         configured = root/'configured'/ 'Uniform_sample_enFD_2070MeV'

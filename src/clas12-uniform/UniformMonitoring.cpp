@@ -145,9 +145,10 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
 
     const std::string region = sample_label.size() >= 2 && sample_label.compare(sample_label.size() - 2, 2, "CD") == 0 ? "CD" : "FD";
     const auto hadron = hadronLabel(hadron_pid, region);
-    // Retain the legacy ep/en family suffixes. Charged-pion extensions use ep as in the requested
-    // P_pipCD_ep convention, while the particle token itself carries the unambiguous pion identity.
-    const std::string channel = hadron_pid == constants::neutron_pdg ? "en" : "ep";
+    // ROOT displays the histogram object name in its statistics box. Use the complete resolved sample
+    // label so every plot identifies its actual hadron species and detector region (for example,
+    // `Theta_pipCD_epipCD`) rather than collapsing pion and regional samples to legacy `ep`/`en` names.
+    const std::string& channel = sample_label;
     const std::string context = "(e,e'" + hadron.title + ") sample";
     const double theta_high = region == "CD" ? 150 : 50;
 

@@ -36,16 +36,16 @@ A hadron `part` detected in the Central Detector or Forward Detector is written 
 Examples:
 
 ```cpp
-TH1D("P_pFD_ep",
+TH1D("P_pFD_epFD",
      "P_{pFD} in (e,e'pFD) sample;P_{pFD} [GeV]",
      100, 0, Ebeam * 1.1);
 
-TH1D("P_pipCD_ep",
+TH1D("P_pipCD_epipCD",
      "P_{#pi^{+}CD} in (e,e'#pi^{+}CD) sample;P_{#pi^{+}CD} [GeV]",
      100, 0, Ebeam * 1.1);
 ```
 
-The region-bearing particle token is used consistently in momentum, theta, phi, vertex, particle-correlation, and electron-hadron correlation histograms. Neutron families retain the `en` suffix; proton and charged-pion families use the legacy-style `ep` family suffix while their particle token identifies the species unambiguously.
+The region-bearing particle token is used consistently in momentum, theta, phi, vertex, particle-correlation, and electron-hadron correlation histograms. Each ROOT object name ends with the complete resolved channel label (`epFD`, `enFD`, `epipFD`, `epimFD`, or its CD counterpart). ROOT therefore shows the actual uniform channel in the statistics box.
 
 ## 4. Rendered products
 

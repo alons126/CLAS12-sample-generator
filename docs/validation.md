@@ -5,7 +5,7 @@
 Three different contracts are checked independently:
 
 1. **LUND records:** matching headers, particle identities, momenta, and target vertices for matched seeds, beam/geometry/A/Z, and sampling settings. The pinned upstream ep/en profile maps to `--hadron-momentum uniform --hadron-p-min 0.3`; the upper bound is automatically beam energy. Mass/energy fields intentionally reflect the single maintained rounded table, and the tester now samples its target geometry.
-2. **Uniform diagnostics:** exact archived 1e histogram names, binning, entries, contents and errors. Electron-hadron monitoring intentionally adds FD/CD to hadron names and titles; all uniform modes are checked for one nonduplicated monitoring file.
+2. **Uniform diagnostics:** exact archived 1e histogram names, binning, entries, contents and errors. Electron-hadron monitoring adds the hadron species and FD/CD region to names and titles, and ends each object name with the complete resolved channel so ROOT statistics boxes identify the sample correctly. All uniform modes are checked for one nonduplicated monitoring file.
 3. **Job arguments:** matching GEMC/reconstruction arguments and output naming at matched field/card/YAML/file-count settings. Real detector execution is a separate validation stage.
 
 The maintained production electron/proton mixtures and zero-to-beam uniform neutron mode intentionally differ from the pinned upstream submodule's older momentum bounds and modes. The production modes have their own analytical distribution tests; fixed 1 GeV/c remains a neutron-only option.
