@@ -137,7 +137,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         for channel, pid, mass, selection, theta_min, theta_max, p_min in cases:
             output_root = root / channel
             output = output_root / f'Uniform_sample_{channel}_5986MeV'
-            settings = selection + ['--events', '10001', '--events-per-file', '10000', '--seed', '17', '--vertex-seed', '23', '--render-plots', 'false']
+            settings = selection + ['--events', '10001', '--events-per-file', '10000', '--seed', '17', '--vertex-seed', '23']
             run(executable, *settings, '--output', output_root)
             manifest, events = read_run(output)
             monitoring_file = output/'lundfiles/lund-gen-monitoring'/f"{manifest['config']['prefix']}_monitoring_plots.root"
@@ -153,6 +153,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             run(monitoring_checker, monitoring_file, monitor_name, monitor_title, monitor_axis, monitor_count)
             if channel == 'epipCD':
                 run(monitoring_checker, monitoring_file, 'Theta_pipCD_epipCD', "#theta_{#pi^{+}CD} in (e,e'#pi^{+}CD) sample", '#theta_{#pi^{+}CD} [#circ]', monitor_count)
+            rendered = output/'lundfiles/lund-gen-monitoring/MonitoringPlotsPath'
+            assert (rendered/f'Uniform_{channel}_plots_5986MeV.pdf').is_file()
+            assert len(list(rendered.glob('[0-9]*_*.png'))) == int(monitor_count)
             assert [f['events'] for f in manifest['files']] == [10000,1]
             assert [int(h[8]) for h,p in events] == list(range(10000)) + [0]
             for header, particles in events:
@@ -203,7 +206,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert (labeled_plots/'Uniform_epFD_plots_5986MeV.pdf').is_file()
         assert list(labeled_plots.glob('[0-9]*_*pFD*_epFD.png'))
 
-        config.write_text('# test precedence\nchannel = eh\nhadron = neutron\nhadron-region = FD\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\nrender-plots = false\n')
+        config.write_text('# test precedence\nchannel = eh\nhadron = neutron\nhadron-region = FD\nevents = 3\nevents-per-file = 2\nbeam-energy = 2.07052\n')
         configured = root/'configured'/ 'Uniform_sample_enFD_2070MeV'
         run(executable, '--config', config, '--events', '5', '--output', configured.parent)
         m,_ = read_run(configured)
@@ -221,11 +224,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         _,events=read_run(tester)
         assert all(math.isclose(angles(p[0])[0],5.98636,abs_tol=2e-5) for h,p in events)
         fixed = root/'fixed'/ 'Uniform_sample_enFD_5986MeV'
-        run(executable, '--channel', 'eh', '--hadron', 'neutron', '--hadron-momentum', 'fixed', '--events', '5', '--render-plots', 'false', '--output', fixed.parent)
+        run(executable, '--channel', 'eh', '--hadron', 'neutron', '--hadron-momentum', 'fixed', '--events', '5', '--output', fixed.parent)
         _,events=read_run(fixed)
         assert all(math.isclose(angles(p[-1])[0],1,abs_tol=2e-5) for h,p in events)
         automatic = root/'automatic-seed'/'Uniform_sample_1e_5986MeV'
-        run(executable, '--seed', '0', '--vertex-seed', '0', '--events', '2', '--render-plots', 'false', '--output', automatic.parent)
+        run(executable, '--seed', '0', '--vertex-seed', '0', '--events', '2', '--output', automatic.parent)
         am,_=read_run(automatic)
         assert am['config']['seed'] == '0' and am['config']['vertex-seed'] == '0'
         # Every material-bearing RG-M target resolves nuclear metadata and one external geometry key.

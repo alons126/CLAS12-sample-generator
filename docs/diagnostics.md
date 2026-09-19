@@ -49,7 +49,7 @@ The region-bearing particle token is used consistently in momentum, theta, phi, 
 
 ## 4. Rendered products
 
-Uniform generation defaults to `--render-plots true`. It renders the same histograms stored in the ROOT file into:
+Every uniform generation run renders the same histograms stored in the ROOT file into:
 
 ```text
 lundfiles/lund-gen-monitoring/MonitoringPlotsPath/
@@ -59,4 +59,4 @@ lundfiles/lund-gen-monitoring/MonitoringPlotsPath/
 └── ...
 ```
 
-Use `--render-plots false` to retain the ROOT monitoring file without producing PDF or PNG views. Rendering does not create a second ROOT file.
+Rendering is part of the uniform output contract for every channel and does not create a second ROOT file.

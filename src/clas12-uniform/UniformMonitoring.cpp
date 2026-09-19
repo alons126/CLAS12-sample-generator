@@ -228,7 +228,7 @@ void UniformMonitoring::fill(const Event& event) {
 
 #pragma region /* Output and rendering */
 
-void UniformMonitoring::save(const std::filesystem::path& path, bool render, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
+void UniformMonitoring::save(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
     // Apply the archived axis presentation before ROOT serialization so the stored histograms and
     // rendered canvases carry the same title alignment and text sizing.
     for (auto& entry : impl_->entries) {
@@ -251,7 +251,6 @@ void UniformMonitoring::save(const std::filesystem::path& path, bool render, con
     }
     output.Close();
 
-    if (!render) { return; }
     gROOT->SetBatch(true);
     std::filesystem::create_directories(plot_directory);
     const auto pdf = (plot_directory / pdf_name).string();

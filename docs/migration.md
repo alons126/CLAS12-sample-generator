@@ -33,7 +33,7 @@ All production channels keep the original flat-theta and azimuth prescriptions, 
 
 ## Diagnostics
 
-Uniform generation writes one `lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root` file. It merges the former general and compatibility monitors, preserves the archived plot format, and extends regional hadron notation for protons, neutrons, pip, and pim. `MonitoringPlotsPath/` contains optional PDF/PNG renderings of the same objects. Physical conversion no longer creates monitoring histograms. Uniform generation also prepares the legacy empty `mchipo/`, `reconhipo/`, and `rootfiles/` directories.
+Uniform generation writes one `lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root` file. It merges the former general and compatibility monitors, preserves the archived plot format, and extends regional hadron notation for protons, neutrons, pip, and pim. Every uniform channel fills `MonitoringPlotsPath/` with PDF/PNG renderings of the same objects. Physical conversion creates no monitoring histograms. Uniform generation also prepares the legacy empty `mchipo/`, `reconhipo/`, and `rootfiles/` directories.
 
 ## Retained corrections
 

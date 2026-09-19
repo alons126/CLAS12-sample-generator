@@ -27,7 +27,6 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused in physical conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed; zero requests ROOT automatic, nonrepeatable seeding |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
-| `render-plots` | `true` uniform only | Render the uniform PDF/PNG views from the histograms stored in the single monitoring ROOT file |
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
 | `event-generator` | `genie` | Physical adapter name; GENIE is currently implemented |
 | `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |

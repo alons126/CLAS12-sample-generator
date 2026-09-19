@@ -78,4 +78,4 @@ Masses come only from `src/support/constants.h`: PDG 2026-based values rounded t
 
 ## Output and diagnostics
 
-`lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root` contains the complete monitoring set. Its legacy-style definitions cover 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel with region-bearing hadron labels. It is the only monitoring ROOT file. Optional PDF/PNG views render those same histograms. Empty `mchipo/`, `reconhipo/`, and `rootfiles/` directories preserve the downstream layout. See [diagnostics](diagnostics.md) and [sampling equations](sampling-models.md).
+`lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root` contains the complete monitoring set. Its legacy-style definitions cover 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel with region-bearing hadron labels. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms. Empty `mchipo/`, `reconhipo/`, and `rootfiles/` directories preserve the downstream layout. See [diagnostics](diagnostics.md) and [sampling equations](sampling-models.md).

@@ -103,7 +103,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
                     extra = []
                 selection = [] if channel in ('1e','tester') else ['--hadron','proton' if channel=='ep' else 'neutron','--hadron-region','FD']
                 run(current,'--channel','electron-tester' if channel == 'tester' else '1e' if channel == '1e' else 'eh','--beam-energy',beam,'--events',64,
-                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--render-plots','false','--output',new_root,*selection,*extra)
+                    '--seed',67890,'--vertex-seed',12345,'--A',1,'--Z',1,'--output',new_root,*selection,*extra)
                 m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
                 monitoring = new/'lundfiles/lund-gen-monitoring'/f"{m['config']['prefix']}_monitoring_plots.root"
                 assert monitoring.is_file()
@@ -119,7 +119,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             run(legacy,'1e',original,2.07052,64,1,67890,12345,target)
             run(current,'--channel','1e','--beam-energy',2.07052,'--target',target,'--A',1,'--Z',1,'--events',64,
                 '--electron-momentum','uniform','--electron-p-min',0,'--electron-p-max',2.07052,
-                '--render-plots','false','--output',new_root)
+                '--output',new_root)
             m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
             compare(new/m['files'][0]['path'],original/'legacy_1.txt')
     else:

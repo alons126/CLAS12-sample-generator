@@ -223,7 +223,6 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         c.values_.insert({{"channel", "1e"},
                           {"hadron", "proton"},
                           {"hadron-region", "FD"},
-                          {"render-plots", "true"},
                           {"electron-theta-min", "5"},
                           {"electron-theta-max", "40"},
                           {"electron-p-min", "0.7"},
@@ -601,7 +600,6 @@ void RunConfig::validate(bool uniform) const {
         throw std::runtime_error("hadron must be proton, neutron, pip or pim");
     }
     if (get("hadron-region") != "FD" && get("hadron-region") != "CD") { throw std::runtime_error("hadron-region must be FD or CD"); }
-    if (get("render-plots") != "true" && get("render-plots") != "false") { throw std::runtime_error("render-plots must be true or false"); }
 
     // Require ordered polar-angle bounds inside the full geometric domain. The resolved defaults carry
     // the legacy per-particle acceptance, while explicit profiles may narrow those ranges.
@@ -738,10 +736,9 @@ std::string help(bool uniform) {
             "Uniform: --hadron proton|neutron|pip|pim, --hadron-region FD|CD, --electron-theta-min/max DEG, --electron-p-min/max GeV/c,\n"
             "--hadron-theta-min/max DEG, --electron-momentum auto|uniform|mixed|beam,\n"
             "--hadron-momentum auto|fixed|sampled|uniform|mixed,\n"
-            "--hadron-p GeV/c, --hadron-p-min GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG,\n"
-            "--render-plots true|false.\n"
+            "--hadron-p GeV/c, --hadron-p-min GeV/c, --trigger-theta DEG, --trigger-phi-offset DEG.\n"
             "Hadron theta and phi are always sampled uniformly inside their configured ranges.\n"
-            "Sampled hadron momentum extends to the beam energy.\n";
+            "Sampled hadron momentum extends to the beam energy. Uniform monitoring is always written and rendered.\n";
     } else {
         // Physical-only settings identify the current GENIE adapter and preserve generator, tune,
         // selection, detector, and target-variation provenance in the output contract.

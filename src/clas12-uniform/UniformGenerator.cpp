@@ -290,15 +290,15 @@ void generateUniform(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Run completion */
-    // Persist one diagnostic contract before making the run consumable. Optional rendering adds
-    // legacy-style PDF/PNG views without duplicating ROOT histogram storage.
+    // Persist one diagnostic contract before making the run consumable. Every uniform channel writes
+    // its ROOT histograms and renders the legacy-style PDF/PNG views into MonitoringPlotsPath.
     const auto output = std::filesystem::path(c.get("output"));
     const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
     const auto monitoring_root = diagnostics / (c.get("prefix") + "_monitoring_plots.root");
     const auto plot_directory = diagnostics / "MonitoringPlotsPath";
     const auto plot_channel = sampleLabel(c);
     const auto pdf_name = "Uniform_" + plot_channel + "_plots_" + legacyBeamLabel(beam) + ".pdf";
-    monitoring.save(monitoring_root, c.get("render-plots") == "true", plot_directory, pdf_name);
+    monitoring.save(monitoring_root, plot_directory, pdf_name);
 
     // Uniform generation scans and writes the same number of events, so the written count is also the
     // completion count supplied to the manifest. finish() closes files before publishing readiness.

@@ -88,7 +88,7 @@ This boundary is intentionally side-effect-free with respect to run products: pa
 3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
 5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It preserves the archived definitions and rendering style and generalizes hadron labels to proton, neutron, pip, and pim in FD or CD.
-6. It writes every histogram once to `<prefix>_monitoring_plots.root` and optionally renders the same objects to PDF and PNG.
+6. It writes every histogram once to `<prefix>_monitoring_plots.root` and renders the same objects to PDF and PNG for every uniform channel.
 7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
 
 ## Following a physical run

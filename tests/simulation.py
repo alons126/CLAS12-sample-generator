@@ -34,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-simulation-') as tmp:
     root = Path(tmp)
     output_root = root/'run'
     output = output_root/'Uniform_sample_1e_5986MeV'
-    call(exe, '--output', output_root, '--events', '25001', '--render-plots', 'false')
+    call(exe, '--output', output_root, '--events', '25001')
     card = root/'detector.gcard'; card.write_text('<gcard/>')
     yaml = root/'reco.yaml'; yaml.write_text('configuration: test\n')
     runner = project/'scripts/simulation/run.py'

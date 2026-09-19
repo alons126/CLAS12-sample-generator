@@ -49,7 +49,7 @@ The electron tester profiles sample the selected target geometry and scan electr
 
 ## Available common options
 
-`output`, `beam-energy`, `rgm-target`, optional target-field overrides (`target`, `A`, `Z`, `gemc-target-variation`), `events`, `events-per-file`, `seed`, `vertex-seed`, and `prefix` are common configuration keys. `render-plots` belongs only to uniform generation because physical conversion creates no monitoring histograms. Every event samples its selected target geometry. Uniform prefixes are automatic unless `--prefix` explicitly overrides them. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
+`output`, `beam-energy`, `rgm-target`, optional target-field overrides (`target`, `A`, `Z`, `gemc-target-variation`), `events`, `events-per-file`, `seed`, `vertex-seed`, and `prefix` are common configuration keys. Every uniform run writes its ROOT monitoring file and fills `MonitoringPlotsPath` with PDF/PNG renderings; physical conversion creates no monitoring plots. Every event samples its selected target geometry. Uniform prefixes are automatic unless `--prefix` explicitly overrides them. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
 
 ## Available uniform options
 
