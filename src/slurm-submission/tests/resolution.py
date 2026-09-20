@@ -60,7 +60,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     assert result['OUTPATH'] == str(lund.parent)
     assert 'OUTPATH_BASE' not in result
     assert result['NUM_OF_JOBS'] == '2' and result['JOB_NEVENTS'] == '3'
-    assert result['TEMP_OUTPATH_PARTICLE'] == 'enFD' and result['TEMP_BEAM_E'] == '2070MeV'
+    assert result['UNIFORM_SAMPLE_CHANNEL'] == 'enFD' and result['TEMP_BEAM_E'] == '2070MeV'
     assert result['TORUS_FIELD'] == '0.5'
     assert result['CLAS12TAGS_DIR'] == result['farm_out'] == ''
     # Simulated resources for a nondefault version avoid editing detector originals.
@@ -135,7 +135,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     save(physical)
     result = resolve(lund, {}, project)
     assert result['source'] == 'physical' and result['SAMPLE_GENERATOR'] == 'genie'
-    assert result['TEMP_OUTPATH_PARTICLE'] == 'none' and result['JOB_NEVENTS'] == '3'
+    assert result['UNIFORM_SAMPLE_CHANNEL'] == 'none' and result['JOB_NEVENTS'] == '3'
     # Check actual output schema and relative paths from workflow 1, when the executable is available.
     if len(sys.argv) > 2:
         subprocess.run([str(Path(sys.argv[2]).resolve()), '--config', str(project / 'config/samples/uniform-1e-2070MeV.conf'),
@@ -144,6 +144,6 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
         generated = root / 'generated/Uniform_sample_1e_2070MeV/lundfiles'
         result = resolve(generated, {}, project)
         assert result['NUM_OF_JOBS'] == '2' and result['JOB_NEVENTS'] == '3'
-        assert result['TEMP_OUTPATH_PARTICLE'] == '1e' and result['GEMC_VERSION'] == '5.14'
+        assert result['UNIFORM_SAMPLE_CHANNEL'] == '1e' and result['GEMC_VERSION'] == '5.14'
 print('Manifest portability, defaults, precedence, manual input, partial files and invalid-input checks passed.')
 # endregion Tests

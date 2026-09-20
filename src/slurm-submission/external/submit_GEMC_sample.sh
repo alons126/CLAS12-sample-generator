@@ -21,7 +21,7 @@ echo "JOB_BEAM_E = ${JOB_BEAM_E}"
 echo
 echo "GEMC_DATA_DIR = ${GEMC_DATA_DIR}"
 echo
-echo "TEMP_OUTPATH_PARTICLE = ${TEMP_OUTPATH_PARTICLE}"
+echo "UNIFORM_SAMPLE_CHANNEL = ${UNIFORM_SAMPLE_CHANNEL}"
 echo
 
 #Change file prefix for your simulation

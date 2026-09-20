@@ -325,7 +325,7 @@ def resolve(lund_directory, explicit, root):
     default_job = f'Uniform_{channel}_sample_{beam}' if source == 'uniform' else f'{target}_{generator}_{tune}_{beam}_{q2}{fc}_GEMC{version}'
     job = token(values.get('job-name', default_job), 'job-name')
     return dict(source=source, NUM_OF_JOBS=str(jobs), JOB_NEVENTS=str(limit), TEMP_BEAM_E=beam,
-                TEMP_BEAM_E_ROUNDED=rounded, TEMP_OUTPATH_PARTICLE=channel, TARGET_VARIATION=variation,
+                TEMP_BEAM_E_ROUNDED=rounded, UNIFORM_SAMPLE_CHANNEL=channel, TARGET_VARIATION=variation,
                 SAMPLE_TARGET_NUCLEUS=target, SAMPLE_GENERATOR=generator, GENERATOR_TUNE=tune, Q2_CUT=q2,
                 OUTPATH=str(run), SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job,
                 GEMC_VERSION=version, CLEAR_FAR_OUT=values['clear-farm-out'],

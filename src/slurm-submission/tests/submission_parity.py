@@ -94,7 +94,7 @@ def fixture(root, source, energy, channel='en', fc=0):
     old_path = root / 'old.csh'
     old_path.write_text(old)
     values = dict(NUM_OF_JOBS='2', JOB_NEVENTS='3', TEMP_BEAM_E=energy,
-                  TEMP_OUTPATH_PARTICLE=channel if source == 'uniform' else 'none', TARGET_VARIATION=target,
+                  UNIFORM_SAMPLE_CHANNEL=channel if source == 'uniform' else 'none', TARGET_VARIATION=target,
                   SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie',
                   GENERATOR_TUNE=tune, Q2_CUT=q2, OUTPATH=str(run),
                   SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job, TEMP_BEAM_E_ROUNDED=rounded,
@@ -174,7 +174,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     for channel in ('enFD', 'enCD', 'epFD', 'epCD', 'epipFD', 'epipCD', 'epimFD', 'epimCD', 'electron-tester'):
         new, _, values, env = fixture(root / channel, 'uniform', '2070MeV', channel)
         _, calls = run_script(new, env)
-        assert len(calls) == 1 and calls[0]['env']['TEMP_OUTPATH_PARTICLE'] == channel
+        assert len(calls) == 1 and calls[0]['env']['UNIFORM_SAMPLE_CHANNEL'] == channel
     for failure in ('gcard', 'yaml', 'lund', 'tags', 'symlink', 'unsafe', 'sbatch'):
         new, _, values, env = fixture(root / failure, 'uniform', '2070MeV')
         run = Path(values['OUTPATH'])
@@ -222,7 +222,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         assert len(calls) == 1 and calls[0]['argv'][1] == '--array=1-2'
         assert calls[0]['env']['GEMC_VERSION'] == '5.14' and calls[0]['env']['JOB_NEVENTS'] == '3'
         assert calls[0]['env']['OUTPATH'] == values['OUTPATH']
-        assert calls[0]['env']['TEMP_OUTPATH_PARTICLE'] == ('enFD' if source == 'uniform' else 'none')
+        assert calls[0]['env']['UNIFORM_SAMPLE_CHANNEL'] == ('enFD' if source == 'uniform' else 'none')
         _, calls = run_script(new, env, success=False, arguments=('--lund-dir', str(lund), '--beam-energy', '4.02962'))
         assert not calls
 
@@ -277,7 +277,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     for source in ('uniform', 'GENIE'):
         for energy, torus in (('2070MeV', '0.5'), ('4029MeV', '-1.0'), ('5986MeV', '-1.0')):
             prefix = f'Uniform_en_sample_{energy}' if source == 'uniform' else f'C12_GEM21_11a_00_000_Q2_0_02_{energy}'
-            worker_env = dict(env, OUTPATH=str(first_run), TEMP_BEAM_E=energy, TEMP_OUTPATH_PARTICLE='en',
+            worker_env = dict(env, OUTPATH=str(first_run), TEMP_BEAM_E=energy, UNIFORM_SAMPLE_CHANNEL='en',
                               SAMPLE_TARGET_NUCLEUS='C12', GENIE_TUNE='GEM21_11a_00_000', GENERATOR_TUNE='GEM21_11a_00_000',
                               SAMPLE_GENERATOR=source, Q2_CUT='Q2_0_02', TORUS_FIELD=torus,
                               GCARD_FILE=values['GCARD_FILE'], YAML_FILE=values['YAML_FILE'],

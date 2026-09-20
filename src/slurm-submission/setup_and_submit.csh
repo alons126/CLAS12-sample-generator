@@ -279,16 +279,6 @@ foreach sample ($samples:q)
     set check_name = GEMC_DATA_DIR
     set check_path = "$GEMC_DATA_DIR"
     submission_dir
-
-    # Introduce the adapter-specific sample loop report; actual iteration is driven by the resolver-generated sample files.
-    if ("$source" == "uniform") then
-        set subbanner_title = "Looping over particle types"
-    else
-        set subbanner_title = "Looping over samples"
-    endif
-    set subbanner_color = "$COLOR_START"
-    code_subbanner
-
     # endregion Setup
 
     # Sample report -----------------------------------------------------------
@@ -306,44 +296,38 @@ foreach sample ($samples:q)
     # Lead with the source-specific identity a user needs to recognize the selected run.
     # Uniform samples are identified by channel, while physical samples include their target nucleus and generator tune.
     if ("$source" == "uniform") then
-        set banner_title = "Processing particle type ${TEMP_OUTPATH_PARTICLE} at beam energy ${TEMP_BEAM_E}"
+        set subbanner_title = "Processing uniform sample"
     else
-        set banner_title = "Processing GENIE sample for ${SAMPLE_TARGET_NUCLEUS} (${GENERATOR_TUNE}) at beam energy ${TEMP_BEAM_E}"
+        set subbanner_title = "Processing GENIE sample"
     endif
     set banner_color = "$COLOR_START"
-    code_banner
+    code_subbanner
     echo
 
     # Uniform runs report their generated channel. Physical runs report the detector target variation here;
     # their full generator provenance follows below.
     if ("$source" == "uniform") then
-        echo "${COLOR_START}TEMP_BEAM_E:${COLOR_END} ${TEMP_BEAM_E}"
-        echo
-        echo "${COLOR_START}TEMP_OUTPATH_PARTICLE:${COLOR_END} ${TEMP_OUTPATH_PARTICLE}"
+        echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
+        echo "${COLOR_START}TEMP_BEAM_E:${COLOR_END}             ${TEMP_BEAM_E}"
         echo
 
         # Sample-specific reports use the informational color supplied by set_environment.csh.
-        echo "${COLOR_INFO}TEMP_OUTPATH_PARTICLE:${COLOR_END} ${TEMP_OUTPATH_PARTICLE}"
-        echo
-        set banner_title = "Setting environment for ${TEMP_BEAM_E} and particle type ${TEMP_OUTPATH_PARTICLE}"
+        set banner_title = "Setting environment for ${TEMP_BEAM_E} and channel ${UNIFORM_SAMPLE_CHANNEL}"
         set banner_color = "$COLOR_INFO"
         code_banner
         echo
-
     else
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END} ${TARGET_VARIATION}"
         echo
-
         # Physical-sample reports use the same shared informational color; field-cage status is still printed explicitly below.
     endif
-
     echo "${COLOR_INFO}TEMP_BEAM_E_ROUNDED:${COLOR_END} ${TEMP_BEAM_E_ROUNDED}"
     echo
 
     # The rounded beam label selects detector resources; the exact TEMP_BEAM_E remains part of sample provenance.
     # The physical report keeps the legacy GENIE wording because GENIE is the currently supported physical adapter.
     if ("$source" == "uniform") then
-        set banner_title = "Setting paths for particle type ${TEMP_OUTPATH_PARTICLE}"
+        set banner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
         set banner_color = "$COLOR_INFO"
         code_banner
         echo
@@ -461,7 +445,7 @@ foreach sample ($samples:q)
     # Report the automatic detector selection before checking its two concrete inputs.
     # GCARD controls GEMC geometry and fields; YAML controls the downstream CLAS12 reconstruction configuration.
     if ("$source" == "uniform") then
-        set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E}, ${TARGET_VARIATION}, and ${TEMP_OUTPATH_PARTICLE}"
+        set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E}, ${TARGET_VARIATION}, and ${UNIFORM_SAMPLE_CHANNEL}"
     else
         set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E} and ${TARGET_VARIATION}"
     endif
@@ -512,7 +496,7 @@ foreach sample ($samples:q)
     # GEMC and reconstruction always produce mchipo and reconhipo directories.
     # Uniform runs additionally replace rootfiles to preserve their archived output layout and monitoring workflow.
     if ("$source" == "uniform") then
-        set banner_title = "Setting output directories for ${TEMP_OUTPATH_PARTICLE}"
+        set banner_title = "Setting output directories for ${UNIFORM_SAMPLE_CHANNEL}"
         set output_dirs = (mchipo reconhipo rootfiles)
     else
         set banner_title = "Setting output directories"
