@@ -125,7 +125,7 @@ setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEM
 # and jump to the corresponding failure label before any dependent stage can run. submission_section prints a consistent heading.
 alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; printf "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; printf "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
-alias submission_section 'echo ""; echo "${COLOR_START}=======================================================================${COLOR_END}"; printf "%s\n" "${COLOR_START}${section}${COLOR_END}"; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo ""'
+alias submission_section 'echo ""; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo "${COLOR_START}${section}${COLOR_END}"; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo ""'
 
 # endregion Shell support
 
