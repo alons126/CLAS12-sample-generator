@@ -187,7 +187,7 @@ foreach sample ($samples:q)
     set subbanner_color = "$COLOR_START"
     code_subbanner
 
-    echo "${COLOR_START}RUNNING_DIR:${COLOR_END} ${RUNNING_DIR}"
+    echo "${COLOR_START}RUNNING_DIR:${COLOR_END}.        ${RUNNING_DIR}"
     if ("$source" == "uniform") then
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}    ${TARGET_VARIATION}"
     endif
