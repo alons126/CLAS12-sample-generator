@@ -8,20 +8,42 @@
 
 Purpose:
     Keep LUND build controls separate from sample physics and detector submission settings.
+
 Workflow:
     Parse launcher flags -> load config/run.json -> configure/build -> optional CTest ->
     run clas12-uniform or clas12-generator-to-lund with the original sample arguments.
+
 Inputs:
     Explicit create-lund source, strict build JSON, optional color environment and forwarded
     sample options. Paths are anchored to the repository root.
+
 Outputs:
     Build products and completed LUND files. Creation never submits simulation jobs.
+
 Failure:
     Invalid settings and failed child commands stop subsequent stages and return a nonzero
     status to the sourced launcher. Arguments are passed as argv lists without shell evaluation.
+
 Notes:
     run.csh handles --workflow submit itself by sourcing setup_and_submit.csh in the login shell.
     It bypasses this Python driver, CMake, and the LUND build settings entirely.
+
+Launcher options:
+    --run-settings FILE          Read strict build/test settings (default: config/run.json).
+    --workflow create-lund       Select the LUND-creation workflow (required here).
+    --source uniform|physical    Select the LUND event source (required for create-lund).
+    --build true|false           Configure and build before dispatch (JSON default: true).
+    --test true|false            Run CTest after building (JSON default: false).
+    --run true|false             Run the selected LUND executable (JSON default: true).
+    --build-dir DIRECTORY        Select the CMake binary tree (JSON default: build/release).
+    --build-type TYPE            Select Debug, Release, RelWithDebInfo, or MinSizeRel (default: Release).
+    --jobs N                     Select positive parallel build workers (JSON default: 4).
+    --help                       Print launcher options without updating, building, or running.
+
+Forwarded options:
+    Unrecognized arguments are preserved and passed to clas12-uniform or
+    clas12-generator-to-lund. Use -- --help after the launcher selections to print that
+    executable's authoritative sample options.
 """
 
 import argparse

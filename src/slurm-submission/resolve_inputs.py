@@ -6,15 +6,57 @@
 
 """Resolve submission inputs into a small, safely quoted C-shell environment.
 
-Purpose: bridge completed LUND output to the existing sourced setup without owning module
+Purpose:
+    bridge completed LUND output to the existing sourced setup without owning module
     loading, output removal, Slurm submission, or detector commands.
-Workflow: parse CLI/config -> read optional completed manifest -> merge explicit settings ->
+
+Workflow:
+    parse CLI/config -> read optional completed manifest -> merge explicit settings ->
     validate truth metadata and selected files -> emit one environment per sample.
-Inputs: lundfiles directories, optional key=value config, CLI overrides and manifest schema 1.
-Outputs: whitelisted set/setenv assignments, on stdout or in a private directory supplied by
+
+Inputs:
+    lundfiles directories, optional key=value config, CLI overrides and manifest schema 1.
+
+Outputs:
+    whitelisted set/setenv assignments, on stdout or in a private directory supplied by
     setup_and_submit.csh. All samples are validated before any environment file is written.
-Failure: malformed input, contradictory truth metadata or unsafe values return nonzero. Missing
+
+Failure:
+    malformed input, contradictory truth metadata or unsafe values return nonzero. Missing
     metadata is never inferred from parent-directory names. No simulation outputs are modified.
+
+Submission options:
+    --execute                     Submit after validation; default behavior is preview only.
+    --config FILE                 Read optional key = value submission settings.
+    --lund-dir DIRECTORY          Select completed RUN/lundfiles input; repeat for several samples.
+    --source uniform|physical     Override or confirm the manifest workflow.
+    --beam-energy GeV             Override or confirm truth beam energy.
+    --rgm-target ID               Override or confirm truth target identity.
+    --channel LABEL               Select uniform 1e, eh, electron-tester, or a resolved channel label.
+    --hadron NAME                 Select proton, neutron, pip, or pim when channel is eh.
+    --hadron-region FD|CD         Select the uniform hadron detector region.
+    --event-generator NAME        Select physical generator metadata (default: genie).
+    --tune NAME / --q2-cut NAME  Set physical-input provenance labels.
+    --prefix NAME                 Set the LUND filename stem when no manifest supplies it.
+    --gemc-version VERSION        Select the GEMC module/version (fallback: 5.14).
+    --gemc-target-variation NAME  Select the detector target variation.
+    --gcard FILE / --yaml FILE    Override detector-simulation/reconstruction inputs.
+    --torus SCALE                 Override the beam-dependent torus scale.
+    --num-jobs N                  Submit the first N completed files (default: all).
+    --events-per-job N            Set the shared worker event limit (default: largest selected file).
+    --job-name NAME               Override the derived Slurm job name.
+    --load-gemc true|false        Control GEMC module loading (default: true).
+    --gemc-data-dir DIRECTORY     Override GEMC_DATA_DIR after module loading.
+    --clas12tags-dir DIRECTORY    Validate an optional custom clas12Tags tree.
+    --clear-farm-out true|false   Remove direct farm_out files once (default: false).
+    --farm-out DIRECTORY          Supply the required cleanup directory when clearing farm_out.
+    --fc-status 0|1               Set the legacy physical report/filename label only.
+    --help                        Print this option list without modifying simulation output.
+
+Precedence and output:
+    CLI values override config values, which override manifest values and defaults. With
+    --execute, validated samples are passed to setup_and_submit.csh; simulation output directories
+    are replaced there while completed LUND files are preserved.
 """
 
 import argparse

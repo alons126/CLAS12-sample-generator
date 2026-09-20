@@ -5,14 +5,19 @@
 # CMakeLists.txt ---------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Project configuration and build orchestration.
+# 
 # Purpose:
 #   Declare supported workflows, discover dependencies, embed provenance and connect libraries, applications and tests.
+# 
 # Workflow:
 #   CMake configure -> dependencies -> provenance header -> source targets -> optional tests -> install rules.
+# 
 # Inputs:
 #   CMake 3.20+, compatible ROOT, Threads, Git when available; BUILD_UNIFORM, BUILD_GENIE and BUILD_TESTING cache options.
+# 
 # Outputs:
 #   Build targets, generated/Version.h, compile_commands.json and installation rules.
+# 
 # Notes:
 #   ROOT must declare a C++ standard of at least 17. Configuration fails when required dependencies are unavailable.
 

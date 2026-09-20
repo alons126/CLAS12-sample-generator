@@ -5,14 +5,19 @@
 # src/lund-generation/apps/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Command-line executable targets.
+# 
 # Purpose:
 #   Connect small CLI entry points to their implementation libraries and install enabled applications.
+# 
 # Workflow:
 #   src/ creates libraries -> this directory links executables -> CMake install places them under bin/.
+# 
 # Inputs:
 #   BUILD_UNIFORM and BUILD_GENIE, plus the libraries defined in src/.
+# 
 # Outputs:
 #   clas12-uniform and/or clas12-generator-to-lund in the build apps/ directory.
+# 
 # Notes:
 #   Defining or building a target does not generate samples or submit detector jobs.
 

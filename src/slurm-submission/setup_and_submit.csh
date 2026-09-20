@@ -5,22 +5,64 @@
 #!/bin/tcsh
 
 # Setup and submit ------------------------------------------------------------
-# Description: validates resolved sample settings and submits one GEMC/reconstruction Slurm array for each selected sample.
-# Purpose: provide the single ifarm setup/submission path for completed uniform or physical LUND samples.
-# Usage: source run.csh --workflow submit --lund-dir RUN/lundfiles [--config FILE] [overrides].
+# Description:
+#	validates resolved sample settings and submits one GEMC/reconstruction Slurm array for each selected sample.
+# 
+# Purpose:
+#	provide the single ifarm setup/submission path for completed uniform or physical LUND samples.
+# 
+# Usage:
+#	source run.csh --workflow submit --lund-dir RUN/lundfiles [--config FILE] [overrides].
+# 
 # Workflow:
 #   1. Ask resolve_inputs.py to validate configuration and emit private tcsh assignments.
 #   2. Load the requested GEMC environment and report the resolved detector and sample inputs.
 #   3. Validate every LUND file and worker command before replacing simulation output directories.
 #   4. Submit the protected GEMC/reconstruction payload as a Slurm array and return its status.
-# Inputs: manifest/config/CLI settings (GEMC fallback 5.14), existing OUTPATH/lundfiles/PREFIX_INDEX.txt, GCARD, YAML, and the login shell's module command.
-# Outputs: Slurm jobs writing OUTPATH/mchipo and OUTPATH/reconhipo; uniform samples also recreate rootfiles.
-# Failure behavior: checked failures jump to the shared return block; sourcing never exits the user's login shell.
-# Printing: run.csh sources set_environment.csh first; that file owns the COLOR_* environment-variable palette used below.
-# Preview is the default: validate/load the environment and print commands without changing sample outputs.
-# WARNING: --execute submits jobs and replaces the selected sample's simulation output directories. LUND is preserved.
-# All paths must be absolute and contain only letters, numbers, /, _, -, and . (protected payload contract).
-# JOB_NEVENTS is an event limit shared by the array, not a claim about each input file's length.
+# 
+# Submission options resolved before this script acts:
+#   --execute                     Submit and replace simulation outputs; default is preview only.
+#   --config FILE                 Read optional key = value submission settings.
+#   --lund-dir DIRECTORY          Select completed RUN/lundfiles input; repeat for several samples.
+#   --source uniform|physical     Override or confirm manifest workflow metadata.
+#   --beam-energy GeV             Override or confirm truth beam energy.
+#   --rgm-target ID               Override or confirm truth target identity.
+#   --channel/--hadron/--hadron-region VALUE  Describe uniform sample content.
+#   --event-generator/--tune/--q2-cut VALUE   Describe physical-input provenance.
+#   --prefix NAME                 Set the LUND filename stem when no manifest supplies it.
+#   --gemc-version VERSION        Select the GEMC module/version (fallback: 5.14).
+#   --gemc-target-variation NAME  Select the detector target variation.
+#   --gcard FILE / --yaml FILE    Override detector and reconstruction inputs.
+#   --torus SCALE                 Override the beam-dependent torus scale.
+#   --num-jobs N                  Submit the first N completed files (default: all).
+#   --events-per-job N            Set the shared worker event limit.
+#   --job-name NAME               Override the derived Slurm job name.
+#   --load-gemc true|false        Control GEMC module loading (default: true).
+#   --gemc-data-dir DIRECTORY     Override GEMC_DATA_DIR after module loading.
+#   --clas12tags-dir DIRECTORY    Validate an optional custom clas12Tags tree.
+#   --clear-farm-out true|false / --farm-out DIRECTORY  Control guarded farm log cleanup.
+#   --fc-status 0|1               Set the legacy physical report/filename label only.
+#   --help                        Print submission help without replacing outputs or submitting.
+# 
+# Inputs:
+#	manifest/config/CLI settings (GEMC fallback 5.14), existing OUTPATH/lundfiles/PREFIX_INDEX.txt, GCARD, YAML, and the login shell's module command.
+# 
+# Outputs:
+#	Slurm jobs writing OUTPATH/mchipo and OUTPATH/reconhipo; uniform samples also recreate rootfiles.
+# 
+# Failure behavior:
+#	checked failures jump to the shared return block; sourcing never exits the user's login shell.
+# 
+# Printing:
+#	run.csh sources set_environment.csh first; that file owns the COLOR_* environment-variable palette used below.
+# 
+# Preview is the default:
+#	validate/load the environment and print commands without changing sample outputs.
+# 
+# WARNING:
+#	--execute submits jobs and replaces the selected sample's simulation output directories. LUND is preserved.
+#	All paths must be absolute and contain only letters, numbers, /, _, -, and . (protected payload contract).
+#	JOB_NEVENTS is an event limit shared by the array, not a claim about each input file's length.
 
 # Input resolution ------------------------------------------------------------
 

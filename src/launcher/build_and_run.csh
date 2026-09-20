@@ -7,18 +7,24 @@
 # build_and_run.csh --------------------------------------------------------------------
 # Description:
 #   Build/run compatibility entry point.
+# 
 # Purpose:
 #   Delegate to workflow.py with Git pulling disabled by default; forwarded options may override it.
+# 
 # Workflow:
 #   1. Resolve the checkout from invocation, cwd or CLAS12_SAMPLES_DIR.
 #   2. Forward quoted arguments to the shared Python driver.
 #   3. Return its status without exiting the sourced parent shell.
+# 
 # Usage (csh/tcsh, including files named .sh):
 #   source src/launcher/build_and_run.csh --workflow create-lund --source uniform --output runs/example
+# 
 # Inputs:
 #   $argv carries launcher/child options; CLAS12_SAMPLES_DIR overrides the root.
+# 
 # Outputs:
 #   CLAS12_SAMPLE_STATUS and immediate $status report the driver result.
+# 
 # Notes:
 #   Source from the repository root unless CLAS12_SAMPLES_DIR is set.
 #   The Python driver inherits the already-loaded server software environment.

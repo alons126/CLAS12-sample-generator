@@ -7,9 +7,11 @@
 # run.csh --------------------------------------------------------------------
 # Description:
 #   Authoritative ifarm checkout entry point.
+# 
 # Purpose:
 #   Replace the disposable server clone with the remote revision, load its environment, then build
 #   and run one configured CLAS12 sample workflow.
+#
 # Workflow:
 #   1. Find the checkout from the caller's directory, this file, or CLAS12_SAMPLES_DIR; normalize
 #      it and verify both `.git` and the project workflow driver before any destructive command.
@@ -23,18 +25,38 @@
 #      arguments to src/launcher/workflow.py for building, testing and LUND creation.
 #   5. Restore the caller's directory and return the captured result as both CLAS12_SAMPLE_STATUS and
 #      immediate tcsh `$status`, without using `exit` in this normally sourced launcher.
+# 
+# Launcher options:
+#   --workflow create-lund|submit  Select one of the two user-facing workflows (required).
+#   --source uniform|physical      Select event content for create-lund; invalid for submit.
+#   --run-settings FILE            Select strict build/test JSON (default: config/run.json).
+#   --build true|false             Configure and build LUND applications (default from run JSON).
+#   --test true|false              Run CTest before LUND creation (default from run JSON).
+#   --run true|false               Execute the selected LUND application (default from run JSON).
+#   --build-dir DIRECTORY          Select the CMake binary tree.
+#   --build-type TYPE              Select Debug, Release, RelWithDebInfo, or MinSizeRel.
+#   --jobs N                       Select positive parallel build workers.
+#   --help                         Print launcher help without synchronizing the ifarm checkout.
+# 
 # Usage:
 #   source run.csh --workflow create-lund --source uniform \
 #     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 #   source run.csh --workflow create-lund --source physical \
 #     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 #   source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
+# 
+# Forwarded options:
+#   create-lund forwards remaining options to the selected LUND executable. Submit forwards them
+#   to resolve_inputs.py; key submission controls include --lund-dir, --config, and --execute.
+# 
 # Inputs:
 #   $argv carries launcher and child options. CLAS12_SAMPLES_DIR is an optional environment variable
 #   set by the user with `setenv`; when present, it supplies the absolute checkout path and overrides
 #   automatic discovery. The project does not create this variable.
+# 
 # Outputs:
 #   CLAS12_SAMPLE_STATUS and immediate $status report the complete update/build/run result.
+# 
 # Notes:
 #   The ifarm checkout is disposable. Commit and push valuable changes from the local development
 #   clone before sourcing this file. The updater resets tracked changes and cleans untracked files.

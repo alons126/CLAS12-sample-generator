@@ -11,6 +11,29 @@
  *
  * Workflow:
  *   Help returns immediately; otherwise parse -> convertGenie -> report success or caught failure.
+ *
+ * Command-line options:
+ *   --config FILE                     Read `key = value` settings; CLI values take precedence.
+ *   --event-generator genie           Select the physical adapter (default/currently supported: genie).
+ *   --input GST_GLOB                  Required GENIE GST ROOT input file or glob.
+ *   --beam-energy GeV                 Set beam energy metadata (default: 5.98636 GeV).
+ *   --rgm-target ID                   Select nuclear metadata and automatic geometry (default: Ar40).
+ *   --target GEOMETRY                 Override the target-geometry key (default: auto).
+ *   --A N / --Z N                     Override LUND target metadata (default: auto).
+ *   --output DIRECTORY                Required parent directory for the resolved run directory.
+ *   --events N                        Required maximum number of accepted events to write.
+ *   --events-per-file N               Split output after N accepted events (default: 10000).
+ *   --seed N / --vertex-seed N        Set configured kinematic/vertex seeds (defaults: 67890/12345).
+ *   --prefix NAME                     Override the automatic LUND filename prefix.
+ *   --event-generator-version VERSION Record generator-version provenance (default: unknown).
+ *   --tune NAME                       Record generator-tune provenance (default: unknown).
+ *   --q2-cut NAME                     Record the input selection label (default: auto; no cut is applied here).
+ *   --gemc-version VERSION            Record intended GEMC-version provenance (default: unknown).
+ *   --gemc-target-variation NAME      Record detector target variation (default: auto).
+ *   --help                            Print the authoritative runtime option summary.
+ *
+ * Output:
+ *   A replaced metadata-named run directory containing split LUND files and conversion provenance.
  */
 
 #include <exception>

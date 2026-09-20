@@ -14,6 +14,21 @@
  * Workflow:
  *   Defaults -> profile -> CLI overrides -> automatic values -> validation -> absolute paths.
  *
+ * Accepted `--key value` options:
+ *   Shared: config, beam-energy, rgm-target, target, A, Z, output, events, events-per-file,
+ *           seed, vertex-seed, prefix, and gemc-target-variation.
+ *   Uniform: channel, hadron, hadron-region, electron-theta-min/max, electron-p-min/max,
+ *            electron-momentum, hadron-theta-min/max, hadron-p-min, hadron-p,
+ *            hadron-momentum, trigger-theta, and trigger-phi-offset.
+ *   Physical: input, event-generator, event-generator-version, tune, q2-cut, and gemc-version.
+ *   `--help` is handled by each application before parse(); all other options require a following
+ *   value. One optional profile uses the same names without the leading `--`.
+ *
+ * Precedence and defaults:
+ *   CLI overrides profile values, which override the defaults installed here. Automatic values are
+ *   resolved only after precedence is complete. The two application entry points document defaults,
+ *   units, required values, and source-specific choices next to their user-facing usage.
+ *
  * Boundary:
  *   This translation unit resolves configuration only. It performs no event generation/conversion,
  *   input-tree inspection, random sampling, output-directory replacement, LUND serialization,
