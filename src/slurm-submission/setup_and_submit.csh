@@ -188,22 +188,18 @@ foreach sample ($samples:q)
 
     if ("$source" == "uniform") then
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}    ${TARGET_VARIATION}"
-        echo
     endif
     echo "${COLOR_START}CLEAR_FAR_OUT:${COLOR_END}       ${CLEAR_FAR_OUT}"
-    echo
     echo "${COLOR_START}CUSTOM_GEMC_VERSION:${COLOR_END} ${CUSTOM_GEMC_VERSION}"
-    echo
     echo "${COLOR_START}GEMC_VERSION:${COLOR_END}        ${GEMC_VERSION}"
-    echo
     echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}         ${NUM_OF_JOBS}"
-    echo
     echo ""
+
     echo "${COLOR_START}=======================================================================${COLOR_END}"
     if ("$source" == "uniform") then
-        printf "%s%s%s\n" "${COLOR_START}= " "Starting uniform generation and submission         ${COLOR_START}=${COLOR_END}"
+        echo "${COLOR_START}= Starting uniform generation and submission         ${COLOR_START}=${COLOR_END}"
     else
-        printf "%s%s%s\n" "${COLOR_START}= " "Starting GENIE sample generation and submission     ${COLOR_START}=${COLOR_END}"
+        echo "${COLOR_START}= Starting GENIE sample generation and submission     ${COLOR_START}=${COLOR_END}"
     endif
     echo "${COLOR_START}=======================================================================${COLOR_END}"
     echo ""
