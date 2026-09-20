@@ -59,17 +59,17 @@ printenv COLOR_START
 
 echo ""
 
-echo "${COLOR_START}====================================================================================================${COLOR_END}"
-echo "${COLOR_START}= Running update script                                                                            =${COLOR_END}"
-echo "${COLOR_START}====================================================================================================${COLOR_END}"
-echo ""
+printf "${COLOR_START}====================================================================================================${COLOR_END}\n"
+printf "${COLOR_START}= Running update script                                                                            =${COLOR_END}\n"
+printf "${COLOR_START}====================================================================================================${COLOR_END}\n"
+printf "\n"
 
 # -------------------------------------------------------------------------------------------------
 # Clean working tree
 # -------------------------------------------------------------------------------------------------
 
-echo "${COLOR_START}- Cleaning excessive files -------------------------------------------------------------------------${COLOR_END}"
-echo ""
+printf "${COLOR_START}- Cleaning excessive files -------------------------------------------------------------------------${COLOR_END}\n"
+printf "\n"
 
 git rev-parse --show-toplevel
 if ( $status != 0 ) exit 1
@@ -90,9 +90,9 @@ git pull
 
 if ( $status != 0 ) then
     echo ""
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
-    echo "${COLOR_ERR}= git pull failed. Aborting update script.                                                         =${COLOR_END}"
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
+	printf "${COLOR_ERR}====================================================================================================${COLOR_END}\n"
+	printf "${COLOR_ERR}= git pull failed. Aborting update script.                                                         =${COLOR_END}\n"
+	printf "${COLOR_ERR}====================================================================================================${COLOR_END}\n"
     echo ""
     exit 1
 endif
