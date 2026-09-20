@@ -175,13 +175,13 @@ foreach sample ($samples:q)
     echo ""
     echo
     echo ""
-    echo "${COLOR_INFO}///////////////////////////////////////////////////////////////////////${COLOR_END}"
+    echo "${COLOR_START}///////////////////////////////////////////////////////////////////////${COLOR_END}"
     if ("$source" == "uniform") then
-        echo "${COLOR_INFO}//${COLOR_END}        Setting and submitting uniform sample generation jobs      ${COLOR_INFO}//${COLOR_END}"
+        echo "${COLOR_START}//${COLOR_END}        Setting and submitting uniform sample generation jobs      ${COLOR_START}//${COLOR_END}"
     else
-        echo "${COLOR_INFO}//${COLOR_END}        Setting and submitting GENIE sample generation jobs        ${COLOR_INFO}//${COLOR_END}"
+        echo "${COLOR_START}//${COLOR_END}        Setting and submitting GENIE sample generation jobs        ${COLOR_START}//${COLOR_END}"
     endif
-    echo "${COLOR_INFO}///////////////////////////////////////////////////////////////////////${COLOR_END}"
+    echo "${COLOR_START}///////////////////////////////////////////////////////////////////////${COLOR_END}"
     echo ""
     set section = '= Setup environment variables and paths                               ='
     submission_section
@@ -195,13 +195,11 @@ foreach sample ($samples:q)
     echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}         ${NUM_OF_JOBS}"
     echo ""
 
-    echo "${COLOR_START}=======================================================================${COLOR_END}"
     if ("$source" == "uniform") then
-        echo "${COLOR_START}= Starting uniform generation and submission         ${COLOR_START}=${COLOR_END}"
+        echo "${COLOR_START} Sample type:${COLOR_INFO} uniform ${COLOR_END}"
     else
-        echo "${COLOR_START}= Starting GENIE sample generation and submission     ${COLOR_START}=${COLOR_END}"
+        echo "${COLOR_START} Sample type:${COLOR_INFO} physical ${COLOR_END}"
     endif
-    echo "${COLOR_START}=======================================================================${COLOR_END}"
     echo ""
 
     # Physical conversion keeps its run beneath OUTPATH_BASE; uniform resolution validates that base in the sample report.
