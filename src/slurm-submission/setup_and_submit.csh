@@ -200,7 +200,7 @@ foreach sample ($samples:q)
     echo "${COLOR_START}CLEAR_FAR_OUT:${COLOR_END} ${CLEAR_FAR_OUT}"
     echo "${COLOR_START}GEMC_VERSION:${COLOR_END}  ${GEMC_VERSION}"
     if ("$source" == "uniform") then
-		echo "${COLOR_START}Sample type:${COLOR_INFO}  uniform${COLOR_END}"
+		echo "${COLOR_START}Sample type:${COLOR_INFO}   uniform${COLOR_END}"
     else
         unset SAMPLE_GENERATOR # TODO: Move SAMPLE_GENERATOR from here!
         unsetenv SAMPLE_GENERATOR
@@ -502,6 +502,7 @@ foreach sample ($samples:q)
 
     # Print a final pre-submission inventory: LUND should be populated, while the recreated simulation directories are empty.
     # For lundfiles, we remove the lund-gen-monitoring directory from the count
+    echo "${COLOR_START}OUTPATH:${COLOR_END} ${OUTPATH}"
     echo "${COLOR_START}Number of files in target directory (OUTPATH):${COLOR_END}"
     @ n_lund = `ls ${OUTPATH}/lundfiles | wc -l` - 1
     echo "${COLOR_START}Number of lund files:     ${COLOR_END} ${n_lund}"
