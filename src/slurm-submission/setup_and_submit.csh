@@ -29,6 +29,7 @@
 # --help bypasses temporary-file creation, while all other paths converge on submission_finish for cleanup.
 set CLAS12_SAMPLE_STATUS = 1
 set submission_environment = ""
+
 if ($#argv == 1) then
     if ("$argv[1]" == "--help") then
         python3 src/slurm-submission/resolve_inputs.py --help
@@ -36,11 +37,15 @@ if ($#argv == 1) then
         goto submission_finish
     endif
 endif
+
 set submission_environment = `mktemp -d /tmp/clas12-submit.XXXXXXXX`
 if ($status != 0 || "$submission_environment" == "") goto submission_finish
+
 python3 src/slurm-submission/resolve_inputs.py --environment-dir "$submission_environment" $argv:q
 if ($status != 0) goto submission_finish
+
 set samples = ( "$submission_environment"/*.csh )
+
 # endregion Input resolution
 
 # Shell environment and printing ---------------------------------------------
@@ -72,6 +77,7 @@ setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEM
 alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; printf "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; printf "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_section 'echo ""; echo "${COLOR_START}=======================================================================${COLOR_END}"; printf "%s\n" "${COLOR_START}${section}${COLOR_END}"; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo ""'
+
 # endregion Shell support
 
 foreach sample ($samples:q)
@@ -81,6 +87,7 @@ foreach sample ($samples:q)
     # The helper emits only validated, whitelisted assignments into our private temporary directory.
     source "$sample"
     if ($status != 0) goto submission_finish
+
     # endregion Resolved sample
 
     # Setup report and modules ------------------------------------------------
@@ -93,8 +100,10 @@ foreach sample ($samples:q)
         echo "${COLOR_ERR}Error:${COLOR_END} source must be uniform or physical."
         goto submission_finish
     endif
+
     if ("$CLEAR_FAR_OUT" != "true" && "$CLEAR_FAR_OUT" != "false") goto submission_bad_settings
     if ("$CUSTOM_GEMC_VERSION" != "true" && "$CUSTOM_GEMC_VERSION" != "false") goto submission_bad_settings
+
     printf '%s\n' "$NUM_OF_JOBS" "$JOB_NEVENTS" | awk '$0 !~ /^[1-9][0-9]*$/ {exit 1}'
     if ($status != 0) goto submission_bad_settings
 
@@ -120,6 +129,7 @@ foreach sample ($samples:q)
     echo ""
     set section = '= Setup environment variables and paths                               ='
     submission_section
+
     if ("$source" == "uniform") then
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}    ${TARGET_VARIATION}"
         echo
@@ -151,6 +161,7 @@ foreach sample ($samples:q)
         set check_path = "$OUTPATH_BASE"
         submission_dir
     endif
+
     if ("$CLAS12TAGS_DIR" != "") then
         echo "${COLOR_START}CLAS12TAGS_DIR:${COLOR_END} ${CLAS12TAGS_DIR}"
         set check_name = CLAS12TAGS_DIR
@@ -167,9 +178,11 @@ foreach sample ($samples:q)
         # Limit optional deletion to files directly in the configured user's farm_out directory.
         if ("$farm_out" !~ /* || "$farm_out" == "/" || "$farm_out" == "$HOME" || "$farm_out" == "$RUNNING_DIR" || -l "$farm_out") goto submission_bad_settings
         if (! -d "$farm_out") goto submission_bad_settings
+
         set resolved_farm = `cd "$farm_out" && pwd -P`
         if ($status != 0 || "$resolved_farm" == "" || "$resolved_farm" == "/" || "$resolved_farm" == "$HOME" || "$RUNNING_DIR" =~ "$resolved_farm"/* || "$resolved_farm" == "$RUNNING_DIR") goto submission_bad_settings
         if ("$resolved_farm" !~ */farm_out && "$resolved_farm" !~ */farm_out/*) goto submission_bad_settings
+
         echo "${COLOR_START}Clearing farm_out directory...${COLOR_END}"
         echo "${COLOR_START}-----------------------------------------------------------------------${COLOR_END}"
         find "$resolved_farm" -maxdepth 1 -type f -delete
@@ -192,16 +205,21 @@ foreach sample ($samples:q)
     if ("$CUSTOM_GEMC_VERSION" == "true") then
         echo "${COLOR_START}Loading GEMC version ${COLOR_END}${GEMC_VERSION}${COLOR_START}...${COLOR_END}"
         echo "${COLOR_START}-----------------------------------------------------------------------${COLOR_END}"
+
         module unload gemc
         if ($status != 0) goto submission_module_failed
+
         module load gemc/${GEMC_VERSION}
         if ($status != 0) goto submission_module_failed
+
         echo
         if ("$GEMC_DATA_OVERRIDE" != "") setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
+
         if (! $?GEMC_DATA_DIR) then
             echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR was not set by the loaded environment."
             goto submission_finish
         endif
+
         echo "${COLOR_START}GEMC_DATA_DIR:${COLOR_END} ${GEMC_DATA_DIR}"
         set check_name = GEMC_DATA_DIR
         set check_path = "$GEMC_DATA_DIR"
@@ -213,10 +231,12 @@ foreach sample ($samples:q)
 
     # Reapply the override when custom module loading is disabled, then validate the final directory in either path.
     if ("$GEMC_DATA_OVERRIDE" != "") setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
+
     if (! $?GEMC_DATA_DIR) then
         echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR is missing; load GEMC or supply --gemc-data-dir."
         goto submission_finish
     endif
+
     if (! -d "$GEMC_DATA_DIR") then
         echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR is not a directory: $GEMC_DATA_DIR"
         goto submission_finish
@@ -228,7 +248,9 @@ foreach sample ($samples:q)
     else
         set section = '= Looping over samples                                         ='
     endif
+
     submission_section
+
     # endregion Setup
 
     # Sample report -----------------------------------------------------------
@@ -268,12 +290,14 @@ foreach sample ($samples:q)
         echo "${COLOR_INFO}Setting environment variables based on TEMP_BEAM_E and particle type ${TEMP_OUTPATH_PARTICLE}${COLOR_END}"
         echo "${COLOR_INFO}-----------------------------------------------------------------------${COLOR_END}"
         echo
+
     else
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END} ${TARGET_VARIATION}"
         echo
 
         # Physical-sample reports use the same shared informational color; field-cage status is still printed explicitly below.
     endif
+
     echo "${COLOR_INFO}TEMP_BEAM_E_ROUNDED:${COLOR_END} ${TEMP_BEAM_E_ROUNDED}"
     echo
 
@@ -308,6 +332,7 @@ foreach sample ($samples:q)
     # Physical conversion may create this directory during setup; uniform generation must have created it beforehand.
     echo "${COLOR_INFO}OUTPATH:${COLOR_END} ${OUTPATH}"
     if ("$source" == "physical") echo ""
+
     set check_color = "$COLOR_INFO"
     if ("$source" == "physical") set check_color = "$COLOR_START"
 
@@ -318,6 +343,7 @@ foreach sample ($samples:q)
         printf '%s\n' "$path_value" | env LC_ALL=C awk '$0 !~ /^\/[A-Za-z0-9_.\/-]+$/ || $0 ~ /(^|\/)\.\.(\/|$)/ {exit 1}'
         if ($status != 0) goto submission_bad_settings
     end
+
     printf '%s\n' "$SAMPLE_FILE_PREFIX" | env LC_ALL=C awk '$0 !~ /^[A-Za-z0-9_-][A-Za-z0-9_.-]*$/ {exit 1}'
     if ($status != 0) goto submission_bad_settings
 
@@ -328,8 +354,10 @@ foreach sample ($samples:q)
             echo "${COLOR_START}--> Checking if ${COLOR_END}OUTPATH${COLOR_START} is a directory...${COLOR_END}"
             printf "%s\n" "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Warning:${COLOR_END} the following directory does not exist: ${OUTPATH}"
             printf "%s\n" "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Creating OUTPATH.${COLOR_END}"
+
             mkdir -p "$OUTPATH"
             if ($status != 0) goto submission_finish
+
             echo "${COLOR_START}----> Checking if ${COLOR_END}OUTPATH${COLOR_START} is a directory...${COLOR_END}"
             printf "%s\n\n" "${COLOR_START}---->${COLOR_END} ${COLOR_COMPLETION}OUTPATH was created successfully.${COLOR_END}"
         else
@@ -356,6 +384,7 @@ foreach sample ($samples:q)
             goto submission_finish
         endif
     end
+
     set submission_outputs = ($submission_outputs:q "$resolved_out")
 
     # Export the canonical path so the protected Slurm worker and all subsequent checks use the same directory identity.
@@ -376,6 +405,7 @@ foreach sample ($samples:q)
     # REQUIREMENTS_PATH groups the reviewed GCARD and YAML selected for this beam energy, target variation, and GEMC version.
     echo "${COLOR_INFO}REQUIREMENTS_PATH:${COLOR_END} ${REQUIREMENTS_PATH}"
     echo
+
     set check_color = "$COLOR_INFO"
     set check_name = REQUIREMENTS_PATH
     set check_path = "$REQUIREMENTS_PATH"
@@ -398,6 +428,7 @@ foreach sample ($samples:q)
         echo "${COLOR_INFO}${check_name}:${COLOR_END} ${check_path}"
         submission_file
     end
+
     # endregion Sample report
 
     # Validate LUND and prepare outputs ---------------------------------------
@@ -471,6 +502,7 @@ foreach sample ($samples:q)
     echo "${COLOR_INFO}Number of mchipo files:   \t\t${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
     echo "${COLOR_INFO}Number of reconhipo files:\t\t${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
     echo
+
     # endregion Output preparation
 
     # Slurm handoff -----------------------------------------------------------
@@ -495,6 +527,7 @@ foreach sample ($samples:q)
     setenv ARRAY 1-${NUM_OF_JOBS}
     echo "${COLOR_INFO}ARRAY:${COLOR_END} ${ARRAY}"
     echo ""
+
     echo "${COLOR_INFO}SUBMIT_SCRIPT_FILE:${COLOR_END} ${SUBMIT_SCRIPT_FILE}"
     set check_name = SUBMIT_SCRIPT_FILE
     set check_path = "$SUBMIT_SCRIPT_FILE"
@@ -510,6 +543,7 @@ foreach sample ($samples:q)
     if ($status != 0) goto submission_sbatch_failed
     echo
     echo
+
     # endregion Submission
 end
 
@@ -528,6 +562,7 @@ goto submission_finish
 submission_missing_dir:
 printf "%s\n" "${check_color}-->${COLOR_END} ${COLOR_ERR}Error:${COLOR_END} the following directory does not exist: ${check_path}"
 goto submission_finish
+
 submission_missing_file:
 printf "%s\n" "${check_color}-->${COLOR_END} ${COLOR_ERR}Error:${COLOR_END} the following file does not exist: ${check_path}"
 goto submission_finish
@@ -545,6 +580,7 @@ goto submission_finish
 # An unsuccessful sbatch call also stops the multi-sample loop; falling through reaches the common cleanup below.
 submission_sbatch_failed:
 echo "${COLOR_ERR}Error:${COLOR_END} sbatch failed; no subsequent sample was submitted."
+
 submission_finish:
 
 # Only remove the private mktemp directory created during input resolution, never a user-supplied path.
@@ -557,4 +593,5 @@ unalias submission_dir submission_file submission_section
 
 # Execute a harmless child shell with the chosen code: tcsh adopts that command's status while the user's shell remains alive.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
+
 # endregion Return
