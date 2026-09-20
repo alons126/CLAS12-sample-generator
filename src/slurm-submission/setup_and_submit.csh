@@ -1,8 +1,8 @@
+#!/bin/tcsh
+
 #
 # Created by Alon Sportes on 19/09/2026.
 #
-
-#!/bin/tcsh
 
 # Setup and submit ------------------------------------------------------------
 # Description:
