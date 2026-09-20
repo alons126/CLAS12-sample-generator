@@ -43,7 +43,7 @@ endif
 
 set banner_title = "Running update script"
 set banner_color = "$COLOR_START"
-updater_banner
+code_banner
 echo ""
 
 # -------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ if ( $status != 0 ) then
     echo ""
     set banner_title = "git pull failed. Aborting update script."
     set banner_color = "$COLOR_ERR"
-    updater_banner
+    code_banner
     echo ""
     exit 1
 endif
@@ -87,7 +87,7 @@ if ( $status != 0 ) then
     echo ""
     set banner_title = "git submodule update failed. Aborting update script."
     set banner_color = "$COLOR_ERR"
-    updater_banner
+    code_banner
     echo ""
     exit 1
 endif
@@ -110,5 +110,5 @@ echo ""
 
 # run.csh sources the environment after this child process succeeds.
 
-unalias updater_banner
+unalias code_banner
 echo ""

@@ -75,7 +75,7 @@ endif
 
 set banner_title = "Running Slurm submission script"
 set banner_color = "$COLOR_START"
-submission_banner
+code_banner
 echo ""
 
 # Input resolution ------------------------------------------------------------
@@ -139,7 +139,7 @@ setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEM
 # and jump to the corresponding failure label before any dependent stage can run. submission_section wraps the shared banner renderer.
 alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
-alias submission_section 'echo ""; set banner_title = "$section"; set banner_color = "$COLOR_START"; submission_banner; echo ""'
+alias submission_section 'echo ""; set banner_title = "$section"; set banner_color = "$COLOR_START"; code_banner; echo ""'
 
 # endregion Shell support
 
@@ -193,7 +193,7 @@ foreach sample ($samples:q)
         set banner_title = "Setting and submitting GENIE sample generation jobs"
     endif
     set banner_color = "$COLOR_START"
-    submission_banner
+    code_banner
     echo ""
     set section = "Setup environment variables and paths"
     submission_section
@@ -244,7 +244,7 @@ foreach sample ($samples:q)
 
         set banner_title = "Clearing farm_out directory"
         set banner_color = "$COLOR_START"
-        submission_banner
+        code_banner
         if ("$SUBMISSION_EXECUTE" == "true") then
             find "$resolved_farm" -maxdepth 1 -type f -delete
             if ($status != 0) goto submission_finish
@@ -311,7 +311,7 @@ foreach sample ($samples:q)
         set banner_title = "Processing GENIE sample for ${SAMPLE_TARGET_NUCLEUS} (${GENERATOR_TUNE}) at beam energy ${TEMP_BEAM_E}"
     endif
     set banner_color = "$COLOR_START"
-    submission_banner
+    code_banner
     echo
 
     # Uniform runs report their generated channel and the shared output base validated during setup.
@@ -328,7 +328,7 @@ foreach sample ($samples:q)
         echo
         set banner_title = "Setting environment for ${TEMP_BEAM_E} and particle type ${TEMP_OUTPATH_PARTICLE}"
         set banner_color = "$COLOR_INFO"
-        submission_banner
+        code_banner
         echo
 
     else
@@ -346,16 +346,16 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
         set banner_title = "Setting paths for particle type ${TEMP_OUTPATH_PARTICLE}"
         set banner_color = "$COLOR_INFO"
-        submission_banner
+        code_banner
         echo
     else
         set banner_title = "Setting GENIE Slurm job submission"
         set banner_color = "$COLOR_INFO"
-        submission_banner
+        code_banner
         echo
         set banner_title = "Sample parameters"
         set banner_color = "$COLOR_INFO"
-        submission_banner
+        code_banner
         echo ""
         echo "${COLOR_INFO}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
         echo ""
@@ -441,7 +441,7 @@ foreach sample ($samples:q)
     if ("$source" == "physical") then
         set banner_title = "Job parameters"
         set banner_color = "$COLOR_INFO"
-        submission_banner
+        code_banner
         echo ""
         echo "${COLOR_INFO}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
         echo ""
@@ -467,7 +467,7 @@ foreach sample ($samples:q)
         set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E} and ${TARGET_VARIATION}"
     endif
     set banner_color = "$COLOR_INFO"
-    submission_banner
+    code_banner
     echo
 
     # Reuse the file-check alias so either missing detector input follows the same colored error and return path.
@@ -520,7 +520,7 @@ foreach sample ($samples:q)
         set output_dirs = (mchipo reconhipo)
     endif
     set banner_color = "$COLOR_INFO"
-    submission_banner
+    code_banner
     echo
 
     # Reject symbolic-link destinations before recursive deletion, even though OUTPATH itself was canonicalized above.
@@ -581,7 +581,7 @@ foreach sample ($samples:q)
         set banner_title = "Submitting GENIE sbatch job"
     endif
     set banner_color = "$COLOR_INFO"
-    submission_banner
+    code_banner
     echo
 
     echo "${COLOR_INFO}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
@@ -656,7 +656,7 @@ if ("$submission_environment" != "") then
 endif
 
 # Discard helper aliases so sourcing this workflow does not pollute the interactive login shell.
-unalias submission_banner submission_dir submission_file submission_section
+unalias code_banner submission_dir submission_file submission_section
 
 # Execute a harmless child shell with the chosen code: tcsh adopts that command's status while the user's shell remains alive.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
