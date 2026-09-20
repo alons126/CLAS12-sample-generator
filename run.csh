@@ -206,10 +206,10 @@ endif
 # Each state-changing Git command is checked there. Any failure is captured below and prevents the
 # environment, build, LUND creation, and job submission stages from running.
 if ($_clas12_skip_server_sync == 1) then
-    echo "${COLOR_START}Skipping ifarm checkout replacement (explicit local/test override)...${COLOR_END}"
+    echo "${COLOR_START}Skipping ifarm checkout replacement (explicit local/test override).${COLOR_END}"
     set CLAS12_SAMPLE_STATUS = 0
 else
-    echo "Updating disposable ifarm checkout at ${_clas12_root}"
+    echo "${COLOR_START}Updating disposable ifarm checkout at{COLOR_END} ${_clas12_root}$"
     tcsh -f src/launcher/code_updater.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
