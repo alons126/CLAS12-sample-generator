@@ -331,7 +331,7 @@ def resolve(lund_directory, explicit, root):
                 GEMC_VERSION=version, CLEAR_FAR_OUT=values['clear-farm-out'],
                 CLAS12TAGS_DIR=optional_paths['clas12tags-dir'], farm_out=optional_paths['farm-out'],
                 TORUS_FIELD=torus_text,
-                REQUIREMENTS_PATH=str(card.parent), GCARD_FILE=str(card), YAML_FILE=str(yaml),
+                REQUIREMENTS_DIR=str(card.parent), GCARD_FILE=str(card), YAML_FILE=str(yaml),
                 FC_STATUS_ENABLED=values['fc-status'], FC_STATUS=fc)
 # endregion Resolution
 

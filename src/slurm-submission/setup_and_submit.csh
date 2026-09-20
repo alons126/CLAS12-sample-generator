@@ -291,7 +291,6 @@ foreach sample ($samples:q)
     #   resolver-generated sample metadata, detector paths, filename prefix, and the shared terminal-color palette.
     # 
     # Result: OUTPATH is canonicalized and all required directories/files are confirmed; failures return before submission.
-    echo
 
     # Lead with the source-specific identity a user needs to recognize the selected run.
     # Uniform samples are identified by channel, while physical samples include their target nucleus and generator tune.
@@ -426,13 +425,13 @@ foreach sample ($samples:q)
         submission_dir
     endif
 
-    # REQUIREMENTS_PATH groups the reviewed GCARD and YAML selected for this beam energy, target variation, and GEMC version.
-    echo "${COLOR_START}REQUIREMENTS_PATH:${COLOR_END} ${REQUIREMENTS_PATH}"
+    # REQUIREMENTS_DIR groups the reviewed GCARD and YAML selected for this beam energy, target variation, and GEMC version.
+    echo "${COLOR_START}REQUIREMENTS_DIR:${COLOR_END} ${REQUIREMENTS_DIR}"
     echo
 
     set check_color = "$COLOR_START"
-    set check_name = REQUIREMENTS_PATH
-    set check_path = "$REQUIREMENTS_PATH"
+    set check_name = REQUIREMENTS_DIR
+    set check_path = "$REQUIREMENTS_DIR"
     submission_dir
 
     # Report the automatic detector selection before checking its two concrete inputs.

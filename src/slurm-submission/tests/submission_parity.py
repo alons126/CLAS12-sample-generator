@@ -98,7 +98,7 @@ def fixture(root, source, energy, channel='en', fc=0):
                   SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie',
                   GENERATOR_TUNE=tune, Q2_CUT=q2, OUTPATH=str(run),
                   SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job, DETECTOR_ENERGY_GROUP=rounded,
-                  TORUS_FIELD=torus, REQUIREMENTS_PATH=str(root / 'requirements'), GCARD_FILE=str(card),
+                  TORUS_FIELD=torus, REQUIREMENTS_DIR=str(root / 'requirements'), GCARD_FILE=str(card),
                   YAML_FILE=str(yaml), FC_STATUS_ENABLED=str(fc), FC_STATUS=suffix)
     settings = {
         'lund-dir': str(run / 'lundfiles'), 'source': source, 'beam-energy': str(int(energy[:-3]) / 1000),
