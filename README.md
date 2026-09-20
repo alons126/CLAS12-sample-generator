@@ -52,6 +52,7 @@ Maintained source is grouped first by workflow under `src/lund-generation/` and 
 - [Uniform generation](docs/uniform-samples.md)
 - [Physical event-generator conversion](docs/genie-to-lund-conversion.md)
 - [GEMC, reconstruction and Slurm](docs/gemc-reconstruction-batch-submission.md)
+- [Workflow command examples](tutorial/README.md)
 - [Configuration reference](docs/configuration.md)
 - [Technical note and complete reference](docs/technical-note.md)
 - [Legacy parity and validation](docs/validation.md)
