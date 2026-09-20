@@ -182,16 +182,19 @@ foreach sample ($samples:q)
     if ($status != 0) goto submission_bad_settings
 
     # The inherited Slurm export policy must not suppress the configured software environment.
-    # GENIE_TUNE preserves the variable name expected by the protected worker while the resolver uses the generator-neutral name.
+    # GENERATOR_TUNE preserves the variable name expected by the protected worker while the resolver uses the generator-neutral name.
     unset SLURM_EXPORT_ENV
     unsetenv SLURM_EXPORT_ENV
     setenv SLURM_EXPORT_ENV ALL
     unset SBATCH_EXPORT
     unsetenv SBATCH_EXPORT
     setenv SBATCH_EXPORT ALL
-    unset GENIE_TUNE
-    unsetenv GENIE_TUNE
-    setenv GENIE_TUNE "$GENERATOR_TUNE"
+    unset SAMPLE_GENERATOR
+    unsetenv SAMPLE_GENERATOR
+    setenv SAMPLE_GENERATOR "$SAMPLE_GENERATOR"
+    unset GENERATOR_TUNE
+    unsetenv GENERATOR_TUNE
+    setenv GENERATOR_TUNE "$GENERATOR_TUNE"
 
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
@@ -205,7 +208,7 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
 		echo "${COLOR_START}Sample type:${COLOR_INFO}  uniform${COLOR_END}"
     else
-        echo "${COLOR_START}Sample type:${COLOR_INFO}  physical (GENIE)${COLOR_END}"
+        echo "${COLOR_START}Sample type:${COLOR_INFO}  physical (${SAMPLE_GENERATOR})${COLOR_END}"
     endif
     echo ""
 
@@ -293,7 +296,7 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
         set subbanner_title = "Uniform sample job parameters"
     else
-        set subbanner_title = "GENIE sample job parameters"
+        set subbanner_title = "${SAMPLE_GENERATOR} sample job parameters"
     endif
     set subbanner_color = "$COLOR_START"
     code_subbanner
@@ -325,7 +328,7 @@ foreach sample ($samples:q)
         code_subbanner
         echo ""
         echo "${COLOR_START}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
-        echo "${COLOR_START}GENIE_TUNE:${COLOR_END}            ${GENERATOR_TUNE}"
+        echo "${COLOR_START}GENERATOR_TUNE:${COLOR_END}        ${GENERATOR_TUNE}"
         echo "${COLOR_START}Q2_CUT:${COLOR_END}                ${Q2_CUT}"
         echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}     ${BEAM_ENERGY_LABEL}"
         echo "${COLOR_START}FC_STATUS:${COLOR_END}             ${FC_STATUS}"
@@ -523,7 +526,7 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
         set subbanner_title = "Submitting sbatch job for uniform sample"
     else
-        set subbanner_title = "Submitting sbatch job for GENIE sample"
+        set subbanner_title = "Submitting sbatch job for ${SAMPLE_GENERATOR} sample"
     endif
     set subbanner_color = "$COLOR_START"
     code_subbanner

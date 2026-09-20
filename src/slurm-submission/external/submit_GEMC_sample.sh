@@ -9,45 +9,43 @@
 #SBATCH --error=//farm_out/%u/%x-%j-%N.err                                                                           
 
 JOB_TARGET=${SAMPLE_TARGET_NUCLEUS}
-echo "JOB_TARGET = ${JOB_TARGET}"
+echo "JOB_TARGET:             ${JOB_TARGET}"
 JOB_GENERATOR=${SAMPLE_GENERATOR}
-echo "JOB_GENERATOR = ${JOB_GENERATOR}"
+echo "JOB_GENERATOR:          ${JOB_GENERATOR}"
 JOB_GENERATOR_TUNE=${GENERATOR_TUNE}
-echo "JOB_GENERATOR_TUNE = ${JOB_GENERATOR_TUNE}"
+echo "JOB_GENERATOR_TUNE:     ${JOB_GENERATOR_TUNE}"
 JOB_Q2_CUT=${Q2_CUT}
-echo "JOB_Q2_CUT = ${JOB_Q2_CUT}"
-echo "BEAM_ENERGY_LABEL = ${BEAM_ENERGY_LABEL}"
-echo
-echo "GEMC_DATA_DIR = ${GEMC_DATA_DIR}"
-echo
-echo "UNIFORM_SAMPLE_CHANNEL = ${UNIFORM_SAMPLE_CHANNEL}"
+echo "JOB_Q2_CUT:             ${JOB_Q2_CUT}"
+echo "BEAM_ENERGY_LABEL:      ${BEAM_ENERGY_LABEL}"
+echo "GEMC_DATA_DIR:          ${GEMC_DATA_DIR}"
+echo "UNIFORM_SAMPLE_CHANNEL: ${UNIFORM_SAMPLE_CHANNEL}"
 echo
 
 #Change file prefix for your simulation
 FILE_PREFIX=${SAMPLE_FILE_PREFIX}
-echo "FILE_PREFIX = ${FILE_PREFIX}"
+echo "FILE_PREFIX:            ${FILE_PREFIX}"
 echo
 
 NEVENTS=${JOB_NEVENTS:?JOB_NEVENTS is required}
-echo "NEVENTS = ${NEVENTS}"
+echo "NEVENTS:                ${NEVENTS}"
 echo
 
 #-1.0 for inbending (6,4 GeV) 0.5 for outbending (2 Gev)
 TORUS=${TORUS_FIELD}
-echo "TORUS = ${TORUS}"
+echo "TORUS:                  ${TORUS}"
 echo
 
 #set output file path location, don't forget to set up dir using setupdir.sh
 JOB_OUT_PATH=${OUTPATH}
-echo "JOB_OUT_PATH = ${JOB_OUT_PATH}"
+echo "JOB_OUT_PATH:           ${JOB_OUT_PATH}"
 echo
 
 #choose the Gcard for your target type
 GCARD=${GCARD_FILE}
-echo "GCARD = ${GCARD}"
+echo "GCARD:                  ${GCARD}"
 #Reconstruction yaml file
 YAML=${YAML_FILE}
-echo "YAML = ${YAML}"
+echo "YAML:                   ${YAML}"
 echo
 
 #------DONT NEED TO TOUCH UNDER HERE UNLESS YOU NEED TOO------
