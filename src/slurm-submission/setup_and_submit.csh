@@ -309,20 +309,18 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
         echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
         echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}      ${BEAM_ENERGY_LABEL}"
-        echo
     else
-        echo "${COLOR_START}TARGET_VARIATION:${COLOR_END} ${TARGET_VARIATION}"
-        echo
+        echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}       ${TARGET_VARIATION}"
     endif
 
     # DETECTOR_ENERGY_GROUP is derived automatically from BEAM_ENERGY_LABEL and selects the matching
     # detector-resource directory: 2070MeV -> 2GeV, 4029MeV -> 4GeV, or 5986MeV -> 6GeV.
-    echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END} ${DETECTOR_ENERGY_GROUP}"
+    echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END}      ${DETECTOR_ENERGY_GROUP}"
     echo
 
     # Introduce the source-specific path report.
     if ("$source" == "uniform") then
-        set banner_title = "Setting paths for channel ${COLOR_INFO}${UNIFORM_SAMPLE_CHANNEL}${COLOR_END}"
+        set banner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
         set banner_color = "$COLOR_START"
         code_banner
         echo
