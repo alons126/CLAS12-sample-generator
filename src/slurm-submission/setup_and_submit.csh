@@ -322,7 +322,6 @@ foreach sample ($samples:q)
         set subbanner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
         set subbanner_color = "$COLOR_START"
         code_subbanner
-        echo
     else
         set subbanner_title = "Setting GENIE Slurm job submission"
         set subbanner_color = "$COLOR_START"
@@ -333,17 +332,11 @@ foreach sample ($samples:q)
         code_subbanner
         echo ""
         echo "${COLOR_START}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
-        echo ""
         echo "${COLOR_START}GENIE_TUNE:${COLOR_END} ${GENERATOR_TUNE}"
-        echo ""
         echo "${COLOR_START}Q2_CUT:${COLOR_END} ${Q2_CUT}"
-        echo ""
         echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END} ${BEAM_ENERGY_LABEL}"
-        echo ""
         echo "${COLOR_START}FC_STATUS:${COLOR_END} ${FC_STATUS}"
-        echo ""
         echo "${COLOR_START}FC_STATUS_ENABLED:${COLOR_END} ${FC_STATUS_ENABLED}"
-        echo ""
     endif
 
     # OUTPATH is the completed LUND run directory consumed by this submission and later receives simulation products.
