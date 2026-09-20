@@ -48,6 +48,8 @@ The array size is the number of completed files, not the requested generation ca
 
 **GEMC defaults to 5.14.** A concrete manifest version supplies the generation-time plan; `unknown`, `none` or `auto` fall back to 5.14. A config or `--gemc-version` overrides either. The default GCARD uses the explicit detector target variation, beam and resolved GEMC version. Default YAML and torus settings preserve the established 2070/4029/5986 MeV conventions: +0.5 at 2 GeV and −1.0 at 4/6 GeV. Other beam energies require explicit `--gcard`, `--yaml` and `--torus`. The payload retains fixed solenoid −1.0.
 
+The resolver automatically derives two deliberately distinct labels from `beam-energy`: `BEAM_ENERGY_LABEL` identifies the sample as `2070MeV`, `4029MeV`, or `5986MeV`, while `DETECTOR_ENERGY_GROUP` selects the corresponding `2GeV`, `4GeV`, or `6GeV` detector-resource directory. For other energies, both use the nearest-MeV label and explicit detector inputs are required.
+
 ## Configuration and CLI overrides
 
 All settings have matching `key = value` config entries and `--key value` CLI flags. Precedence is **CLI > explicit config > manifest > defaults**. CLI paths are relative to the checkout; paths inside a config are relative to that config. Blank lines and full-line `#` comments are accepted; duplicate, unknown and empty keys fail. Values are plain text, not executable shell expressions.

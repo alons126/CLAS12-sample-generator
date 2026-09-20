@@ -307,11 +307,11 @@ foreach sample ($samples:q)
     # their full generator provenance follows below.
     if ("$source" == "uniform") then
         echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
-        echo "${COLOR_START}TEMP_BEAM_E:${COLOR_END}             ${TEMP_BEAM_E}"
+        echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}       ${BEAM_ENERGY_LABEL}"
         echo
 
         # Sample-specific reports use the informational color supplied by set_environment.csh.
-        set banner_title = "Setting environment for ${TEMP_BEAM_E} and channel ${UNIFORM_SAMPLE_CHANNEL}"
+        set banner_title = "Setting environment for ${BEAM_ENERGY_LABEL} and channel ${UNIFORM_SAMPLE_CHANNEL}"
         set banner_color = "$COLOR_INFO"
         code_banner
         echo
@@ -320,10 +320,11 @@ foreach sample ($samples:q)
         echo
         # Physical-sample reports use the same shared informational color; field-cage status is still printed explicitly below.
     endif
-    echo "${COLOR_INFO}TEMP_BEAM_E_ROUNDED:${COLOR_END} ${TEMP_BEAM_E_ROUNDED}"
+    echo "${COLOR_INFO}DETECTOR_ENERGY_GROUP:${COLOR_END} ${DETECTOR_ENERGY_GROUP}"
     echo
 
-    # The rounded beam label selects detector resources; the exact TEMP_BEAM_E remains part of sample provenance.
+    # DETECTOR_ENERGY_GROUP selects the 2/4/6 GeV detector-resource family; BEAM_ENERGY_LABEL retains
+    # the more specific canonical sample label such as 2070MeV, 4029MeV, or 5986MeV.
     # The physical report keeps the legacy GENIE wording because GENIE is the currently supported physical adapter.
     if ("$source" == "uniform") then
         set banner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
@@ -345,7 +346,7 @@ foreach sample ($samples:q)
         echo ""
         echo "${COLOR_INFO}Q2_CUT:${COLOR_END} ${Q2_CUT}"
         echo ""
-        echo "${COLOR_INFO}TEMP_BEAM_E:${COLOR_END} ${TEMP_BEAM_E}"
+        echo "${COLOR_INFO}BEAM_ENERGY_LABEL:${COLOR_END} ${BEAM_ENERGY_LABEL}"
         echo ""
         echo "${COLOR_INFO}FC_STATUS:${COLOR_END} ${FC_STATUS}"
         echo ""
@@ -444,9 +445,9 @@ foreach sample ($samples:q)
     # Report the automatic detector selection before checking its two concrete inputs.
     # GCARD controls GEMC geometry and fields; YAML controls the downstream CLAS12 reconstruction configuration.
     if ("$source" == "uniform") then
-        set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E}, ${TARGET_VARIATION}, and ${UNIFORM_SAMPLE_CHANNEL}"
+        set banner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL}, ${TARGET_VARIATION}, and ${UNIFORM_SAMPLE_CHANNEL}"
     else
-        set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E} and ${TARGET_VARIATION}"
+        set banner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL} and ${TARGET_VARIATION}"
     endif
     set banner_color = "$COLOR_INFO"
     code_banner
@@ -558,7 +559,7 @@ foreach sample ($samples:q)
     # Purpose: expose the exact Slurm array request, validate the protected worker path, and hand the job to ifarm.
     # The source-specific text is informational; uniform and physical samples share the same sbatch command contract.
     if ("$source" == "uniform") then
-        set banner_title = "Submitting sbatch job for beam energy ${TEMP_BEAM_E}"
+        set banner_title = "Submitting sbatch job for beam energy ${BEAM_ENERGY_LABEL}"
     else
         set banner_title = "Submitting GENIE sbatch job"
     endif

@@ -35,7 +35,7 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | `JOB_NEVENTS` | Configured per-task event limit shared by the array; required |
 | `SAMPLE_GENERATOR`, `GENERATOR_TUNE` | Generator/tune monitoring labels |
 | `SAMPLE_TARGET_NUCLEUS`, `Q2_CUT` | Target and Q² monitoring labels |
-| `TEMP_BEAM_E`, `UNIFORM_SAMPLE_CHANNEL`, `GEMC_DATA_DIR` | Beam/channel/environment monitoring |
+| `BEAM_ENERGY_LABEL`, `DETECTOR_ENERGY_GROUP`, `UNIFORM_SAMPLE_CHANNEL`, `GEMC_DATA_DIR` | Beam/resource-group/channel/environment monitoring |
 | `OUTPATH`, `SLURM_ARRAY_TASK_ID` | Run directory and file index |
 | `TORUS_FIELD` | +0.5 at 2 GeV; −1 at 4/6 GeV |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction configurations |

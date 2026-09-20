@@ -60,7 +60,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     assert result['OUTPATH'] == str(lund.parent)
     assert 'OUTPATH_BASE' not in result
     assert result['NUM_OF_JOBS'] == '2' and result['JOB_NEVENTS'] == '3'
-    assert result['UNIFORM_SAMPLE_CHANNEL'] == 'enFD' and result['TEMP_BEAM_E'] == '2070MeV'
+    assert result['UNIFORM_SAMPLE_CHANNEL'] == 'enFD' and result['BEAM_ENERGY_LABEL'] == '2070MeV'
+    assert result['DETECTOR_ENERGY_GROUP'] == '2GeV'
     assert result['TORUS_FIELD'] == '0.5'
     assert result['CLAS12TAGS_DIR'] == result['farm_out'] == ''
     # Simulated resources for a nondefault version avoid editing detector originals.
@@ -108,7 +109,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     custom_beam['config']['beam-energy'] = '8.8'
     save(custom_beam)
     result = resolve(lund, {'gcard': str(card), 'yaml': str(yaml), 'torus': '-1'}, project)
-    assert result['TEMP_BEAM_E'] == '8800MeV'
+    assert result['BEAM_ENERGY_LABEL'] == result['DETECTOR_ENERGY_GROUP'] == '8800MeV'
     save(manifest)
     (lund / f'{prefix}_2.txt').unlink()
     rejected()

@@ -93,11 +93,11 @@ def fixture(root, source, energy, channel='en', fc=0):
     old = re.sub(r'(?m)^(\s*)foreach OUTPATH_PARTICLE \( .* \)$', lambda m: m[1] + f'foreach OUTPATH_PARTICLE ( {channel} )', old)
     old_path = root / 'old.csh'
     old_path.write_text(old)
-    values = dict(NUM_OF_JOBS='2', JOB_NEVENTS='3', TEMP_BEAM_E=energy,
+    values = dict(NUM_OF_JOBS='2', JOB_NEVENTS='3', BEAM_ENERGY_LABEL=energy,
                   UNIFORM_SAMPLE_CHANNEL=channel if source == 'uniform' else 'none', TARGET_VARIATION=target,
                   SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie',
                   GENERATOR_TUNE=tune, Q2_CUT=q2, OUTPATH=str(run),
-                  SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job, TEMP_BEAM_E_ROUNDED=rounded,
+                  SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job, DETECTOR_ENERGY_GROUP=rounded,
                   TORUS_FIELD=torus, REQUIREMENTS_PATH=str(root / 'requirements'), GCARD_FILE=str(card),
                   YAML_FILE=str(yaml), FC_STATUS_ENABLED=str(fc), FC_STATUS=suffix)
     settings = {
@@ -160,7 +160,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
                 assert len(calls) == len(old_calls) == 1
                 assert calls[0]['argv'] == old_calls[0]['argv']
                 assert calls[0]['argv'][1] == '--array=1-2'
-                for name in ('OUTPATH', 'GCARD_FILE', 'YAML_FILE', 'TORUS_FIELD', 'TEMP_BEAM_E', 'ARRAY', 'SLURM_JOB_NAME'):
+                for name in ('OUTPATH', 'GCARD_FILE', 'YAML_FILE', 'TORUS_FIELD', 'ARRAY', 'SLURM_JOB_NAME'):
                     assert calls[0]['env'][name] == old_calls[0]['env'][name], name
                 for name, value in values.items():
                     assert calls[0]['env'][name] == value, name
@@ -277,7 +277,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     for source in ('uniform', 'GENIE'):
         for energy, torus in (('2070MeV', '0.5'), ('4029MeV', '-1.0'), ('5986MeV', '-1.0')):
             prefix = f'Uniform_en_sample_{energy}' if source == 'uniform' else f'C12_GEM21_11a_00_000_Q2_0_02_{energy}'
-            worker_env = dict(env, OUTPATH=str(first_run), TEMP_BEAM_E=energy, UNIFORM_SAMPLE_CHANNEL='en',
+            worker_env = dict(env, OUTPATH=str(first_run), BEAM_ENERGY_LABEL=energy, UNIFORM_SAMPLE_CHANNEL='en',
                               SAMPLE_TARGET_NUCLEUS='C12', GENIE_TUNE='GEM21_11a_00_000', GENERATOR_TUNE='GEM21_11a_00_000',
                               SAMPLE_GENERATOR=source, Q2_CUT='Q2_0_02', TORUS_FIELD=torus,
                               GCARD_FILE=values['GCARD_FILE'], YAML_FILE=values['YAML_FILE'],
