@@ -41,9 +41,13 @@ else
     exit 1
 endif
 
-echo "${COLOR_START}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"
-echo "${COLOR_START}// Running update script                                                                          //${COLOR_END}"
-echo "${COLOR_START}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"
+# Render every titled banner at 100 visible columns. Callers supply banner_title and banner_color;
+# the helper calculates asymmetric padding when an odd number of spaces is required.
+alias updater_banner 'set banner_title_length = `printf "%s" "$banner_title" | wc -c`; @ banner_padding = 96 - $banner_title_length; @ banner_padding_left = $banner_padding / 2; @ banner_padding_right = $banner_padding - $banner_padding_left; echo "${banner_color}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"; printf "${banner_color}//%*s%s%*s//${COLOR_END}\n" $banner_padding_left "" "$banner_title" $banner_padding_right ""; echo "${banner_color}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"; unset banner_title banner_color banner_title_length banner_padding banner_padding_left banner_padding_right'
+
+set banner_title = "Running update script"
+set banner_color = "$COLOR_START"
+updater_banner
 echo ""
 
 # -------------------------------------------------------------------------------------------------
@@ -72,9 +76,9 @@ git pull
 
 if ( $status != 0 ) then
     echo ""
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
-    echo "${COLOR_ERR}= git pull failed. Aborting update script.                                                         =${COLOR_END}"
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
+    set banner_title = "git pull failed. Aborting update script."
+    set banner_color = "$COLOR_ERR"
+    updater_banner
     echo ""
     exit 1
 endif
@@ -85,9 +89,9 @@ if ( $status != 0 ) exit 1
 git submodule update --init --recursive
 if ( $status != 0 ) then
     echo ""
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
-    echo "${COLOR_ERR}= git submodule update failed. Aborting update script.                                             =${COLOR_END}"
-    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
+    set banner_title = "git submodule update failed. Aborting update script."
+    set banner_color = "$COLOR_ERR"
+    updater_banner
     echo ""
     exit 1
 endif
@@ -110,4 +114,5 @@ echo ""
 
 # run.csh sources the environment after this child process succeeds.
 
+unalias updater_banner
 echo ""
