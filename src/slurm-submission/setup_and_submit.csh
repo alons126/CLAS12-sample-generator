@@ -62,6 +62,22 @@
 #	All paths must be absolute and contain only letters, numbers, /, _, -, and . (protected payload contract).
 #	JOB_NEVENTS is an event limit shared by the array, not a claim about each input file's length.
 
+# Terminal color initialization -----------------------------------------------
+
+if ( -f ./src/launcher/environment/set_colors.csh ) then
+    source ./src/launcher/environment/set_colors.csh
+    # printf "${COLOR_START}-->${COLOR_END} %b\n" "${COLOR_COMPLETION}Color environment loaded.${COLOR_END}"
+    echo
+else
+    echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/environment/set_colors.csh\n"
+    exit 1
+endif
+
+echo "${COLOR_START}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"
+echo "${COLOR_START}// Running Slurm submission script                                                                //${COLOR_END}"
+echo "${COLOR_START}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"
+echo ""
+
 # Input resolution ------------------------------------------------------------
 
 # region Input resolution
