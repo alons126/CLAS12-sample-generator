@@ -10,7 +10,7 @@ run.csh --workflow create-lund -> Python build driver -> LUND application -> com
 run.csh --workflow submit      -> sourced setup_and_submit.csh -> sbatch array -> GEMC -> recon-util
 ```
 
-On ifarm, use `source run.csh --workflow submit --lund-dir RUN/lundfiles`. The completed manifest supplies sample settings; optional CLI flags or `--config config/submission.conf` override simulation defaults. GEMC falls back to 5.14. Submission replaces the selected simulation output directories and preserves LUND inputs. See the [setup and submission guide](docs/gemc-reconstruction-batch-submission.md).
+On ifarm, use `source run.csh --workflow submit --lund-dir RUN/lundfiles`. The completed manifest supplies sample settings; optional CLI flags or `--config config/submission.conf` override simulation defaults. GEMC falls back to 5.14. The default is preview; add `--execute` to submit and replace the selected simulation output directories while preserving LUND inputs. See the [setup and submission guide](docs/gemc-reconstruction-batch-submission.md).
 
 This repository does not run the physical event generator or calculate final acceptance maps.
 

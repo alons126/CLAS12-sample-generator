@@ -87,7 +87,7 @@ First create the LUND files. Pass the completed LUND directory; use optional con
 source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
 ```
 
-This performs setup and submits the selected arrays. **It replaces the selected simulation output directories, preserving LUND input.** There is no preview-by-default or `--execute` switch. The setup checks inputs and prints the legacy report before calling `sbatch`. Tests intercept that final call in temporary fixtures. See the [submission guide](gemc-reconstruction-batch-submission.md) for settings and failure behavior.
+This previews setup and the Slurm command. Add `--execute` to submit the selected arrays and replace simulation output directories, preserving LUND input. Preview still performs the documented server-checkout refresh and environment loading, but preserves sample outputs and farm logs. The setup checks inputs and prints the legacy report before calling `sbatch`. Tests intercept that final call in temporary fixtures. See the [submission guide](gemc-reconstruction-batch-submission.md) for settings and failure behavior.
 
 ## Supporting shell files
 

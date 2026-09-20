@@ -23,6 +23,14 @@ Creation may run locally or on the server. Setup runs in the server login shell;
 source run.csh --workflow submit --lund-dir /shared/Uniform_sample_enFD_2070MeV/lundfiles
 ```
 
+Without `--execute`, this previews the resolved setup and exact `sbatch` command. It loads/checks the configured software environment but does not call `sbatch`, clear farm logs, or create/replace simulation output directories. Add `--execute` to perform those actions:
+
+```tcsh
+source run.csh --workflow submit --lund-dir /shared/sample/lundfiles --execute
+```
+
+The switch is CLI-only: a config file cannot enable execution. The normal `run.csh` disposable-checkout synchronization still runs during preview; sample/output protection does not disable that documented server refresh.
+
 The resolver reads `lund-gen-monitoring/lund-gen-log.json` under the supplied directory. It obtains source, beam energy, target identity, detector target variation, channel/hadron/region, generator/tune/Q² labels, filename prefix and completed file counts from the manifest. `OUTPATH` is the supplied directory's parent, so copied samples do not depend on the original absolute generation path. It does not infer scientific metadata from directory names.
 
 The array size is the number of completed files, not the requested generation capacity. The default `JOB_NEVENTS` is the largest event count among the selected files. A shorter final file remains in the same array with this shared limit and reaches input EOF. This limit is not an exact per-file count; confirm EOF behavior with the selected detector versions during server validation.
@@ -76,7 +84,7 @@ Use a csh/tcsh login shell with its module command initialized and reconstructio
 
 `run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ssh-workflow.md).
 
-**Submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo`; uniform submission also replaces `OUTPATH/rootfiles`.** LUND inputs are preserved. Checks reject unsafe output paths and symlinks before replacement. Optional farm-output cleanup deletes only files directly in the configured farm-output directory, once per invocation.
+**With `--execute`, submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo`; uniform submission also replaces `OUTPATH/rootfiles`.** LUND inputs are preserved. Checks reject unsafe output paths and symlinks before replacement. Optional farm-output cleanup deletes only files directly in the configured farm-output directory, once per invocation.
 
 One array is submitted per sample. Failure stops later samples and returns a nonzero `$status` without closing the sourced shell; already submitted jobs remain submitted. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-`, because the protected payload retains its legacy unquoted command arguments. There is no local detector-execution workflow.
 

@@ -17,7 +17,8 @@
 # Outputs: Slurm jobs writing OUTPATH/mchipo and OUTPATH/reconhipo; uniform samples also recreate rootfiles.
 # Failure behavior: checked failures jump to the shared return block; sourcing never exits the user's login shell.
 # Printing: run.csh sources set_environment.csh first; that file owns the COLOR_* environment-variable palette used below.
-# WARNING: each submission replaces the selected sample's simulation output directories. LUND is preserved.
+# Preview is the default: validate/load the environment and print commands without changing sample outputs.
+# WARNING: --execute submits jobs and replaces the selected sample's simulation output directories. LUND is preserved.
 # All paths must be absolute and contain only letters, numbers, /, _, -, and . (protected payload contract).
 # JOB_NEVENTS is an event limit shared by the array, not a claim about each input file's length.
 
@@ -87,6 +88,7 @@ foreach sample ($samples:q)
     # The helper emits only validated, whitelisted assignments into our private temporary directory.
     source "$sample"
     if ($status != 0) goto submission_finish
+    if ("$SUBMISSION_EXECUTE" == "false") echo "PREVIEW: no sbatch, output replacement or farm_out cleanup; add --execute to submit."
 
     # endregion Resolved sample
 
@@ -185,8 +187,12 @@ foreach sample ($samples:q)
 
         echo "${COLOR_START}Clearing farm_out directory...${COLOR_END}"
         echo "${COLOR_START}-----------------------------------------------------------------------${COLOR_END}"
-        find "$resolved_farm" -maxdepth 1 -type f -delete
-        if ($status != 0) goto submission_finish
+        if ("$SUBMISSION_EXECUTE" == "true") then
+            find "$resolved_farm" -maxdepth 1 -type f -delete
+            if ($status != 0) goto submission_finish
+        else
+            echo "PREVIEW: would clear files in $resolved_farm"
+        endif
         set farm_cleared = 1
         echo
     else if ("$CLEAR_FAR_OUT" == "true") then
@@ -355,8 +361,9 @@ foreach sample ($samples:q)
             printf "%s\n" "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Warning:${COLOR_END} the following directory does not exist: ${OUTPATH}"
             printf "%s\n" "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Creating OUTPATH.${COLOR_END}"
 
-            mkdir -p "$OUTPATH"
-            if ($status != 0) goto submission_finish
+            # Resolution normally requires this directory already; fail if it disappeared during setup.
+            echo "${COLOR_ERR}Error:${COLOR_END} resolved LUND run directory disappeared: $OUTPATH"
+            goto submission_finish
 
             echo "${COLOR_START}----> Checking if ${COLOR_END}OUTPATH${COLOR_START} is a directory...${COLOR_END}"
             printf "%s\n\n" "${COLOR_START}---->${COLOR_END} ${COLOR_COMPLETION}OUTPATH was created successfully.${COLOR_END}"
@@ -451,7 +458,9 @@ foreach sample ($samples:q)
 
     # Confirm the login shell exposes both the scheduler command and the two executables used by the worker payload.
     # This catches incomplete module/environment setup before any existing output directory is removed.
-    foreach executable (sbatch gemc recon-util)
+    set required_executables = (gemc recon-util)
+    if ("$SUBMISSION_EXECUTE" == "true") set required_executables = (sbatch $required_executables)
+    foreach executable ($required_executables)
         which "$executable" >& /dev/null
         if ($status != 0) then
             echo "${COLOR_ERR}Error:${COLOR_END} $executable is unavailable in the loaded environment."
@@ -480,27 +489,41 @@ foreach sample ($samples:q)
 
     # Submission intentionally starts a clean simulation attempt: remove only the source-specific directories listed above.
     # The completed OUTPATH/lundfiles directory is never included and therefore remains the immutable job input.
-    echo "${COLOR_INFO}Removing old directory structure for MC simulation here...${COLOR_END}"
+    if ("$SUBMISSION_EXECUTE" == "true") then
+        echo "${COLOR_INFO}Removing old directory structure for MC simulation here...${COLOR_END}"
 
-    foreach directory ($output_dirs)
-        rm -rf -- "$OUTPATH/$directory"
-        if ($status != 0) goto submission_finish
-    end
-    echo
+        foreach directory ($output_dirs)
+            rm -rf -- "$OUTPATH/$directory"
+            if ($status != 0) goto submission_finish
+        end
+        echo
 
-    # Recreate each directory explicitly and stop at the first failure so Slurm never receives a partial output layout.
-    echo "${COLOR_INFO}Setting up directory structure for MC simulation here...${COLOR_END}"
-    foreach directory ($output_dirs)
-        mkdir "$OUTPATH/$directory"
-        if ($status != 0) goto submission_finish
-    end
-    echo
+        # Recreate each directory explicitly and stop at the first failure so Slurm never receives a partial output layout.
+        echo "${COLOR_INFO}Setting up directory structure for MC simulation here...${COLOR_END}"
+        foreach directory ($output_dirs)
+            mkdir "$OUTPATH/$directory"
+            if ($status != 0) goto submission_finish
+        end
+        echo
+
+    else
+        echo "PREVIEW: would replace $output_dirs under $OUTPATH; existing outputs are preserved."
+    endif
 
     # Print a final pre-submission inventory: LUND should be populated, while the recreated simulation directories are empty.
     echo "${COLOR_INFO}Number of files in target directory (OUTPATH):${COLOR_END}"
     echo "${COLOR_INFO}Number of lund files:     \t\t${COLOR_END} `ls ${OUTPATH}/lundfiles | wc -l`"
-    echo "${COLOR_INFO}Number of mchipo files:   \t\t${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
-    echo "${COLOR_INFO}Number of reconhipo files:\t\t${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
+    if ("$SUBMISSION_EXECUTE" == "true") then
+        echo "${COLOR_INFO}Number of mchipo files:   \t\t${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
+        echo "${COLOR_INFO}Number of reconhipo files:\t\t${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
+    else
+        set mc_count = 0
+        set reco_count = 0
+        if (-d "$OUTPATH/mchipo") set mc_count = `ls ${OUTPATH}/mchipo | wc -l`
+        if (-d "$OUTPATH/reconhipo") set reco_count = `ls ${OUTPATH}/reconhipo | wc -l`
+        echo "${COLOR_INFO}Number of mchipo files:   \t\t${COLOR_END} ${mc_count}"
+        echo "${COLOR_INFO}Number of reconhipo files:\t\t${COLOR_END} ${reco_count}"
+    endif
     echo
 
     # endregion Output preparation
@@ -535,19 +558,25 @@ foreach sample ($samples:q)
 
     # Echo the effective command for provenance and troubleshooting before invoking the scheduler.
     # The protected payload receives all previously exported sample, detector, and output variables through Slurm's environment.
-    echo "${COLOR_INFO}Submitted job with command:${COLOR_END}"
+    if ("$SUBMISSION_EXECUTE" == "true") then
+        echo "${COLOR_INFO}Submitted job with command:${COLOR_END}"
+    else
+        echo "${COLOR_INFO}Preview command (not submitted):${COLOR_END}"
+    endif
     echo "${COLOR_INFO}sbatch --job-name=${COLOR_END}${SLURM_JOB_NAME}${COLOR_INFO} --array=${COLOR_END}${ARRAY} ${SUBMIT_SCRIPT_FILE}"
 
     # A scheduler rejection is fatal for this invocation and prevents later resolved samples from being submitted silently.
-    sbatch --job-name="$SLURM_JOB_NAME" --array="$ARRAY" "$SUBMIT_SCRIPT_FILE"
-    if ($status != 0) goto submission_sbatch_failed
+    if ("$SUBMISSION_EXECUTE" == "true") then
+        sbatch --job-name="$SLURM_JOB_NAME" --array="$ARRAY" "$SUBMIT_SCRIPT_FILE"
+        if ($status != 0) goto submission_sbatch_failed
+    endif
     echo
     echo
 
     # endregion Submission
 end
 
-# Reaching the end of every resolved sample means all requested arrays were accepted by sbatch.
+# All samples were successfully previewed, or all requested arrays were accepted with --execute.
 set CLAS12_SAMPLE_STATUS = 0
 goto submission_finish
 

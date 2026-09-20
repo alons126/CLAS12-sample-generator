@@ -4,6 +4,8 @@ Document maintained C++ with file/class purpose and workflow descriptions, named
 
 Apply this layered style to all maintained code objects, not just functions: classes, structs (including private/nested implementation records), enums, meaningful state groups, constants and configuration containers. Explain purpose, how objects are created/used, member meanings and units, ownership/lifetime, invariants and consumers. Use named banners/regions at meaningful object boundaries; keep trivial members concise and avoid inventing algorithms for passive data records.
 
+Keep clear and consistent vertical spacing in every maintained code file. Use exactly one blank line between logical code blocks, such as initialization, validation, conditionals, loops, reporting, cleanup, return paths, named regions, and separate groups of related statements. Keep a comment directly attached to the block it explains. Do not use repeated blank lines, whitespace-only lines, or tab indentation to create visual separation. For maintained C++, apply this rule only where the repository formatter preserves the spacing.
+
 ## Maintained C++ formatting
 
 Apply these rules to maintained C++ source and header files. Do not apply them to protected external or archived sources. Unless a later instruction explicitly says otherwise, none of the code-format or ownership-header rules in this section apply to `.clang-format`, `.vscode/c_cpp_properties.json`, `.vscode/settings.json`, any `*.conf` file, or Git control files such as `.gitignore`, `.gitattributes`, and `.gitmodules`.

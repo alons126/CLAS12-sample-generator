@@ -24,7 +24,6 @@ from pathlib import Path
 import re
 import sys
 
-
 # Input contract --------------------------------------------------------------
 
 # region Input contract
@@ -70,7 +69,6 @@ HADRONS = {'proton': 'ep', 'neutron': 'en', 'pip': 'epip', 'pim': 'epim'}
 LABELS = {'1e', 'electron-tester', 'ep', 'en'} | {label + region for label in HADRONS.values() for region in ('FD', 'CD')}
 # endregion Input contract
 
-
 # Parsing and validation ------------------------------------------------------
 
 # region Parsing
@@ -78,15 +76,15 @@ def parser():
     """Define the shared CLI/config vocabulary and private shell-integration switches."""
     p = argparse.ArgumentParser(description='Resolve LUND inputs and submit through the sourced shell workflow.',
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
-               'Submission replaces mchipo/reconhipo and uniform rootfiles, preserving lundfiles. '
+               'With --execute, submission replaces mchipo/reconhipo and uniform rootfiles, preserving lundfiles. '
                'GEMC defaults to 5.14. Use source run.csh --workflow submit --lund-dir RUN/lundfiles.')
+    p.add_argument('--execute', action='store_true', help='Submit jobs and replace simulation outputs; default: preview only')
     p.add_argument('--config', type=Path, help='Optional key = value submission settings')
     for key, help_text in OPTIONS.items():
         p.add_argument('--' + key, action='append' if key == 'lund-dir' else 'store', help=help_text)
     p.add_argument('--environment-dir', type=Path, help=argparse.SUPPRESS)
     p.add_argument('--check-arguments', action='store_true', help=argparse.SUPPRESS)
     return p
-
 
 def read_config(path):
     """Read a flat, non-executable config; reject duplicate/unknown keys and resolve its paths."""
@@ -108,13 +106,11 @@ def read_config(path):
         result[key] = value
     return result
 
-
 def positive(value, name):
     """Require a positive bounded integer usable by the C-shell array loop."""
     if isinstance(value, bool) or not re.fullmatch(r'[1-9][0-9]*', str(value)) or int(value) > 2147483647:
         raise ValueError(f'{name} must be an integer from 1 to 2147483647')
     return int(value)
-
 
 def number(value, name):
     """Read a finite decimal, avoiding binary rounding at the MeV label boundary."""
@@ -126,13 +122,11 @@ def number(value, name):
         raise ValueError(f'{name} must be a finite number')
     return result
 
-
 def token(value, name):
     """Require one plain metadata/filename component, with no shell metacharacters."""
     if not SAFE_TOKEN.fullmatch(str(value)):
         raise ValueError(f'{name} must be a nonempty filename-safe label')
     return str(value)
-
 
 def path_value(value, name):
     """Resolve a worker path and reject characters unsupported by the protected payload."""
@@ -140,7 +134,6 @@ def path_value(value, name):
     if not SAFE_PATH.fullmatch(str(path)):
         raise ValueError(f'{name}: worker paths may contain only letters, digits, /, _, - and .')
     return path
-
 
 def channel_label(values):
     """Resolve uniform channel content without guessing particle identity from a filename."""
@@ -152,7 +145,6 @@ def channel_label(values):
     if channel not in LABELS:
         raise ValueError('Specify --channel 1e|eh|electron-tester or an explicit legacy/regional label')
     return channel
-
 
 def read_manifest(lund_dir):
     """Read only the final published manifest; an unfinished .tmp is not manual input."""
@@ -172,7 +164,6 @@ def read_manifest(lund_dir):
         raise ValueError(f'Manifest contains no completed files: {path}')
     return data
 # endregion Parsing
-
 
 # Sample resolution -----------------------------------------------------------
 
@@ -305,7 +296,6 @@ def resolve(lund_directory, explicit, root):
                 FC_STATUS_ENABLED=values['fc-status'], FC_STATUS=fc)
 # endregion Resolution
 
-
 # Environment handoff ---------------------------------------------------------
 
 # region Handoff
@@ -318,7 +308,6 @@ def shell_environment(values):
         assignment = f'set {key} = ' if key in ('source', 'farm_out') else f'setenv {key} '
         lines.append(assignment + '"' + value + '"')
     return '\n'.join(lines) + '\n'
-
 
 def main():
     """Resolve all requested runs, then emit assignments; return before any shell work on error."""
@@ -341,6 +330,8 @@ def main():
     resolved = [resolve(directory, explicit, root) for directory in directories]
     if len({sample['OUTPATH'] for sample in resolved}) != len(resolved):
         raise ValueError('Each selected sample must have a distinct OUTPATH')
+    for sample in resolved:
+        sample['SUBMISSION_EXECUTE'] = 'true' if args.execute else 'false'
     contents = [shell_environment(sample) for sample in resolved]
     if args.environment_dir:
         for index, content in enumerate(contents, 1):
@@ -349,7 +340,6 @@ def main():
     else:
         sys.stdout.write('\n'.join(contents))
     return 0
-
 
 if __name__ == '__main__':
     try:

@@ -28,7 +28,6 @@ LEGACY = PROJECT / 'legacy/GEMC-samples'
 SETUP = PROJECT / 'src/slurm-submission/setup_and_submit.csh'
 PAYLOAD = PROJECT / 'src/slurm-submission/external/submit_GEMC_sample.sh'
 
-
 # Fixture construction --------------------------------------------------------
 
 # region Fixtures
@@ -122,12 +121,13 @@ def fixture(root, source, energy, channel='en', fc=0):
                MODULE_STATUS='0', GEMC_DATA_DIR='/wrong/inherited/value', SBATCH_STATUS='0')
     return new_path, old_path, values, env
 
-
-def run_script(path, env, success=True, arguments=()):
+def run_script(path, env, success=True, arguments=(), execute=True):
     """Source a fixture with a shell module alias; verify status and caller-shell survival."""
+    if execute:
+        arguments = (*arguments, '--execute')
     for key in ('MODULE_LOG', 'SBATCH_LOG'):
         Path(env[key]).unlink(missing_ok=True)
-    program = 'alias module \'source "' + str(path.parent / 'module.csh') + '" \\!*\'; set script_path="$argv[1]"; shift argv; source "$script_path" $argv:q; set result=$status; echo "SHELL_ALIVE=$result"; /bin/sh -c "exit $result"'
+    program = 'source "' + str(PROJECT / 'src/launcher/environment/set_colors.csh') + '"; alias module \'source "' + str(path.parent / 'module.csh') + '" \\!*\'; set script_path="$argv[1]"; shift argv; source "$script_path" $argv:q; set result=$status; echo "SHELL_ALIVE=$result"; /bin/sh -c "exit $result"'
     result = subprocess.run([SHELL, '-f', '-c', program, str(path), *arguments], cwd=path.parent, env=env, capture_output=True, text=True)
     assert f'SHELL_ALIVE={result.returncode}\n' in result.stdout, result.stdout + result.stderr
     assert (result.returncode == 0) == success, result.stdout + result.stderr
@@ -137,7 +137,6 @@ def run_script(path, env, success=True, arguments=()):
     calls = [json.loads(line) for line in Path(env['SBATCH_LOG']).read_text().splitlines()] if Path(env['SBATCH_LOG']).exists() else []
     return transcript, calls
 # endregion Fixtures
-
 
 # Parity and failure cases -----------------------------------------------------
 
@@ -154,6 +153,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
                 for directory in ('mchipo', 'reconhipo', 'rootfiles'):
                     (Path(values['OUTPATH']) / directory / 'old.hipo').write_text('old simulation output')
                 actual, calls = run_script(new, env)
+                # The shared palette replaces archived channel colors; compare the complete visible report.
+                reference = re.sub(r'(?:\x1b|\\033)\[[0-9;]*m', '', reference)
+                actual = re.sub(r'(?:\x1b|\\033)\[[0-9;]*m', '', actual)
                 assert reference == actual, ''.join(difflib.unified_diff(reference.splitlines(True), actual.splitlines(True), fromfile='legacy', tofile='unified'))
                 assert len(calls) == len(old_calls) == 1
                 assert calls[0]['argv'] == old_calls[0]['argv']
@@ -225,6 +227,22 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         assert calls[0]['env']['TEMP_OUTPATH_PARTICLE'] == ('enFD' if source == 'uniform' else 'none')
         _, calls = run_script(new, env, success=False, arguments=('--lund-dir', str(lund), '--beam-energy', '4.02962'))
         assert not calls
+
+    # Preview must leave both existing and absent output directories unchanged, and never call sbatch.
+    new, _, values, env = fixture(root / 'preview', 'uniform', '2070MeV')
+    run = Path(values['OUTPATH'])
+    log = new.parent / 'farm_out/keep.log'
+    log.write_text('preserve log')
+    before = {str(path.relative_to(run)): path.read_bytes() for path in run.rglob('*') if path.is_file()}
+    output, calls = run_script(new, env, arguments=('--clear-farm-out', 'true'), execute=False)
+    assert not calls and 'Preview command (not submitted)' in output and '--array=' in output
+    assert log.read_text() == 'preserve log'
+    assert before == {str(path.relative_to(run)): path.read_bytes() for path in run.rglob('*') if path.is_file()}
+    for folder in ('mchipo', 'reconhipo', 'rootfiles'):
+        shutil.rmtree(run / folder)
+    (new.parent / 'bin/sbatch').unlink()
+    _, calls = run_script(new, env, execute=False)
+    assert not calls and all(not (run / folder).exists() for folder in ('mchipo', 'reconhipo', 'rootfiles'))
 
     # Exercise the real run.csh branch without sync or the Python/build machinery.
     new, _, values, env = fixture(root / 'launcher', 'uniform', '2070MeV')
