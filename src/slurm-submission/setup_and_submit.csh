@@ -496,24 +496,23 @@ foreach sample ($samples:q)
             if ($status != 0) goto submission_finish
         end
         echo
-
     else
         echo "${COLOR_INFO}PREVIEW:${COLOR_END} would replace $output_dirs under $OUTPATH; existing outputs are preserved."
     endif
 
     # Print a final pre-submission inventory: LUND should be populated, while the recreated simulation directories are empty.
     echo "${COLOR_START}Number of files in target directory (OUTPATH):${COLOR_END}"
-    echo "${COLOR_START}Number of lund files:     \t\t${COLOR_END} `ls ${OUTPATH}/lundfiles | wc -l`"
+        echo "${COLOR_START}Number of lund files:     ${COLOR_END} `ls ${OUTPATH}/lundfiles | wc -l`"
     if ("$SUBMISSION_EXECUTE" == "true") then
-        echo "${COLOR_START}Number of mchipo files:   \t\t${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
-        echo "${COLOR_START}Number of reconhipo files:\t\t${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
+        echo "${COLOR_START}Number of mchipo files:   ${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
+        echo "${COLOR_START}Number of reconhipo files:${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
     else
         set mc_count = 0
         set reco_count = 0
         if (-d "$OUTPATH/mchipo") set mc_count = `ls ${OUTPATH}/mchipo | wc -l`
         if (-d "$OUTPATH/reconhipo") set reco_count = `ls ${OUTPATH}/reconhipo | wc -l`
-        echo "${COLOR_START}Number of mchipo files:   \t\t${COLOR_END} ${mc_count}"
-        echo "${COLOR_START}Number of reconhipo files:\t\t${COLOR_END} ${reco_count}"
+        echo "${COLOR_START}Number of mchipo files:   ${COLOR_END} ${mc_count}"
+        echo "${COLOR_START}Number of reconhipo files:${COLOR_END} ${reco_count}"
     endif
     echo
 
@@ -525,35 +524,34 @@ foreach sample ($samples:q)
     # Purpose: expose the exact Slurm array request, validate the protected worker path, and hand the job to ifarm.
     # The source-specific text is informational; uniform and physical samples share the same sbatch command contract.
     if ("$source" == "uniform") then
-        set subbanner_title = "Submitting sbatch job for beam energy ${BEAM_ENERGY_LABEL}"
+        set subbanner_title = "Submitting sbatch job for uniform sample"
     else
-        set subbanner_title = "Submitting GENIE sbatch job"
+        set subbanner_title = "Submitting sbatch job for GENIE sample"
     endif
     set subbanner_color = "$COLOR_START"
     code_subbanner
-    echo
 
     echo "${COLOR_START}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
-    echo ""
 
     # ARRAY maps one Slurm task to each validated PREFIX_INDEX.txt input, using the same inclusive range checked above.
     unset ARRAY
     unsetenv ARRAY
     setenv ARRAY 1-${NUM_OF_JOBS}
-    echo "${COLOR_START}ARRAY:${COLOR_END} ${ARRAY}"
+    echo "${COLOR_START}ARRAY:                      ${COLOR_END} ${ARRAY}"
     echo ""
 
     echo "${COLOR_START}SUBMIT_SCRIPT_FILE:${COLOR_END} ${SUBMIT_SCRIPT_FILE}"
     set check_name = SUBMIT_SCRIPT_FILE
     set check_path = "$SUBMIT_SCRIPT_FILE"
     submission_file
+    echo
 
     # Echo the effective command for provenance and troubleshooting before invoking the scheduler.
     # The protected payload receives all previously exported sample, detector, and output variables through Slurm's environment.
     if ("$SUBMISSION_EXECUTE" == "true") then
         echo "${COLOR_START}Submitted job with command:${COLOR_END}"
     else
-        echo "${COLOR_START}Preview command (not submitted):${COLOR_END}"
+        echo "${COLOR_INFO}Preview command (not submitted):${COLOR_END}"
     endif
     echo "${COLOR_START}sbatch --job-name=${COLOR_END}${SLURM_JOB_NAME}${COLOR_START} --array=${COLOR_END}${ARRAY} ${SUBMIT_SCRIPT_FILE}"
 
@@ -562,7 +560,6 @@ foreach sample ($samples:q)
         sbatch --job-name="$SLURM_JOB_NAME" --array="$ARRAY" "$SUBMIT_SCRIPT_FILE"
         if ($status != 0) goto submission_sbatch_failed
     endif
-    echo
     echo
 
     # endregion Submission
