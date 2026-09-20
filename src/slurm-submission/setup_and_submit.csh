@@ -184,14 +184,6 @@ foreach sample ($samples:q)
 
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
-    if ("$source" == "uniform") then
-        set banner_title = "Setting and submitting uniform sample generation jobs"
-    else
-        set banner_title = "Setting and submitting GENIE sample generation jobs"
-    endif
-    set banner_color = "$COLOR_START"
-    code_banner
-    echo ""
     set section = "Setup environment variables and paths"
     submission_section
 
