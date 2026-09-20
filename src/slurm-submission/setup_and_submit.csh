@@ -202,7 +202,6 @@ foreach sample ($samples:q)
     echo "${COLOR_START}RUNNING_DIR:${COLOR_END}         ${RUNNING_DIR}"
     echo "${COLOR_START}CLEAR_FAR_OUT:${COLOR_END}       ${CLEAR_FAR_OUT}"
     echo "${COLOR_START}GEMC_VERSION:${COLOR_END}        ${GEMC_VERSION}"
-    echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}         ${NUM_OF_JOBS}"
     if ("$source" == "uniform") then
 		echo "${COLOR_START}Sample type:${COLOR_INFO} 	     uniform${COLOR_END}"
     else
@@ -302,18 +301,18 @@ foreach sample ($samples:q)
     # Describe the selected sample. UNIFORM_SAMPLE_CHANNEL identifies the generated uniform final state,
     # such as 1e or enFD, and BEAM_ENERGY_LABEL is its canonical MeV label, such as 2070MeV.
     # Physical samples have no uniform channel, so they report the GEMC target variation instead.
-    if ("$source" == "uniform") then
-        echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
-    endif
-
-    # DETECTOR_ENERGY_GROUP is derived automatically from BEAM_ENERGY_LABEL and selects the matching
-    # detector-resource directory: 2070MeV -> 2GeV, 4029MeV -> 4GeV, or 5986MeV -> 6GeV.
     echo "${COLOR_START}SAMPLE_TARGET_NUCLEUS:${COLOR_END}  ${SAMPLE_TARGET_NUCLEUS}"
     echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}       ${TARGET_VARIATION}"
     echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}      ${BEAM_ENERGY_LABEL}"
     echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END}  ${DETECTOR_ENERGY_GROUP}"
     echo "${COLOR_START}TORUS_FIELD:${COLOR_END}            ${TORUS_FIELD}"
+    echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}            ${NUM_OF_JOBS}"
     echo
+
+    if ("$source" == "uniform") then
+        echo "${COLOR_INFO}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
+        echo
+    endif
 
     # Introduce the source-specific path report.
     if ("$source" == "uniform") then
