@@ -320,18 +320,18 @@ foreach sample ($samples:q)
 
     # Introduce the source-specific path report.
     if ("$source" == "uniform") then
-        set banner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
-        set banner_color = "$COLOR_START"
-        code_banner
+        set subbanner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
+        set subbanner_color = "$COLOR_START"
+        code_subbanner
         echo
     else
-        set banner_title = "Setting GENIE Slurm job submission"
-        set banner_color = "$COLOR_START"
-        code_banner
+        set subbanner_title = "Setting GENIE Slurm job submission"
+        set subbanner_color = "$COLOR_START"
+        code_subbanner
         echo
-        set banner_title = "Sample parameters"
-        set banner_color = "$COLOR_START"
-        code_banner
+        set subbanner_title = "Sample parameters"
+        set subbanner_color = "$COLOR_START"
+        code_subbanner
         echo ""
         echo "${COLOR_START}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
         echo ""
@@ -415,9 +415,9 @@ foreach sample ($samples:q)
     # Physical reports retain the torus setting and checkout check used by the archived submission workflow.
     # Uniform and physical paths converge below on the same detector-resource validation.
     if ("$source" == "physical") then
-        set banner_title = "Job parameters"
-        set banner_color = "$COLOR_START"
-        code_banner
+        set subbanner_title = "Job parameters"
+        set subbanner_color = "$COLOR_START"
+        code_subbanner
         echo ""
         echo "${COLOR_START}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
         echo ""
@@ -438,12 +438,12 @@ foreach sample ($samples:q)
     # Report the automatic detector selection before checking its two concrete inputs.
     # GCARD controls GEMC geometry and fields; YAML controls the downstream CLAS12 reconstruction configuration.
     if ("$source" == "uniform") then
-        set banner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL}, ${TARGET_VARIATION}, and ${UNIFORM_SAMPLE_CHANNEL}"
+        set subbanner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL}, ${TARGET_VARIATION}, and ${UNIFORM_SAMPLE_CHANNEL}"
     else
-        set banner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL} and ${TARGET_VARIATION}"
+        set subbanner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL} and ${TARGET_VARIATION}"
     endif
-    set banner_color = "$COLOR_START"
-    code_banner
+    set subbanner_color = "$COLOR_START"
+    code_subbanner
     echo
 
     # Reuse the file-check alias so either missing detector input follows the same colored error and return path.
@@ -489,14 +489,14 @@ foreach sample ($samples:q)
     # GEMC and reconstruction always produce mchipo and reconhipo directories.
     # Uniform runs additionally replace rootfiles to preserve their archived output layout and monitoring workflow.
     if ("$source" == "uniform") then
-        set banner_title = "Setting output directories for ${UNIFORM_SAMPLE_CHANNEL}"
+        set subbanner_title = "Setting output directories for ${UNIFORM_SAMPLE_CHANNEL}"
         set output_dirs = (mchipo reconhipo rootfiles)
     else
-        set banner_title = "Setting output directories"
+        set subbanner_title = "Setting output directories"
         set output_dirs = (mchipo reconhipo)
     endif
-    set banner_color = "$COLOR_START"
-    code_banner
+    set subbanner_color = "$COLOR_START"
+    code_subbanner
     echo
 
     # Reject symbolic-link destinations before recursive deletion, even though OUTPATH itself was canonicalized above.
@@ -552,12 +552,12 @@ foreach sample ($samples:q)
     # Purpose: expose the exact Slurm array request, validate the protected worker path, and hand the job to ifarm.
     # The source-specific text is informational; uniform and physical samples share the same sbatch command contract.
     if ("$source" == "uniform") then
-        set banner_title = "Submitting sbatch job for beam energy ${BEAM_ENERGY_LABEL}"
+        set subbanner_title = "Submitting sbatch job for beam energy ${BEAM_ENERGY_LABEL}"
     else
-        set banner_title = "Submitting GENIE sbatch job"
+        set subbanner_title = "Submitting GENIE sbatch job"
     endif
-    set banner_color = "$COLOR_START"
-    code_banner
+    set subbanner_color = "$COLOR_START"
+    code_subbanner
     echo
 
     echo "${COLOR_START}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
@@ -632,7 +632,7 @@ if ("$submission_environment" != "") then
 endif
 
 # Discard helper aliases so sourcing this workflow does not pollute the interactive login shell.
-unalias code_banner submission_dir submission_file code_subbanner
+unalias code_banner code_subbanner submission_dir submission_file
 
 # Execute a harmless child shell with the chosen code: tcsh adopts that command's status while the user's shell remains alive.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
