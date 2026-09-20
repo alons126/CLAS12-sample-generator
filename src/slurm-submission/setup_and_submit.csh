@@ -534,7 +534,7 @@ foreach sample ($samples:q)
     unset ARRAY
     unsetenv ARRAY
     setenv ARRAY 1-${NUM_OF_JOBS}
-    echo "${COLOR_START}ARRAY:                      ${COLOR_END} ${ARRAY}"
+    echo "${COLOR_START}ARRAY:${COLOR_END}          ${ARRAY}"
     echo ""
 
     echo "${COLOR_START}SUBMIT_SCRIPT_FILE:${COLOR_END} ${SUBMIT_SCRIPT_FILE}"
