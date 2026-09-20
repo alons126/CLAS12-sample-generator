@@ -196,7 +196,7 @@ foreach sample ($samples:q)
     echo ""
 
     if ("$source" == "uniform") then
-	echo "${COLOR_START}Sample type:${COLOR_INFO} 		 uniform${COLOR_END}"
+		echo "${COLOR_START}Sample type:${COLOR_INFO} 		 uniform${COLOR_END}"
     else
         echo "${COLOR_START}Sample type:${COLOR_INFO}	 physical (GENIE)${COLOR_END}"
     endif
