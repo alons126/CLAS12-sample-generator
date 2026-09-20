@@ -315,7 +315,7 @@ foreach sample ($samples:q)
 
     # DETECTOR_ENERGY_GROUP is derived automatically from BEAM_ENERGY_LABEL and selects the matching
     # detector-resource directory: 2070MeV -> 2GeV, 4029MeV -> 4GeV, or 5986MeV -> 6GeV.
-    echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END}      ${DETECTOR_ENERGY_GROUP}"
+    echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END}  ${DETECTOR_ENERGY_GROUP}"
     echo
 
     # Introduce the source-specific path report.
