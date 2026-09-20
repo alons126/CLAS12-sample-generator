@@ -189,9 +189,6 @@ foreach sample ($samples:q)
     unset SBATCH_EXPORT
     unsetenv SBATCH_EXPORT
     setenv SBATCH_EXPORT ALL
-    unset GENERATOR_TUNE
-    unsetenv GENERATOR_TUNE
-    setenv GENERATOR_TUNE "$GENERATOR_TUNE"
 
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
@@ -205,9 +202,12 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
 		echo "${COLOR_START}Sample type:${COLOR_INFO}  uniform${COLOR_END}"
     else
-        unset SAMPLE_GENERATOR
+        unset SAMPLE_GENERATOR # TODO: Move SAMPLE_GENERATOR from here!
         unsetenv SAMPLE_GENERATOR
         setenv SAMPLE_GENERATOR "$SAMPLE_GENERATOR"
+        unset GENERATOR_TUNE # TODO: Move SAMPLE_GENERATOR from here!
+        unsetenv GENERATOR_TUNE
+        setenv GENERATOR_TUNE "$GENERATOR_TUNE"
         echo "${COLOR_START}Sample type:${COLOR_INFO}  physical (${SAMPLE_GENERATOR})${COLOR_END}"
     endif
     echo ""
