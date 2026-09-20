@@ -189,9 +189,6 @@ foreach sample ($samples:q)
     unset SBATCH_EXPORT
     unsetenv SBATCH_EXPORT
     setenv SBATCH_EXPORT ALL
-    unset SAMPLE_GENERATOR
-    unsetenv SAMPLE_GENERATOR
-    setenv SAMPLE_GENERATOR "$SAMPLE_GENERATOR"
     unset GENERATOR_TUNE
     unsetenv GENERATOR_TUNE
     setenv GENERATOR_TUNE "$GENERATOR_TUNE"
@@ -208,6 +205,9 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
 		echo "${COLOR_START}Sample type:${COLOR_INFO}  uniform${COLOR_END}"
     else
+        unset SAMPLE_GENERATOR
+        unsetenv SAMPLE_GENERATOR
+        setenv SAMPLE_GENERATOR "$SAMPLE_GENERATOR"
         echo "${COLOR_START}Sample type:${COLOR_INFO}  physical (${SAMPLE_GENERATOR})${COLOR_END}"
     endif
     echo ""
