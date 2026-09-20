@@ -66,8 +66,6 @@
 
 if ( -f ./src/launcher/environment/set_banners.csh ) then
     source ./src/launcher/environment/set_banners.csh
-    # printf "${COLOR_START}-->${COLOR_END} %b\n" "${COLOR_COMPLETION}Color environment loaded.${COLOR_END}"
-    echo
 else
     echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/environment/set_banners.csh\n"
     exit 1
