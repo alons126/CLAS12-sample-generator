@@ -148,7 +148,7 @@ foreach sample ($samples:q)
     # The helper emits only validated, whitelisted assignments into our private temporary directory.
     source "$sample"
     if ($status != 0) goto submission_finish
-    if ("$SUBMISSION_EXECUTE" == "false") echo "PREVIEW: no sbatch, output replacement or farm_out cleanup; add --execute to submit."
+    if ("$SUBMISSION_EXECUTE" == "false") echo "${COLOR_INFO}PREVIEW:${COLOR_END}\nNo sbatch, output replacement or farm_out cleanup; add --execute to submit."
 
     # endregion Resolved sample
 
