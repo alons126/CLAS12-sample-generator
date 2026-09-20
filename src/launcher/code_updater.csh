@@ -41,6 +41,16 @@ else
     exit 1
 endif
 
+
+source ./src/launcher/environment/set_colors.csh
+
+printf 'COLOR_START      = <%s>\n' "$COLOR_START"
+printf 'COLOR_INFO       = <%s>\n' "$COLOR_INFO"
+
+printf '\033[33mYELLOW TEST\033[0m\n'
+printf '\033[35mMAGENTA TEST\033[0m\n'
+
+
 echo ""
 
 echo "${COLOR_START}====================================================================================================${COLOR_END}"
