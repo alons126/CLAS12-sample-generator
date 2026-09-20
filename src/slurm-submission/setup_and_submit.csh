@@ -300,7 +300,7 @@ foreach sample ($samples:q)
     else
         set subbanner_title = "Processing GENIE sample"
     endif
-    set banner_color = "$COLOR_START"
+    set subbanner_color = "$COLOR_START"
     code_subbanner
     echo
 
