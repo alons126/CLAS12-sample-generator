@@ -303,10 +303,9 @@ foreach sample ($samples:q)
     set subbanner_color = "$COLOR_START"
     code_subbanner
 
-    # The resolver obtains a uniform channel label from the completed LUND manifest or explicit submission
-    # settings, and derives the canonical MeV beam label from beam-energy. Physical samples have no uniform
-    # channel, so this summary shows their selected GEMC target variation instead. These values identify the
-    # resolved sample for the user; the operational file, detector, and output paths are validated separately.
+    # Describe the selected sample. UNIFORM_SAMPLE_CHANNEL identifies the generated uniform final state,
+    # such as 1e or enFD, and BEAM_ENERGY_LABEL is its canonical MeV label, such as 2070MeV.
+    # Physical samples have no uniform channel, so they report the GEMC target variation instead.
     if ("$source" == "uniform") then
         echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
         echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}      ${BEAM_ENERGY_LABEL}"
@@ -314,16 +313,16 @@ foreach sample ($samples:q)
     else
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END} ${TARGET_VARIATION}"
         echo
-        # Physical-sample reports use the same shared informational color; field-cage status is still printed explicitly below.
     endif
+
+    # DETECTOR_ENERGY_GROUP is derived automatically from BEAM_ENERGY_LABEL and selects the matching
+    # detector-resource directory: 2070MeV -> 2GeV, 4029MeV -> 4GeV, or 5986MeV -> 6GeV.
     echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END} ${DETECTOR_ENERGY_GROUP}"
     echo
 
-    # DETECTOR_ENERGY_GROUP selects the 2/4/6 GeV detector-resource family; BEAM_ENERGY_LABEL retains
-    # the more specific canonical sample label such as 2070MeV, 4029MeV, or 5986MeV.
-    # The physical report keeps the legacy GENIE wording because GENIE is the currently supported physical adapter.
+    # Introduce the source-specific path report.
     if ("$source" == "uniform") then
-        set banner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
+        set banner_title = "Setting paths for channel ${COLOR_INFO}${UNIFORM_SAMPLE_CHANNEL}${COLOR_END}"
         set banner_color = "$COLOR_START"
         code_banner
         echo
