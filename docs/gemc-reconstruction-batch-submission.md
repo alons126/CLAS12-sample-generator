@@ -54,10 +54,9 @@ source run.csh --workflow submit --lund-dir /shared/sample/lundfiles \
 | --- | --- |
 | `--lund-dir` | Existing RUN/lundfiles; repeat for several samples using the same overrides |
 | `--num-jobs`, `--events-per-job` | Optional first-N file selection and per-task event limit |
-| `--gemc-version`, `--load-gemc true|false` | Version and module-loading choice; defaults 5.14 and true |
+| `--gemc-version` | GEMC version used for detector resources and output naming; defaults to 5.14 |
 | `--gcard`, `--yaml`, `--torus` | Explicit simulation choices overriding derived defaults |
-| `--gemc-data-dir` | Override the module's GEMC_DATA_DIR after loading |
-| `--clas12tags-dir` | Optional legacy directory check; no embedded personal path |
+| `--clas12tags-dir` | Use a custom checkout or fork of [gemc/clas12Tags](https://github.com/gemc/clas12Tags) as `GEMC_DATA_DIR` |
 | `--job-name` | Override the metadata-derived Slurm name |
 | `--clear-farm-out true|false`, `--farm-out` | Optional log cleanup, off by default; explicit path required when enabled |
 | `--fc-status 0|1` | Legacy physical naming/report label only; applies no cut |
@@ -80,9 +79,11 @@ Without a manifest, source, beam energy in GeV, target identity and prefix are r
 
 ## Server execution and output replacement
 
-Use a csh/tcsh login shell with its module command initialized and reconstruction available. The setup runs `module unload gemc` and `module load gemc/VERSION` unless disabled, and checks `GEMC_DATA_DIR`. Optional overrides apply after module loading. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the configured environment. Scheduler/log defaults remain in the protected payload's `#SBATCH` directives.
+Use a csh/tcsh login shell with GEMC and reconstruction already available. The submission workflow does not load or replace the GEMC module. By default, it uses the `GEMC_DATA_DIR` supplied by the preloaded ifarm GEMC environment.
 
-Before each project-owned `setenv`, the maintained submission path removes both a same-named tcsh local variable and any inherited environment value. Resolver-generated handoff files follow the same rule. This prevents persistent login-shell state from shadowing validated submission settings; site-module values remain untouched unless the workflow explicitly replaces them, such as a configured `GEMC_DATA_DIR` override.
+For a custom GEMC detector implementation, such as testing target geometry, clone or fork [gemc/clas12Tags](https://github.com/gemc/clas12Tags) on shared storage and pass its checkout with `--clas12tags-dir DIRECTORY`. The setup validates `CLAS12TAGS_DIR` and then exports `GEMC_DATA_DIR=$CLAS12TAGS_DIR` before submission. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the selected directory in every Slurm task. Scheduler/log defaults remain in the protected payload's `#SBATCH` directives.
+
+Before each project-owned `setenv`, the maintained submission path removes both a same-named tcsh local variable and any inherited environment value. Resolver-generated handoff files follow the same rule. This prevents persistent login-shell state from shadowing validated submission settings; the preloaded `GEMC_DATA_DIR` remains active unless the workflow replaces it with `--clas12tags-dir`.
 
 `run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ssh-workflow.md).
 

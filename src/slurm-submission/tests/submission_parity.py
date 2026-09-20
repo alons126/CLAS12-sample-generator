@@ -118,7 +118,7 @@ def fixture(root, source, energy, channel='en', fc=0):
     new_path.write_text(f'source src/slurm-submission/setup_and_submit.csh --config "{config}" $argv:q\n')
     env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'], MODULE_LOG=str(root / 'modules.log'),
                SBATCH_LOG=str(root / 'sbatch.jsonl'), FIXTURE_GEMC_DATA=str(root / 'gemc-data'),
-               MODULE_STATUS='0', GEMC_DATA_DIR='/wrong/inherited/value', SBATCH_STATUS='0')
+               MODULE_STATUS='0', GEMC_DATA_DIR=str(root / 'gemc-data'), SBATCH_STATUS='0')
     return new_path, old_path, values, env
 
 def run_script(path, env, success=True, arguments=(), execute=True):
@@ -160,13 +160,13 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
                 assert len(calls) == len(old_calls) == 1
                 assert calls[0]['argv'] == old_calls[0]['argv']
                 assert calls[0]['argv'][1] == '--array=1-2'
-                for name in ('OUTPATH', 'GCARD_FILE', 'YAML_FILE', 'TORUS_FIELD', 'TEMP_BEAM_E', 'GEMC_DATA_DIR', 'ARRAY', 'SLURM_JOB_NAME'):
+                for name in ('OUTPATH', 'GCARD_FILE', 'YAML_FILE', 'TORUS_FIELD', 'TEMP_BEAM_E', 'ARRAY', 'SLURM_JOB_NAME'):
                     assert calls[0]['env'][name] == old_calls[0]['env'][name], name
                 for name, value in values.items():
                     assert calls[0]['env'][name] == value, name
                 assert calls[0]['env']['SBATCH_EXPORT'] == calls[0]['env']['SLURM_EXPORT_ENV'] == 'ALL'
-                assert Path(env['MODULE_LOG']).read_text() == 'unload gemc\nload gemc/5.14\n'
-                assert calls[0]['env']['GEMC_DATA_DIR'] == env['FIXTURE_GEMC_DATA']
+                assert not Path(env['MODULE_LOG']).exists()
+                assert calls[0]['env']['GEMC_DATA_DIR'] == str(new.parent / 'tags')
                 run = Path(values['OUTPATH'])
                 assert not list((run / 'mchipo').iterdir()) and not list((run / 'reconhipo').iterdir())
                 assert len(list((run / 'lundfiles').glob('*.txt'))) == 2
@@ -175,12 +175,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         new, _, values, env = fixture(root / channel, 'uniform', '2070MeV', channel)
         _, calls = run_script(new, env)
         assert len(calls) == 1 and calls[0]['env']['TEMP_OUTPATH_PARTICLE'] == channel
-    for failure in ('module', 'gcard', 'yaml', 'lund', 'tags', 'symlink', 'unsafe', 'sbatch'):
+    for failure in ('gcard', 'yaml', 'lund', 'tags', 'symlink', 'unsafe', 'sbatch'):
         new, _, values, env = fixture(root / failure, 'uniform', '2070MeV')
         run = Path(values['OUTPATH'])
-        if failure == 'module':
-            env['MODULE_STATUS'] = '1'
-        elif failure in ('gcard', 'yaml'):
+        if failure in ('gcard', 'yaml'):
             Path(values['GCARD_FILE' if failure == 'gcard' else 'YAML_FILE']).unlink()
         elif failure == 'lund':
             (run / f'lundfiles/{values["SAMPLE_FILE_PREFIX"]}_2.txt').unlink()
@@ -257,10 +255,6 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     assert len(calls) == 1 and calls[0]['argv'][1] == '--array=1-2'
     _, calls = run_script(entry, env, success=False, arguments=('--workflow', 'submit', '--site', 'removed.json'))
     assert not calls
-    env['MODULE_STATUS'] = '1'
-    _, calls = run_script(entry, env, success=False, arguments=('--workflow', 'submit', '--config', str(checkout / 'submission.conf')))
-    assert not calls
-
     # Multiple samples repeat setup with distinct outputs and make exactly one array each.
     new, _, values, env = fixture(root / 'multiple', 'uniform', '2070MeV')
     first_run = Path(values['OUTPATH'])

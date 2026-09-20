@@ -37,15 +37,13 @@
 #   --num-jobs N                  Submit the first N completed files (default: all).
 #   --events-per-job N            Set the shared worker event limit.
 #   --job-name NAME               Override the derived Slurm job name.
-#   --load-gemc true|false        Control GEMC module loading (default: true).
-#   --gemc-data-dir DIRECTORY     Override GEMC_DATA_DIR after module loading.
-#   --clas12tags-dir DIRECTORY    Validate an optional custom clas12Tags tree.
+#   --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
 #   --clear-farm-out true|false / --farm-out DIRECTORY  Control guarded farm log cleanup.
 #   --fc-status 0|1               Set the legacy physical report/filename label only.
 #   --help                        Print submission help without replacing outputs or submitting.
 # 
 # Inputs:
-#	manifest/config/CLI settings (GEMC fallback 5.14), existing OUTPATH/lundfiles/PREFIX_INDEX.txt, GCARD, YAML, and the login shell's module command.
+#	manifest/config/CLI settings (GEMC fallback 5.14), existing OUTPATH/lundfiles/PREFIX_INDEX.txt, GCARD, YAML, and the preloaded ifarm GEMC environment.
 # 
 # Outputs:
 #	Slurm jobs writing OUTPATH/mchipo and OUTPATH/reconhipo; uniform samples also recreate rootfiles.
@@ -143,8 +141,8 @@ foreach sample ($samples:q)
     # Setup report and modules ------------------------------------------------
 
     # region Setup
-    # Validate the resolver's control values before they can affect module loading, filesystem cleanup, or Slurm.
-    # source selects the report/output conventions; the two Boolean settings must use explicit true/false text.
+    # Validate the resolver's control values before they can affect filesystem cleanup or Slurm.
+    # source selects the report/output conventions; the cleanup Boolean must use explicit true/false text.
     # NUM_OF_JOBS and JOB_NEVENTS are positive decimal integers because zero-sized arrays and event limits are invalid.
     if ("$source" != "uniform" && "$source" != "physical") then
         echo "${COLOR_ERR}Error:${COLOR_END} source must be uniform or physical."
@@ -152,8 +150,6 @@ foreach sample ($samples:q)
     endif
 
     if ("$CLEAR_FAR_OUT" != "true" && "$CLEAR_FAR_OUT" != "false") goto submission_bad_settings
-    if ("$CUSTOM_GEMC_VERSION" != "true" && "$CUSTOM_GEMC_VERSION" != "false") goto submission_bad_settings
-
     printf '%s\n' "$NUM_OF_JOBS" "$JOB_NEVENTS" | awk '$0 !~ /^[1-9][0-9]*$/ {exit 1}'
     if ($status != 0) goto submission_bad_settings
 
@@ -190,7 +186,6 @@ foreach sample ($samples:q)
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}    ${TARGET_VARIATION}"
     endif
     echo "${COLOR_START}CLEAR_FAR_OUT:${COLOR_END}       ${CLEAR_FAR_OUT}"
-    echo "${COLOR_START}CUSTOM_GEMC_VERSION:${COLOR_END} ${CUSTOM_GEMC_VERSION}"
     echo "${COLOR_START}GEMC_VERSION:${COLOR_END}        ${GEMC_VERSION}"
     echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}         ${NUM_OF_JOBS}"
     echo ""
@@ -198,19 +193,17 @@ foreach sample ($samples:q)
     if ("$source" == "uniform") then
 		echo "${COLOR_START}Sample type:${COLOR_INFO} 	     uniform${COLOR_END}"
     else
-        echo "${COLOR_START}Sample type:${COLOR_INFO}	 physical (GENIE)${COLOR_END}"
+        echo "${COLOR_START}Sample type:${COLOR_INFO}	     physical (GENIE)${COLOR_END}"
     endif
     echo ""
 
-    # Physical conversion keeps its run beneath OUTPATH_BASE; uniform resolution validates that base in the sample report.
-    # CLAS12TAGS_DIR is optional and is checked only when a custom clas12Tags tree was explicitly configured.
+    # Every resolved run must remain beneath an existing output base, regardless of whether its LUND source is physical or uniform.
+    # CLAS12TAGS_DIR selects an optional custom fork of https://github.com/gemc/clas12Tags, for example when testing target geometry.
     set check_color = "$COLOR_START"
-    if ("$source" == "physical") then
-        echo "${COLOR_START}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
-        set check_name = OUTPATH_BASE
-        set check_path = "$OUTPATH_BASE"
-        submission_dir
-    endif
+    echo "${COLOR_START}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
+    set check_name = OUTPATH_BASE
+    set check_path = "$OUTPATH_BASE"
+    submission_dir
 
     if ("$CLAS12TAGS_DIR" != "") then
         echo "${COLOR_START}CLAS12TAGS_DIR:${COLOR_END} ${CLAS12TAGS_DIR}"
@@ -222,7 +215,7 @@ foreach sample ($samples:q)
     # CLEAR_FAR_OUT is an invocation-wide maintenance option for ifarm log files, independent of per-sample output cleanup.
     # The guards reject roots, the home directory, this checkout, symlinks, and paths outside a farm_out hierarchy.
     # find removes only regular files directly below the resolved directory; subdirectories and later job logs are preserved.
-    set section = '= Handling farm_out directory clearing and custom GEMC version        ='
+    set section = '= Handling farm_out directory clearing and GEMC data                  ='
     submission_section
     if ("$CLEAR_FAR_OUT" == "true" && $farm_cleared == 0) then
         # Limit optional deletion to files directly in the configured user's farm_out directory.
@@ -251,64 +244,28 @@ foreach sample ($samples:q)
         echo
     endif
 
-    # Optionally replace the login shell's GEMC module with the requested version.
-    # A configured override wins after module loading; otherwise GEMC_DATA_DIR must come from the active environment.
-    # Every module or directory failure returns through the shared failure block before output deletion or submission.
-    # Remove only a shadowing local value here; preserve the site-owned exported value when module loading is disabled.
-    unset GEMC_DATA_DIR
-    set section = '= Handling custom GEMC version                                        ='
+    # GEMC is already loaded on ifarm, and its environment supplies the standard GEMC_DATA_DIR.
+    # A configured CLAS12TAGS_DIR replaces that value with a custom clas12Tags checkout, such as
+    # a fork used to test target geometry. Directory failures return before deletion or submission.
+    set section = '= Checking preloaded GEMC data                                        ='
     submission_section
-    if ("$CUSTOM_GEMC_VERSION" == "true") then
-        echo "${COLOR_START}Loading GEMC version ${COLOR_END}${GEMC_VERSION}${COLOR_START}...${COLOR_END}"
-        echo "${COLOR_START}-----------------------------------------------------------------------${COLOR_END}"
 
-        module unload gemc
-        if ($status != 0) goto submission_module_failed
-
-        module load gemc/${GEMC_VERSION}
-        if ($status != 0) goto submission_module_failed
-
-        # Site module files are expected to export GEMC_DATA_DIR. Do not let a module-created local
-        # value take precedence over that export in the remainder of this sourced workflow.
-        unset GEMC_DATA_DIR
-
-        echo
-        if ("$GEMC_DATA_OVERRIDE" != "") then
-            unset GEMC_DATA_DIR
-            unsetenv GEMC_DATA_DIR
-            setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
-        endif
-
-        if (! $?GEMC_DATA_DIR) then
-            echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR was not set by the loaded environment."
-            goto submission_finish
-        endif
-
-        echo "${COLOR_START}GEMC_DATA_DIR:${COLOR_END} ${GEMC_DATA_DIR}"
-        set check_name = GEMC_DATA_DIR
-        set check_path = "$GEMC_DATA_DIR"
-        submission_dir
-    else
-        echo "CUSTOM_GEMC_VERSION$ ${COLOR_START}is set to '${COLOR_END}false${COLOR_START}', skipping custom GEMC version loading...${COLOR_END}"
-        echo
-    endif
-
-    # Reapply the override when custom module loading is disabled, then validate the final directory in either path.
-    if ("$GEMC_DATA_OVERRIDE" != "") then
+    # Selecting a custom clas12Tags checkout means every submitted job must use that fork.
+    if ("$CLAS12TAGS_DIR" != "") then
         unset GEMC_DATA_DIR
         unsetenv GEMC_DATA_DIR
-        setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
+        setenv GEMC_DATA_DIR "$CLAS12TAGS_DIR"
     endif
 
     if (! $?GEMC_DATA_DIR) then
-        echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR is missing; load GEMC or supply --gemc-data-dir."
+        echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR is missing from the preloaded GEMC environment; select --clas12tags-dir for a custom checkout."
         goto submission_finish
     endif
 
-    if (! -d "$GEMC_DATA_DIR") then
-        echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR is not a directory: $GEMC_DATA_DIR"
-        goto submission_finish
-    endif
+    echo "${COLOR_START}GEMC_DATA_DIR:${COLOR_END} ${GEMC_DATA_DIR}"
+    set check_name = GEMC_DATA_DIR
+    set check_path = "$GEMC_DATA_DIR"
+    submission_dir
 
     # Introduce the adapter-specific sample loop report; actual iteration is driven by the resolver-generated sample files.
     if ("$source" == "uniform") then
@@ -339,7 +296,7 @@ foreach sample ($samples:q)
     echo "${COLOR_START}-----------------------------------------------------------------------${COLOR_END}"
     echo
 
-    # Uniform runs report their generated channel and require the shared output base to exist already.
+    # Uniform runs report their generated channel and the shared output base validated during setup.
     # Physical runs report the detector target variation here; their full generator provenance follows below.
     if ("$source" == "uniform") then
         echo "${COLOR_START}TEMP_BEAM_E:${COLOR_END} ${TEMP_BEAM_E}"
@@ -349,10 +306,6 @@ foreach sample ($samples:q)
 
         # Sample-specific reports use the informational color supplied by set_environment.csh.
         echo "${COLOR_INFO}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
-        set check_color = "$COLOR_INFO"
-        set check_name = OUTPATH_BASE
-        set check_path = "$OUTPATH_BASE"
-        submission_dir
         echo "${COLOR_INFO}TEMP_OUTPATH_PARTICLE:${COLOR_END} ${TEMP_OUTPATH_PARTICLE}"
         echo
         echo "${COLOR_INFO}Setting environment variables based on TEMP_BEAM_E and particle type ${TEMP_OUTPATH_PARTICLE}${COLOR_END}"
@@ -665,11 +618,6 @@ goto submission_finish
 # Invalid values and unsafe paths deliberately share one message because both require correcting resolved submission input.
 submission_bad_settings:
 echo "${COLOR_ERR}Error:${COLOR_END} invalid setting or unsafe path; check the submission config or CLI settings."
-goto submission_finish
-
-# Module failure prevents later samples from inheriting a partially changed GEMC environment.
-submission_module_failed:
-echo "${COLOR_ERR}Error:${COLOR_END} GEMC module setup failed; no subsequent sample was submitted."
 goto submission_finish
 
 # An unsuccessful sbatch call also stops the multi-sample loop; falling through reaches the common cleanup below.

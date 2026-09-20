@@ -67,11 +67,14 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     card.write_text('<gcard/>')
     yaml.write_text('test: true\n')
     explicit = {'gemc-version': '5.15', 'gcard': str(card), 'yaml': str(yaml), 'torus': '-0.75',
-                'num-jobs': '1', 'events-per-job': '2', 'load-gemc': 'false'}
+                'num-jobs': '1', 'events-per-job': '2'}
     result = resolve(lund, explicit, project)
     assert result['GEMC_VERSION'] == '5.15' and result['TORUS_FIELD'] == '-0.75'
     assert result['NUM_OF_JOBS'] == '1' and result['JOB_NEVENTS'] == '2'
-    assert result['CUSTOM_GEMC_VERSION'] == 'false'
+    custom_tags = root / 'custom-clas12Tags'
+    custom_tags.mkdir()
+    result = resolve(lund, {**explicit, 'clas12tags-dir': str(custom_tags)}, project)
+    assert result['CLAS12TAGS_DIR'] == str(custom_tags)
     planned = copy.deepcopy(manifest)
     planned['config']['gemc-version'] = '5.15'
     save(planned)

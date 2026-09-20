@@ -46,9 +46,7 @@ Submission options:
     --num-jobs N                  Submit the first N completed files (default: all).
     --events-per-job N            Set the shared worker event limit (default: largest selected file).
     --job-name NAME               Override the derived Slurm job name.
-    --load-gemc true|false        Control GEMC module loading (default: true).
-    --gemc-data-dir DIRECTORY     Override GEMC_DATA_DIR after module loading.
-    --clas12tags-dir DIRECTORY    Validate an optional custom clas12Tags tree.
+    --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
     --clear-farm-out true|false   Remove direct farm_out files once (default: false).
     --farm-out DIRECTORY          Supply the required cleanup directory when clearing farm_out.
     --fc-status 0|1               Set the legacy physical report/filename label only.
@@ -92,14 +90,12 @@ OPTIONS = {
     'num-jobs': 'Submit the first N files (default: all completed files)',
     'events-per-job': 'Shared event limit (default: maximum selected manifest file count)',
     'job-name': 'Slurm job name (default: derived from sample metadata)',
-    'load-gemc': 'true/false (default: true); use false for an already configured environment',
-    'gemc-data-dir': 'Override GEMC_DATA_DIR after module loading',
-    'clas12tags-dir': 'Optional legacy custom-geometry directory check; no personal default',
+    'clas12tags-dir': 'Custom gemc/clas12Tags checkout used as GEMC_DATA_DIR; intended for detector-development tests',
     'clear-farm-out': 'true/false (default: false); delete files directly in farm-out once',
     'farm-out': 'Explicit farm_out directory, required only when clearing it',
     'fc-status': '0 or 1 legacy physical filename/report label only (default: 0)',
 }
-PATH_KEYS = {'lund-dir', 'gcard', 'yaml', 'gemc-data-dir', 'clas12tags-dir', 'farm-out'}
+PATH_KEYS = {'lund-dir', 'gcard', 'yaml', 'clas12tags-dir', 'farm-out'}
 # Values entering the sourced file cannot contain shell syntax. Worker paths are more restrictive
 # because the protected payload deliberately retains its original unquoted detector arguments.
 SAFE_VALUE = re.compile(r'[A-Za-z0-9_./:+ -]*\Z')
@@ -241,7 +237,7 @@ def resolve(lund_directory, explicit, root):
                 same = number(explicit[key], key) == number(inherited[key], key) if key == 'beam-energy' else explicit[key] == inherited[key]
                 if not same:
                     raise ValueError(f'--{key} conflicts with manifest value {inherited[key]!r}')
-    values = {'gemc-version': '5.14', 'load-gemc': 'true', 'clear-farm-out': 'false', 'fc-status': '0', **inherited, **explicit}
+    values = {'gemc-version': '5.14', 'clear-farm-out': 'false', 'fc-status': '0', **inherited, **explicit}
     for key in ('source', 'beam-energy', 'rgm-target', 'prefix'):
         if not values.get(key):
             raise ValueError(f'Missing --{key}; supply it through the manifest, config or CLI')
@@ -307,13 +303,13 @@ def resolve(lund_directory, explicit, root):
     for name, path in (('GCARD', card), ('YAML', yaml)):
         if not path.is_file():
             raise ValueError(f'{name} does not exist: {path}; supply an explicit path if needed')
-    for key in ('load-gemc', 'clear-farm-out'):
+    for key in ('clear-farm-out',):
         if values[key] not in ('true', 'false'):
             raise ValueError(f'--{key} must be true or false')
     if values['fc-status'] not in ('0', '1'):
         raise ValueError('--fc-status must be 0 or 1 (legacy naming only)')
     optional_paths = {}
-    for key in ('gemc-data-dir', 'clas12tags-dir', 'farm-out'):
+    for key in ('clas12tags-dir', 'farm-out'):
         path = path_value(values[key], key) if values.get(key) else None
         if path is not None and not path.is_dir():
             raise ValueError(f'--{key} directory does not exist: {path}')
@@ -332,9 +328,9 @@ def resolve(lund_directory, explicit, root):
                 TEMP_BEAM_E_ROUNDED=rounded, TEMP_OUTPATH_PARTICLE=channel, TARGET_VARIATION=variation,
                 SAMPLE_TARGET_NUCLEUS=target, SAMPLE_GENERATOR=generator, GENERATOR_TUNE=tune, Q2_CUT=q2,
                 OUTPATH_BASE=str(run.parent), OUTPATH=str(run), SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job,
-                GEMC_VERSION=version, CUSTOM_GEMC_VERSION=values['load-gemc'], CLEAR_FAR_OUT=values['clear-farm-out'],
+                GEMC_VERSION=version, CLEAR_FAR_OUT=values['clear-farm-out'],
                 CLAS12TAGS_DIR=optional_paths['clas12tags-dir'], farm_out=optional_paths['farm-out'],
-                GEMC_DATA_OVERRIDE=optional_paths['gemc-data-dir'], TORUS_FIELD=torus_text,
+                TORUS_FIELD=torus_text,
                 REQUIREMENTS_PATH=str(card.parent), GCARD_FILE=str(card), YAML_FILE=str(yaml),
                 FC_STATUS_ENABLED=values['fc-status'], FC_STATUS=fc)
 # endregion Resolution
