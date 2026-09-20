@@ -404,15 +404,18 @@ foreach sample ($samples:q)
     unsetenv OUTPATH
     setenv OUTPATH "$resolved_out"
 
-    # Physical reports retain the torus setting and checkout check used by the archived submission workflow.
-    # Uniform and physical paths converge below on the same detector-resource validation.
+    # GEMC uses TORUS_FIELD for every uniform and physical sample. The resolver derives its default
+    # from DETECTOR_ENERGY_GROUP or accepts an explicit --torus override, then exports it to the worker.
+    set subbanner_title = "Job parameters"
+    set subbanner_color = "$COLOR_START"
+    code_subbanner
+    echo ""
+    echo "${COLOR_START}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
+    echo ""
+
+    # Retain the archived physical-workflow checkout check. Both source types converge immediately
+    # afterward on the same detector-resource validation and use the same resolved TORUS_FIELD.
     if ("$source" == "physical") then
-        set subbanner_title = "Job parameters"
-        set subbanner_color = "$COLOR_START"
-        code_subbanner
-        echo ""
-        echo "${COLOR_START}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
-        echo ""
         set check_name = RUNNING_DIR
         set check_path = "$RUNNING_DIR"
         submission_dir
@@ -420,7 +423,7 @@ foreach sample ($samples:q)
 
     # REQUIREMENTS_DIR groups the reviewed GCARD and YAML selected for this beam energy, target variation, and GEMC version.
     echo "${COLOR_START}REQUIREMENTS_DIR:${COLOR_END} ${REQUIREMENTS_DIR}"
-    echo
+    # echo
 
     set check_color = "$COLOR_START"
     set check_name = REQUIREMENTS_DIR
