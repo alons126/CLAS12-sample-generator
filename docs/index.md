@@ -23,7 +23,7 @@ Existing GENIE GST --> conversion --+
 3. Choose [uniform generation](uniform-samples.md) or [physical event-generator conversion](genie-to-lund-conversion.md).
 4. [Configuration](configuration.md): units, defaults, seeds and target settings.
 5. [Simulation and Slurm](gemc-reconstruction-batch-submission.md): configure the sourced setup and submit one array per sample.
-6. [Workflow command examples](../tutorial/README.md): matched uniform LUND-generation and small-array submission commands.
+6. [Workflow command examples](../tutorials/README.md): matched uniform LUND-generation and small-array submission commands.
 7. [Migration](migration.md): old-to-new entry points and deliberate behavioral changes.
 
 For the scientific and implementation reference, start at the [technical-note outline](technical-note.md). It links the sampling equations, data contracts, source inventory, legacy launch-chain mapping, and validation evidence.

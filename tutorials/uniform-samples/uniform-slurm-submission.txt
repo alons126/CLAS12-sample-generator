@@ -1,7 +1,3 @@
-#
-# Created by Alon Sportes on 17/09/2026.
-#
-
 # Corresponding generation commands: uniform-lund-generation.txt
 # Run on ifarm after the matching LUND generation finishes.
 # Each command submits only the first 5 LUND files (array 1-5), rather than all 40 files.

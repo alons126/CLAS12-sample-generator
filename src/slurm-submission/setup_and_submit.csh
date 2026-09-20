@@ -177,9 +177,9 @@ foreach sample ($samples:q)
     echo ""
     echo "${COLOR_INFO}///////////////////////////////////////////////////////////////////////${COLOR_END}"
     if ("$source" == "uniform") then
-        printf "%s%s%s\n" "${COLOR_INFO}//${COLOR_END}        Setting and submitting uniform sample generation jobs      ${COLOR_INFO}//${COLOR_END}"
+        echo "${COLOR_INFO}//${COLOR_END}        Setting and submitting uniform sample generation jobs      ${COLOR_INFO}//${COLOR_END}"
     else
-        printf "%s%s%s\n" "${COLOR_INFO}//${COLOR_END}        Setting and submitting GENIE sample generation jobs        ${COLOR_INFO}//${COLOR_END}"
+        echo "${COLOR_INFO}//${COLOR_END}        Setting and submitting GENIE sample generation jobs        ${COLOR_INFO}//${COLOR_END}"
     endif
     echo "${COLOR_INFO}///////////////////////////////////////////////////////////////////////${COLOR_END}"
     echo ""
