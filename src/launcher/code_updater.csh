@@ -59,6 +59,14 @@ printenv COLOR_START
 
 echo ""
 
+printf '\033[33mLITERAL 33\033[0m\n'
+
+printf "${COLOR_START}VARIABLE FORMAT${COLOR_END}\n"
+
+printf '%bVARIABLE %%b%b\n' "$COLOR_START" "$COLOR_END"
+
+printf '%s\n' "$COLOR_START" | od -An -tx1c
+
 printf "${COLOR_START}====================================================================================================${COLOR_END}\n"
 printf "${COLOR_START}= Running update script                                                                            =${COLOR_END}\n"
 printf "${COLOR_START}====================================================================================================${COLOR_END}\n"
