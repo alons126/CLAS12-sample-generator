@@ -303,8 +303,10 @@ foreach sample ($samples:q)
     set subbanner_color = "$COLOR_START"
     code_subbanner
 
-    # Uniform runs report their generated channel. Physical runs report the detector target variation here;
-    # their full generator provenance follows below.
+    # The resolver obtains a uniform channel label from the completed LUND manifest or explicit submission
+    # settings, and derives the canonical MeV beam label from beam-energy. Physical samples have no uniform
+    # channel, so this summary shows their selected GEMC target variation instead. These values identify the
+    # resolved sample for the user; the operational file, detector, and output paths are validated separately.
     if ("$source" == "uniform") then
         echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
         echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}      ${BEAM_ENERGY_LABEL}"
@@ -314,7 +316,7 @@ foreach sample ($samples:q)
         echo
         # Physical-sample reports use the same shared informational color; field-cage status is still printed explicitly below.
     endif
-    echo "${COLOR_INFO}DETECTOR_ENERGY_GROUP:${COLOR_END} ${DETECTOR_ENERGY_GROUP}"
+    echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END} ${DETECTOR_ENERGY_GROUP}"
     echo
 
     # DETECTOR_ENERGY_GROUP selects the 2/4/6 GeV detector-resource family; BEAM_ENERGY_LABEL retains
@@ -322,38 +324,38 @@ foreach sample ($samples:q)
     # The physical report keeps the legacy GENIE wording because GENIE is the currently supported physical adapter.
     if ("$source" == "uniform") then
         set banner_title = "Setting paths for channel ${UNIFORM_SAMPLE_CHANNEL}"
-        set banner_color = "$COLOR_INFO"
+        set banner_color = "$COLOR_START"
         code_banner
         echo
     else
         set banner_title = "Setting GENIE Slurm job submission"
-        set banner_color = "$COLOR_INFO"
+        set banner_color = "$COLOR_START"
         code_banner
         echo
         set banner_title = "Sample parameters"
-        set banner_color = "$COLOR_INFO"
+        set banner_color = "$COLOR_START"
         code_banner
         echo ""
-        echo "${COLOR_INFO}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
+        echo "${COLOR_START}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
         echo ""
-        echo "${COLOR_INFO}GENIE_TUNE:${COLOR_END} ${GENERATOR_TUNE}"
+        echo "${COLOR_START}GENIE_TUNE:${COLOR_END} ${GENERATOR_TUNE}"
         echo ""
-        echo "${COLOR_INFO}Q2_CUT:${COLOR_END} ${Q2_CUT}"
+        echo "${COLOR_START}Q2_CUT:${COLOR_END} ${Q2_CUT}"
         echo ""
-        echo "${COLOR_INFO}BEAM_ENERGY_LABEL:${COLOR_END} ${BEAM_ENERGY_LABEL}"
+        echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END} ${BEAM_ENERGY_LABEL}"
         echo ""
-        echo "${COLOR_INFO}FC_STATUS:${COLOR_END} ${FC_STATUS}"
+        echo "${COLOR_START}FC_STATUS:${COLOR_END} ${FC_STATUS}"
         echo ""
-        echo "${COLOR_INFO}FC_STATUS_ENABLED:${COLOR_END} ${FC_STATUS_ENABLED}"
+        echo "${COLOR_START}FC_STATUS_ENABLED:${COLOR_END} ${FC_STATUS_ENABLED}"
         echo ""
     endif
 
     # OUTPATH is the completed LUND run directory consumed by this submission and later receives simulation products.
     # Physical conversion may create this directory during setup; uniform generation must have created it beforehand.
-    echo "${COLOR_INFO}OUTPATH:${COLOR_END} ${OUTPATH}"
+    echo "${COLOR_START}OUTPATH:${COLOR_END} ${OUTPATH}"
     if ("$source" == "physical") echo ""
 
-    set check_color = "$COLOR_INFO"
+    set check_color = "$COLOR_START"
     if ("$source" == "physical") set check_color = "$COLOR_START"
 
     # Enforce the protected worker's conservative path contract before passing any value through its environment.
@@ -417,10 +419,10 @@ foreach sample ($samples:q)
     # Uniform and physical paths converge below on the same detector-resource validation.
     if ("$source" == "physical") then
         set banner_title = "Job parameters"
-        set banner_color = "$COLOR_INFO"
+        set banner_color = "$COLOR_START"
         code_banner
         echo ""
-        echo "${COLOR_INFO}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
+        echo "${COLOR_START}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
         echo ""
         set check_name = RUNNING_DIR
         set check_path = "$RUNNING_DIR"
@@ -428,10 +430,10 @@ foreach sample ($samples:q)
     endif
 
     # REQUIREMENTS_PATH groups the reviewed GCARD and YAML selected for this beam energy, target variation, and GEMC version.
-    echo "${COLOR_INFO}REQUIREMENTS_PATH:${COLOR_END} ${REQUIREMENTS_PATH}"
+    echo "${COLOR_START}REQUIREMENTS_PATH:${COLOR_END} ${REQUIREMENTS_PATH}"
     echo
 
-    set check_color = "$COLOR_INFO"
+    set check_color = "$COLOR_START"
     set check_name = REQUIREMENTS_PATH
     set check_path = "$REQUIREMENTS_PATH"
     submission_dir
@@ -443,7 +445,7 @@ foreach sample ($samples:q)
     else
         set banner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL} and ${TARGET_VARIATION}"
     endif
-    set banner_color = "$COLOR_INFO"
+    set banner_color = "$COLOR_START"
     code_banner
     echo
 
@@ -451,7 +453,7 @@ foreach sample ($samples:q)
     foreach check_name (GCARD_FILE YAML_FILE)
         if ("$check_name" == "GCARD_FILE") set check_path = "$GCARD_FILE"
         if ("$check_name" == "YAML_FILE") set check_path = "$YAML_FILE"
-        echo "${COLOR_INFO}${check_name}:${COLOR_END} ${check_path}"
+        echo "${COLOR_START}${check_name}:${COLOR_END} ${check_path}"
         submission_file
     end
 
@@ -496,7 +498,7 @@ foreach sample ($samples:q)
         set banner_title = "Setting output directories"
         set output_dirs = (mchipo reconhipo)
     endif
-    set banner_color = "$COLOR_INFO"
+    set banner_color = "$COLOR_START"
     code_banner
     echo
 
@@ -509,7 +511,7 @@ foreach sample ($samples:q)
     # Submission intentionally starts a clean simulation attempt: remove only the source-specific directories listed above.
     # The completed OUTPATH/lundfiles directory is never included and therefore remains the immutable job input.
     if ("$SUBMISSION_EXECUTE" == "true") then
-        echo "${COLOR_INFO}Removing old directory structure for MC simulation here...${COLOR_END}"
+        echo "${COLOR_START}Removing old directory structure for MC simulation here...${COLOR_END}"
 
         foreach directory ($output_dirs)
             rm -rf -- "$OUTPATH/$directory"
@@ -518,7 +520,7 @@ foreach sample ($samples:q)
         echo
 
         # Recreate each directory explicitly and stop at the first failure so Slurm never receives a partial output layout.
-        echo "${COLOR_INFO}Setting up directory structure for MC simulation here...${COLOR_END}"
+        echo "${COLOR_START}Setting up directory structure for MC simulation here...${COLOR_END}"
         foreach directory ($output_dirs)
             mkdir "$OUTPATH/$directory"
             if ($status != 0) goto submission_finish
@@ -530,18 +532,18 @@ foreach sample ($samples:q)
     endif
 
     # Print a final pre-submission inventory: LUND should be populated, while the recreated simulation directories are empty.
-    echo "${COLOR_INFO}Number of files in target directory (OUTPATH):${COLOR_END}"
-    echo "${COLOR_INFO}Number of lund files:     \t\t${COLOR_END} `ls ${OUTPATH}/lundfiles | wc -l`"
+    echo "${COLOR_START}Number of files in target directory (OUTPATH):${COLOR_END}"
+    echo "${COLOR_START}Number of lund files:     \t\t${COLOR_END} `ls ${OUTPATH}/lundfiles | wc -l`"
     if ("$SUBMISSION_EXECUTE" == "true") then
-        echo "${COLOR_INFO}Number of mchipo files:   \t\t${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
-        echo "${COLOR_INFO}Number of reconhipo files:\t\t${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
+        echo "${COLOR_START}Number of mchipo files:   \t\t${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
+        echo "${COLOR_START}Number of reconhipo files:\t\t${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
     else
         set mc_count = 0
         set reco_count = 0
         if (-d "$OUTPATH/mchipo") set mc_count = `ls ${OUTPATH}/mchipo | wc -l`
         if (-d "$OUTPATH/reconhipo") set reco_count = `ls ${OUTPATH}/reconhipo | wc -l`
-        echo "${COLOR_INFO}Number of mchipo files:   \t\t${COLOR_END} ${mc_count}"
-        echo "${COLOR_INFO}Number of reconhipo files:\t\t${COLOR_END} ${reco_count}"
+        echo "${COLOR_START}Number of mchipo files:   \t\t${COLOR_END} ${mc_count}"
+        echo "${COLOR_START}Number of reconhipo files:\t\t${COLOR_END} ${reco_count}"
     endif
     echo
 
@@ -557,21 +559,21 @@ foreach sample ($samples:q)
     else
         set banner_title = "Submitting GENIE sbatch job"
     endif
-    set banner_color = "$COLOR_INFO"
+    set banner_color = "$COLOR_START"
     code_banner
     echo
 
-    echo "${COLOR_INFO}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
+    echo "${COLOR_START}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
     echo ""
 
     # ARRAY maps one Slurm task to each validated PREFIX_INDEX.txt input, using the same inclusive range checked above.
     unset ARRAY
     unsetenv ARRAY
     setenv ARRAY 1-${NUM_OF_JOBS}
-    echo "${COLOR_INFO}ARRAY:${COLOR_END} ${ARRAY}"
+    echo "${COLOR_START}ARRAY:${COLOR_END} ${ARRAY}"
     echo ""
 
-    echo "${COLOR_INFO}SUBMIT_SCRIPT_FILE:${COLOR_END} ${SUBMIT_SCRIPT_FILE}"
+    echo "${COLOR_START}SUBMIT_SCRIPT_FILE:${COLOR_END} ${SUBMIT_SCRIPT_FILE}"
     set check_name = SUBMIT_SCRIPT_FILE
     set check_path = "$SUBMIT_SCRIPT_FILE"
     submission_file
@@ -579,11 +581,11 @@ foreach sample ($samples:q)
     # Echo the effective command for provenance and troubleshooting before invoking the scheduler.
     # The protected payload receives all previously exported sample, detector, and output variables through Slurm's environment.
     if ("$SUBMISSION_EXECUTE" == "true") then
-        echo "${COLOR_INFO}Submitted job with command:${COLOR_END}"
+        echo "${COLOR_START}Submitted job with command:${COLOR_END}"
     else
-        echo "${COLOR_INFO}Preview command (not submitted):${COLOR_END}"
+        echo "${COLOR_START}Preview command (not submitted):${COLOR_END}"
     endif
-    echo "${COLOR_INFO}sbatch --job-name=${COLOR_END}${SLURM_JOB_NAME}${COLOR_INFO} --array=${COLOR_END}${ARRAY} ${SUBMIT_SCRIPT_FILE}"
+    echo "${COLOR_START}sbatch --job-name=${COLOR_END}${SLURM_JOB_NAME}${COLOR_START} --array=${COLOR_END}${ARRAY} ${SUBMIT_SCRIPT_FILE}"
 
     # A scheduler rejection is fatal for this invocation and prevents later resolved samples from being submitted silently.
     if ("$SUBMISSION_EXECUTE" == "true") then
