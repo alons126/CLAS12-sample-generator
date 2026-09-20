@@ -25,6 +25,7 @@
 #   contaminated interactive shell. These assignments intentionally contain no terminal output.
 
 unset COLOR_START COLOR_ERR COLOR_COMPLETION COLOR_INFO COLOR_WARNING COLOR_END
+unsetenv COLOR_START COLOR_ERR COLOR_COMPLETION COLOR_INFO COLOR_WARNING COLOR_END
 
 setenv COLOR_START      '\033[33m'  # Yellow
 setenv COLOR_ERR        '\033[31m'  # Red

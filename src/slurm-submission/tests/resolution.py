@@ -86,6 +86,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     emitted = (environment / '000001.csh').read_text()
     assert 'setenv GEMC_VERSION "5.14"' in emitted and 'setenv NUM_OF_JOBS "1"' in emitted
     assert f'setenv GCARD_FILE "{card}"' in emitted
+    assert 'unset GEMC_VERSION\nunsetenv GEMC_VERSION\nsetenv GEMC_VERSION "5.14"' in emitted
+    assert 'unset source\nset source = "uniform"' in emitted
     for overrides in ({'beam-energy': '4.02962'}, {'rgm-target': 'C12'}, {'source': 'physical'},
                       {'hadron': 'proton'}, {'channel': '1e'}, {'prefix': 'wrong'}, {'num-jobs': '3'},
                       {'events-per-job': '0'}, {'torus': 'NaN'}, {'job-name': '$(touch bad)'},

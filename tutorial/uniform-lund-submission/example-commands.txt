@@ -1,0 +1,74 @@
+#########################################################################################
+# Uniform (e,e') sample Slurm submission
+#########################################################################################
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-1e-2070MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-1e-4029MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-1e-5986MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+#########################################################################################
+# Uniform (e,e'nFD) sample Slurm submission
+#########################################################################################
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-enFD-2070MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-enFD-4029MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-enFD-5986MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+#########################################################################################
+# Uniform (e,e'pFD) sample Slurm submission:
+#########################################################################################
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-epFD-2070MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-epFD-4029MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
+
+source run.csh \
+  --workflow create-lund \
+  --source uniform \
+  --config config/samples/uniform-epFD-5986MeV.conf \
+  --events 1000000 \
+  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples

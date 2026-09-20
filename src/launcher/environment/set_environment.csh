@@ -41,8 +41,10 @@ echo ""
 # Set project root directory
 # ------------------------------------------------------------------------------------------
 
-# Remove previous value if present
+# Remove both tcsh namespaces before exporting the authoritative value. A local variable created
+# with `set` otherwise shadows a same-named environment variable created with `setenv`.
 unset DIR_CLAS12_SAMPLE_GENERATOR_CODE
+unsetenv DIR_CLAS12_SAMPLE_GENERATOR_CODE
 
 # Set the variable to the current working directory
 # Backticks execute the command and capture the output
@@ -57,6 +59,7 @@ echo ""
 # ------------------------------------------------------------------------------------------
 
 unset ANALYSIS_HOSTNAME
+unsetenv ANALYSIS_HOSTNAME
 
 # hostname command returns the current machine name
 setenv ANALYSIS_HOSTNAME `hostname`
@@ -70,6 +73,7 @@ echo ""
 # ------------------------------------------------------------------------------------------
 
 unset JLAB_TESTER
+unsetenv JLAB_TESTER
 
 # Any hostname containing this substring will be treated as a JLab machine
 setenv JLAB_TESTER "jlab.org"
@@ -81,6 +85,7 @@ echo "${COLOR_START}JLAB_TESTER:${COLOR_END} ${JLAB_TESTER}"
 # ------------------------------------------------------------------------------------------
 
 unset IFARM_RUN
+unsetenv IFARM_RUN
 
 # tcsh pattern matching: "=~" tests whether the left side matches a wildcard pattern
 # Here we check if ANALYSIS_HOSTNAME contains "jlab.org"

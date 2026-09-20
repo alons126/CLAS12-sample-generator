@@ -80,6 +80,8 @@ endif
 
 # An explicit environment value has final precedence. CLAS12_SAMPLES_DIR is not defined by this
 # project: the user sets it only when they want to source run.csh from outside the checkout, for example:
+#   unset CLAS12_SAMPLES_DIR
+#   unsetenv CLAS12_SAMPLES_DIR
 #   setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
 #   source "$CLAS12_SAMPLES_DIR/run.csh"
 # It remains in the shell until `unsetenv CLAS12_SAMPLES_DIR`. When the user is already at the checkout

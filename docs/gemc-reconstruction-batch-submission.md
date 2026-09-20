@@ -82,6 +82,8 @@ Without a manifest, source, beam energy in GeV, target identity and prefix are r
 
 Use a csh/tcsh login shell with its module command initialized and reconstruction available. The setup runs `module unload gemc` and `module load gemc/VERSION` unless disabled, and checks `GEMC_DATA_DIR`. Optional overrides apply after module loading. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the configured environment. Scheduler/log defaults remain in the protected payload's `#SBATCH` directives.
 
+Before each project-owned `setenv`, the maintained submission path removes both a same-named tcsh local variable and any inherited environment value. Resolver-generated handoff files follow the same rule. This prevents persistent login-shell state from shadowing validated submission settings; site-module values remain untouched unless the workflow explicitly replaces them, such as a configured `GEMC_DATA_DIR` override.
+
 `run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ssh-workflow.md).
 
 **With `--execute`, submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo`; uniform submission also replaces `OUTPATH/rootfiles`.** LUND inputs are preserved. Checks reject unsafe output paths and symlinks before replacement. Optional farm-output cleanup deletes only files directly in the configured farm-output directory, once per invocation.

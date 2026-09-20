@@ -95,9 +95,13 @@ set samples = ( "$submission_environment"/*.csh )
 
 # region Shell support
 # Preserve one status for run.csh, remember output directories already handled in this invocation, and clear farm_out at most once.
+# Every maintained export clears both tcsh namespaces first. Without `unset`, a stale local value
+# can shadow the new `setenv` value; without `unsetenv`, inherited state survives until assignment.
 set CLAS12_SAMPLE_STATUS = 1
 set submission_outputs = ()
 set farm_cleared = 0
+unset RUNNING_DIR
+unsetenv RUNNING_DIR
 setenv RUNNING_DIR "$cwd"
 
 # This script is intended to be sourced through run.csh, which calls set_environment.csh before reaching this point.
@@ -113,6 +117,8 @@ if (! -f "$RUNNING_DIR/src/slurm-submission/external/submit_GEMC_sample.sh") the
     goto submission_finish
 endif
 
+unset SUBMIT_SCRIPT_FILE
+unsetenv SUBMIT_SCRIPT_FILE
 setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEMC_sample.sh"
 
 # The check aliases consume check_name/check_path/check_color, print the legacy messages,
@@ -153,8 +159,14 @@ foreach sample ($samples:q)
 
     # The inherited Slurm export policy must not suppress the configured software environment.
     # GENIE_TUNE preserves the variable name expected by the protected worker while the resolver uses the generator-neutral name.
+    unset SLURM_EXPORT_ENV
+    unsetenv SLURM_EXPORT_ENV
     setenv SLURM_EXPORT_ENV ALL
+    unset SBATCH_EXPORT
+    unsetenv SBATCH_EXPORT
     setenv SBATCH_EXPORT ALL
+    unset GENIE_TUNE
+    unsetenv GENIE_TUNE
     setenv GENIE_TUNE "$GENERATOR_TUNE"
 
     # Report the checkout and resolved high-level settings before performing any side effect.
@@ -248,6 +260,8 @@ foreach sample ($samples:q)
     # Optionally replace the login shell's GEMC module with the requested version.
     # A configured override wins after module loading; otherwise GEMC_DATA_DIR must come from the active environment.
     # Every module or directory failure returns through the shared failure block before output deletion or submission.
+    # Remove only a shadowing local value here; preserve the site-owned exported value when module loading is disabled.
+    unset GEMC_DATA_DIR
     set section = '= Handling custom GEMC version                                        ='
     submission_section
     if ("$CUSTOM_GEMC_VERSION" == "true") then
@@ -260,8 +274,16 @@ foreach sample ($samples:q)
         module load gemc/${GEMC_VERSION}
         if ($status != 0) goto submission_module_failed
 
+        # Site module files are expected to export GEMC_DATA_DIR. Do not let a module-created local
+        # value take precedence over that export in the remainder of this sourced workflow.
+        unset GEMC_DATA_DIR
+
         echo
-        if ("$GEMC_DATA_OVERRIDE" != "") setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
+        if ("$GEMC_DATA_OVERRIDE" != "") then
+            unset GEMC_DATA_DIR
+            unsetenv GEMC_DATA_DIR
+            setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
+        endif
 
         if (! $?GEMC_DATA_DIR) then
             echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR was not set by the loaded environment."
@@ -278,7 +300,11 @@ foreach sample ($samples:q)
     endif
 
     # Reapply the override when custom module loading is disabled, then validate the final directory in either path.
-    if ("$GEMC_DATA_OVERRIDE" != "") setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
+    if ("$GEMC_DATA_OVERRIDE" != "") then
+        unset GEMC_DATA_DIR
+        unsetenv GEMC_DATA_DIR
+        setenv GEMC_DATA_DIR "$GEMC_DATA_OVERRIDE"
+    endif
 
     if (! $?GEMC_DATA_DIR) then
         echo "${COLOR_ERR}Error:${COLOR_END} GEMC_DATA_DIR is missing; load GEMC or supply --gemc-data-dir."
@@ -437,6 +463,8 @@ foreach sample ($samples:q)
     set submission_outputs = ($submission_outputs:q "$resolved_out")
 
     # Export the canonical path so the protected Slurm worker and all subsequent checks use the same directory identity.
+    unset OUTPATH
+    unsetenv OUTPATH
     setenv OUTPATH "$resolved_out"
 
     # Physical reports retain the torus setting and checkout check used by the archived submission workflow.
@@ -589,6 +617,8 @@ foreach sample ($samples:q)
     echo ""
 
     # ARRAY maps one Slurm task to each validated PREFIX_INDEX.txt input, using the same inclusive range checked above.
+    unset ARRAY
+    unsetenv ARRAY
     setenv ARRAY 1-${NUM_OF_JOBS}
     echo "${COLOR_INFO}ARRAY:${COLOR_END} ${ARRAY}"
     echo ""

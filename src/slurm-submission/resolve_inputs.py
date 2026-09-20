@@ -18,8 +18,9 @@ Inputs:
     lundfiles directories, optional key=value config, CLI overrides and manifest schema 1.
 
 Outputs:
-    whitelisted set/setenv assignments, on stdout or in a private directory supplied by
-    setup_and_submit.csh. All samples are validated before any environment file is written.
+    whitelisted unset/set/setenv assignments, on stdout or in a private directory supplied
+    by setup_and_submit.csh. Every exported name has both tcsh namespaces cleared before it is
+    assigned. All samples are validated before any environment file is written.
 
 Failure:
     malformed input, contradictory truth metadata or unsafe values return nonzero. Missing
@@ -342,13 +343,17 @@ def resolve(lund_directory, explicit, root):
 
 # region Handoff
 def shell_environment(values):
-    """Encode only known settings; reject shell syntax before the shell sources any content."""
+    """Encode known settings after clearing stale tcsh local and environment values."""
     lines = []
     for key, value in values.items():
         if not SAFE_VALUE.fullmatch(value):
             raise ValueError(f'Unsupported shell characters in resolved setting {key}')
-        assignment = f'set {key} = ' if key in ('source', 'farm_out') else f'setenv {key} '
-        lines.append(assignment + '"' + value + '"')
+        if key in ('source', 'farm_out'):
+            lines.extend((f'unset {key}', f'set {key} = "{value}"'))
+        else:
+            # tcsh permits a local and exported variable with the same name. The local value wins
+            # during `$name` expansion, so clearing only the environment is not sufficient.
+            lines.extend((f'unset {key}', f'unsetenv {key}', f'setenv {key} "{value}"'))
     return '\n'.join(lines) + '\n'
 
 def main():

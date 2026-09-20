@@ -29,12 +29,14 @@ An empty `source run.csh` prints uniform, physical, submission, and build/test e
 To source from another directory, first set `CLAS12_SAMPLES_DIR` to the absolute checkout path:
 
 ```tcsh
+unset CLAS12_SAMPLES_DIR
+unsetenv CLAS12_SAMPLES_DIR
 setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
 source "$CLAS12_SAMPLES_DIR/run.csh" --workflow create-lund --source uniform \
   --config config/samples/uniform-1e-5986MeV.conf --output runs/electron-003
 ```
 
-`CLAS12_SAMPLES_DIR` is an optional user-defined environment variable; the project does not create it. It overrides automatic checkout discovery so the launcher can be sourced from any working directory. When the shell is already in the repository root, it is unnecessary:
+`CLAS12_SAMPLES_DIR` is an optional user-defined environment variable; the project does not create it. The example clears both tcsh namespaces before assignment for the same reason as project-owned exports. It overrides automatic checkout discovery so the launcher can be sourced from any working directory. When the shell is already in the repository root, it is unnecessary:
 
 ```tcsh
 cd /shared/path/CLAS12-sample-generator
@@ -49,6 +51,12 @@ unsetenv CLAS12_SAMPLES_DIR
 ```
 
 A failed command stops subsequent stages and returns a nonzero `$status` without exiting the sourced parent shell. `CLAS12_SAMPLE_STATUS` also retains the wrapper's result. Read `$status` immediately because the next shell command replaces it. `CLAS12_SKIP_SERVER_SYNC=1` is reserved for local tests and launcher development; routine ifarm use must keep synchronization enabled.
+
+### Environment replacement contract
+
+Tcsh maintains local variables created by `set` separately from exported environment variables created by `setenv`. Both may have the same name, and `$NAME` expands the local value even after `setenv NAME ...` replaces the exported value. A stale local value can therefore make a freshly sourced workflow appear to ignore its configuration until a new terminal session is opened.
+
+Every maintained project-owned environment assignment clears both namespaces immediately before setting its authoritative value: `unset NAME`, then `unsetenv NAME`, then `setenv NAME VALUE`. This applies to the shared color and launcher environment, resolver-generated submission handoff files, and submission variables passed to Slurm. User-owned inputs such as `CLAS12_SAMPLES_DIR`, values established by external site modules, protected payloads, and archived sources are not rewritten unless a maintained workflow explicitly owns an override. Regression tests begin with conflicting local and exported values to verify that sourcing repairs the shell state.
 
 ## Run settings and build controls
 
