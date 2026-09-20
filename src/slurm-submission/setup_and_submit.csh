@@ -315,6 +315,7 @@ foreach sample ($samples:q)
     # DETECTOR_ENERGY_GROUP is derived automatically from BEAM_ENERGY_LABEL and selects the matching
     # detector-resource directory: 2070MeV -> 2GeV, 4029MeV -> 4GeV, or 5986MeV -> 6GeV.
     echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END}  ${DETECTOR_ENERGY_GROUP}"
+    echo "${COLOR_START}TORUS_FIELD:${COLOR_END}            ${TORUS_FIELD}"
     echo
 
     # Introduce the source-specific path report.
@@ -404,15 +405,6 @@ foreach sample ($samples:q)
     unsetenv OUTPATH
     setenv OUTPATH "$resolved_out"
 
-    # GEMC uses TORUS_FIELD for every uniform and physical sample. The resolver derives its default
-    # from DETECTOR_ENERGY_GROUP or accepts an explicit --torus override, then exports it to the worker.
-    set subbanner_title = "Job parameters"
-    set subbanner_color = "$COLOR_START"
-    code_subbanner
-    echo ""
-    echo "${COLOR_START}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
-    echo ""
-
     # Retain the archived physical-workflow checkout check. Both source types converge immediately
     # afterward on the same detector-resource validation and use the same resolved TORUS_FIELD.
     if ("$source" == "physical") then
@@ -423,8 +415,6 @@ foreach sample ($samples:q)
 
     # REQUIREMENTS_DIR groups the reviewed GCARD and YAML selected for this beam energy, target variation, and GEMC version.
     echo "${COLOR_START}REQUIREMENTS_DIR:${COLOR_END} ${REQUIREMENTS_DIR}"
-    # echo
-
     set check_color = "$COLOR_START"
     set check_name = REQUIREMENTS_DIR
     set check_path = "$REQUIREMENTS_DIR"
