@@ -307,13 +307,7 @@ foreach sample ($samples:q)
     # their full generator provenance follows below.
     if ("$source" == "uniform") then
         echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
-        echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}       ${BEAM_ENERGY_LABEL}"
-        echo
-
-        # Sample-specific reports use the informational color supplied by set_environment.csh.
-        set banner_title = "Setting environment for ${BEAM_ENERGY_LABEL} and channel ${UNIFORM_SAMPLE_CHANNEL}"
-        set banner_color = "$COLOR_INFO"
-        code_banner
+        echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}      ${BEAM_ENERGY_LABEL}"
         echo
     else
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END} ${TARGET_VARIATION}"
