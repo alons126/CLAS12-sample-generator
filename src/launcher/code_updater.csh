@@ -44,12 +44,18 @@ endif
 
 source ./src/launcher/environment/set_colors.csh
 
-printf 'COLOR_START      = <%s>\n' "$COLOR_START"
-printf 'COLOR_INFO       = <%s>\n' "$COLOR_INFO"
+echo "CHECK 1:"
+printenv COLOR_START
 
-printf '\033[33mYELLOW TEST\033[0m\n'
-printf '\033[35mMAGENTA TEST\033[0m\n'
+# ... next section of code ...
 
+echo "CHECK 2:"
+printenv COLOR_START
+
+# ... next section ...
+
+echo "CHECK 3:"
+printenv COLOR_START
 
 echo ""
 
