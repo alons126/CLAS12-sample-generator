@@ -73,15 +73,19 @@ else
     exit 1
 endif
 
-echo "${COLOR_START}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"
-echo "${COLOR_START}// Running Slurm submission script                                                                //${COLOR_END}"
-echo "${COLOR_START}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"
+# Render every titled banner at 100 visible columns. Callers supply banner_title and banner_color;
+# the helper calculates asymmetric padding when an odd number of spaces is required.
+alias submission_banner 'set banner_title_length = `printf "%s" "$banner_title" | wc -c`; @ banner_padding = 96 - $banner_title_length; @ banner_padding_left = $banner_padding / 2; @ banner_padding_right = $banner_padding - $banner_padding_left; echo "${banner_color}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"; printf "${banner_color}//%*s%s%*s//${COLOR_END}\n" $banner_padding_left "" "$banner_title" $banner_padding_right ""; echo "${banner_color}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"; unset banner_title banner_color banner_title_length banner_padding banner_padding_left banner_padding_right'
+
+set banner_title = "Running Slurm submission script"
+set banner_color = "$COLOR_START"
+submission_banner
 echo ""
 
 # Input resolution ------------------------------------------------------------
 
 # region Input resolution
-# Python only resolves and validates data. Module loading and sbatch remain in this sourced login shell.
+# Python only resolves and validates data. Preloaded environment handling and sbatch remain in this sourced login shell.
 # The resolver writes one whitelisted .csh assignment file per selected sample into a private temporary directory.
 # --help bypasses temporary-file creation, while all other paths converge on submission_finish for cleanup.
 set CLAS12_SAMPLE_STATUS = 1
@@ -136,10 +140,10 @@ unsetenv SUBMIT_SCRIPT_FILE
 setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEMC_sample.sh"
 
 # The check aliases consume check_name/check_path/check_color, print the legacy messages,
-# and jump to the corresponding failure label before any dependent stage can run. submission_section prints a consistent heading.
+# and jump to the corresponding failure label before any dependent stage can run. submission_section wraps the shared banner renderer.
 alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
-alias submission_section 'echo ""; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo "${COLOR_START}${section}${COLOR_END}"; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo ""'
+alias submission_section 'echo ""; set banner_title = "$section"; set banner_color = "$COLOR_START"; submission_banner; echo ""'
 
 # endregion Shell support
 
@@ -187,15 +191,15 @@ foreach sample ($samples:q)
     echo ""
     echo
     echo ""
-    echo "${COLOR_START}///////////////////////////////////////////////////////////////////////${COLOR_END}"
     if ("$source" == "uniform") then
-        echo "${COLOR_START}//${COLOR_END}        Setting and submitting uniform sample generation jobs      ${COLOR_START}//${COLOR_END}"
+        set banner_title = "Setting and submitting uniform sample generation jobs"
     else
-        echo "${COLOR_START}//${COLOR_END}        Setting and submitting GENIE sample generation jobs        ${COLOR_START}//${COLOR_END}"
+        set banner_title = "Setting and submitting GENIE sample generation jobs"
     endif
-    echo "${COLOR_START}///////////////////////////////////////////////////////////////////////${COLOR_END}"
+    set banner_color = "$COLOR_START"
+    submission_banner
     echo ""
-    set section = '= Setup environment variables and paths                               ='
+    set section = "Setup environment variables and paths"
     submission_section
 
     if ("$source" == "uniform") then
@@ -231,7 +235,7 @@ foreach sample ($samples:q)
     # CLEAR_FAR_OUT is an invocation-wide maintenance option for ifarm log files, independent of per-sample output cleanup.
     # The guards reject roots, the home directory, this checkout, symlinks, and paths outside a farm_out hierarchy.
     # find removes only regular files directly below the resolved directory; subdirectories and later job logs are preserved.
-    set section = '= Handling farm_out directory clearing and GEMC data                  ='
+    set section = "Handling farm_out directory clearing and GEMC data"
     submission_section
     if ("$CLEAR_FAR_OUT" == "true" && $farm_cleared == 0) then
         # Limit optional deletion to files directly in the configured user's farm_out directory.
@@ -242,8 +246,9 @@ foreach sample ($samples:q)
         if ($status != 0 || "$resolved_farm" == "" || "$resolved_farm" == "/" || "$resolved_farm" == "$HOME" || "$RUNNING_DIR" =~ "$resolved_farm"/* || "$resolved_farm" == "$RUNNING_DIR") goto submission_bad_settings
         if ("$resolved_farm" !~ */farm_out && "$resolved_farm" !~ */farm_out/*) goto submission_bad_settings
 
-        echo "${COLOR_START}Clearing farm_out directory...${COLOR_END}"
-        echo "${COLOR_START}-----------------------------------------------------------------------${COLOR_END}"
+        set banner_title = "Clearing farm_out directory"
+        set banner_color = "$COLOR_START"
+        submission_banner
         if ("$SUBMISSION_EXECUTE" == "true") then
             find "$resolved_farm" -maxdepth 1 -type f -delete
             if ($status != 0) goto submission_finish
@@ -263,7 +268,7 @@ foreach sample ($samples:q)
     # GEMC is already loaded on ifarm, and its environment supplies the standard GEMC_DATA_DIR.
     # A configured CLAS12TAGS_DIR replaces that value with a custom clas12Tags checkout, such as
     # a fork used to test target geometry. Directory failures return before deletion or submission.
-    set section = '= Checking preloaded GEMC data                                        ='
+    set section = "Checking preloaded GEMC data"
     submission_section
 
     # Selecting a custom clas12Tags checkout means every submitted job must use that fork.
@@ -285,9 +290,9 @@ foreach sample ($samples:q)
 
     # Introduce the adapter-specific sample loop report; actual iteration is driven by the resolver-generated sample files.
     if ("$source" == "uniform") then
-        set section = '= Looping over particle types                                         ='
+        set section = "Looping over particle types"
     else
-        set section = '= Looping over samples                                         ='
+        set section = "Looping over samples"
     endif
 
     submission_section
@@ -305,11 +310,12 @@ foreach sample ($samples:q)
     # Lead with the source-specific identity a user needs to recognize the selected run.
     # Uniform samples are identified by channel, while physical samples include their target nucleus and generator tune.
     if ("$source" == "uniform") then
-        echo "${COLOR_START}Processing particle type ${COLOR_END}${TEMP_OUTPATH_PARTICLE}${COLOR_START} at beam energy ${COLOR_END}${TEMP_BEAM_E}"
+        set banner_title = "Processing particle type ${TEMP_OUTPATH_PARTICLE} at beam energy ${TEMP_BEAM_E}"
     else
-        echo "${COLOR_START}Processing GENIE sample for ${COLOR_END}${SAMPLE_TARGET_NUCLEUS}${COLOR_START} (${COLOR_END}${GENERATOR_TUNE}${COLOR_START}) at beam energy ${COLOR_END}${TEMP_BEAM_E}"
+        set banner_title = "Processing GENIE sample for ${SAMPLE_TARGET_NUCLEUS} (${GENERATOR_TUNE}) at beam energy ${TEMP_BEAM_E}"
     endif
-    echo "${COLOR_START}-----------------------------------------------------------------------${COLOR_END}"
+    set banner_color = "$COLOR_START"
+    submission_banner
     echo
 
     # Uniform runs report their generated channel and the shared output base validated during setup.
@@ -324,8 +330,9 @@ foreach sample ($samples:q)
         echo "${COLOR_INFO}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
         echo "${COLOR_INFO}TEMP_OUTPATH_PARTICLE:${COLOR_END} ${TEMP_OUTPATH_PARTICLE}"
         echo
-        echo "${COLOR_INFO}Setting environment variables based on TEMP_BEAM_E and particle type ${TEMP_OUTPATH_PARTICLE}${COLOR_END}"
-        echo "${COLOR_INFO}-----------------------------------------------------------------------${COLOR_END}"
+        set banner_title = "Setting environment for ${TEMP_BEAM_E} and particle type ${TEMP_OUTPATH_PARTICLE}"
+        set banner_color = "$COLOR_INFO"
+        submission_banner
         echo
 
     else
@@ -341,15 +348,18 @@ foreach sample ($samples:q)
     # The rounded beam label selects detector resources; the exact TEMP_BEAM_E remains part of sample provenance.
     # The physical report keeps the legacy GENIE wording because GENIE is the currently supported physical adapter.
     if ("$source" == "uniform") then
-        echo "${COLOR_INFO}Setting paths based on particle type ${TEMP_OUTPATH_PARTICLE}${COLOR_END}"
-        echo "${COLOR_INFO}-----------------------------------------------------------------------${COLOR_END}"
+        set banner_title = "Setting paths for particle type ${TEMP_OUTPATH_PARTICLE}"
+        set banner_color = "$COLOR_INFO"
+        submission_banner
         echo
     else
-        echo "${COLOR_INFO}//////////////////////////////////////////////////////////////////////${COLOR_END}"
-        echo "${COLOR_INFO}// Setting GENIE slurm job submission                               //${COLOR_END}"
-        echo "${COLOR_INFO}//////////////////////////////////////////////////////////////////////${COLOR_END}"
+        set banner_title = "Setting GENIE Slurm job submission"
+        set banner_color = "$COLOR_INFO"
+        submission_banner
         echo
-        echo "${COLOR_INFO}- Sample parameters ---------------------------------------------------${COLOR_END}"
+        set banner_title = "Sample parameters"
+        set banner_color = "$COLOR_INFO"
+        submission_banner
         echo ""
         echo "${COLOR_INFO}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
         echo ""
@@ -433,7 +443,9 @@ foreach sample ($samples:q)
     # Physical reports retain the torus setting and checkout check used by the archived submission workflow.
     # Uniform and physical paths converge below on the same detector-resource validation.
     if ("$source" == "physical") then
-        echo "${COLOR_INFO}- Job parameters ------------------------------------------------------${COLOR_END}"
+        set banner_title = "Job parameters"
+        set banner_color = "$COLOR_INFO"
+        submission_banner
         echo ""
         echo "${COLOR_INFO}TORUS_FIELD:${COLOR_END} ${TORUS_FIELD}"
         echo ""
@@ -454,11 +466,12 @@ foreach sample ($samples:q)
     # Report the automatic detector selection before checking its two concrete inputs.
     # GCARD controls GEMC geometry and fields; YAML controls the downstream CLAS12 reconstruction configuration.
     if ("$source" == "uniform") then
-        echo "${COLOR_INFO}Setting GCARD_FILE and YAML_FILE files based on TEMP_BEAM_E and TARGET_VARIATION ${TEMP_OUTPATH_PARTICLE}${COLOR_END}"
+        set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E}, ${TARGET_VARIATION}, and ${TEMP_OUTPATH_PARTICLE}"
     else
-        echo "${COLOR_INFO}Setting GCARD_FILE and YAML_FILE files based on TEMP_BEAM_E and TARGET_VARIATION${COLOR_END}"
+        set banner_title = "Setting GCARD and YAML for ${TEMP_BEAM_E} and ${TARGET_VARIATION}"
     endif
-    echo "${COLOR_INFO}-----------------------------------------------------------------------${COLOR_END}"
+    set banner_color = "$COLOR_INFO"
+    submission_banner
     echo
 
     # Reuse the file-check alias so either missing detector input follows the same colored error and return path.
@@ -504,14 +517,14 @@ foreach sample ($samples:q)
     # GEMC and reconstruction always produce mchipo and reconhipo directories.
     # Uniform runs additionally replace rootfiles to preserve their archived output layout and monitoring workflow.
     if ("$source" == "uniform") then
-        echo "${COLOR_INFO}Setting output directory structure ${TEMP_OUTPATH_PARTICLE}${COLOR_END}"
+        set banner_title = "Setting output directories for ${TEMP_OUTPATH_PARTICLE}"
         set output_dirs = (mchipo reconhipo rootfiles)
     else
-        echo "${COLOR_INFO}Setting output directory structure${COLOR_END}"
+        set banner_title = "Setting output directories"
         set output_dirs = (mchipo reconhipo)
     endif
-
-    echo "${COLOR_INFO}-----------------------------------------------------------------------${COLOR_END}"
+    set banner_color = "$COLOR_INFO"
+    submission_banner
     echo
 
     # Reject symbolic-link destinations before recursive deletion, even though OUTPATH itself was canonicalized above.
@@ -567,14 +580,13 @@ foreach sample ($samples:q)
     # Purpose: expose the exact Slurm array request, validate the protected worker path, and hand the job to ifarm.
     # The source-specific text is informational; uniform and physical samples share the same sbatch command contract.
     if ("$source" == "uniform") then
-        echo "${COLOR_INFO}Submitting sbatch job for BeamE = ${COLOR_END}${TEMP_BEAM_E}"
-        echo "${COLOR_INFO}-----------------------------------------------------------------------${COLOR_END}"
-        echo
+        set banner_title = "Submitting sbatch job for beam energy ${TEMP_BEAM_E}"
     else
-        echo "${COLOR_INFO}- Submitting jobs ------------------------------------------------------${COLOR_END}"
-        echo ""
-        echo "${COLOR_INFO}Submitting GENIE sbatch job...${COLOR_END}"
+        set banner_title = "Submitting GENIE sbatch job"
     endif
+    set banner_color = "$COLOR_INFO"
+    submission_banner
+    echo
 
     echo "${COLOR_INFO}SLURM_JOB_NAME:${COLOR_END} ${SLURM_JOB_NAME}"
     echo ""
@@ -648,7 +660,7 @@ if ("$submission_environment" != "") then
 endif
 
 # Discard helper aliases so sourcing this workflow does not pollute the interactive login shell.
-unalias submission_dir submission_file submission_section
+unalias submission_banner submission_dir submission_file submission_section
 
 # Execute a harmless child shell with the chosen code: tcsh adopts that command's status while the user's shell remains alive.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
