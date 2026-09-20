@@ -183,7 +183,7 @@ foreach sample ($samples:q)
 
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
-    set section = "Setup environment variables and paths"
+    set subbanner_title = "Setup environment variables and paths"
     code_subbanner
 
     echo "${COLOR_START}RUNNING_DIR:${COLOR_END} ${RUNNING_DIR}"
@@ -220,7 +220,7 @@ foreach sample ($samples:q)
     # CLEAR_FAR_OUT is an invocation-wide maintenance option for ifarm log files, independent of per-sample output cleanup.
     # The guards reject roots, the home directory, this checkout, symlinks, and paths outside a farm_out hierarchy.
     # find removes only regular files directly below the resolved directory; subdirectories and later job logs are preserved.
-    set section = "Handling farm_out directory clearing and GEMC data"
+    set subbanner_title = "Handling farm_out directory clearing and GEMC data"
     code_subbanner
     if ("$CLEAR_FAR_OUT" == "true" && $farm_cleared == 0) then
         # Limit optional deletion to files directly in the configured user's farm_out directory.
@@ -253,7 +253,7 @@ foreach sample ($samples:q)
     # GEMC is already loaded on ifarm, and its environment supplies the standard GEMC_DATA_DIR.
     # A configured CLAS12TAGS_DIR replaces that value with a custom clas12Tags checkout, such as
     # a fork used to test target geometry. Directory failures return before deletion or submission.
-    set section = "Checking preloaded GEMC data"
+    set subbanner_title = "Checking preloaded GEMC data"
     code_subbanner
 
     # Selecting a custom clas12Tags checkout means every submitted job must use that fork.
@@ -275,9 +275,9 @@ foreach sample ($samples:q)
 
     # Introduce the adapter-specific sample loop report; actual iteration is driven by the resolver-generated sample files.
     if ("$source" == "uniform") then
-        set section = "Looping over particle types"
+        set subbanner_title = "Looping over particle types"
     else
-        set section = "Looping over samples"
+        set subbanner_title = "Looping over samples"
     endif
 
     code_subbanner
