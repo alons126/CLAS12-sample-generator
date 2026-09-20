@@ -200,9 +200,6 @@ foreach sample ($samples:q)
     code_subbanner
 
     echo "${COLOR_START}RUNNING_DIR:${COLOR_END}         ${RUNNING_DIR}"
-    if ("$source" == "uniform") then
-        echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}    ${TARGET_VARIATION}"
-    endif
     echo "${COLOR_START}CLEAR_FAR_OUT:${COLOR_END}       ${CLEAR_FAR_OUT}"
     echo "${COLOR_START}GEMC_VERSION:${COLOR_END}        ${GEMC_VERSION}"
     echo "${COLOR_START}NUM_OF_JOBS:${COLOR_END}         ${NUM_OF_JOBS}"
