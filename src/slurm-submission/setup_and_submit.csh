@@ -148,7 +148,10 @@ foreach sample ($samples:q)
     # The helper emits only validated, whitelisted assignments into our private temporary directory.
     source "$sample"
     if ($status != 0) goto submission_finish
-    if ("$SUBMISSION_EXECUTE" == "false") echo "${COLOR_INFO}PREVIEW:${COLOR_END}\nNo sbatch, output replacement or farm_out cleanup; add --execute to submit."
+    if ("$SUBMISSION_EXECUTE" == "false") then
+        echo "${COLOR_INFO}PREVIEW:${COLOR_END}\nNo sbatch, output replacement or farm_out cleanup; add --execute to submit."
+        echo ""
+    endif
 
     # endregion Resolved sample
 
@@ -181,7 +184,7 @@ foreach sample ($samples:q)
 
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
-    echo "${COLOR_START}RUNNING_DIR::${COLOR_END} ${RUNNING_DIR}"
+    echo "${COLOR_START}RUNNING_DIR:${COLOR_END} ${RUNNING_DIR}"
     echo ""
     echo
     echo ""
