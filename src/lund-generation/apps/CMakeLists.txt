@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# src/lund-generation/apps/CMakeLists.txt ----------------------------------------------------------------------------------------------------
+# src/lund-generation/apps/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Command-line executable targets.
 # Purpose:
@@ -16,7 +16,7 @@
 # Notes:
 #   Defining or building a target does not generate samples or submit detector jobs.
 
-# Uniform CLI -------------------------------------------------------
+# Uniform CLI ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Uniform CLI
 # Purpose: Link the uniform entry point to the implementation library and install its executable.
@@ -28,7 +28,7 @@ if(BUILD_UNIFORM)
 endif()
 # endregion
 
-# Physical conversion CLI -------------------------------------------------------
+# Physical conversion CLI ------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Physical conversion CLI
 # Purpose: Link the selected event-generator adapter and install its generator-independent executable.

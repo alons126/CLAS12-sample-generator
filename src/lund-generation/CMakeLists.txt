@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# src/lund-generation/CMakeLists.txt ---------------------------------------------------------------------------------------------------------
+# src/lund-generation/CMakeLists.txt -------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Responsibility-grouped C++ libraries.
 # Purpose:
@@ -17,7 +17,7 @@
 #   Source-specific directories match their executable names. Physical event-generator adapters are nested below
 #   clas12-generator-to-lund; LundCore remains one target because its shared layers form one small pipeline.
 
-# Shared LUND pipeline -------------------------------------------------------
+# Shared LUND pipeline ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Shared LUND pipeline
 # Purpose: Join the core configuration, geometry, LUND records/serialization, and support layers without hiding their source boundaries.
@@ -32,7 +32,7 @@ target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE $
 target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO)
 # endregion
 
-# Uniform generation -------------------------------------------------------
+# Uniform generation -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Uniform generation
 # Purpose: Build the implementation behind the clas12-uniform executable as UniformGeneration.
@@ -42,7 +42,7 @@ if(BUILD_UNIFORM)
 endif()
 # endregion
 
-# Physical-event conversion -------------------------------------------------------
+# Physical-event conversion ----------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Physical-event conversion
 # Purpose: Build the clas12-generator-to-lund dispatcher and keep GST dependencies on its nested GENIE adapter.
@@ -54,7 +54,7 @@ if(BUILD_GENIE)
 endif()
 # endregion
 
-# Applications and tests --------------------------------------------------------------------------------------------------------------------
+# Applications and tests -------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Applications and tests
 # Purpose: Keep LUND executable entry points and validation beside the implementation they exercise.

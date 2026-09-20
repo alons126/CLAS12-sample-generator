@@ -20,7 +20,6 @@ import subprocess
 import sys
 import tempfile
 
-
 # ks --------------------------------------------------------------------
 # region ks
 def ks(values, cdf):
@@ -41,7 +40,6 @@ def ks(values, cdf):
     distance=max(max(abs(cdf(x)-i/n), abs((i+1)/n-cdf(x))) for i,x in enumerate(values))
     assert distance < 0.025, f'CDF distance {distance}'
 # endregion
-
 
 # Test execution ------------------------------------------------
 # region Execution

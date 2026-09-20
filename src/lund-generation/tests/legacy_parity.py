@@ -19,12 +19,10 @@ import subprocess
 import sys
 import tempfile
 
-
 def uniform_output(root, channel, beam):
     """Return the resolved uniform run directory for one requested output root."""
     energy_mev = {'2.07052':2070, '4.02962':4029, '5.98636':5986}.get(str(beam), int(float(beam) * 1000 + 0.5))
     return root / f'Uniform_sample_{channel}_{energy_mev:04d}MeV'
-
 
 # run --------------------------------------------------------------------
 # region run
@@ -44,7 +42,6 @@ def run(*args):
     assert result.returncode == 0, result.stdout + result.stderr
     return result
 # endregion
-
 
 # compare --------------------------------------------------------------------
 # region compare
@@ -74,7 +71,6 @@ def compare(actual, expected, ignore_vertex=False):
             assert [av[j] for j in keep] == [ev[j] for j in keep], f'{actual.name}, particle line {i}: new={a!r}; legacy={e!r}'
             remaining -= 1
 # endregion
-
 
 mode, current, legacy = sys.argv[1:4]
 # Test execution ------------------------------------------------

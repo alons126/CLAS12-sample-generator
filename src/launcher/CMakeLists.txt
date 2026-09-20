@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 19/09/2026.
 #
 
-# src/launcher/CMakeLists.txt -----------------------------------------------------------------------------------------------------------------
+# src/launcher/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Test registration for the shared local/ifarm workflow dispatcher.
 # Purpose:
@@ -16,7 +16,7 @@
 # Failure behavior:
 #   The launcher test is omitted when its shell or compiled applications are unavailable.
 
-# Launcher integration test ------------------------------------------------------------------------------------------------------------------
+# Launcher integration test ----------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Launcher integration test
 if(BUILD_TESTING)

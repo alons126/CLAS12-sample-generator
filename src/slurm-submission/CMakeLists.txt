@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 19/09/2026.
 #
 
-# Ifarm submission ------------------------------------------------------------
+# Ifarm submission -------------------------------------------------------------------------------------------------------------------------------------------------------
 # Purpose: register tests for the sourced setup and protected detector payload.
 # Workflow: run.csh -> setup_and_submit.csh -> sbatch array -> external payload.
 # Inputs: Python and tcsh for isolated tests; no detector execution or real submission.

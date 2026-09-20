@@ -34,7 +34,7 @@
 
 namespace samples {
 
-// UniformMonitoring::Impl object ---------------------------------------------------------------------------------------------------------------------------------------
+// UniformMonitoring::Impl object ----------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* UniformMonitoring::Impl object */
 
@@ -61,7 +61,7 @@ struct UniformMonitoring::Impl {
 
 #pragma endregion
 
-// Private definition helpers -------------------------------------------------------------------------------------------------------------------------------------------
+// Private definition helpers --------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Private definition helpers */
 
@@ -105,7 +105,7 @@ double quantity(const Event& event, int pid, const std::string& metric) {
 
 #pragma endregion
 
-// UniformMonitoring construction --------------------------------------------------------------------------------------------------------------------------------------
+// UniformMonitoring construction ----------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* UniformMonitoring construction */
 

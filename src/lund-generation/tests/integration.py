@@ -20,7 +20,6 @@ import subprocess
 import sys
 import tempfile
 
-
 # run --------------------------------------------------------------------
 # region run
 def run(*args, ok=True):
@@ -40,7 +39,6 @@ def run(*args, ok=True):
     assert (result.returncode == 0) == ok, result.stdout + result.stderr
     return result
 # endregion
-
 
 # read_run --------------------------------------------------------------------
 # region read_run
@@ -87,13 +85,11 @@ def read_run(directory):
     return manifest, events
 # endregion
 
-
 def physical_output(root, beam='5.98636'):
     """Return the default metadata-derived physical run directory."""
     q2 = {'2.07052':'Q2_0_02', '4.02962':'Q2_0_25', '5.98636':'Q2_0_40'}.get(str(beam), 'none')
     mev = int(float(beam) * 1000 + 0.5)
     return root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{mev}MeV_GEMC-unknown'
-
 
 # angles --------------------------------------------------------------------
 # region angles
@@ -113,7 +109,6 @@ def angles(particle):
     p = math.sqrt(x*x+y*y+z*z)
     return p, math.degrees(math.acos(z/p)), math.degrees(math.atan2(y,x))
 # endregion
-
 
 mode, executable = sys.argv[1:3]
 monitoring_checker = sys.argv[3] if mode == 'uniform' else None

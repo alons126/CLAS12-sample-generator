@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 19/09/2026.
 #
 
-# src/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------
+# src/CMakeLists.txt -----------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Workflow-oriented source-tree entry point.
 # Purpose:
@@ -16,7 +16,7 @@
 # Failure behavior:
 #   A child configuration failure stops the root CMake configure step.
 
-# Workflow source trees ----------------------------------------------------------------------------------------------------------------------
+# Workflow source trees --------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Workflow source trees
 add_subdirectory(lund-generation)

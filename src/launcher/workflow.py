@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-
 #
 # Created by Alon Sportes on 14/09/2026.
 #
+
+#!/usr/bin/env python3
 
 """Configure, build, test and dispatch LUND creation behind run.csh.
 
@@ -77,7 +77,6 @@ COLOR_WARNING = os.environ.get("COLOR_WARNING", "").replace(r"\033", "\033")
 COLOR_END = os.environ.get("COLOR_END", "").replace(r"\033", "\033")
 # endregion
 
-
 # Error presentation ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Error presentation
@@ -93,7 +92,6 @@ WORKFLOW_GUIDANCE = """Choose one of these forms:
 Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
 create-lund source to see that executable's sample options."""
 
-
 def error_message(message):
     """Return an error message with exactly one colored ``Error:`` prefix.
 
@@ -104,7 +102,6 @@ def error_message(message):
 
     normalized = str(message).replace(f'{ERROR_PREFIX} ', '').replace(ERROR_PREFIX, '').strip()
     return f'{ERROR_PREFIX} {normalized}'
-
 
 def print_error(message):
     """Write one consistently formatted launcher error to standard error.
@@ -118,7 +115,6 @@ def print_error(message):
     """
 
     print(error_message(message), file=sys.stderr)
-
 
 class LauncherArgumentParser(argparse.ArgumentParser):
     """Argument parser whose validation failures use the launcher error format.
@@ -134,7 +130,6 @@ class LauncherArgumentParser(argparse.ArgumentParser):
         print_error(message)
         self.exit(2)
 # endregion
-
 
 # boolean ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -177,7 +172,6 @@ def boolean(value):
     # LauncherArgumentParser catches this argparse error path and applies the shared colored prefix.
     raise argparse.ArgumentTypeError(error_message('Use true or false'))
 # endregion
-
 
 # parser ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -228,7 +222,6 @@ def parser():
 
     return p
 # endregion
-
 
 # settings --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -321,7 +314,6 @@ def settings(args):
     return result
 # endregion
 
-
 # execute ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region execute
@@ -389,7 +381,6 @@ def execute(command):
     print()
 # endregion
 
-
 # banner ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region banner
@@ -432,7 +423,6 @@ def banner(name):
         # Keep status transitions visible on systems where tcsh itself is unavailable.
         print(f'CLAS12 samples: {name}', flush=True)
 # endregion
-
 
 # main ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -514,7 +504,7 @@ def main():
         execute(['cmake', '--build', str(build), '--parallel', str(config['jobs'])])
 
         print()
-    
+
     # Tests must succeed before the selected workflow can run.
     if config['test']:
         print(f"{COLOR_START}===================================================================================================={COLOR_END}")
@@ -570,7 +560,6 @@ def main():
 
     return 0
 # endregion
-
 
 # Command-line entry point ----------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-
 #
 # Created by Alon Sportes on 19/09/2026.
 #
+
+#!/usr/bin/env python3
 
 """Resolve submission inputs into a small, safely quoted C-shell environment.
 

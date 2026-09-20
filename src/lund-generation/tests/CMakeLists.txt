@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# src/lund-generation/tests/CMakeLists.txt ---------------------------------------------------------------------------------------------------
+# src/lund-generation/tests/CMakeLists.txt -------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Test executables, isolated references and CTest registration.
 # Purpose:
@@ -16,7 +16,7 @@
 # Notes:
 #   Protected legacy and external sources are read-only. Reference adapters write separate build-tree files; no real server jobs are submitted.
 
-# Test tools and GST fixture -------------------------------------------------------
+# Test tools and GST fixture ---------------------------------------------------------------------------------------------------------------------------------------------
 # region Test tools and GST fixture
 # Purpose: Discover Python and build numerical comparison and synthetic-input helpers.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -32,7 +32,7 @@ if(BUILD_GENIE)
 endif()
 # endregion
 
-# Output integration tests -------------------------------------------------------
+# Output integration tests -----------------------------------------------------------------------------------------------------------------------------------------------
 # region Output integration tests
 # Purpose: Test enabled LUND applications and their output contracts.
 if(BUILD_UNIFORM)
@@ -43,7 +43,7 @@ if(BUILD_GENIE)
 endif()
 # endregion
 
-# Independent legacy references -------------------------------------------------------
+# Independent legacy references ------------------------------------------------------------------------------------------------------------------------------------------
 # region Independent legacy references
 # Purpose: Compile controlled adapters separately from production; compare bytes, bins and distributions.
 # Archived implementations are linked only into independent reference executables.
@@ -65,7 +65,7 @@ if(BUILD_GENIE)
 endif()
 # endregion
 
-# Isolated geometry fixture -------------------------------------------------------
+# Isolated geometry fixture ----------------------------------------------------------------------------------------------------------------------------------------------
 # region Isolated geometry fixture
 # Purpose: Read the protected header into a separate test fixture; compile the actual adapter against that fixture.
 # Prove that replacing the external header alone changes the production adapter.

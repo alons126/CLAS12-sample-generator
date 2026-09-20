@@ -24,7 +24,6 @@ import tempfile
 
 project, shell, build = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
 
-
 # sourced --------------------------------------------------------------------
 # region sourced
 def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
@@ -59,7 +58,6 @@ def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
     assert (result.returncode==0)==success, result.stdout+result.stderr
     return result
 # endregion
-
 
 # Test execution ------------------------------------------------
 # region Execution
@@ -97,8 +95,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     env=dict(os.environ,CLAS12_SAMPLES_DIR=str(project))
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false'],cwd=root,env=env)
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false'],entry='src/launcher/build_and_run.csh')
-    # Direct execution also resolves the entry location.
-    subprocess.run([str(project/'run.csh'),'--workflow','create-lund','--source','uniform','--build','false','--run','false'],cwd=root,env=dict(os.environ,CLAS12_SKIP_SERVER_SYNC='1'),check=True,capture_output=True)
+    # Explicit tcsh execution also resolves the entry location. The ownership header precedes the interpreter directive,
+    # so callers that do not source this workflow must select tcsh themselves.
+    subprocess.run([shell, str(project/'run.csh'),'--workflow','create-lund','--source','uniform','--build','false','--run','false'],cwd=root,env=dict(os.environ,CLAS12_SKIP_SERVER_SYNC='1'),check=True,capture_output=True)
     # Verify profile/CLI precedence and argv preservation using isolated fake build tools.
     checkout=root/'checkout'
     shutil.copytree(project/'src/launcher',checkout/'src/launcher')
@@ -114,6 +113,6 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     commands=[json.loads(line) for line in log.read_text().splitlines()]
     assert len(commands)==2 and '--parallel' in commands[1] and commands[1][-1]=='2'
     assert '-DBUILD_TESTING=OFF' in commands[0]
-print('Sourced/executed SSH launchers, shell survival, profiles and build commands passed.')
+print('Sourced/explicit-tcsh launchers, shell survival, profiles and build commands passed.')
 
 # endregion

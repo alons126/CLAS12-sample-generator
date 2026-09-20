@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# CMakeLists.txt ------------------------------------------------------------
+# CMakeLists.txt ---------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Project configuration and build orchestration.
 # Purpose:
@@ -16,7 +16,7 @@
 # Notes:
 #   ROOT must declare a C++ standard of at least 17. Configuration fails when required dependencies are unavailable.
 
-# Project and workflow options -------------------------------------------------------
+# Project and workflow options -------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Project and workflow options
 # Purpose: Select which compiled sample workflows are available.
@@ -26,7 +26,7 @@ option(BUILD_UNIFORM "Build uniform sample generation" ON)
 option(BUILD_GENIE "Build GENIE GST conversion" ON)
 # endregion
 
-# Compiler and dependency requirements -------------------------------------------------------
+# Compiler and dependency requirements -----------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiler and dependency requirements
 # Purpose: Match the selected ROOT language standard and propagate required imported targets.
@@ -49,7 +49,7 @@ endif()
 set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 # endregion
 
-# Compiled provenance -------------------------------------------------------
+# Compiled provenance ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiled provenance
 # Purpose: Read the Git revision and target-header hash; configure a maintained header template. Protected inputs are never modified.
@@ -65,7 +65,7 @@ file(SHA256 "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h" SAMPL
 configure_file(src/lund-generation/core/support/Version.h.in generated/Version.h @ONLY)
 # endregion
 
-# Build graph and tests -------------------------------------------------------
+# Build graph and tests --------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Build graph and tests
 # Purpose: Order subdirectories so libraries exist before applications and tests reference them.
@@ -73,7 +73,7 @@ include(CTest)
 add_subdirectory(src)
 # endregion
 
-# Installation -------------------------------------------------------
+# Installation -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Installation
 # Purpose: Install shared configuration resources; each workflow source tree installs its own programs.

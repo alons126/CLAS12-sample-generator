@@ -54,7 +54,7 @@ enum class UniformChannel {
 };
 #pragma endregion
 
-// HadronSpecies object -------------------------------------------------------------------------------------------------------------------------------------------------
+// HadronSpecies object --------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* HadronSpecies object */
 /** @enum HadronSpecies @brief Typed identity selected by `--hadron` for the eh channel. */
