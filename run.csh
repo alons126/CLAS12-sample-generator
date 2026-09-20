@@ -97,7 +97,7 @@ set _clas12_root = `cd "$_clas12_root" && pwd`
 # alone could accept an unrelated repository; checking only `workflow.py` could permit destructive
 # cleanup in a copied source directory that is not the intended disposable clone.
 if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
-    echo "Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
+    echo "${COLOR_ERR}Error:${COLOR_END} Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
 
     # Record failure and jump to the shared status-return block. Avoid `exit` because run.csh is
     # normally sourced and must not terminate the user's interactive SSH shell.
@@ -118,7 +118,7 @@ if ($#argv == 1) then
 endif
 
 if ($#argv == 0) then
-    echo "Error: source run.csh requires an explicit workflow."
+    echo "${COLOR_ERR}Error:${COLOR_END} source run.csh requires an explicit workflow."
     echo ""
     echo "Create a uniform LUND sample:"
     echo '  source run.csh --workflow create-lund --source uniform \'
@@ -206,10 +206,10 @@ endif
 # Each state-changing Git command is checked there. Any failure is captured below and prevents the
 # environment, build, LUND creation, and job submission stages from running.
 if ($_clas12_skip_server_sync == 1) then
-    echo "Skipping ifarm checkout replacement (explicit local/test override)."
+    echo "${COLOR_START}Skipping ifarm checkout replacement (explicit local/test override)...${COLOR_END}"
     set CLAS12_SAMPLE_STATUS = 0
 else
-    echo "Updating disposable ifarm checkout at $_clas12_root"
+    echo "Updating disposable ifarm checkout at ${_clas12_root}"
     tcsh -f src/launcher/code_updater.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
