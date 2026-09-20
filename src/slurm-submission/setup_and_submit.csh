@@ -199,13 +199,13 @@ foreach sample ($samples:q)
     set subbanner_color = "$COLOR_START"
     code_subbanner
 
-    echo "${COLOR_START}RUNNING_DIR:${COLOR_END}         ${RUNNING_DIR}"
-    echo "${COLOR_START}CLEAR_FAR_OUT:${COLOR_END}       ${CLEAR_FAR_OUT}"
-    echo "${COLOR_START}GEMC_VERSION:${COLOR_END}        ${GEMC_VERSION}"
+    echo "${COLOR_START}RUNNING_DIR:${COLOR_END}   ${RUNNING_DIR}"
+    echo "${COLOR_START}CLEAR_FAR_OUT:${COLOR_END} ${CLEAR_FAR_OUT}"
+    echo "${COLOR_START}GEMC_VERSION:${COLOR_END}  ${GEMC_VERSION}"
     if ("$source" == "uniform") then
-		echo "${COLOR_START}Sample type:${COLOR_INFO} 	     uniform${COLOR_END}"
+		echo "${COLOR_START}Sample type:${COLOR_INFO}  uniform${COLOR_END}"
     else
-        echo "${COLOR_START}Sample type:${COLOR_INFO}	     physical (GENIE)${COLOR_END}"
+        echo "${COLOR_START}Sample type:${COLOR_INFO}  physical (GENIE)${COLOR_END}"
     endif
     echo ""
 
