@@ -32,18 +32,14 @@
 # Terminal color initialization
 # -------------------------------------------------------------------------------------------------
 
-if ( -f ./src/launcher/environment/set_colors.csh ) then
-    source ./src/launcher/environment/set_colors.csh
+if ( -f ./src/launcher/environment/set_banners.csh ) then
+    source ./src/launcher/environment/set_banners.csh
     # printf "${COLOR_START}-->${COLOR_END} %b\n" "${COLOR_COMPLETION}Color environment loaded.${COLOR_END}"
     echo
 else
-    echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/environment/set_colors.csh\n"
+    echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/environment/set_banners.csh\n"
     exit 1
 endif
-
-# Render every titled banner at 100 visible columns. Callers supply banner_title and banner_color;
-# the helper calculates asymmetric padding when an odd number of spaces is required.
-alias updater_banner 'set banner_title_length = `printf "%s" "$banner_title" | wc -c`; @ banner_padding = 96 - $banner_title_length; @ banner_padding_left = $banner_padding / 2; @ banner_padding_right = $banner_padding - $banner_padding_left; echo "${banner_color}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"; printf "${banner_color}//%*s%s%*s//${COLOR_END}\n" $banner_padding_left "" "${COLOR_END}$banner_title${banner_color}" $banner_padding_right ""; echo "${banner_color}////////////////////////////////////////////////////////////////////////////////////////////////////${COLOR_END}"; unset banner_title banner_color banner_title_length banner_padding banner_padding_left banner_padding_right'
 
 set banner_title = "Running update script"
 set banner_color = "$COLOR_START"
