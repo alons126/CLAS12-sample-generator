@@ -323,20 +323,16 @@ foreach sample ($samples:q)
         set subbanner_color = "$COLOR_START"
         code_subbanner
     else
-        set subbanner_title = "Setting GENIE Slurm job submission"
-        set subbanner_color = "$COLOR_START"
-        code_subbanner
-        echo
-        set subbanner_title = "Sample parameters"
+        set subbanner_title = "Setting paths and parameters"
         set subbanner_color = "$COLOR_START"
         code_subbanner
         echo ""
         echo "${COLOR_START}SAMPLE_TARGET_NUCLEUS:${COLOR_END} ${SAMPLE_TARGET_NUCLEUS}"
-        echo "${COLOR_START}GENIE_TUNE:${COLOR_END} ${GENERATOR_TUNE}"
-        echo "${COLOR_START}Q2_CUT:${COLOR_END} ${Q2_CUT}"
-        echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END} ${BEAM_ENERGY_LABEL}"
-        echo "${COLOR_START}FC_STATUS:${COLOR_END} ${FC_STATUS}"
-        echo "${COLOR_START}FC_STATUS_ENABLED:${COLOR_END} ${FC_STATUS_ENABLED}"
+        echo "${COLOR_START}GENIE_TUNE:${COLOR_END}            ${GENERATOR_TUNE}"
+        echo "${COLOR_START}Q2_CUT:${COLOR_END}                ${Q2_CUT}"
+        echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}     ${BEAM_ENERGY_LABEL}"
+        echo "${COLOR_START}FC_STATUS:${COLOR_END}             ${FC_STATUS}"
+        echo "${COLOR_START}FC_STATUS_ENABLED:${COLOR_END}     ${FC_STATUS_ENABLED}"
     endif
 
     # OUTPATH is the completed LUND run directory consumed by this submission and later receives simulation products.
@@ -433,9 +429,14 @@ foreach sample ($samples:q)
     # Validate LUND and prepare outputs ---------------------------------------
 
     # region Output preparation
-    # Purpose: prove that the complete worker input set is usable before replacing prior simulation products.
-    # Inputs: the resolved file prefix and job count, active software environment, source type, and canonical OUTPATH.
-    # Outputs: fresh empty simulation directories; LUND inputs and detector configuration remain untouched.
+    # Purpose:
+    #   prove that the complete worker input set is usable before replacing prior simulation products.
+    # 
+    # Inputs:
+    #   the resolved file prefix and job count, active software environment, source type, and canonical OUTPATH.
+    # 
+    # Outputs:
+    #   fresh empty simulation directories; LUND inputs and detector configuration remain untouched.
 
     # Array tasks are numbered from 1 through NUM_OF_JOBS, matching the protected worker's SLURM_ARRAY_TASK_ID lookup.
     # Require every corresponding LUND file to be nonempty so a submitted task cannot start without its event input.
