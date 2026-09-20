@@ -425,8 +425,8 @@ foreach sample ($samples:q)
         if ("$check_name" == "YAML_FILE") set check_path = "$YAML_FILE"
         echo "${COLOR_START}${check_name}:${COLOR_END} ${check_path}"
         submission_file
+        echo
     end
-    echo
 
     # endregion Sample report
 
