@@ -121,8 +121,8 @@ setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEM
 
 # The check aliases consume check_name/check_path/check_color, print the legacy messages,
 # and jump to the corresponding failure label before any dependent stage can run. submission_section prints a consistent heading.
-alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; printf "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
-alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; printf "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
+alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; echo "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
+alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; echo "${check_color}-->${COLOR_END} %s\n\n" "${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_section 'echo ""; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo "${COLOR_START}${section}${COLOR_END}"; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo ""'
 
 # endregion Shell support
@@ -373,8 +373,8 @@ foreach sample ($samples:q)
     if (! -d "$OUTPATH") then
         if ("$source" == "physical") then
             echo "${COLOR_START}--> Checking if ${COLOR_END}OUTPATH${COLOR_START} is a directory...${COLOR_END}"
-            printf "%s\n" "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Warning:${COLOR_END} the following directory does not exist: ${OUTPATH}"
-            printf "%s\n" "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Creating OUTPATH.${COLOR_END}"
+            echo "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Warning:${COLOR_END} the following directory does not exist: ${OUTPATH}"
+            echo "${COLOR_START}-->${COLOR_END} ${COLOR_WARNING}Creating OUTPATH.${COLOR_END}"
 
             # Resolution normally requires this directory already; fail if it disappeared during setup.
             echo "${COLOR_ERR}Error:${COLOR_END} resolved LUND run directory disappeared: $OUTPATH"
@@ -608,11 +608,11 @@ goto submission_finish
 
 # Directory and file aliases populate the shared check variables immediately before jumping to these labels.
 submission_missing_dir:
-printf "%s\n" "${check_color}-->${COLOR_END} ${COLOR_ERR}Error:${COLOR_END} the following directory does not exist: ${check_path}"
+echo "${check_color}-->${COLOR_END} ${COLOR_ERR}Error:${COLOR_END} the following directory does not exist: ${check_path}"
 goto submission_finish
 
 submission_missing_file:
-printf "%s\n" "${check_color}-->${COLOR_END} ${COLOR_ERR}Error:${COLOR_END} the following file does not exist: ${check_path}"
+echo "${check_color}-->${COLOR_END} ${COLOR_ERR}Error:${COLOR_END} the following file does not exist: ${check_path}"
 goto submission_finish
 
 # Invalid values and unsafe paths deliberately share one message because both require correcting resolved submission input.
