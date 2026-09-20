@@ -37,47 +37,16 @@ if ( -f ./src/launcher/environment/set_colors.csh ) then
     printf "${COLOR_START}-->${COLOR_END} %b\n" "${COLOR_COMPLETION}Color environment loaded.${COLOR_END}"
     echo
 else
-    printf "Error: the following file does not exist: ./src/launcher/environment/set_colors.csh\n"
+    echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/environment/set_colors.csh\n"
     exit 1
 endif
-
-
-source ./src/launcher/environment/set_colors.csh
-
-echo "CHECK 1:"
-printenv COLOR_START
-
-# ... next section of code ...
-
-echo "CHECK 2:"
-printenv COLOR_START
-
-# ... next section ...
-
-echo "CHECK 3:"
-printenv COLOR_START
-
-echo ""
-
-printf '\033[33mLITERAL 33\033[0m\n'
-
-printf "${COLOR_START}VARIABLE FORMAT${COLOR_END}\n"
-
-printf '%bVARIABLE %%b%b\n' "$COLOR_START" "$COLOR_END"
-
-printf '%s\n' "$COLOR_START" | od -An -tx1c
-
-printf "${COLOR_START}====================================================================================================${COLOR_END}\n"
-printf "${COLOR_START}= Running update script                                                                            =${COLOR_END}\n"
-printf "${COLOR_START}====================================================================================================${COLOR_END}\n"
-printf "\n"
 
 # -------------------------------------------------------------------------------------------------
 # Clean working tree
 # -------------------------------------------------------------------------------------------------
 
-printf "${COLOR_START}- Cleaning excessive files -------------------------------------------------------------------------${COLOR_END}\n"
-printf "\n"
+echo "${COLOR_START}- Cleaning excessive files -------------------------------------------------------------------------${COLOR_END}"
+echo ""
 
 git rev-parse --show-toplevel
 if ( $status != 0 ) exit 1
@@ -98,9 +67,9 @@ git pull
 
 if ( $status != 0 ) then
     echo ""
-	printf "${COLOR_ERR}====================================================================================================${COLOR_END}\n"
-	printf "${COLOR_ERR}= git pull failed. Aborting update script.                                                         =${COLOR_END}\n"
-	printf "${COLOR_ERR}====================================================================================================${COLOR_END}\n"
+    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
+    echo "${COLOR_ERR}= git pull failed. Aborting update script.                                                         =${COLOR_END}"
+    echo "${COLOR_ERR}====================================================================================================${COLOR_END}"
     echo ""
     exit 1
 endif
