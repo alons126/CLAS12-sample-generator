@@ -419,17 +419,6 @@ foreach sample ($samples:q)
     set check_path = "$REQUIREMENTS_DIR"
     submission_dir
 
-    # Report the automatic detector selection before checking its two concrete inputs.
-    # GCARD controls GEMC geometry and fields; YAML controls the downstream CLAS12 reconstruction configuration.
-    if ("$source" == "uniform") then
-        set subbanner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL}, ${TARGET_VARIATION}, and ${UNIFORM_SAMPLE_CHANNEL}"
-    else
-        set subbanner_title = "Setting GCARD and YAML for ${BEAM_ENERGY_LABEL} and ${TARGET_VARIATION}"
-    endif
-    set subbanner_color = "$COLOR_START"
-    code_subbanner
-    echo
-
     # Reuse the file-check alias so either missing detector input follows the same colored error and return path.
     foreach check_name (GCARD_FILE YAML_FILE)
         if ("$check_name" == "GCARD_FILE") set check_path = "$GCARD_FILE"
@@ -437,6 +426,7 @@ foreach sample ($samples:q)
         echo "${COLOR_START}${check_name}:${COLOR_END} ${check_path}"
         submission_file
     end
+    echo
 
     # endregion Sample report
 
