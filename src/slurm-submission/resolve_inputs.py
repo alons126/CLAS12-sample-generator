@@ -115,7 +115,7 @@ def parser():
     """Define the shared CLI/config vocabulary and private shell-integration switches."""
     p = argparse.ArgumentParser(description='Resolve LUND inputs and submit through the sourced shell workflow.',
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
-               'With --execute, submission replaces mchipo/reconhipo and uniform rootfiles, preserving lundfiles. '
+               'With --execute, submission replaces mchipo/reconhipo while preserving lundfiles. '
                'GEMC defaults to 5.14. Use source run.csh --workflow submit --lund-dir RUN/lundfiles.')
     p.add_argument('--execute', action='store_true', help='Submit jobs and replace simulation outputs; default: preview only')
     p.add_argument('--config', type=Path, help='Optional key = value submission settings')

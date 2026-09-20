@@ -46,7 +46,7 @@
 #	manifest/config/CLI settings (GEMC fallback 5.14), existing OUTPATH/lundfiles/PREFIX_INDEX.txt, GCARD, YAML, and the preloaded ifarm GEMC environment.
 # 
 # Outputs:
-#	Slurm jobs writing OUTPATH/mchipo and OUTPATH/reconhipo; uniform samples also recreate rootfiles.
+#	Slurm jobs writing OUTPATH/mchipo and OUTPATH/reconhipo.
 # 
 # Failure behavior:
 #	checked failures jump to the shared return block; sourcing never exits the user's login shell.
@@ -461,18 +461,16 @@ foreach sample ($samples:q)
         endif
     end
 
-    # GEMC and reconstruction always produce mchipo and reconhipo directories.
-    # Uniform runs additionally replace rootfiles to preserve their archived output layout and monitoring workflow.
+    # GEMC and reconstruction write the same two simulation-output directories for both source types.
+    # Uniform monitoring belongs to LUND generation and does not require a simulation rootfiles directory.
     if ("$source" == "uniform") then
         set subbanner_title = "Setting output directories for ${UNIFORM_SAMPLE_CHANNEL}"
-        set output_dirs = (mchipo reconhipo rootfiles)
     else
         set subbanner_title = "Setting output directories"
-        set output_dirs = (mchipo reconhipo)
     endif
+    set output_dirs = (mchipo reconhipo)
     set subbanner_color = "$COLOR_START"
     code_subbanner
-    echo
 
     # Reject symbolic-link destinations before recursive deletion, even though OUTPATH itself was canonicalized above.
     # This keeps replacement confined to real child directories of the validated run directory.
@@ -500,7 +498,7 @@ foreach sample ($samples:q)
         echo
 
     else
-        echo "PREVIEW: would replace $output_dirs under $OUTPATH; existing outputs are preserved."
+        echo "${COLOR_INFO}PREVIEW:${COLOR_END} would replace $output_dirs under $OUTPATH; existing outputs are preserved."
     endif
 
     # Print a final pre-submission inventory: LUND should be populated, while the recreated simulation directories are empty.

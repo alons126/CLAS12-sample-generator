@@ -100,7 +100,7 @@ Before each project-owned `setenv`, the maintained submission path removes both 
 
 `run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ssh-workflow.md).
 
-**With `--execute`, submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo`; uniform submission also replaces `OUTPATH/rootfiles`.** LUND inputs are preserved. Checks reject unsafe output paths and symlinks before replacement. Optional farm-output cleanup deletes only files directly in the configured farm-output directory, once per invocation.
+**With `--execute`, submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo` for both uniform and physical samples.** LUND inputs are preserved. Uniform monitoring is produced during LUND generation and does not use a simulation `rootfiles` directory. Checks reject unsafe output paths and symlinks before replacement. Optional farm-output cleanup deletes only files directly in the configured farm-output directory, once per invocation.
 
 One array is submitted per sample. Failure stops later samples and returns a nonzero `$status` without closing the sourced shell; already submitted jobs remain submitted. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-`, because the protected payload retains its legacy unquoted command arguments. There is no local detector-execution workflow.
 

@@ -44,7 +44,7 @@ def fixture(root, source, energy, channel='en', fc=0):
     run = root / 'output/run'
     for directory in (run / 'lundfiles', root / 'requirements', root / 'tags', root / 'gemc-data', root / 'farm_out'):
         directory.mkdir(parents=True)
-    for directory in ('mchipo', 'reconhipo', 'rootfiles'):
+    for directory in ('mchipo', 'reconhipo'):
         (run / directory).mkdir()
         (run / directory / 'old.hipo').write_text('old simulation output')
     rounded, torus, q2 = {'2070MeV': ('2GeV', '0.5', 'Q2_0_02'),
@@ -150,8 +150,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
                 new, old, values, env = fixture(root / f'{source}-{energy}-{channel}-{fc}', source, energy, channel, fc)
                 reference, old_calls = run_script(old, env)
                 # Restore stale outputs so the new setup must perform its own replacement.
-                for directory in ('mchipo', 'reconhipo', 'rootfiles'):
+                for directory in ('mchipo', 'reconhipo'):
                     (Path(values['OUTPATH']) / directory / 'old.hipo').write_text('old simulation output')
+                shutil.rmtree(Path(values['OUTPATH']) / 'rootfiles', ignore_errors=True)
                 actual, calls = run_script(new, env)
                 # The shared palette replaces archived channel colors; compare the complete visible report.
                 reference = re.sub(r'(?:\x1b|\\033)\[[0-9;]*m', '', reference)
@@ -170,7 +171,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
                 run = Path(values['OUTPATH'])
                 assert not list((run / 'mchipo').iterdir()) and not list((run / 'reconhipo').iterdir())
                 assert len(list((run / 'lundfiles').glob('*.txt'))) == 2
-                assert (run / 'rootfiles/old.hipo').exists() == (source == 'physical')
+                assert not (run / 'rootfiles').exists()
     for channel in ('enFD', 'enCD', 'epFD', 'epCD', 'epipFD', 'epipCD', 'epimFD', 'epimCD', 'electron-tester'):
         new, _, values, env = fixture(root / channel, 'uniform', '2070MeV', channel)
         _, calls = run_script(new, env)
@@ -236,11 +237,12 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     assert not calls and 'Preview command (not submitted)' in output and '--array=' in output
     assert log.read_text() == 'preserve log'
     assert before == {str(path.relative_to(run)): path.read_bytes() for path in run.rglob('*') if path.is_file()}
-    for folder in ('mchipo', 'reconhipo', 'rootfiles'):
+    for folder in ('mchipo', 'reconhipo'):
         shutil.rmtree(run / folder)
     (new.parent / 'bin/sbatch').unlink()
     _, calls = run_script(new, env, execute=False)
-    assert not calls and all(not (run / folder).exists() for folder in ('mchipo', 'reconhipo', 'rootfiles'))
+    assert not calls and all(not (run / folder).exists() for folder in ('mchipo', 'reconhipo'))
+    assert not (run / 'rootfiles').exists()
 
     # Exercise the real run.csh branch without sync or the Python/build machinery.
     new, _, values, env = fixture(root / 'launcher', 'uniform', '2070MeV')

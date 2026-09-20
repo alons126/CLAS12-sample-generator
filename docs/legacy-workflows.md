@@ -133,7 +133,7 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Solenoid −1.0 | Unchanged in the protected payload |
 | GEMC modules and `GEMC_DATA_DIR` | Loaded and checked by the sourced setup |
 | Scheduler resources and logs | Existing protected payload directives |
-| Simulation output reset | Recreate `mchipo`/`reconhipo`, plus uniform `rootfiles`; preserve LUND |
+| Simulation output reset | Recreate `mchipo`/`reconhipo` for either source; preserve LUND |
 | Repository update | Guarded disposable-clone refresh in `run.csh` |
 
 `source run.csh --workflow submit` sources the unified setup directly. Select completed samples with `--lund-dir`; supply optional config/CLI overrides. Full archived setup stdout and exported Slurm settings are compared in isolated tests; see the [submission guide](gemc-reconstruction-batch-submission.md). Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.
