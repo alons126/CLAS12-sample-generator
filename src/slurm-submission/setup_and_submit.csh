@@ -307,12 +307,11 @@ foreach sample ($samples:q)
     # Physical samples have no uniform channel, so they report the GEMC target variation instead.
     if ("$source" == "uniform") then
         echo "${COLOR_START}UNIFORM_SAMPLE_CHANNEL:${COLOR_END} ${UNIFORM_SAMPLE_CHANNEL}"
-        echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}       ${TARGET_VARIATION}"
-        echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}      ${BEAM_ENERGY_LABEL}"
     endif
 
     # DETECTOR_ENERGY_GROUP is derived automatically from BEAM_ENERGY_LABEL and selects the matching
     # detector-resource directory: 2070MeV -> 2GeV, 4029MeV -> 4GeV, or 5986MeV -> 6GeV.
+    echo "${COLOR_START}BEAM_ENERGY_LABEL:${COLOR_END}      ${BEAM_ENERGY_LABEL}"
     echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}       ${TARGET_VARIATION}"
     echo "${COLOR_START}DETECTOR_ENERGY_GROUP:${COLOR_END}  ${DETECTOR_ENERGY_GROUP}"
     echo "${COLOR_START}TORUS_FIELD:${COLOR_END}            ${TORUS_FIELD}"
