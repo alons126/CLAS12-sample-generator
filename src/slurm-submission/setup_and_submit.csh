@@ -134,10 +134,9 @@ unsetenv SUBMIT_SCRIPT_FILE
 setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEMC_sample.sh"
 
 # The check aliases consume check_name/check_path/check_color, print the legacy messages,
-# and jump to the corresponding failure label before any dependent stage can run. submission_section wraps the shared banner renderer.
+# and jump to the corresponding failure label before any dependent stage can run. code_subbanner wraps the shared banner renderer.
 alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
-alias submission_section 'echo ""; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo "${COLOR_START}${section}${COLOR_END}"; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo ""'
 
 # endregion Shell support
 
@@ -185,7 +184,7 @@ foreach sample ($samples:q)
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
     set section = "Setup environment variables and paths"
-    submission_section
+    code_subbanner
 
     echo "${COLOR_START}RUNNING_DIR:${COLOR_END} ${RUNNING_DIR}"
     if ("$source" == "uniform") then
@@ -222,7 +221,7 @@ foreach sample ($samples:q)
     # The guards reject roots, the home directory, this checkout, symlinks, and paths outside a farm_out hierarchy.
     # find removes only regular files directly below the resolved directory; subdirectories and later job logs are preserved.
     set section = "Handling farm_out directory clearing and GEMC data"
-    submission_section
+    code_subbanner
     if ("$CLEAR_FAR_OUT" == "true" && $farm_cleared == 0) then
         # Limit optional deletion to files directly in the configured user's farm_out directory.
         if ("$farm_out" !~ /* || "$farm_out" == "/" || "$farm_out" == "$HOME" || "$farm_out" == "$RUNNING_DIR" || -l "$farm_out") goto submission_bad_settings
@@ -255,7 +254,7 @@ foreach sample ($samples:q)
     # A configured CLAS12TAGS_DIR replaces that value with a custom clas12Tags checkout, such as
     # a fork used to test target geometry. Directory failures return before deletion or submission.
     set section = "Checking preloaded GEMC data"
-    submission_section
+    code_subbanner
 
     # Selecting a custom clas12Tags checkout means every submitted job must use that fork.
     if ("$CLAS12TAGS_DIR" != "") then
@@ -281,7 +280,7 @@ foreach sample ($samples:q)
         set section = "Looping over samples"
     endif
 
-    submission_section
+    code_subbanner
 
     # endregion Setup
 
@@ -646,7 +645,7 @@ if ("$submission_environment" != "") then
 endif
 
 # Discard helper aliases so sourcing this workflow does not pollute the interactive login shell.
-unalias code_banner submission_dir submission_file submission_section
+unalias code_banner submission_dir submission_file code_subbanner
 
 # Execute a harmless child shell with the chosen code: tcsh adopts that command's status while the user's shell remains alive.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
