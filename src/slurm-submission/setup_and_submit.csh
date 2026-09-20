@@ -302,7 +302,6 @@ foreach sample ($samples:q)
     endif
     set subbanner_color = "$COLOR_START"
     code_subbanner
-    echo
 
     # Uniform runs report their generated channel. Physical runs report the detector target variation here;
     # their full generator provenance follows below.
