@@ -32,12 +32,6 @@ PAYLOAD = PROJECT / 'src/slurm-submission/external/submit_GEMC_sample.sh'
 # Fixture construction --------------------------------------------------------
 
 # region Fixtures
-def region(text, name, replacement):
-    """Replace one named editable region in a temporary script, preserving its markers."""
-    return re.sub(r'(?m)(^[ \t]*# region ' + re.escape(name) + r'\n).*?(^[ \t]*# endregion ' + re.escape(name) + r'$)',
-                  lambda match: match[1] + replacement + '\n' + match[2], text, flags=re.S)
-
-
 def fixture(root, source, energy, channel='en', fc=0):
     """Create a self-contained reference/new setup pair and inert module/Slurm tools.
 
@@ -107,16 +101,22 @@ def fixture(root, source, energy, channel='en', fc=0):
                   SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job, TEMP_BEAM_E_ROUNDED=rounded,
                   TORUS_FIELD=torus, REQUIREMENTS_PATH=str(root / 'requirements'), GCARD_FILE=str(card),
                   YAML_FILE=str(yaml), FC_STATUS_ENABLED=str(fc), FC_STATUS=suffix)
-    common = f'''set samples = ( example )
-setenv CLEAR_FAR_OUT false
-setenv CUSTOM_GEMC_VERSION true
-setenv GEMC_VERSION 5.14
-setenv CLAS12TAGS_DIR {root}/tags
-set farm_out = {root}/farm_out'''
-    settings = f'set source = {source}\n' + '\n'.join(f'setenv {name} "{value}"' for name, value in values.items())
-    new = region(region(SETUP.read_text(), 'Settings', common), 'Sample settings', settings)
+    settings = {
+        'lund-dir': str(run / 'lundfiles'), 'source': source, 'beam-energy': str(int(energy[:-3]) / 1000),
+        'channel': channel, 'rgm-target': 'C12', 'gemc-target-variation': target, 'prefix': prefix,
+        'num-jobs': '2', 'events-per-job': '3', 'tune': tune, 'q2-cut': q2, 'job-name': job,
+        'gcard': str(card), 'yaml': str(yaml), 'clas12tags-dir': str(root / 'tags'),
+        'farm-out': str(root / 'farm_out'), 'fc-status': str(fc),
+    }
+    if source == 'physical':
+        settings.pop('channel')
+    config = root / 'submission.conf'
+    config.write_text('\n'.join(f'{key} = {value}' for key, value in settings.items()) + '\n')
+    shutil.copy2(PROJECT / 'src/slurm-submission/resolve_inputs.py', payload.parent.parent / 'resolve_inputs.py')
     new_path = root / 'new.csh'
-    new_path.write_text(new)
+    # Test wrapper supplies a normal config, leaving the maintained setup completely unmodified.
+    shutil.copy2(SETUP, payload.parent.parent / 'setup_and_submit.csh')
+    new_path.write_text(f'source src/slurm-submission/setup_and_submit.csh --config "{config}" $argv:q\n')
     env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'], MODULE_LOG=str(root / 'modules.log'),
                SBATCH_LOG=str(root / 'sbatch.jsonl'), FIXTURE_GEMC_DATA=str(root / 'gemc-data'),
                MODULE_STATUS='0', GEMC_DATA_DIR='/wrong/inherited/value', SBATCH_STATUS='0')
@@ -127,11 +127,12 @@ def run_script(path, env, success=True, arguments=()):
     """Source a fixture with a shell module alias; verify status and caller-shell survival."""
     for key in ('MODULE_LOG', 'SBATCH_LOG'):
         Path(env[key]).unlink(missing_ok=True)
-    program = 'alias module \'source "' + str(path.parent / 'module.csh') + '" \\!*\'; source "$argv[1]" $argv[2-]:q; set result=$status; echo "SHELL_ALIVE=$result"; /bin/sh -c "exit $result"'
+    program = 'alias module \'source "' + str(path.parent / 'module.csh') + '" \\!*\'; set script_path="$argv[1]"; shift argv; source "$script_path" $argv:q; set result=$status; echo "SHELL_ALIVE=$result"; /bin/sh -c "exit $result"'
     result = subprocess.run([SHELL, '-f', '-c', program, str(path), *arguments], cwd=path.parent, env=env, capture_output=True, text=True)
     assert f'SHELL_ALIVE={result.returncode}\n' in result.stdout, result.stdout + result.stderr
     assert (result.returncode == 0) == success, result.stdout + result.stderr
-    assert not result.stderr, result.stdout + result.stderr
+    if success:
+        assert not result.stderr, result.stdout + result.stderr
     transcript = result.stdout.rsplit('SHELL_ALIVE=', 1)[0]
     calls = [json.loads(line) for line in Path(env['SBATCH_LOG']).read_text().splitlines()] if Path(env['SBATCH_LOG']).exists() else []
     return transcript, calls
@@ -187,46 +188,43 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
             shutil.rmtree(run / 'mchipo')
             (run / 'mchipo').symlink_to(new.parent / 'tags', target_is_directory=True)
         elif failure == 'unsafe':
-            new.write_text(new.read_text().replace(f'setenv OUTPATH "{run}"', 'setenv OUTPATH "/"'))
+            config = new.parent / 'submission.conf'
+            config.write_text(config.read_text().replace(str(run / 'lundfiles'), '/lundfiles'))
         elif failure == 'sbatch':
             env['SBATCH_STATUS'] = '1'
         _, calls = run_script(new, env, success=False)
         assert len(calls) == (1 if failure == 'sbatch' else 0)
         if failure != 'sbatch':
             assert (run / 'reconhipo/old.hipo').exists()
-    # Exercise the actual editable examples and beam switch, not just relocated legacy settings.
+    # Feed a completed manifest through the real resolver and sourced shell, with no sample config.
     for source in ('uniform', 'physical'):
-        new, _, values, env = fixture(root / f'configured-{source}', source, '2070MeV')
-        checkout = new.parent
-        configured = region(SETUP.read_text(), 'Settings', f"""set samples = ( {source}-example )
-setenv CLEAR_FAR_OUT false
-setenv CUSTOM_GEMC_VERSION true
-setenv GEMC_VERSION 5.14
-setenv CLAS12TAGS_DIR {checkout}/tags
-set farm_out = {checkout}/farm_out""")
-        configured = re.sub(r'(?m)^(\s*)setenv OUTPATH_BASE .*$', lambda m: m[1] + f'setenv OUTPATH_BASE {checkout}/output', configured)
-        configured = configured.replace('setenv NUM_OF_JOBS 5000', 'setenv NUM_OF_JOBS 2')
-        configured = re.sub(r'setenv JOB_NEVENTS (25000|10000)', 'setenv JOB_NEVENTS 3', configured)
-        new.write_text(configured)
+        new, _, values, env = fixture(root / f'manifest-{source}', source, '2070MeV', 'enFD')
+        lund = Path(values['OUTPATH']) / 'lundfiles'
+        monitoring = lund / 'lund-gen-monitoring'
+        monitoring.mkdir()
+        metadata = {'beam-energy': '2.07052', 'rgm-target': 'C12', 'prefix': values['SAMPLE_FILE_PREFIX'],
+                    'gemc-target-variation': values['TARGET_VARIATION'], 'gemc-version': 'unknown',
+                    'output': '/old-machine/run', 'tune': values['GENERATOR_TUNE'], 'q2-cut': values['Q2_CUT']}
         if source == 'uniform':
-            name, prefix, target = 'Uniform_sample_enFD_2070MeV', 'Uniform_sample_enFD_2070MeV', 'rgm_fall2021_Ar'
+            metadata.update(channel='eh', hadron='neutron', **{'hadron-region': 'FD'})
         else:
-            name = 'rgm_fall2021_C_S__genie-none__GEM21_11a_00_000__Q2_0_02__2070MeV_GEMC-5.14'
-            prefix, target = 'C12_genie_2070MeV', 'rgm_fall2021_C_S'
-        configured_run = checkout / 'output' / name
-        shutil.copytree(Path(values['OUTPATH']), configured_run)
-        for index in (1, 2):
-            (configured_run / f'lundfiles/{values["SAMPLE_FILE_PREFIX"]}_{index}.txt').rename(configured_run / f'lundfiles/{prefix}_{index}.txt')
-        resources = checkout / 'config/detector/Generation_files_2GeV/5.14'
+            metadata['event-generator'] = 'genie'
+        manifest = {'schema_version': 1, 'workflow': source, 'config': metadata, 'written_events': 4,
+                    'files': [{'path': f'lundfiles/{values["SAMPLE_FILE_PREFIX"]}_{index}.txt', 'events': count}
+                              for index, count in ((1, 3), (2, 1))]}
+        (monitoring / 'lund-gen-log.json').write_text(json.dumps(manifest))
+        resources = new.parent / 'config/detector/Generation_files_2GeV/5.14'
         resources.mkdir(parents=True)
-        # Fixtures are in a temporary checkout, never the protected repository paths.
-        (resources / f'{target}_2GeV.gcard').write_text('<gcard/>')
-        (resources / 'rgm_fall2021-cv.yaml').write_text('test: true\n')
-        _, calls = run_script(new, env)
-        assert len(calls) == 1
-        assert calls[0]['env']['OUTPATH'] == str(configured_run)
-        assert calls[0]['env']['SAMPLE_FILE_PREFIX'] == prefix
-        assert calls[0]['env']['GCARD_FILE'] == str(resources / f'{target}_2GeV.gcard')
+        shutil.copy2(values['GCARD_FILE'], resources / Path(values['GCARD_FILE']).name)
+        shutil.copy2(values['YAML_FILE'], resources / Path(values['YAML_FILE']).name)
+        new.write_text('source src/slurm-submission/setup_and_submit.csh $argv:q\n')
+        _, calls = run_script(new, env, arguments=('--lund-dir', str(lund)))
+        assert len(calls) == 1 and calls[0]['argv'][1] == '--array=1-2'
+        assert calls[0]['env']['GEMC_VERSION'] == '5.14' and calls[0]['env']['JOB_NEVENTS'] == '3'
+        assert calls[0]['env']['OUTPATH'] == values['OUTPATH']
+        assert calls[0]['env']['TEMP_OUTPATH_PARTICLE'] == ('enFD' if source == 'uniform' else 'none')
+        _, calls = run_script(new, env, success=False, arguments=('--lund-dir', str(lund), '--beam-energy', '4.02962'))
+        assert not calls
 
     # Exercise the real run.csh branch without sync or the Python/build machinery.
     new, _, values, env = fixture(root / 'launcher', 'uniform', '2070MeV')
@@ -234,16 +232,15 @@ set farm_out = {checkout}/farm_out""")
     (checkout / '.git').mkdir()
     (checkout / 'src/launcher').mkdir()
     (checkout / 'src/launcher/workflow.py').write_text('raise AssertionError("Submission must bypass Python")\n')
-    shutil.copy2(new, checkout / 'src/slurm-submission/setup_and_submit.csh')
     entry = checkout / 'run.csh'
     shutil.copy2(PROJECT / 'run.csh', entry)
     env['CLAS12_SKIP_SERVER_SYNC'] = '1'
-    _, calls = run_script(entry, env, arguments=('--workflow', 'submit'))
+    _, calls = run_script(entry, env, arguments=('--workflow', 'submit', '--config', str(checkout / 'submission.conf')))
     assert len(calls) == 1 and calls[0]['argv'][1] == '--array=1-2'
     _, calls = run_script(entry, env, success=False, arguments=('--workflow', 'submit', '--site', 'removed.json'))
     assert not calls
     env['MODULE_STATUS'] = '1'
-    _, calls = run_script(entry, env, success=False, arguments=('--workflow', 'submit'))
+    _, calls = run_script(entry, env, success=False, arguments=('--workflow', 'submit', '--config', str(checkout / 'submission.conf')))
     assert not calls
 
     # Multiple samples repeat setup with distinct outputs and make exactly one array each.
@@ -251,17 +248,11 @@ set farm_out = {checkout}/farm_out""")
     first_run = Path(values['OUTPATH'])
     second_run = first_run.with_name('second')
     shutil.copytree(first_run, second_run)
-    text = new.read_text().replace('set samples = ( example )', 'set samples = ( example second )')
-    text = text.replace('    # endregion Sample settings',
-        f'if ("$sample" == "second") setenv OUTPATH "{second_run}"\n    # endregion Sample settings')
-    new.write_text(text)
-    _, calls = run_script(new, env)
+    _, calls = run_script(new, env, arguments=('--lund-dir', str(first_run / 'lundfiles'), '--lund-dir', str(second_run / 'lundfiles')))
     assert len(calls) == 2
     assert [call['env']['OUTPATH'] for call in calls] == [str(first_run), str(second_run)]
-    # Do not reset a directory again after submitting an array that writes into it.
-    new.write_text(text.replace(f'if ("$sample" == "second") setenv OUTPATH "{second_run}"', ''))
-    _, calls = run_script(new, env, success=False)
-    assert len(calls) == 1
+    _, calls = run_script(new, env, success=False, arguments=('--lund-dir', str(first_run / 'lundfiles'), '--lund-dir', str(first_run / 'lundfiles')))
+    assert not calls  # Resolve every sample before performing any setup or submission.
 
     # Preserve the detector command contract, independently of setup presentation.
     command_log = root / 'detector-commands.jsonl'

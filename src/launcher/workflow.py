@@ -88,7 +88,7 @@ WORKFLOW_GUIDANCE = """Choose one of these forms:
     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
   source run.csh --workflow create-lund --source physical \\
     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
-  source run.csh --workflow submit
+  source run.csh --workflow submit --lund-dir RUN/lundfiles
   source run.csh --workflow create-lund --source uniform --build true --test true --run false
 Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
 create-lund source to see that executable's sample options."""
@@ -477,7 +477,7 @@ def main():
         forwarded = forwarded[1:]
 
     if args.workflow == 'submit':
-        raise ValueError('Use source run.csh --workflow submit; edit src/slurm-submission/setup_and_submit.csh.')
+        raise ValueError('Use source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides].')
 
     # Resolve and validate the complete launcher configuration before performing any external action.
     config = settings(args)

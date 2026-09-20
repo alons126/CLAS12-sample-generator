@@ -67,7 +67,7 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 
 `--workflow create-lund|submit` is required. `--source uniform|physical` is required for `create-lund` and invalid for `submit`.
 
-`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/slurm-submission/setup_and_submit.csh` directly; its settings live in that file, and it accepts no build flags, site files or manifest options. See the [submission guide](gemc-reconstruction-batch-submission.md).
+`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/slurm-submission/setup_and_submit.csh` directly; its helper accepts `--lund-dir`, `--config` and CLI overrides without invoking the LUND build driver. See the [submission guide](gemc-reconstruction-batch-submission.md).
 
 Building always invokes CMake dependency checking, so replacing an uncommitted `src/lund-generation/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
 
@@ -81,10 +81,10 @@ The refresh requires a configured Git upstream and network access to any not-yet
 
 ## Detector processing and submission
 
-First create the LUND files. Edit the selected samples, shared-storage paths, detector settings, GEMC version and job count in `src/slurm-submission/setup_and_submit.csh` locally; commit and push. Then, from a csh/tcsh login shell on ifarm:
+First create the LUND files. Pass the completed LUND directory; use optional config/CLI overrides for detector settings. Commit and push any in-checkout configuration changes locally first. Then, from a csh/tcsh login shell on ifarm:
 
 ```tcsh
-source run.csh --workflow submit
+source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
 ```
 
 This performs setup and submits the selected arrays. **It replaces the selected simulation output directories, preserving LUND input.** There is no preview-by-default or `--execute` switch. The setup checks inputs and prints the legacy report before calling `sbatch`. Tests intercept that final call in temporary fixtures. See the [submission guide](gemc-reconstruction-batch-submission.md) for settings and failure behavior.

@@ -78,7 +78,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
 
     # Submission no longer accepts LUND build flags or touches build settings.
     submitted=sourced(['--workflow','submit','--run','false'],success=False)
-    assert 'submission settings belong' in submitted.stdout
+    assert 'unrecognized arguments' in submitted.stderr
     assert 'Updating disposable ifarm checkout' not in submitted.stdout
 
     output=root/'output with spaces'

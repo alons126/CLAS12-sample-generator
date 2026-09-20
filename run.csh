@@ -28,7 +28,7 @@
 #     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 #   source run.csh --workflow create-lund --source physical \
 #     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
-#   source run.csh --workflow submit
+#   source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
 # Inputs:
 #   $argv carries launcher and child options. CLAS12_SAMPLES_DIR is an optional environment variable
 #   set by the user with `setenv`; when present, it supplies the absolute checkout path and overrides
@@ -105,7 +105,7 @@ if ($#argv == 0) then
     echo "    --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
     echo ""
     echo "Submit completed LUND files:"
-    echo "  source run.csh --workflow submit"
+    echo "  source run.csh --workflow submit --lund-dir RUN/lundfiles"
     echo ""
     echo "Build and test without running a workflow payload:"
     echo "  source run.csh --workflow create-lund --source uniform --build true --test true --run false"
@@ -120,7 +120,7 @@ endif
 # Submission selection -------------------------------------------------------
 
 # region Submission selection
-# Submission settings live in the sourced script, with no build flags, site files or Python coordinator.
+# Submission accepts manifest/config/CLI inputs; its resolver has no build or submission responsibilities.
 set _clas12_submit = 0
 if ($#argv >= 1) then
     if ("$argv[1]" == "--workflow=submit") set _clas12_submit = 1
@@ -129,12 +129,20 @@ if ($#argv >= 2) then
     if ("$argv[1]" == "--workflow" && "$argv[2]" == "submit") set _clas12_submit = 1
 endif
 if ($_clas12_submit == 1) then
-    if ($#argv > 2 || ($#argv == 2 && "$argv[1]" == "--workflow=submit")) then
-        echo "Error: submission settings belong in src/slurm-submission/setup_and_submit.csh."
-        echo "Usage: source run.csh --workflow submit"
-        set CLAS12_SAMPLE_STATUS = 2
-        goto clas12_launcher_finish
+    set _clas12_submission_args = ($argv:q)
+    if ("$argv[1]" == "--workflow=submit") then
+        shift _clas12_submission_args
+    else
+        shift _clas12_submission_args
+        shift _clas12_submission_args
     endif
+    # Help and malformed arguments must not trigger the destructive server refresh.
+    python3 "$_clas12_root/src/slurm-submission/resolve_inputs.py" --check-arguments $_clas12_submission_args:q
+    set CLAS12_SAMPLE_STATUS = $status
+    if ($CLAS12_SAMPLE_STATUS != 0) goto clas12_launcher_finish
+    foreach _clas12_argument ($_clas12_submission_args:q)
+        if ("$_clas12_argument" == "--help") goto clas12_launcher_finish
+    end
 endif
 # endregion Submission selection
 
@@ -200,7 +208,7 @@ endif
 # LUND creation retains its existing Python build/creation driver.
 if ($CLAS12_SAMPLE_STATUS == 0) then
     if ($_clas12_submit == 1) then
-        source src/slurm-submission/setup_and_submit.csh
+        source src/slurm-submission/setup_and_submit.csh $_clas12_submission_args:q
         set CLAS12_SAMPLE_STATUS = $status
     else
         python3 src/launcher/workflow.py $argv:q
@@ -229,6 +237,8 @@ clas12_launcher_finish:
 # the named workflow result after control returns.
 unset _clas12_invocation _clas12_root
 if ($?_clas12_submit) unset _clas12_submit
+if ($?_clas12_submission_args) unset _clas12_submission_args
+if ($?_clas12_argument) unset _clas12_argument
 if ($?_clas12_skip_server_sync) unset _clas12_skip_server_sync
 
 # Run a child shell that exits with the captured workflow result. A direct `exit` here would close the

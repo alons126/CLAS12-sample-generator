@@ -44,6 +44,6 @@ The sourced `src/slurm-submission/setup_and_submit.csh` exports these settings, 
 
 ## Integration with the maintained launcher
 
-`source run.csh --workflow submit` refreshes the disposable server checkout and sources the setup script directly in the login shell. All submission settings are in that script. There is no site JSON, Python coordinator, local detector runner, lock database or generated wrapper. The payload retains its scheduler directives and detector commands unchanged.
+`source run.csh --workflow submit` refreshes the disposable server checkout and sources the setup script directly in the login shell. The helper resolves submission settings from the LUND manifest, optional key=value config and CLI. There is no site JSON, Python coordinator, local detector runner, lock database or generated wrapper. The payload retains its scheduler directives and detector commands unchanged.
 
 CMake installs only this protected payload under `bin/`. The setup workflow runs from the checkout through `run.csh`. Review the [submission guide](gemc-reconstruction-batch-submission.md) for settings, output replacement and tests.

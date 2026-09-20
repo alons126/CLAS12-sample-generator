@@ -22,10 +22,10 @@ source run.csh --workflow create-lund --source physical \
   --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 ```
 
-Select completed LUND samples in `src/slurm-submission/setup_and_submit.csh`, then submit:
+Select completed LUND output using `--lund-dir`, then submit:
 
 ```tcsh
-source run.csh --workflow submit
+source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
 ```
 
 `--workflow` is always required. `--source uniform|physical` is required for `create-lund` and is rejected for `submit`. Child options are forwarded exactly as written; the launcher no longer injects a hidden sample profile or output path.
@@ -57,7 +57,7 @@ Use `--run-settings FILE` to select a different strict JSON build profile explic
 
 The file keeps stable operational defaults out of scientific sample profiles and avoids repeating build controls in every command. It does not hide the action being performed. A reader can determine the selected workflow, source, sample definition, input and output directly from the command line.
 
-Sample physics and generation settings belong in [samples](samples/). Submission settings belong in `src/slurm-submission/setup_and_submit.csh`; scheduler defaults remain in the protected payload. Protected GCARD and reconstruction resources belong in [detector](detector/).
+Sample physics and generation settings belong in [samples](samples/). Submission settings come from the completed manifest plus optional key=value configuration and CLI overrides; scheduler defaults remain in the protected payload. Protected GCARD and reconstruction resources belong in [detector](detector/).
 
 ## Failure behavior
 

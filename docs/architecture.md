@@ -45,7 +45,7 @@ run.csh
                             -> sbatch array -> protected GEMC/reconstruction payload
 ```
 
-The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver and reads its editable shell settings. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](gemc-reconstruction-batch-submission.md) for the full call chain and editable settings.
+The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its small Python helper resolves manifest/config/CLI inputs and passes validated settings to the sourced shell. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](gemc-reconstruction-batch-submission.md) for the full call chain and editable settings.
 
 ## Sample configuration boundary
 
@@ -92,7 +92,7 @@ The converter stops at the configured output capacity or end of input. The final
 - Add another physical adapter under `src/lund-generation/clas12-generator-to-lund/<generator>/` and register it behind `convertPhysical`; keep the public executable and manifest contract unchanged.
 - Replace or extend `src/lund-generation/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
-- Keep submission paths and sample settings in the setup script; use the protected payload’s scheduler defaults.
+- Resolve submission inputs from the completed manifest, explicit config and CLI; use the protected payload’s scheduler defaults.
 
 Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 

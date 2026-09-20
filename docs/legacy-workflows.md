@@ -127,8 +127,8 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Uncomment uniform vs GENIE setup line | Choose generation/conversion CLI; both yield the same manifest contract |
 | Hardcoded output/input prefixes | `--output`, `--prefix`, manifest file list |
 | `NUM_OF_FILES` / Slurm array | Actual number of completed manifest files |
-| `NEVENTS=10000` in archived payloads | Configured `JOB_NEVENTS` shared by each sample array |
-| `TARGET_VARIATION`, `GCARD_FILE`, `YAML_FILE` | Explicit settings in the unified shell script |
+| `NEVENTS=10000` in archived payloads | `JOB_NEVENTS` defaults to the largest selected manifest count; explicit event-limit overrides are supported |
+| `TARGET_VARIATION`, `GCARD_FILE`, `YAML_FILE` | Resolved manifest values and config/CLI overrides |
 | `TORUS_FIELD` | Retained +0.5 at 2 GeV; −1.0 at 4/6 GeV |
 | Solenoid −1.0 | Unchanged in the protected payload |
 | GEMC modules and `GEMC_DATA_DIR` | Loaded and checked by the sourced setup |
@@ -136,4 +136,4 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Simulation output reset | Recreate `mchipo`/`reconhipo`, plus uniform `rootfiles`; preserve LUND |
 | Repository update | Guarded disposable-clone refresh in `run.csh` |
 
-`source run.csh --workflow submit` sources the unified setup directly. Select uniform or physical samples in its editable settings. Full archived setup stdout and exported Slurm settings are compared in isolated tests; see the [submission guide](gemc-reconstruction-batch-submission.md). Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.
+`source run.csh --workflow submit` sources the unified setup directly. Select completed samples with `--lund-dir`; supply optional config/CLI overrides. Full archived setup stdout and exported Slurm settings are compared in isolated tests; see the [submission guide](gemc-reconstruction-batch-submission.md). Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.

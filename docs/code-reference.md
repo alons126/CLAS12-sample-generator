@@ -69,10 +69,11 @@ The reader arrays replace the archived fixed 250-element buffers. Input errors, 
 | --- | --- |
 | `run.csh` | Guarded ifarm refresh; source submission directly or dispatch LUND creation |
 | `src/launcher/workflow.py` | LUND configuration, build/test stages and application dispatch |
-| `src/slurm-submission/setup_and_submit.csh` | Editable sample settings, GEMC module, legacy report/checks, output reset and one array per sample |
+| `src/slurm-submission/resolve_inputs.py` | Manifest/config/CLI precedence, truth validation, portable file inventory and safe shell assignments |
+| `src/slurm-submission/setup_and_submit.csh` | Resolved input handoff, GEMC module, legacy report/checks, output reset and one array per sample |
 | `src/slurm-submission/external/submit_GEMC_sample.sh` | Protected Slurm task payload; GEMC followed by reconstruction |
 
-The setup script consumes completed LUND files with an explicit prefix and task count. It exports a configured event limit for the array. The payload retains its original scheduler defaults. See the [submission guide](gemc-reconstruction-batch-submission.md).
+The resolver obtains the prefix and task count from the completed manifest or explicit input, then the setup script consumes the validated LUND files. It exports a shared event limit for the array, defaulting to the largest selected manifest file count. The payload retains its original scheduler defaults. See the [submission guide](gemc-reconstruction-batch-submission.md).
 
 ## 6. Configuration and resources
 

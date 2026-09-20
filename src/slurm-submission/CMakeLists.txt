@@ -16,6 +16,13 @@ install(PROGRAMS external/submit_GEMC_sample.sh DESTINATION bin)
 # region Tests
 if(BUILD_TESTING)
     find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
+    if(BUILD_UNIFORM)
+        add_test(NAME submission-input-resolution COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py ${PROJECT_SOURCE_DIR} $<TARGET_FILE:clas12-uniform>)
+    else()
+        add_test(NAME submission-input-resolution COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py ${PROJECT_SOURCE_DIR})
+    endif()
     find_program(TCSH_EXECUTABLE NAMES tcsh csh)
     if(TCSH_EXECUTABLE)
         add_test(NAME submission-legacy-parity COMMAND ${Python3_EXECUTABLE}

@@ -98,4 +98,4 @@ It is a completion record and pipeline input, not a content-addressed archive: r
 
 ## Detector and submission settings
 
-Edit `src/slurm-submission/setup_and_submit.csh` for selected samples, paths, GEMC version, event limit and array size. It selects GCARD/YAML resources explicitly and uses the protected payload’s scheduler defaults. There are no site JSON files. See the [submission guide](gemc-reconstruction-batch-submission.md).
+Supply `--lund-dir RUN/lundfiles` to infer settings from its manifest, with optional `--config` and CLI overrides. GEMC falls back to 5.14. It selects GCARD/YAML resources explicitly and uses the protected payload’s scheduler defaults. There are no site JSON files. See the [submission guide](gemc-reconstruction-batch-submission.md).
