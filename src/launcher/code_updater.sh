@@ -37,17 +37,7 @@
 #
 # `$?VARIABLE` is a tcsh test that returns true if the variable exists.
 
-if ( ! $?COLOR_START ) then
-    set COLOR_START = "\033[35m"
-endif
-
-if ( ! $?COLOR_END ) then
-    set COLOR_END = "\033[0m"
-endif
-
-if ( ! $?COLOR_ERR ) then
-    set COLOR_ERR = "\033[31m"
-endif
+if (-f ./src/launcher/environment/set_colors.csh) source ./src/launcher/environment/set_colors.csh
 
 # Print an empty line to visually separate this script's output from previous
 # terminal output.
