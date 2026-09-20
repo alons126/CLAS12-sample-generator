@@ -184,6 +184,7 @@ foreach sample ($samples:q)
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
     set subbanner_title = "Setup environment variables and paths"
+    set subbanner_color = "$COLOR_START"
     code_subbanner
 
     echo "${COLOR_START}RUNNING_DIR:${COLOR_END} ${RUNNING_DIR}"
@@ -221,6 +222,7 @@ foreach sample ($samples:q)
     # The guards reject roots, the home directory, this checkout, symlinks, and paths outside a farm_out hierarchy.
     # find removes only regular files directly below the resolved directory; subdirectories and later job logs are preserved.
     set subbanner_title = "Handling farm_out directory clearing and GEMC data"
+    set subbanner_color = "$COLOR_START"
     code_subbanner
     if ("$CLEAR_FAR_OUT" == "true" && $farm_cleared == 0) then
         # Limit optional deletion to files directly in the configured user's farm_out directory.
@@ -232,7 +234,7 @@ foreach sample ($samples:q)
         if ("$resolved_farm" !~ */farm_out && "$resolved_farm" !~ */farm_out/*) goto submission_bad_settings
 
         set banner_title = "Clearing farm_out directory"
-        set banner_color = "$COLOR_START"
+        set subbanner_color = "$COLOR_START"
         code_banner
         if ("$SUBMISSION_EXECUTE" == "true") then
             find "$resolved_farm" -maxdepth 1 -type f -delete
@@ -254,6 +256,7 @@ foreach sample ($samples:q)
     # A configured CLAS12TAGS_DIR replaces that value with a custom clas12Tags checkout, such as
     # a fork used to test target geometry. Directory failures return before deletion or submission.
     set subbanner_title = "Checking preloaded GEMC data"
+    set subbanner_color = "$COLOR_START"
     code_subbanner
 
     # Selecting a custom clas12Tags checkout means every submitted job must use that fork.
@@ -280,6 +283,7 @@ foreach sample ($samples:q)
         set subbanner_title = "Looping over samples"
     endif
 
+    set subbanner_color = "$COLOR_START"
     code_subbanner
 
     # endregion Setup
