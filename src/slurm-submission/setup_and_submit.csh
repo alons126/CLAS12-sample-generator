@@ -137,7 +137,7 @@ setenv SUBMIT_SCRIPT_FILE "$RUNNING_DIR/src/slurm-submission/external/submit_GEM
 # and jump to the corresponding failure label before any dependent stage can run. submission_section wraps the shared banner renderer.
 alias submission_dir 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a directory...${COLOR_END}"; test -d "$check_path"; if ($status != 0) goto submission_missing_dir; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
 alias submission_file 'echo "${check_color}--> Checking if ${COLOR_END}${check_name}${check_color} is a file...${COLOR_END}"; test -f "$check_path"; if ($status != 0) goto submission_missing_file; echo "${check_color}-->${COLOR_END} ${COLOR_COMPLETION}${check_name} exists.${COLOR_END}"'
-alias submission_section 'echo ""; set banner_title = "$section"; set banner_color = "$COLOR_START"; code_banner; echo ""'
+alias submission_section 'echo ""; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo "${COLOR_START}${section}${COLOR_END}"; echo "${COLOR_START}=======================================================================${COLOR_END}"; echo ""'
 
 # endregion Shell support
 
@@ -184,10 +184,6 @@ foreach sample ($samples:q)
 
     # Report the checkout and resolved high-level settings before performing any side effect.
     # Uniform and physical samples retain distinct legacy headings, while both use the same validated values below.
-    echo "${COLOR_START}RUNNING_DIR:${COLOR_END} ${RUNNING_DIR}"
-    echo ""
-    echo
-    echo ""
     if ("$source" == "uniform") then
         set banner_title = "Setting and submitting uniform sample generation jobs"
     else
@@ -199,6 +195,7 @@ foreach sample ($samples:q)
     set section = "Setup environment variables and paths"
     submission_section
 
+    echo "${COLOR_START}RUNNING_DIR:${COLOR_END} ${RUNNING_DIR}"
     if ("$source" == "uniform") then
         echo "${COLOR_START}TARGET_VARIATION:${COLOR_END}    ${TARGET_VARIATION}"
     endif
