@@ -327,7 +327,7 @@ def resolve(lund_directory, explicit, root):
     return dict(source=source, NUM_OF_JOBS=str(jobs), JOB_NEVENTS=str(limit), TEMP_BEAM_E=beam,
                 TEMP_BEAM_E_ROUNDED=rounded, TEMP_OUTPATH_PARTICLE=channel, TARGET_VARIATION=variation,
                 SAMPLE_TARGET_NUCLEUS=target, SAMPLE_GENERATOR=generator, GENERATOR_TUNE=tune, Q2_CUT=q2,
-                OUTPATH_BASE=str(run.parent), OUTPATH=str(run), SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job,
+                OUTPATH=str(run), SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job,
                 GEMC_VERSION=version, CLEAR_FAR_OUT=values['clear-farm-out'],
                 CLAS12TAGS_DIR=optional_paths['clas12tags-dir'], farm_out=optional_paths['farm-out'],
                 TORUS_FIELD=torus_text,

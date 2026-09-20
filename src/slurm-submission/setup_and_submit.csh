@@ -201,14 +201,8 @@ foreach sample ($samples:q)
     endif
     echo ""
 
-    # Every resolved run must remain beneath an existing output base, regardless of whether its LUND source is physical or uniform.
     # CLAS12TAGS_DIR selects an optional custom fork of https://github.com/gemc/clas12Tags, for example when testing target geometry.
     set check_color = "$COLOR_START"
-    echo "${COLOR_START}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
-    set check_name = OUTPATH_BASE
-    set check_path = "$OUTPATH_BASE"
-    submission_dir
-
     if ("$CLAS12TAGS_DIR" != "") then
         echo "${COLOR_START}CLAS12TAGS_DIR:${COLOR_END} ${CLAS12TAGS_DIR}"
         set check_name = CLAS12TAGS_DIR
@@ -305,8 +299,8 @@ foreach sample ($samples:q)
     code_banner
     echo
 
-    # Uniform runs report their generated channel and the shared output base validated during setup.
-    # Physical runs report the detector target variation here; their full generator provenance follows below.
+    # Uniform runs report their generated channel. Physical runs report the detector target variation here;
+    # their full generator provenance follows below.
     if ("$source" == "uniform") then
         echo "${COLOR_START}TEMP_BEAM_E:${COLOR_END} ${TEMP_BEAM_E}"
         echo
@@ -314,7 +308,6 @@ foreach sample ($samples:q)
         echo
 
         # Sample-specific reports use the informational color supplied by set_environment.csh.
-        echo "${COLOR_INFO}OUTPATH_BASE: ${COLOR_END}${OUTPATH_BASE}"
         echo "${COLOR_INFO}TEMP_OUTPATH_PARTICLE:${COLOR_END} ${TEMP_OUTPATH_PARTICLE}"
         echo
         set banner_title = "Setting environment for ${TEMP_BEAM_E} and particle type ${TEMP_OUTPATH_PARTICLE}"

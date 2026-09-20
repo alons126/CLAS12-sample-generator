@@ -58,6 +58,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     result = resolve(lund, {}, project)
     assert result['GEMC_VERSION'] == '5.14'
     assert result['OUTPATH'] == str(lund.parent)
+    assert 'OUTPATH_BASE' not in result
     assert result['NUM_OF_JOBS'] == '2' and result['JOB_NEVENTS'] == '3'
     assert result['TEMP_OUTPATH_PARTICLE'] == 'enFD' and result['TEMP_BEAM_E'] == '2070MeV'
     assert result['TORUS_FIELD'] == '0.5'

@@ -96,7 +96,7 @@ def fixture(root, source, energy, channel='en', fc=0):
     values = dict(NUM_OF_JOBS='2', JOB_NEVENTS='3', TEMP_BEAM_E=energy,
                   TEMP_OUTPATH_PARTICLE=channel if source == 'uniform' else 'none', TARGET_VARIATION=target,
                   SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie',
-                  GENERATOR_TUNE=tune, Q2_CUT=q2, OUTPATH_BASE=str(root / 'output'), OUTPATH=str(run),
+                  GENERATOR_TUNE=tune, Q2_CUT=q2, OUTPATH=str(run),
                   SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job, TEMP_BEAM_E_ROUNDED=rounded,
                   TORUS_FIELD=torus, REQUIREMENTS_PATH=str(root / 'requirements'), GCARD_FILE=str(card),
                   YAML_FILE=str(yaml), FC_STATUS_ENABLED=str(fc), FC_STATUS=suffix)
