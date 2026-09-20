@@ -501,8 +501,9 @@ foreach sample ($samples:q)
     endif
 
     # Print a final pre-submission inventory: LUND should be populated, while the recreated simulation directories are empty.
+    # For lundfiles, we remove the lund-gen-monitoring directory from the count
     echo "${COLOR_START}Number of files in target directory (OUTPATH):${COLOR_END}"
-        echo "${COLOR_START}Number of lund files:     ${COLOR_END} `ls ${OUTPATH}/lundfiles | wc -l`"
+    echo "${COLOR_START}Number of lund files:     ${COLOR_END} `expr \`ls ${OUTPATH}/lundfiles | wc -l\` - 1`"
     if ("$SUBMISSION_EXECUTE" == "true") then
         echo "${COLOR_START}Number of mchipo files:   ${COLOR_END} `ls ${OUTPATH}/mchipo | wc -l`"
         echo "${COLOR_START}Number of reconhipo files:${COLOR_END} `ls ${OUTPATH}/reconhipo | wc -l`"
