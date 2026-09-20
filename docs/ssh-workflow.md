@@ -91,4 +91,4 @@ This previews setup and the Slurm command. Add `--execute` to submit the selecte
 
 ## Supporting shell files
 
-`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/build_and_run.csh` is a LUND build helper without refresh. `src/launcher/code_updater.sh` performs checked Git operations in a child shell. Submission is sourced so login-shell module aliases and environment updates remain available to `sbatch`.
+`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/build_and_run.csh` is a LUND build helper without refresh. `src/launcher/code_updater.csh` performs checked Git operations in a child shell. Submission is sourced so login-shell module aliases and environment updates remain available to `sbatch`.

@@ -12,7 +12,7 @@
 # user's default login shell.
 
 # ------------------------------------------------------------------------------------------
-# code_updater.sh
+# code_updater.csh
 # ------------------------------------------------------------------------------------------
 # Purpose
 # -------
@@ -32,7 +32,14 @@
 # Terminal color initialization
 # -------------------------------------------------------------------------------------------------
 
-if (-f ./src/launcher/environment/set_colors.csh) source ./src/launcher/environment/set_colors.csh
+if ( -f ./src/launcher/environment/set_colors.csh ) then
+    source ./src/launcher/environment/set_colors.csh
+    printf "${COLOR_START}-->${COLOR_END} %s\n" "${COLOR_GOOD_START}Color environment loaded.${COLOR_END}"
+    echo
+else
+    printf "Error: the following file does not exist: ./src/launcher/environment/set_colors.csh\n"
+    exit 1
+endif
 
 echo ""
 

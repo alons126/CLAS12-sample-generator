@@ -192,7 +192,7 @@ endif
 # Automated launcher tests and deliberate local debugging may bypass destructive Git operations.
 # Otherwise run the updater in a child tcsh: its `exit` calls cannot terminate the sourced parent
 # shell, and its exit status becomes the gate for environment setup and workflow execution.
-# `src/launcher/code_updater.sh` performs, in order:
+# `src/launcher/code_updater.csh` performs, in order:
 #   - `git rev-parse --show-toplevel` to require a recognized worktree;
 #   - `git clean -fxd -e build/ -e build` to remove server-only untracked and ignored content while
 #     retaining the reusable build tree;
@@ -208,7 +208,7 @@ if ($_clas12_skip_server_sync == 1) then
     set CLAS12_SAMPLE_STATUS = 0
 else
     echo "Updating disposable ifarm checkout at $_clas12_root"
-    tcsh -f src/launcher/code_updater.sh
+    tcsh -f src/launcher/code_updater.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
 
