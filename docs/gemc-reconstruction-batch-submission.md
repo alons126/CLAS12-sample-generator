@@ -31,6 +31,17 @@ source run.csh --workflow submit --lund-dir /shared/sample/lundfiles --execute
 
 The switch is CLI-only: a config file cannot enable execution. The normal `run.csh` disposable-checkout synchronization still runs during preview; sample/output protection does not disable that documented server refresh.
 
+To submit several completed samples in one invocation, repeat `--lund-dir`:
+
+```tcsh
+source run.csh --workflow submit \
+  --lund-dir /shared/sample-a/lundfiles \
+  --lund-dir /shared/sample-b/lundfiles \
+  --execute
+```
+
+The resolver validates every selected sample first and writes one temporary numbered `.csh` assignment file for each directory. The sourced setup loops over those files; each file configures one sample and produces one independent Slurm array. The temporary files contain only validated tcsh variable assignments and are deleted when the submission command finishes. If a later sample fails setup or `sbatch`, subsequent samples are skipped while arrays already accepted by Slurm remain submitted.
+
 The resolver reads `lund-gen-monitoring/lund-gen-log.json` under the supplied directory. It obtains source, beam energy, target identity, detector target variation, channel/hadron/region, generator/tune/Q² labels, filename prefix and completed file counts from the manifest. `OUTPATH` is the supplied directory's parent, so copied samples do not depend on the original absolute generation path. It does not infer scientific metadata from directory names.
 
 The array size is the number of completed files, not the requested generation capacity. The default `JOB_NEVENTS` is the largest event count among the selected files. A shorter final file remains in the same array with this shared limit and reaches input EOF. This limit is not an exact per-file count; confirm EOF behavior with the selected detector versions during server validation.

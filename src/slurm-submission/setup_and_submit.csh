@@ -93,12 +93,24 @@ if ($#argv == 1) then
     endif
 endif
 
+# Create a unique private directory for the resolver's per-sample assignment files. mktemp replaces
+# the X template with a collision-resistant suffix and creates the directory atomically; the common
+# submission_finish path removes it. A failed command or empty result cannot be used safely, so stop
+# before invoking the resolver or performing any submission side effect.
 set submission_environment = `mktemp -d /tmp/clas12-submit.XXXXXXXX`
 if ($status != 0 || "$submission_environment" == "") goto submission_finish
 
+# Resolve every CLI/config/manifest input before the shell performs setup or submission. The private
+# --environment-dir receives one validated tcsh assignment file per selected --lund-dir; $argv:q passes
+# the original arguments while preserving each argument as one quoted value. A resolver error stops here,
+# so the shared cleanup path removes the temporary directory before any outputs are replaced or jobs submitted.
 python3 src/slurm-submission/resolve_inputs.py --environment-dir "$submission_environment" $argv:q
 if ($status != 0) goto submission_finish
 
+# The resolver writes one numbered assignment file for each --lund-dir, after validating every
+# selected sample. This list drives the loop below: each file configures one sample and therefore
+# produces one independent Slurm array. A later failure stops the loop without cancelling arrays
+# that were already accepted by Slurm.
 set samples = ( "$submission_environment"/*.csh )
 
 # endregion Input resolution
@@ -274,7 +286,6 @@ foreach sample ($samples:q)
     else
         set subbanner_title = "Looping over samples"
     endif
-
     set subbanner_color = "$COLOR_START"
     code_subbanner
 
@@ -283,8 +294,12 @@ foreach sample ($samples:q)
     # Sample report -----------------------------------------------------------
 
     # region Sample report
-    # Purpose: show the resolved scientific and detector identity of this sample before validating or replacing its outputs.
-    # Inputs: resolver-generated sample metadata, detector paths, filename prefix, and the shared terminal-color palette.
+    # Purpose:
+    #   show the resolved scientific and detector identity of this sample before validating or replacing its outputs.
+    #
+    # Inputs:
+    #   resolver-generated sample metadata, detector paths, filename prefix, and the shared terminal-color palette.
+    # 
     # Result: OUTPATH is canonicalized and all required directories/files are confirmed; failures return before submission.
     echo
 
