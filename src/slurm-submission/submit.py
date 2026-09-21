@@ -417,6 +417,13 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # One Slurm array task corresponds to each selected PREFIX_INDEX.txt input. All
     # paths have passed preflight before output replacement; report them in one place.
     report.banner('Slurm jobs parameters')
+
+    report.value('NUM_OF_JOBS', values['NUM_OF_JOBS'], 4)
+    environment['ARRAY'] = '1-' + values['NUM_OF_JOBS']
+    report.value('SLURM_JOB_NAME', values['SLURM_JOB_NAME'])
+    report.value('ARRAY', environment['ARRAY'], 10)
+    report.text()
+
     report.value('OUTPATH', values['OUTPATH'])
     report.check('OUTPATH', values['OUTPATH'], directory=True)
 
@@ -430,12 +437,6 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         report.value(key, values[key])
         report.check(key, values[key])
         report.text()
-
-    report.value('NUM_OF_JOBS', values['NUM_OF_JOBS'], 4)
-    environment['ARRAY'] = '1-' + values['NUM_OF_JOBS']
-    report.value('SLURM_JOB_NAME', values['SLURM_JOB_NAME'])
-    report.value('ARRAY', environment['ARRAY'], 10)
-    report.text()
 
     payload = environment['SUBMIT_SCRIPT_FILE']
     report.value('SUBMIT_SCRIPT_FILE', payload)
