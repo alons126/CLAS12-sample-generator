@@ -6,6 +6,8 @@ Apply this layered style to all maintained code objects, not just functions: cla
 
 Keep clear and consistent vertical spacing in every maintained code file. Use exactly one blank line between logical code blocks, such as initialization, validation, conditionals, loops, reporting, cleanup, return paths, named regions, and separate groups of related statements. Keep a comment directly attached to the block it explains. Do not use repeated blank lines, whitespace-only lines, or tab indentation to create visual separation. For maintained C++, apply this rule only where the repository formatter preserves the spacing.
 
+When a code explanation is divided into named categories such as `Purpose:`, `Workflow:`, `Inputs:`, `Outputs:`, or `Failure:`, put each category name on its own line. Start its explanation on the following line, indented beneath the category name, and leave exactly one blank line between categories. Apply this layout to docstrings and comment-based explanations where categories are used; keep the language's comment markers on comment lines. Do not add categories to brief comments that do not need them.
+
 ## Maintained C++ formatting
 
 Apply these rules to maintained C++ source and header files. Do not apply them to protected external or archived sources. Unless a later instruction explicitly says otherwise, none of the code-format or ownership-header rules in this section apply to `.clang-format`, `.vscode/c_cpp_properties.json`, `.vscode/settings.json`, any `*.conf` file, or Git control files such as `.gitignore`, `.gitattributes`, and `.gitmodules`.

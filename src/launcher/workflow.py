@@ -40,7 +40,7 @@ Launcher options:
     --jobs N                     Select positive parallel build workers (JSON default: 4).
     --help                       Print launcher options without updating, building, or running.
 
-Forwarded options:
+Forwarded options: 
     Unrecognized arguments are preserved and passed to clas12-uniform or
     clas12-generator-to-lund. Use -- --help after the launcher selections to print that
     executable's authoritative sample options.
