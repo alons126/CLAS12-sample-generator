@@ -102,8 +102,10 @@ def fixture(root, source, energy, channel='en', fc=0):
     modulecmd = bin_dir / 'modulecmd'
 
     modulecmd.write_text('#!' + sys.executable + '\nimport os,sys\n'
-                         'if sys.argv[1:] == ["python", "unload", "gemc"]: print("import os")\n'
+                         'if sys.argv[1:] == ["python", "unload", "gemc"]: '
+                         'sys.stderr.write("Unloading gemc\\n"); print("import os")\n'
                          'elif sys.argv[1:] == ["python", "load", "gemc/5.14"]: '
+                         'sys.stderr.write("Loading gemc/5.14\\n"); '
                          'print("import os; p=" + repr(os.environ["MODULE_GEMC_DATA_DIR"]) + '
                          '"; os.environ[\\"GEMC_DATA_DIR\\"] = p; os.environ[\\"PATH\\"] = p + \\"/bin:\\" + os.environ[\\"PATH\\"]")\n'
                          'else: sys.exit(1)\n')

@@ -13,9 +13,12 @@ CLEAR_FAR_OUT:                                                                  
 GEMC_VERSION:                                                                                  5.14
 Sample type:                                                                       physical (genie)
 
+Unloading gemc
+Loading gemc/5.14
 SLURM_GEMC_EXECUTABLE: {CHECKOUT}/clas12Tags/5.14/bin/gemc
 --> Checking if SLURM_GEMC_EXECUTABLE is a file...
 --> SLURM_GEMC_EXECUTABLE exists.
+
 CLAS12TAGS_DIR: {CHECKOUT}/tags
 --> Checking if CLAS12TAGS_DIR is a directory...
 --> CLAS12TAGS_DIR exists.

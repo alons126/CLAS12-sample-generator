@@ -235,6 +235,10 @@ def load_gemc(version, environment):
         version: Validated GEMC module version selected for this sample.
         environment: Invocation-owned environment updated in place.
 
+    Returns:
+        Informational text emitted by the module system while unloading and loading GEMC.
+        Generated Python environment code is consumed internally and is never printed.
+
     Failure:
         A missing module command, rejected unload/load, or malformed environment result raises
         ValueError before output replacement or job submission.
@@ -250,8 +254,8 @@ def load_gemc(version, environment):
     helper = ('import json, os, subprocess, sys\n'
               'for arguments in (("unload", "gemc"), ("load", "gemc/" + sys.argv[2])):\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], capture_output=True, text=True)\n'
+              '    sys.stderr.write(result.stderr)\n'
               '    if result.returncode:\n'
-              '        sys.stderr.write(result.stderr)\n'
               '        raise SystemExit(result.returncode)\n'
               '    exec(compile(result.stdout, sys.argv[1], "exec"), {"os": os})\n'
               'print(json.dumps(dict(os.environ)))\n')
@@ -273,6 +277,8 @@ def load_gemc(version, environment):
 
     environment.clear()
     environment.update(loaded)
+
+    return result.stderr.rstrip()
 
 def verify_gemc(version, expected_data, environment, report):
     """Verify the module-selected data and executable before any Slurm handoff.
@@ -320,6 +326,7 @@ def verify_gemc(version, expected_data, environment, report):
         raise ValueError(f'loading GEMC {version} selected an executable outside {loaded_data}: {executable}')
 
     report.check('SLURM_GEMC_EXECUTABLE', str(executable))
+    report.text()
 
     return executable
 
@@ -446,7 +453,11 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     if not values['CLAS12TAGS_DIR']:
         expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
 
-    load_gemc(values['GEMC_VERSION'], environment)
+    module_output = load_gemc(values['GEMC_VERSION'], environment)
+
+    if module_output:
+        report.text(module_output)
+
     verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
 
     # Module initialization may publish its own settings. Reapply the validated worker contract
