@@ -13,6 +13,7 @@ Workflow:
 Notes:
     Test fixtures are isolated; protected external and legacy sources are read-only.
 """
+
 from pathlib import Path
 import sys
 # Fixture generation -----------------------------------------------------------
@@ -25,6 +26,7 @@ assert 'double global_z = -3;' in s and 'double beamspot_x = 0.;' in s
 s = s.replace('double global_z = -3;', 'double global_z = -13;')
 s = s.replace('double beamspot_x = 0.;', 'double beamspot_x = 0.75;')
 s = s.replace('{"Ca",', '{"replacement-only", {-12.0}},\n  {"Ca",')
+
 output.parent.mkdir(parents=True, exist_ok=True)
 output.write_text(s)
 

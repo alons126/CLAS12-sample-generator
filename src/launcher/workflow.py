@@ -125,6 +125,7 @@ def error_message(message):
     """
 
     normalized = str(message).replace(f'{ERROR_PREFIX} ', '').replace(ERROR_PREFIX, '').strip()
+
     return f'{ERROR_PREFIX} {normalized}'
 
 def print_error(message):
@@ -305,6 +306,7 @@ def settings(args):
     # options have final precedence without erasing fields selected by the JSON profile.
     for key in DEFAULTS:
         override = getattr(args, key, None)
+
         if override is not None:
             result[key] = override
 
@@ -314,6 +316,7 @@ def settings(args):
 
     result['workflow'] = args.workflow
     result['source'] = args.source
+
     if result['workflow'] == 'create-lund' and result['source'] is None:
         raise ValueError(error_message('--source uniform|physical is required for create-lund.\n\n' + WORKFLOW_GUIDANCE))
 
@@ -487,6 +490,7 @@ def main():
     # Parse launcher-owned flags and retain all unknown tokens for the chosen child workflow. Users
     # may place one bare `--` at the boundary to make that ownership explicit; it is not forwarded.
     args, forwarded = parser().parse_known_args()
+
     if forwarded[:1] == ['--']:
         forwarded = forwarded[1:]
 
@@ -501,8 +505,10 @@ def main():
     workflow = config['workflow']
     source = config['source']
     build = Path(config['build_dir'])
+
     if not build.is_absolute():
         build = ROOT / build
+
     build = build.resolve()
 
     # Sample and submission options are explicit on the command line. In particular, create-lund users
@@ -615,6 +621,7 @@ if __name__ == '__main__':
         # when Python observes signal termination. Preserve positive codes and translate a signal N to
         # the shell convention 128 + N.
         banner('stop')
+
         exit_status = 128-error.returncode if error.returncode < 0 else error.returncode
 
         # shlex.join quotes the argv for an unambiguous diagnostic only; the command was already run

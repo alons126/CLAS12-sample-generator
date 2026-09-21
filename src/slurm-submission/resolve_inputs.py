@@ -130,15 +130,20 @@ def parser():
     Returns:
         A parser that produces input values; semantic validation occurs later in resolve().
     """
+
     p = argparse.ArgumentParser(description='Resolve LUND inputs and preview or submit one Slurm array per sample.',
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
                'With --execute, submission replaces mchipo/reconhipo while preserving lundfiles. '
                'GEMC defaults to 5.14. Use source run.csh --workflow submit --lund-dir RUN/lundfiles.')
+
     p.add_argument('--execute', action='store_true', help='Submit jobs and replace simulation outputs; default: preview only')
     p.add_argument('--config', type=Path, help='Optional key = value submission settings')
+
     for key, help_text in OPTIONS.items():
         p.add_argument('--' + key, action='append' if key == 'lund-dir' else 'store', help=help_text)
+
     p.add_argument('--check-arguments', action='store_true', help=argparse.SUPPRESS)
+
     return p
 
 def read_config(path):
@@ -154,22 +159,33 @@ def read_config(path):
         Missing files, malformed lines, duplicate/unknown keys, and empty values raise before
         any submission environment is constructed.
     """
+
     result = {}
+
     if path is None:
         return result
+
     path = path.resolve(strict=True)
+
     for number, line in enumerate(path.read_text().splitlines(), 1):
         line = line.strip()
+
         if not line or line.startswith('#'):
             continue
+
         if '=' not in line:
             raise ValueError(f'{path}:{number}: expected key = value')
+
         key, value = (part.strip() for part in line.split('=', 1))
+
         if key not in OPTIONS or key in result or not value:
             raise ValueError(f'{path}:{number}: unknown, repeated or empty setting: {key}')
+
         if key in PATH_KEYS:
             value = str((path.parent / value).resolve())
+
         result[key] = value
+
     return result
 
 def positive(value, name):
@@ -185,8 +201,10 @@ def positive(value, name):
     Failure:
         Invalid or out-of-range values raise ValueError.
     """
+
     if isinstance(value, bool) or not re.fullmatch(r'[1-9][0-9]*', str(value)) or int(value) > 2147483647:
         raise ValueError(f'{name} must be an integer from 1 to 2147483647')
+
     return int(value)
 
 def number(value, name):
@@ -202,12 +220,15 @@ def number(value, name):
     Failure:
         Nonnumeric, NaN, and infinite values raise ValueError.
     """
+
     try:
         result = Decimal(str(value))
     except InvalidOperation as error:
         raise ValueError(f'{name} must be a finite number') from error
+
     if not result.is_finite():
         raise ValueError(f'{name} must be a finite number')
+
     return result
 
 def token(value, name):
@@ -223,8 +244,10 @@ def token(value, name):
     Failure:
         Empty values and shell or path metacharacters raise ValueError.
     """
+
     if not SAFE_TOKEN.fullmatch(str(value)):
         raise ValueError(f'{name} must be a nonempty filename-safe label')
+
     return str(value)
 
 def path_value(value, name):
@@ -240,9 +263,12 @@ def path_value(value, name):
     Failure:
         Unsupported characters, including spaces, raise ValueError.
     """
+
     path = Path(value).resolve()
+
     if not SAFE_PATH.fullmatch(str(path)):
         raise ValueError(f'{name}: worker paths may contain only letters, digits, /, _, - and .')
+
     return path
 
 def channel_label(values):
@@ -258,13 +284,18 @@ def channel_label(values):
         Unknown channels or incomplete eh selections raise ValueError. Filenames are never
         inspected to infer missing particle identity.
     """
+
     channel = values.get('channel')
+
     if channel == 'eh':
         if values.get('hadron') not in HADRONS or values.get('hadron-region') not in ('FD', 'CD'):
             raise ValueError('channel=eh requires --hadron proton|neutron|pip|pim and --hadron-region FD|CD')
+
         return HADRONS[values['hadron']] + values['hadron-region']
+
     if channel not in LABELS:
         raise ValueError('Specify --channel 1e|eh|electron-tester or an explicit legacy/regional label')
+
     return channel
 
 def read_manifest(lund_dir):
@@ -280,20 +311,29 @@ def read_manifest(lund_dir):
         An unfinished .json.tmp file, unsupported schema, malformed config, or missing file list
         raises ValueError rather than treating partial output as a completed run.
     """
+
     path = lund_dir / 'lund-gen-monitoring/lund-gen-log.json'
+
     if not path.exists():
         if path.with_suffix('.json.tmp').exists():
             raise ValueError(f'LUND creation is incomplete: {path}.tmp')
+
         return None
+
     data = json.loads(path.read_text())
+
     if not isinstance(data, dict) or type(data.get('schema_version')) is not int or data['schema_version'] != 1:
         raise ValueError(f'Unsupported manifest schema: {path}')
+
     if data.get('workflow') not in ('uniform', 'physical') or not isinstance(data.get('config'), dict):
         raise ValueError(f'Missing manifest workflow/config: {path}')
+
     if not all(isinstance(key, str) and isinstance(value, str) for key, value in data['config'].items()):
         raise ValueError(f'Manifest config values must be strings: {path}')
+
     if not isinstance(data.get('files'), list) or not data['files']:
         raise ValueError(f'Manifest contains no completed files: {path}')
+
     return data
 # endregion Parsing
 
@@ -325,12 +365,16 @@ def resolve(lund_directory, explicit, root):
         Unsafe directories, truth conflicts, missing or inconsistent LUND files, invalid settings,
         and missing detector resources raise ValueError before submission begins.
     """
+
     # The selected lundfiles directory is the authoritative run location. Canonicalizing it first
     # prevents a manifest copied from another machine from redirecting simulation output.
     lund_dir = path_value(lund_directory, 'lund-dir')
+
     if lund_dir.name != 'lundfiles' or not lund_dir.is_dir():
         raise ValueError('--lund-dir must name an existing RUN/lundfiles directory')
+
     run = lund_dir.parent
+
     if run == Path('/') or run == Path.home().resolve() or run == root or run in root.parents:
         raise ValueError(f'Unsafe simulation output directory: {run}')
 
@@ -343,9 +387,11 @@ def resolve(lund_directory, explicit, root):
     # version is not a usable detector resource selection, so the submission fallback may supply it.
     manifest = read_manifest(lund_dir)
     inherited = {}
+
     if manifest:
         inherited = {key: value for key, value in manifest['config'].items() if key in OPTIONS}
         inherited['source'] = manifest['workflow']
+
         if inherited.get('gemc-version') in ('unknown', 'none', 'auto', ''):
             inherited.pop('gemc-version', None)
 
@@ -353,37 +399,49 @@ def resolve(lund_directory, explicit, root):
         for key in ('source', 'beam-energy', 'rgm-target', 'prefix', 'event-generator', 'tune', 'q2-cut', 'hadron', 'hadron-region'):
             if key in explicit and key in inherited:
                 same = number(explicit[key], key) == number(inherited[key], key) if key == 'beam-energy' else explicit[key] == inherited[key]
+
                 if not same:
                     raise ValueError(f'--{key} conflicts with manifest value {inherited[key]!r}')
 
     # Merge in precedence order and require the minimum identity fields before source-specific
     # checks. Explicit settings have final precedence only where they do not contradict truth.
     values = {'gemc-version': '5.14', 'clear-farm-out': 'false', 'fc-status': '0', **inherited, **explicit}
+
     for key in ('source', 'beam-energy', 'rgm-target', 'prefix'):
         if not values.get(key):
             raise ValueError(f'Missing --{key}; supply it through the manifest, config or CLI')
+
     source = values['source']
+
     if source not in ('uniform', 'physical'):
         raise ValueError('--source must be uniform or physical')
+
     channel = channel_label(values) if source == 'uniform' else 'none'
+
     if manifest and source == 'uniform' and channel != channel_label(inherited):
         raise ValueError('Uniform channel conflicts with manifest particle content')
+
     if source == 'physical' and any(key in explicit for key in ('channel', 'hadron', 'hadron-region')):
         raise ValueError('Uniform channel settings do not apply to physical input')
 
     # Decimal arithmetic keeps the three legacy beam labels stable near their nominal energies.
     # Other positive beams require explicit detector files and a torus scale when no table entry exists.
     energy = number(values['beam-energy'], 'beam-energy')
+
     if energy <= 0:
         raise ValueError('beam-energy must be positive')
+
     legacy_energies = {Decimal('2.07052'): 2070, Decimal('4.02962'): 4029, Decimal('5.98636'): 5986}
     mev = next((label for reference, label in legacy_energies.items() if abs(energy - reference) < Decimal('0.000001')),
                int((energy * 1000).to_integral_value(rounding=ROUND_HALF_UP)))
+
     if mev not in BEAMS and not all(values.get(key) for key in ('gcard', 'yaml', 'torus')):
         raise ValueError('No detector defaults for this beam: supply --gcard, --yaml and --torus')
+
     rounded, default_torus, yaml_name = BEAMS.get(mev, (f'{mev}MeV', values.get('torus'), 'none'))
     torus = number(values.get('torus', default_torus), 'torus')
     torus_text = str(torus)
+
     if torus == -1:
         torus_text = '-1.0'  # Preserve the legacy filenames and printed field scale.
 
@@ -392,38 +450,50 @@ def resolve(lund_directory, explicit, root):
     # Without a manifest, accept only a contiguous numbered sequence for the explicit prefix.
     prefix = token(values['prefix'], 'prefix')
     counts = []
+
     if manifest:
         for index, record in enumerate(manifest['files'], 1):
             if not isinstance(record, dict) or record.get('path') != f'lundfiles/{prefix}_{index}.txt':
                 raise ValueError('Manifest files must be ordered lundfiles/PREFIX_INDEX.txt starting at 1')
+
             if type(record.get('events')) is not int:
                 raise ValueError('Manifest file event counts must be integers')
+
             counts.append(positive(record['events'], 'manifest events'))
+
         if type(manifest.get('written_events')) is not int or sum(counts) != manifest['written_events']:
             raise ValueError('Manifest written_events does not equal its file event counts')
+
         available = len(counts)
     else:
         indices = sorted(int(match[1]) for path in lund_dir.iterdir()
                          if (match := re.fullmatch(re.escape(prefix) + r'_([1-9][0-9]*)\.txt', path.name)))
+
         if not indices or indices != list(range(1, len(indices) + 1)):
             raise ValueError('Expected contiguous PREFIX_1.txt through PREFIX_N.txt; check --prefix and LUND files')
+
         available = len(indices)
 
     # The job count may select an initial subset. Check every manifest-listed file when a manifest
     # exists, and every selected file otherwise; reject empty or externally linked inputs.
     jobs = positive(values.get('num-jobs', available), 'num-jobs')
+
     if jobs > available:
         raise ValueError(f'num-jobs={jobs} exceeds {available} completed files')
+
     for index in range(1, (available if manifest else jobs) + 1):
         path = lund_dir / f'{prefix}_{index}.txt'
+
         if not path.is_file() or path.stat().st_size == 0 or path.resolve().parent != lund_dir:
             raise ValueError(f'Missing, empty or externally linked LUND input: {path}')
 
     # One JOB_NEVENTS value serves the whole array. A manifest supplies the maximum selected count;
     # manual input must provide it because file lengths cannot be inferred safely from plain text.
     limit = values.get('events-per-job', max(counts[:jobs]) if counts else None)
+
     if limit is None:
         raise ValueError('Without a manifest, specify --events-per-job explicitly')
+
     limit = positive(limit, 'events-per-job')
 
     # Resolve GCARD and YAML from beam group, variation and GEMC version unless explicit paths were
@@ -431,10 +501,13 @@ def resolve(lund_directory, explicit, root):
     version = token(values['gemc-version'], 'gemc-version')
     variation = token(values.get('gemc-target-variation', 'none'), 'gemc-target-variation')
     requirements = root / f'config/detector/Generation_files_{rounded}/{version}'
+
     if variation == 'none' and 'gcard' not in values:
         raise ValueError('Specify --gemc-target-variation or an explicit --gcard')
+
     card = path_value(values.get('gcard', requirements / f'{variation}_{rounded}.gcard'), 'gcard')
     yaml = path_value(values.get('yaml', requirements / yaml_name), 'yaml')
+
     for name, path in (('GCARD', card), ('YAML', yaml)):
         if not path.is_file():
             raise ValueError(f'{name} does not exist: {path}; supply an explicit path if needed')
@@ -445,14 +518,20 @@ def resolve(lund_directory, explicit, root):
     for key in ('clear-farm-out',):
         if values[key] not in ('true', 'false'):
             raise ValueError(f'--{key} must be true or false')
+
     if values['fc-status'] not in ('0', '1'):
         raise ValueError('--fc-status must be 0 or 1 (legacy naming only)')
+
     optional_paths = {}
+
     for key in ('clas12tags-dir', 'farm-out'):
         path = path_value(values[key], key) if values.get(key) else None
+
         if path is not None and not path.is_dir():
             raise ValueError(f'--{key} directory does not exist: {path}')
+
         optional_paths[key] = str(path) if path else ''
+
     if values['clear-farm-out'] == 'true' and not optional_paths['farm-out']:
         raise ValueError('--clear-farm-out true requires --farm-out')
 
@@ -466,6 +545,7 @@ def resolve(lund_directory, explicit, root):
     fc = '_wFC' if values['fc-status'] == '1' else ''
     default_job = f'Uniform_{channel}_sample_{beam}' if source == 'uniform' else f'{target}_{generator}_{tune}_{beam}_{q2}{fc}_GEMC{version}'
     job = token(values.get('job-name', default_job), 'job-name')
+
     return dict(source=source, NUM_OF_JOBS=str(jobs), JOB_NEVENTS=str(limit), BEAM_ENERGY_LABEL=beam,
                 DETECTOR_ENERGY_GROUP=rounded, UNIFORM_SAMPLE_CHANNEL=channel, TARGET_VARIATION=variation,
                 SAMPLE_TARGET_NUCLEUS=target, SAMPLE_GENERATOR=generator, GENERATOR_TUNE=tune, Q2_CUT=q2,
@@ -502,24 +582,30 @@ def resolve_samples(args, root):
         Missing sample selection, any per-sample failure, or repeated OUTPATH raises before output
         cleanup or submission. Detector setup remains the coordinator's responsibility.
     """
+
     # The flat config provides invocation-wide values; each CLI option except the repeatable
     # lund-dir replaces its config value before individual manifests are inspected.
     explicit = read_config(args.config)
+
     for key in OPTIONS:
         value = getattr(args, key.replace('-', '_'))
+
         if value is not None and key != 'lund-dir':
             explicit[key] = value
 
     # A CLI lund-dir list takes precedence over a single config lund-dir. Remove that selector
     # from the settings passed to resolve(), where it is represented by the function argument.
     directories = args.lund_dir or ([explicit['lund-dir']] if 'lund-dir' in explicit else [])
+
     if not directories:
         raise ValueError('provide --lund-dir RUN/lundfiles or a config specifying lund-dir')
+
     explicit.pop('lund-dir', None)
 
     # Resolve every sample before returning any to submit.py. Distinct canonical OUTPATH values
     # prevent two selected inputs from targeting and replacing the same simulation directory.
     resolved = [resolve(directory, explicit, root) for directory in directories]
+
     if len({sample['OUTPATH'] for sample in resolved}) != len(resolved):
         raise ValueError('Each selected sample must have a distinct OUTPATH')
 
@@ -527,6 +613,7 @@ def resolve_samples(args, root):
     # sbatch call is allowed after successful validation.
     for sample in resolved:
         sample['SUBMISSION_EXECUTE'] = 'true' if args.execute else 'false'
+
     return resolved
 
 def main():
@@ -545,12 +632,16 @@ def main():
     Failure:
         argparse prints usage and exits nonzero for missing selectors or direct invocation.
     """
+
     p = parser()
     args = p.parse_args()
+
     if not args.lund_dir and not args.config:
         p.error('provide --lund-dir RUN/lundfiles or --config FILE')
+
     if not args.check_arguments:
         p.error('use source run.csh --workflow submit to preview or submit')
+
     return 0
 
 # The resolver CLI is deliberately limited to the pre-sync syntax check; full submission starts
