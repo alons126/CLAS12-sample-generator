@@ -301,8 +301,12 @@ def load_gemc(version, environment, report):
         updates the coordinator's environment because replacement occurs only after JSON validation.
     """
 
+    # Announce the requested transition before any lookup or subprocess can fail, so the operator
+    # can associate subsequent module diagnostics with the exact resolved version.
     report.text('{START}Switching GEMC version to {END}{INFO}' + version + '{END}{START}...{END}')
 
+    # Resolve the external Environment Modules backend through the private invocation PATH. The
+    # interactive ``module`` command is a shell function and therefore cannot be invoked directly.
     modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
 
     if modulecmd is None:
@@ -310,7 +314,8 @@ def load_gemc(version, environment, report):
 
     # Environment Modules emits executable environment mutations on stdout and user-facing
     # diagnostics on stderr. Capture only stdout; stream stderr directly so its terminal colors
-    # survive. The helper applies unload and load sequentially to the same private environment.
+    # survive. The helper applies unload and load sequentially to its own os.environ, then emits
+    # one JSON snapshot instead of attempting to modify this parent Python process in place.
     helper = ('import json, os, subprocess, sys\n'
               'for arguments in (("unload", "gemc"), ("load", "gemc/" + sys.argv[2])):\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
@@ -318,24 +323,40 @@ def load_gemc(version, environment, report):
               '        raise SystemExit(result.returncode)\n'
               '    exec(compile(result.stdout, sys.argv[1], "exec"), {"os": os})\n'
               'print(json.dumps(dict(os.environ)))\n')
+
+    # Flush earlier report lines before the helper writes module diagnostics directly to the same
+    # terminal. This preserves deterministic transcript ordering even when stdout is redirected.
     sys.stdout.flush()
+
+    # Seed the helper with the invocation-owned environment. Its stdout contains only the final
+    # JSON snapshot, while stderr is routed to this process's stdout for one ordered transcript.
     result = subprocess.run([sys.executable, '-c', helper, modulecmd, version], env=environment,
                             stdout=subprocess.PIPE, stderr=sys.stdout, text=True)
 
+    # Module failures have already printed their native diagnostic. Raise a concise coordinator
+    # error without applying any portion of the helper's environment.
     if result.returncode:
         raise ValueError('failed to load GEMC module ' + version + '.')
 
+    # Decode the complete child environment only after both module operations succeed. Invalid
+    # JSON indicates that the helper/module contract produced unexpected stdout.
     try:
         loaded = json.loads(result.stdout)
     except json.JSONDecodeError as error:
         raise ValueError('GEMC module loading returned an invalid environment.') from error
 
+    # os.environ accepts only string keys and values. Reject any other JSON shape before replacing
+    # the working dictionary so downstream shutil.which() and subprocess calls remain well-defined.
     if not isinstance(loaded, dict) or not all(isinstance(key, str) and isinstance(value, str)
                                                for key, value in loaded.items()):
         raise ValueError('GEMC module loading returned an invalid environment.')
 
+    # Replace the dictionary as one validated stage. The caller retains the same dictionary object,
+    # so later sample exports and sbatch automatically observe the newly loaded module environment.
     environment.clear()
     environment.update(loaded)
+
+    # Separate native module diagnostics from the following executable-verification report.
     report.text()
 
 def verify_gemc(version, expected_data, environment, report):
