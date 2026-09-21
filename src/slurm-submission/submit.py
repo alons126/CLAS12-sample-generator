@@ -275,6 +275,7 @@ def load_gemc(version, environment, report):
 
     environment.clear()
     environment.update(loaded)
+    report.text()
 
 def verify_gemc(version, expected_data, environment, report):
     """Verify the module-selected data and executable before any Slurm handoff.
