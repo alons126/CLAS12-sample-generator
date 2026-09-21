@@ -447,11 +447,11 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # is validated below and deliberately bypasses this standard-version directory convention.
     expected_gemc_data = None
 
+    # A code block that handles GEMC version
     load_gemc(values['GEMC_VERSION'], environment, report)
-    verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
-
     if not values['CLAS12TAGS_DIR']:
         expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
+    verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
 
     # Module initialization may publish its own settings. Reapply the validated worker contract
     # so explicit sample values and fixed coordinator paths retain final precedence.
