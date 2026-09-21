@@ -216,6 +216,18 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             assert 'Replacing existing run directory (legacy behavior):' in rerun.stdout
             assert not sentinel.exists()
 
+        # The production 2 GeV 1e profile extends the outbending electron coverage down to 2 degrees.
+        profile = Path(__file__).resolve().parents[3] / 'config/samples/uniform-1e-2070MeV.conf'
+        outbending_root = root / '1e-2070-outbending'
+
+        run(executable, '--config', profile, '--events', '100', '--output', outbending_root)
+
+        outbending_manifest, outbending_events = read_run(outbending_root / 'Uniform_sample_1e_2070MeV')
+        outbending_thetas = [angles(particles[0])[1] for _, particles in outbending_events]
+        assert outbending_manifest['config']['electron-theta-min'] == '2'
+        assert all(2 - 1e-7 <= theta <= 40 + 1e-7 for theta in outbending_thetas)
+        assert any(theta < 5 for theta in outbending_thetas)
+
         config = root/'sample.conf'
         # A small default-rendering run verifies the archived uniform output layout and default split.
         artifacts_parent = root/'artifacts'

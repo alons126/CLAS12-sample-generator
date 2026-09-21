@@ -42,7 +42,7 @@ Counts and the split threshold must be integers from 1 through 4294967295. Seeds
 | `channel` | `1e` | `1e` for one sampled electron, `electron-tester` for the beam-momentum angular scan, or `eh` for trigger electron plus selected hadron |
 | `hadron` | `proton` | `proton`, `neutron`, `pip`, or `pim`; used by `eh` |
 | `hadron-region` | `FD` | `FD` or `CD`; resolves the hadron angular and momentum thresholds |
-| `electron-theta-min/max` | `5` / `40` | Electron-only/tester theta range, degrees |
+| `electron-theta-min/max` | `5` / `40` | Electron-only/tester theta range, degrees; the production 2.07052 GeV outbending 1e profile explicitly uses `2` / `40` |
 | `electron-momentum` | `auto` | `mixed` for 1e, `beam` for eh; explicit `uniform`, `mixed`, or `beam` |
 | `electron-p-min/max` | `0.7` / beam | 1e momentum bounds in GeV/c |
 | `hadron-theta-min/max` | `auto` / `auto` | FD: p/pions 5–45°, n 5–35°; CD: nucleons 35–145°, pions 35–140° |

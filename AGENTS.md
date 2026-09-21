@@ -91,7 +91,7 @@ Preserve these legacy target behaviors unless a maintained configuration explici
 
 The uniform adapter creates events rather than reading them. Its maintained channel contract is:
 
-- Production 1e writes one electron with a 50/50 uniform-in-momentum/uniform-in-inverse-momentum mixture from 0.7 GeV/c to beam momentum, theta uniform from 5 to 40 degrees, and phi uniform from -180 to 180 degrees. Explicit upstream-parity settings may restore uniform momentum from zero to beam.
+- Production 1e writes one electron with a 50/50 uniform-in-momentum/uniform-in-inverse-momentum mixture from 0.7 GeV/c to beam momentum, theta uniform from 5 to 40 degrees except for the 2.07052 GeV outbending profile whose minimum is 2 degrees, and phi uniform from -180 to 180 degrees. Explicit upstream-parity settings may restore uniform momentum from zero to beam.
 - Expose `--channel 1e|eh|electron-tester`; `electron-tester` is the beam-momentum 5–40° angular scan and `eh` requires the independently validated `--hadron proton|neutron|pip|pim` and `--hadron-region FD|CD` selections. Resolve output labels to `epFD`, `enFD`, `epipFD`, `epimFD` and the corresponding CD forms.
 - Electron--hadron samples write a beam-momentum trigger electron at 25 degrees whose phi is chosen near the opposite CLAS12 sector from the hadron. Retain that correlation for CD as a deliberate separation check even though it is not obligatory there. The electron tester always scans theta 5--40 degrees and full phi; it provides the rough estimate from which the 25-degree prescription was selected.
 - FD theta is 5--45 degrees for protons and charged pions and 5--35 for neutrons. CD theta is 35--145 for nucleons and 35--140 for charged pions. Phi is always -180--180 degrees.

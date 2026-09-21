@@ -228,6 +228,9 @@ class Report:
 # Setup and submission -------------------------------------------------------
 
 # region Submission
+# Standard ifarm GEMC modules publish one version directory beneath this shared clas12Tags root.
+# A currently loaded GEMC_DATA_DIR may supply the same root dynamically, but this constant provides
+# the site fallback when no GEMC module is active yet. Custom --clas12tags-dir inputs do not use it.
 IFARM_CLAS12TAGS_BASE = Path('/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags')
 
 def check_gemc_version(version, environment, report):
@@ -240,7 +243,9 @@ def check_gemc_version(version, environment, report):
     Workflow:
         Derive the shared clas12Tags base by removing the active version component from the
         inherited GEMC_DATA_DIR. When no active path is available, use the documented ifarm base.
-        Check both that base and its requested-version child before module loading begins.
+        Check both that base and its requested-version child before module loading begins. This
+        ordering preserves the caller's working module environment when the requested installation
+        is absent instead of unloading GEMC and discovering the problem afterward.
 
     Args:
         version: Validated GEMC version requested for the sample.
@@ -248,7 +253,8 @@ def check_gemc_version(version, environment, report):
         report: Shared renderer used for visible safety checks.
 
     Returns:
-        The checked directory expected to become GEMC_DATA_DIR after loading the module.
+        The checked, version-specific directory expected to become GEMC_DATA_DIR after loading
+        the module. verify_gemc() later compares the module result with this exact path.
 
     Failure:
         A missing base or version directory raises before the active GEMC module is changed.
@@ -264,7 +270,18 @@ def check_gemc_version(version, environment, report):
     return requested
 
 def load_gemc(version, environment, report):
-    """Load one resolved GEMC module into the environment inherited by Slurm.
+    """Load one resolved GEMC module into the isolated environment inherited by Slurm.
+
+    Purpose:
+        Reproduce ``module unload gemc`` followed by ``module load gemc/VERSION`` without
+        modifying the interactive shell that sourced run.csh.
+
+    Workflow:
+        Locate modulecmd in the inherited PATH; start a short Python helper with the invocation's
+        environment; ask modulecmd for Python environment mutations for unload and load; execute
+        those mutations inside the helper; serialize the resulting environment as JSON; validate
+        it and replace the invocation-owned environment dictionary. modulecmd diagnostics remain
+        connected to the terminal so their original text and ANSI colors are preserved.
 
     Args:
         version: Validated GEMC module version selected for this sample.
@@ -273,7 +290,8 @@ def load_gemc(version, environment, report):
 
     Failure:
         A missing module command, rejected unload/load, or malformed environment result raises
-        ValueError before output replacement or job submission.
+        ValueError before output replacement or job submission. A failed helper never partially
+        updates the coordinator's environment because replacement occurs only after JSON validation.
     """
 
     report.text('{START}Switching GEMC version to {END}{INFO}' + version + '{END}{START}...{END}')
@@ -283,8 +301,9 @@ def load_gemc(version, environment, report):
     if modulecmd is None:
         raise ValueError('modulecmd is unavailable; the selected GEMC module cannot be loaded.')
 
-    # Environment Modules emits Python on stdout and its user-facing diagnostics on stderr. Capture
-    # only the generated environment code; stream stderr directly so its terminal colors survive.
+    # Environment Modules emits executable environment mutations on stdout and user-facing
+    # diagnostics on stderr. Capture only stdout; stream stderr directly so its terminal colors
+    # survive. The helper applies unload and load sequentially to the same private environment.
     helper = ('import json, os, subprocess, sys\n'
               'for arguments in (("unload", "gemc"), ("load", "gemc/" + sys.argv[2])):\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
@@ -317,7 +336,14 @@ def verify_gemc(version, expected_data, environment, report):
 
     Purpose:
         Prove that loading ``gemc/VERSION`` changed both the detector-data directory and the
-        executable search path, rather than trusting the requested module name alone.
+        executable search path, rather than trusting the requested module name alone. This guards
+        against a stale PATH, a misconfigured modulefile, or a module that reports success while
+        retaining resources from another version.
+
+    Workflow:
+        Require GEMC_DATA_DIR; resolve it canonically; compare it with the prechecked standard path
+        when applicable; require its final component to equal VERSION; resolve ``gemc`` through the
+        loaded PATH; require the executable to live inside that data tree; print the checked path.
 
     Args:
         version: Validated GEMC version requested for the sample.
@@ -327,11 +353,13 @@ def verify_gemc(version, expected_data, environment, report):
         report: Shared renderer used for the executable safety check.
 
     Returns:
-        Absolute GEMC executable path inherited by Slurm.
+        Canonical absolute GEMC executable path inherited by Slurm. The caller currently uses the
+        return value as a verified contract result rather than a separate configuration input.
 
     Failure:
         Missing/mismatched module data or an executable outside that data tree raises before
-        simulation outputs are replaced.
+        simulation outputs are replaced. An explicit custom CLAS12TAGS_DIR changes detector data
+        only after this binary/module consistency check succeeds.
     """
 
     loaded_data_text = environment.get('GEMC_DATA_DIR')
@@ -427,25 +455,32 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         Bridge a resolver-approved sample to the protected GEMC/reconstruction Slurm payload.
 
     Workflow:
-        Merge worker environment values; report sample and detector inputs; check LUND files
-        and commands; preview or replace simulation outputs; print the exact Slurm request;
-        call sbatch only when execute is true.
+        1. Merge resolver-approved worker values and fixed checkout-owned exports.
+        2. Report invocation identity and handle optional invocation-wide farm-log cleanup.
+        3. Precheck standard GEMC data, load the selected module, and verify its data/executable.
+        4. Apply an optional custom clas12Tags data override and validate detector inputs.
+        5. Recheck every selected LUND input and required executable before output replacement.
+        6. Preserve outputs in preview or recreate only mchipo/reconhipo during execution.
+        7. Report the array contract and call the protected payload through sbatch only in execute.
 
     Args:
         values: One validated sample dictionary returned by resolve_samples().
         environment: Invocation-owned copy of os.environ. Sample exports and the selected GEMC
-            module override inherited values.
+            module override inherited values. It is intentionally carried between samples so each
+            subsequent module transition starts from the preceding private environment.
         root: Checkout directory containing the protected worker payload.
         execute: False for read-only preview; true for cleanup and Slurm submission.
         report: Shared renderer for the legacy-style transcript.
         farm_cleared: Invocation-wide farm_out cleanup state.
 
     Returns:
-        Updated farm_out state for the next selected sample.
+        Updated farm_out state for the next selected sample. This prevents repeated cleanup from
+        deleting log files created by an earlier array in the same invocation.
 
     Failure:
         Missing inputs, unsafe output children, absent commands, or sbatch failure raise and
-        stop later samples. Already accepted Slurm arrays are not canceled.
+        stop later samples. All read-only preflight checks occur before mchipo/reconhipo replacement.
+        Already accepted Slurm arrays are not canceled when a later sample fails.
     """
 
     # Copy only worker-facing sample values into this invocation's environment. source and
@@ -671,23 +706,34 @@ def main():
 
     Purpose:
         Provide the process boundary called by run.csh after its shell environment is ready.
+        Keep Python exceptions, per-sample state, and child environments behind one shell-visible
+        integer status without terminating the interactive shell that sourced the launcher.
 
     Workflow:
-        Copy the inherited environment and initialize reporting; parse and validate every
-        sample; verify the checkout and protected payload; process samples in caller order;
-        convert known failures into a nonzero status.
+        Copy the inherited environment and initialize reporting; parse the CLI; resolve and
+        validate every requested sample before processing the first; verify the checkout and
+        protected payload boundary; process distinct samples in caller order while carrying the
+        private module environment and farm-cleanup state; convert known operational failures into
+        one nonzero status.
 
     Inputs:
         Process arguments and the ifarm environment, including the shared color palette and
-        preloaded detector software paths.
+        module/reconstruction paths. The current working directory must be the verified checkout
+        root because maintained resource paths and the protected payload are checkout-relative.
+
+    Outputs:
+        A complete preview or execution transcript on standard output. Execution may create fresh
+        mchipo/reconhipo directories and submit arrays; preview performs the same validation without
+        those mutations. Neither mode exports its private environment back to the caller's shell.
 
     Returns:
         Zero when every selected sample is previewed or submitted successfully; one for a
-        handled setup, validation, filesystem, or scheduler failure.
+        handled setup, validation, module, filesystem, or scheduler failure.
 
     Failure:
         A failed sample stops later samples. Slurm arrays accepted earlier in the same
-        invocation remain submitted. Errors are printed through Report when available.
+        invocation remain submitted. Errors are printed through Report when available; failures
+        before palette construction use a plain standard-error fallback.
     """
 
     # Keep a plain-text fallback for failures that occur before the shared palette can be
