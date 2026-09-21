@@ -390,32 +390,50 @@ def verify_gemc(version, expected_data, environment, report):
         only after this binary/module consistency check succeeds.
     """
 
+    # A successful standard GEMC module must publish its detector-data root. Treat an absent or
+    # empty value as a broken module contract rather than falling back to the pre-load setting.
     loaded_data_text = environment.get('GEMC_DATA_DIR')
 
     if not loaded_data_text:
         raise ValueError('loading GEMC ' + version + ' did not set GEMC_DATA_DIR.')
 
+    # Canonicalize the module result before comparison so equivalent paths containing symbolic
+    # links or relative components cannot create a false mismatch or bypass containment checks.
     loaded_data = Path(loaded_data_text).resolve()
 
+    # Standard ifarm selections were checked before unload. Require the loaded module to reproduce
+    # that exact directory; custom clas12Tags runs pass None and apply their override afterward.
     if expected_data is not None and loaded_data != expected_data.resolve():
         raise ValueError(f'loading GEMC {version} selected unexpected GEMC_DATA_DIR: {loaded_data}')
 
+    # The final directory component provides an independent version check even when no standard
+    # expected path exists, preventing a modulefile from silently retaining another release.
     if loaded_data.name != version:
         raise ValueError(f'loading GEMC {version} selected mismatched GEMC_DATA_DIR: {loaded_data}')
 
+    # Resolve GEMC from the newly loaded PATH rather than trusting the executable inherited before
+    # the transition. This is the same lookup behavior later used by the protected Slurm payload.
     executable_text = shutil.which('gemc', path=environment.get('PATH'))
 
     if executable_text is None:
         raise ValueError(f'gemc is unavailable after loading GEMC module {version}.')
 
+    # Resolve links before enforcing ownership so a symlink inside the version directory cannot
+    # redirect execution to a binary belonging to another installation.
     executable = Path(executable_text).resolve()
 
+    # Require the executable itself, not merely its PATH entry, to reside within GEMC_DATA_DIR.
+    # Equality is retained for completeness; normal installations place it below a bin directory.
     if loaded_data != executable and loaded_data not in executable.parents:
         raise ValueError(f'loading GEMC {version} selected an executable outside {loaded_data}: {executable}')
 
+    # Reuse the normal file safety renderer so the exact Slurm-bound executable and its existence
+    # are visible in both preview and execution transcripts.
     report.check('SLURM_GEMC_EXECUTABLE', str(executable))
     report.text()
 
+    # Return the canonical path as the verified result of this function; callers need not repeat
+    # PATH resolution or infer which executable the private environment will supply.
     return executable
 
 def clear_farm(values, root, execute, report, cleared):
