@@ -40,7 +40,7 @@ Launcher options:
     --jobs N                     Select positive parallel build workers (JSON default: 4).
     --help                       Print launcher options without updating, building, or running.
 
-Forwarded options: 
+Forwarded options:
     Unrecognized arguments are preserved and passed to clas12-uniform or
     clas12-generator-to-lund. Use -- --help after the launcher selections to print that
     executable's authoritative sample options.
@@ -60,10 +60,12 @@ import os
 # Purpose:
 #     Define the immutable checkout anchor, launcher defaults, accepted dispatch vocabulary, and
 #     optional terminal colors used by this process.
+#
 # Lifecycle:
 #     Python creates these module-level objects once at startup. Configuration loading copies
 #     DEFAULTS before overlaying one selected JSON profile and explicit command-line controls; no
 #     workflow should mutate DEFAULTS itself.
+#
 # Scope:
 #     These values control build/test execution and presentation. Workflow, source, physics parameters,
 #     target selections, input, output, and sample profile remain explicit command-line arguments.
@@ -589,10 +591,12 @@ def main():
 # Purpose:
 #     Convert main() and its checked subprocesses into stable process exit statuses for run.csh while
 #     keeping this module importable by tests and maintenance tools without launching a workflow.
+#
 # Workflow:
 #     Direct execution calls main(). Successful completion exits with zero; interruption, child-command
 #     failure, and launcher-owned exceptions each print the stop banner and an error diagnostic before
 #     returning their defined nonzero status. argparse handles its own usage failures with status 2.
+#
 # Outputs:
 #     Writes presentation and diagnostics to the inherited terminal streams. The final process status
 #     becomes `$status` in run.csh's caller and determines whether later shell work may continue.

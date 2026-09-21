@@ -24,7 +24,8 @@
 # Uniform CLI ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Uniform CLI
-# Purpose: Link the uniform entry point to the implementation library and install its executable.
+# Purpose:
+#     Link the uniform entry point to the implementation library and install its executable.
 if(BUILD_UNIFORM)
     add_executable(clas12-uniform uniform_main.cpp)
     target_link_libraries(clas12-uniform PRIVATE UniformGeneration)
@@ -36,7 +37,8 @@ endif()
 # Physical conversion CLI ------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Physical conversion CLI
-# Purpose: Link the selected event-generator adapter and install its generator-independent executable.
+# Purpose:
+#     Link the selected event-generator adapter and install its generator-independent executable.
 if(BUILD_GENIE)
     add_executable(clas12-generator-to-lund genie_to_lund_main.cpp)
     target_link_libraries(clas12-generator-to-lund PRIVATE PhysicalConversion)

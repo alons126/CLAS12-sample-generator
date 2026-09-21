@@ -6,11 +6,12 @@
 
 """Preview or submit existing LUND samples through the protected ifarm payload.
 
-Workflow: resolve every input -> report/check preloaded GEMC -> validate worker inputs ->
-prepare mchipo/reconhipo only with --execute -> submit one Slurm array per sample.
-The sourced shell supplies the shared palette and preloaded software environment. Each
-sbatch inherits that environment with resolved sample settings taking precedence. Nothing
-is exported back into the interactive shell. No detector commands are implemented here.
+Workflow:
+    resolve every input -> report/check preloaded GEMC -> validate worker inputs ->
+    prepare mchipo/reconhipo only with --execute -> submit one Slurm array per sample.
+    The sourced shell supplies the shared palette and preloaded software environment. Each
+    sbatch inherits that environment with resolved sample settings taking precedence. Nothing
+    is exported back into the interactive shell. No detector commands are implemented here.
 
 Preview preserves sample outputs and farm logs. Failures stop subsequent samples, return
 nonzero and never cancel arrays already accepted by Slurm. Invoke through run.csh.

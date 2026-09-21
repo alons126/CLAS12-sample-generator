@@ -4,10 +4,11 @@
 
 """Verify the Python submission contract without real Slurm or detector execution.
 
-Workflow: isolated checkout fixtures -> sourced bridge -> inert sbatch capture. Golden
-reports were captured from the working C-shell coordinator before its Python migration.
-Cover both source types, beam/channel variations, preview, failures and array environments.
-Protected payload execution uses only fake gemc/recon-util commands in temporary directories.
+Workflow:
+    isolated checkout fixtures -> sourced bridge -> inert sbatch capture. Golden
+    reports were captured from the working C-shell coordinator before its Python migration.
+    Cover both source types, beam/channel variations, preview, failures and array environments.
+    Protected payload execution uses only fake gemc/recon-util commands in temporary directories.
 """
 
 import difflib

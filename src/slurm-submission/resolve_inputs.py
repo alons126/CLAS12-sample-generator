@@ -6,10 +6,11 @@
 
 """Resolve completed LUND manifests, optional key=value configuration and CLI settings.
 
-Workflow: merge CLI > config > manifest > defaults, check truth consistency and completed
-files, then return one environment dictionary per distinct sample to submit.py. No shell
-assignment files, software loading, output cleanup, detector execution or Slurm calls occur
-here. run.csh also uses --check-arguments to validate syntax before refreshing ifarm.
+Workflow:
+    merge CLI > config > manifest > defaults, check truth consistency and completed
+    files, then return one environment dictionary per distinct sample to submit.py. No shell
+    assignment files, software loading, output cleanup, detector execution or Slurm calls occur
+    here. run.csh also uses --check-arguments to validate syntax before refreshing ifarm.
 Invalid metadata, missing inputs and unsafe paths raise before submission starts.
 """
 

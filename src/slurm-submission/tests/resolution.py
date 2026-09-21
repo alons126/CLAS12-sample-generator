@@ -4,10 +4,16 @@
 
 """Validate the LUND-to-submission bridge without module loading or real jobs.
 
-Workflow: create portable manifests -> resolve defaults/overrides -> reject contradictions,
+Workflow:
+    create portable manifests -> resolve defaults/overrides -> reject contradictions,
     malformed records and unsafe shell input. Optionally consume actual uniform-generator output.
-Inputs: repository root and optional built uniform executable. Outputs: assertion diagnostics.
-All fixtures are temporary; protected detector inputs are read-only.
+
+Inputs:
+    repository root and optional built uniform executable. All fixtures are temporary;
+    protected detector inputs are read-only.
+
+Outputs:
+    Assertion diagnostics.
 """
 
 import copy
