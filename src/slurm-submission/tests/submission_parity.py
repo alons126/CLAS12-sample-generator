@@ -92,6 +92,15 @@ def fixture(root, source, energy, channel='en', fc=0):
         path.write_text('#!/bin/sh\nexit 0\n')
         path.chmod(0o755)
 
+    modulecmd = bin_dir / 'modulecmd'
+
+    modulecmd.write_text('#!' + sys.executable + '\nimport os,sys\n'
+                         'if sys.argv[1:] == ["python", "unload", "gemc"]: print("import os")\n'
+                         'elif sys.argv[1:] == ["python", "load", "gemc/5.14"]: '
+                         'print("import os; os.environ[\\"GEMC_DATA_DIR\\"] = " + repr(os.environ["MODULE_GEMC_DATA_DIR"]))\n'
+                         'else: sys.exit(1)\n')
+    modulecmd.chmod(0o755)
+
     values = dict(NUM_OF_JOBS='2', JOB_NEVENTS='3', BEAM_ENERGY_LABEL=energy,
                   UNIFORM_SAMPLE_CHANNEL=channel if source == 'uniform' else 'none', TARGET_VARIATION=target,
                   SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie',
@@ -127,7 +136,8 @@ def fixture(root, source, energy, channel='en', fc=0):
     new_path.write_text(f'source src/slurm-submission/setup_and_submit.csh --config "{config}" $argv:q\n')
 
     env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + '/usr/bin:/bin',
-               SBATCH_LOG=str(root / 'sbatch.jsonl'), GEMC_DATA_DIR=str(root / 'gemc-data'), SBATCH_STATUS='0')
+               SBATCH_LOG=str(root / 'sbatch.jsonl'), GEMC_DATA_DIR=str(root / 'gemc-data'),
+               MODULE_GEMC_DATA_DIR=str(root / 'gemc-data'), SBATCH_STATUS='0')
 
     return new_path, values, env
 
@@ -340,22 +350,24 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     _, calls = run_script(new, env, success=False, arguments=('--clear-farm-out', 'true', '--farm-out', str(new.parent / 'tags')))
     assert not calls and (first_run / 'mchipo/keep.hipo').is_file()
 
-    # Preloaded data is used unchanged without an override; missing worker programs/data fail before output reset.
-    for failure in ('none', 'gemc', 'recon-util', 'sbatch', 'GEMC_DATA_DIR'):
+    # The selected GEMC module supplies its data directory. Missing module/worker programs fail
+    # before output reset; a stale inherited GEMC_DATA_DIR is deliberately replaced.
+    for failure in ('none', 'gemc', 'recon-util', 'sbatch', 'modulecmd', 'inherited-GEMC_DATA_DIR'):
         new, values, env = fixture(root / f'environment-{failure}', 'uniform', '2070MeV')
         config = new.parent / 'submission.conf'
 
         config.write_text('\n'.join(line for line in config.read_text().splitlines() if not line.startswith('clas12tags-dir')))
 
-        if failure == 'GEMC_DATA_DIR':
+        if failure == 'inherited-GEMC_DATA_DIR':
             env.pop('GEMC_DATA_DIR')
         elif failure != 'none':
             (new.parent / 'bin' / failure).unlink()
 
-        _, calls = run_script(new, env, success=failure == 'none')
+        success = failure in ('none', 'inherited-GEMC_DATA_DIR')
+        _, calls = run_script(new, env, success=success)
 
-        if failure == 'none':
-            assert calls[0]['env']['GEMC_DATA_DIR'] == env['GEMC_DATA_DIR']
+        if success:
+            assert calls[0]['env']['GEMC_DATA_DIR'] == env['MODULE_GEMC_DATA_DIR']
         else:
             assert not calls and (Path(values['OUTPATH']) / 'mchipo/old.hipo').exists()
 

@@ -39,15 +39,16 @@
 #     --help                        Print submission help before synchronization.
 #
 # Workflow:
-#     initialize colors -> submit.py -> resolve_inputs.py -> sbatch -> protected payload.
+#     initialize colors -> submit.py -> resolve_inputs.py -> load selected GEMC module ->
+#     sbatch -> protected payload.
 #
 # Inputs:
-#     quoted CLI arguments and the preloaded ifarm GEMC/reconstruction environment.
+#     quoted CLI arguments and the ifarm module/reconstruction environment.
 #
 # Outputs:
 #     the same report and Slurm arrays; preview is default, --execute replaces only
 #     mchipo/reconhipo and submits. Python owns resolved exports for its sbatch children;
-#     it does not change the calling shell's sample variables or load software modules.
+#     it does not change the calling shell's sample variables or module environment.
 #
 # Failure:
 #     preserve Python's exit status without exiting the user's sourced shell.

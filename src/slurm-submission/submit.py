@@ -12,11 +12,11 @@ Purpose:
     reconstruction commands.
 
 Workflow:
-    resolve every input -> report/check preloaded GEMC -> validate worker inputs ->
+    resolve every input -> load/check selected GEMC -> validate worker inputs ->
     prepare mchipo/reconhipo only with --execute -> submit one Slurm array per sample.
-    The sourced shell supplies the shared palette and preloaded software environment. Each
-    sbatch inherits that environment with resolved sample settings taking precedence. Nothing
-    is exported back into the interactive shell. No detector commands are implemented here.
+    The sourced shell supplies the shared palette and module command. Each sbatch inherits the
+    selected GEMC module environment with resolved sample settings taking precedence. Nothing is
+    exported back into the interactive shell. No detector commands are implemented here.
 
 Inputs:
     Completed LUND files and manifests, optional config/CLI overrides, GCARD and YAML files,
@@ -59,6 +59,7 @@ Failure:
     by Slurm. Invoke through run.csh.
 """
 
+import json
 import os
 from pathlib import Path
 import shutil
@@ -173,8 +174,9 @@ class Report:
 
         kind = 'directory' if directory else 'file'
 
-        # The message precedes the check so a failed input is visible in the same sequence
-        # as a successful one. RuntimeError has no text because the detail was printed here.
+        # Safety-check paths use compact left-aligned output so they remain easy to read even
+        # when the path is long. The message precedes the check so failures retain context.
+        self.text('{START}' + name + ':{END} ' + str(path))
         self.text('{START}--> Checking if {END}' + name + '{START} is a ' + kind + '...{END}')
 
         if not (Path(path).is_dir() if directory else Path(path).is_file()):
@@ -191,6 +193,52 @@ class Report:
 # Setup and submission -------------------------------------------------------
 
 # region Submission
+def load_gemc(version, environment):
+    """Load one resolved GEMC module into the environment inherited by Slurm.
+
+    Args:
+        version: Validated GEMC module version selected for this sample.
+        environment: Invocation-owned environment updated in place.
+
+    Failure:
+        A missing module command, rejected unload/load, or malformed environment result raises
+        ValueError before output replacement or job submission.
+    """
+
+    modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
+
+    if modulecmd is None:
+        raise ValueError('modulecmd is unavailable; the selected GEMC module cannot be loaded.')
+
+    # Environment Modules emits Python that mutates os.environ. Execute it in an isolated helper
+    # process, then import only the resulting string environment into this invocation.
+    helper = ('import json, os, subprocess, sys\n'
+              'for arguments in (("unload", "gemc"), ("load", "gemc/" + sys.argv[2])):\n'
+              '    result = subprocess.run([sys.argv[1], "python", *arguments], capture_output=True, text=True)\n'
+              '    if result.returncode:\n'
+              '        sys.stderr.write(result.stderr)\n'
+              '        raise SystemExit(result.returncode)\n'
+              '    exec(compile(result.stdout, sys.argv[1], "exec"), {"os": os})\n'
+              'print(json.dumps(dict(os.environ)))\n')
+    result = subprocess.run([sys.executable, '-c', helper, modulecmd, version], env=environment,
+                            capture_output=True, text=True)
+
+    if result.returncode:
+        detail = result.stderr.strip()
+        raise ValueError('failed to load GEMC module ' + version + (': ' + detail if detail else '.'))
+
+    try:
+        loaded = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise ValueError('GEMC module loading returned an invalid environment.') from error
+
+    if not isinstance(loaded, dict) or not all(isinstance(key, str) and isinstance(value, str)
+                                               for key, value in loaded.items()):
+        raise ValueError('GEMC module loading returned an invalid environment.')
+
+    environment.clear()
+    environment.update(loaded)
+
 def clear_farm(values, root, execute, report, cleared):
     """Handle the optional farm_out log cleanup once for the whole invocation.
 
@@ -262,8 +310,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     Args:
         values: One validated sample dictionary returned by resolve_samples().
-        environment: Invocation-owned copy of os.environ. Sample exports override inherited
-            values, and GEMC_DATA_DIR may persist across samples as in the sourced workflow.
+        environment: Invocation-owned copy of os.environ. Sample exports and the selected GEMC
+            module override inherited values.
         root: Checkout directory containing the protected worker payload.
         execute: False for read-only preview; true for cleanup and Slurm submission.
         report: Shared renderer for the legacy-style transcript.
@@ -277,9 +325,13 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         stop later samples. Already accepted Slurm arrays are not canceled.
     """
 
+    # Load the requested executable/data environment first. Resolved worker settings are then
+    # applied with final precedence before the environment is inherited by Slurm.
+    load_gemc(values['GEMC_VERSION'], environment)
+
     # Copy only worker-facing sample values into this invocation's environment. source and
     # farm_out control Python branches, while RUNNING_DIR and the protected payload path
-    # are fixed to the checked-out project. Slurm must inherit the configured exports.
+    # are fixed to the checked-out project.
     environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
     environment.update(RUNNING_DIR=str(root), SLURM_EXPORT_ENV='ALL', SBATCH_EXPORT='ALL',
                        SUBMIT_SCRIPT_FILE=str(root / 'src/slurm-submission/external/submit_GEMC_sample.sh'))
@@ -309,7 +361,6 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # A custom clas12Tags checkout is optional. When supplied, it becomes GEMC_DATA_DIR
     # for this and subsequent samples in the invocation after its directory check passes.
     if values['CLAS12TAGS_DIR']:
-        report.value('CLAS12TAGS_DIR', values['CLAS12TAGS_DIR'])
         report.check('CLAS12TAGS_DIR', values['CLAS12TAGS_DIR'], directory=True)
 
     # The GEMC environment is preloaded by user ifarm environment. An explicit custom checkout can
@@ -320,7 +371,6 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     if 'GEMC_DATA_DIR' not in environment:
         raise ValueError('GEMC_DATA_DIR is missing from the preloaded GEMC environment; select --clas12tags-dir for a custom checkout.')
 
-    report.value('GEMC_DATA_DIR', environment['GEMC_DATA_DIR'])
     report.check('GEMC_DATA_DIR', environment['GEMC_DATA_DIR'], directory=True)
 
     # Both sources report the resolved target, beam, and torus settings here.
@@ -431,28 +481,23 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     report.value('ARRAY', environment['ARRAY'])
     report.text()
 
-    report.value('OUTPATH', values['OUTPATH'])
     report.check('OUTPATH', values['OUTPATH'], directory=True)
 
     for name in ('mchipo', 'reconhipo'):
         path = str(run / name)
 
-        report.value(name, path)
         report.check(name, path, directory=True)
 
     if not uniform:
         report.check('RUNNING_DIR', str(root), directory=True)
 
-    report.value('REQUIREMENTS_DIR', values['REQUIREMENTS_DIR'])
     report.check('REQUIREMENTS_DIR', values['REQUIREMENTS_DIR'], directory=True)
 
     for key in ('GCARD_FILE', 'YAML_FILE'):
-        report.value(key, values[key])
         report.check(key, values[key])
         report.text()
 
     payload = environment['SUBMIT_SCRIPT_FILE']
-    report.value('SUBMIT_SCRIPT_FILE', payload)
     report.check('SUBMIT_SCRIPT_FILE', payload)
     report.text()
 

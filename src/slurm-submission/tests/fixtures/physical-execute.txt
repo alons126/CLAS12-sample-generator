@@ -63,6 +63,7 @@ reconhipo: {CHECKOUT}/output/run/reconhipo
 --> Checking if reconhipo is a directory...
 --> reconhipo exists.
 
+RUNNING_DIR: {CHECKOUT}
 --> Checking if RUNNING_DIR is a directory...
 --> RUNNING_DIR exists.
 
