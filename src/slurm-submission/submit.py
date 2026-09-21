@@ -235,10 +235,6 @@ def load_gemc(version, environment):
         version: Validated GEMC module version selected for this sample.
         environment: Invocation-owned environment updated in place.
 
-    Returns:
-        Informational text emitted by the module system while unloading and loading GEMC.
-        Generated Python environment code is consumed internally and is never printed.
-
     Failure:
         A missing module command, rejected unload/load, or malformed environment result raises
         ValueError before output replacement or job submission.
@@ -249,22 +245,21 @@ def load_gemc(version, environment):
     if modulecmd is None:
         raise ValueError('modulecmd is unavailable; the selected GEMC module cannot be loaded.')
 
-    # Environment Modules emits Python that mutates os.environ. Execute it in an isolated helper
-    # process, then import only the resulting string environment into this invocation.
+    # Environment Modules emits Python on stdout and its user-facing diagnostics on stderr. Capture
+    # only the generated environment code; stream stderr directly so its terminal colors survive.
     helper = ('import json, os, subprocess, sys\n'
               'for arguments in (("unload", "gemc"), ("load", "gemc/" + sys.argv[2])):\n'
-              '    result = subprocess.run([sys.argv[1], "python", *arguments], capture_output=True, text=True)\n'
-              '    sys.stderr.write(result.stderr)\n'
+              '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
               '    if result.returncode:\n'
               '        raise SystemExit(result.returncode)\n'
               '    exec(compile(result.stdout, sys.argv[1], "exec"), {"os": os})\n'
               'print(json.dumps(dict(os.environ)))\n')
+    sys.stdout.flush()
     result = subprocess.run([sys.executable, '-c', helper, modulecmd, version], env=environment,
-                            capture_output=True, text=True)
+                            stdout=subprocess.PIPE, stderr=sys.stdout, text=True)
 
     if result.returncode:
-        detail = result.stderr.strip()
-        raise ValueError('failed to load GEMC module ' + version + (': ' + detail if detail else '.'))
+        raise ValueError('failed to load GEMC module ' + version + '.')
 
     try:
         loaded = json.loads(result.stdout)
@@ -277,8 +272,6 @@ def load_gemc(version, environment):
 
     environment.clear()
     environment.update(loaded)
-
-    return result.stderr.rstrip()
 
 def verify_gemc(version, expected_data, environment, report):
     """Verify the module-selected data and executable before any Slurm handoff.
@@ -453,11 +446,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     if not values['CLAS12TAGS_DIR']:
         expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
 
-    module_output = load_gemc(values['GEMC_VERSION'], environment)
-
-    if module_output:
-        report.text(module_output)
-
+    load_gemc(values['GEMC_VERSION'], environment)
     verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
 
     # Module initialization may publish its own settings. Reapply the validated worker contract
