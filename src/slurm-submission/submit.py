@@ -9,23 +9,29 @@
 Purpose:
     Coordinate detector-job submission for already completed uniform or physical LUND runs.
     resolve_inputs.py owns setting validation; the protected shell payload owns GEMC and
-    reconstruction commands.
+    reconstruction commands. This coordinator owns the boundary between those layers: it turns
+    validated settings into one checked process environment and passes that environment to Slurm.
 
 Workflow:
-    resolve every input -> load/check selected GEMC -> validate worker inputs ->
+    resolve every input -> check/load/verify selected GEMC -> validate worker inputs ->
     prepare mchipo/reconhipo only with --execute -> submit one Slurm array per sample.
-    The sourced shell supplies the shared palette and module command. Each sbatch inherits the
-    selected GEMC module environment with resolved sample settings taking precedence. Nothing is
-    exported back into the interactive shell. No detector commands are implemented here.
+    The sourced shell supplies the shared palette and module command. Python copies that process
+    environment, applies the selected GEMC module to the copy, verifies GEMC_DATA_DIR and the
+    executable, then gives the result to sbatch. A child process cannot rewrite its parent shell,
+    so the interactive shell deliberately retains the module selection it had before invocation.
+    No detector commands are implemented here.
 
 Inputs:
     Completed LUND files and manifests, optional config/CLI overrides, GCARD and YAML files,
-    and the ifarm shell environment containing GEMC, Slurm, and the shared COLOR_* palette.
+    and the ifarm shell environment containing the module command, Slurm, reconstruction tools,
+    and the shared COLOR_* palette. Standard GEMC selections also require the matching shared
+    clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
 
 Outputs:
     Preview prints the intended checks and commands without replacing outputs or submitting.
     --execute replaces the selected simulation directories and submits Slurm arrays; it
-    preserves lundfiles.
+    preserves lundfiles. Both modes print the module transition and the exact GEMC executable
+    that their Slurm environment would inherit.
 
 CLI options (parsed by resolve_inputs.py):
     --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
@@ -55,8 +61,9 @@ CLI options (parsed by resolve_inputs.py):
     --help                        Print submission help before any server synchronization.
 
 Failure:
-    Failures stop subsequent samples, return nonzero and never cancel arrays already accepted
-    by Slurm. Invoke through run.csh.
+    Missing module versions, inconsistent GEMC paths, missing inputs, unsafe outputs, and rejected
+    submissions return nonzero and stop subsequent samples. Arrays already accepted by Slurm are
+    never canceled. Invoke through run.csh so colors and the ifarm environment are available.
 """
 
 import json
@@ -76,21 +83,27 @@ class Report:
 
     Purpose:
         Give preview and execution the same status, path-check, and failure messages without
-        defining ANSI escapes or shell aliases in this module.
+        defining ANSI escapes or shell aliases in this module. Keep summary values visually
+        aligned while leaving safety-check paths compact and readable.
 
     Lifecycle:
         One Report is created from the caller's environment. It owns a decoded copy of the
-        six semantic color values; later methods write directly to standard output.
+        six semantic color values; later methods write directly to standard output. The object
+        owns presentation only and does not retain workflow state or filesystem results.
 
     Output:
         Banners retain the shared shell renderer's 100-column borders and asymmetric title
-        padding. Markers such as {START} are expanded only while printing.
+        padding. Summary values end one column before that border. Safety checks instead print
+        ``NAME: path`` without banner alignment, followed by their check and result lines.
+        Markers such as {START} are expanded only while printing, so escape sequences never
+        affect width calculations.
 
     Failure:
         Construction rejects an incomplete color palette. check() prints the missing path
         before raising so the caller can stop without a duplicate diagnostic.
     """
 
+    # One shared width drives banner borders, title centering, and summary-value alignment.
     BANNER_WIDTH = 100
 
     def __init__(self, environment):
@@ -115,7 +128,13 @@ class Report:
     def text(self, text=''):
         """Print one line after substituting known semantic color markers.
 
-        Unknown braces remain ordinary text; an omitted argument prints a blank line.
+        Args:
+            text: Text containing zero or more semantic markers. Embedded newlines are retained;
+                an omitted argument prints one blank line.
+
+        Output:
+            One print operation on standard output. Unknown braces remain ordinary text, which
+            allows paths, commands, and external diagnostics to pass through unchanged.
         """
 
         # Replace only the six markers owned by this Report, then emit exactly one newline.
@@ -150,8 +169,16 @@ class Report:
     def value(self, name, value, color='START', value_color='END'):
         """Print a label and value, aligning the value's end to banner column 99.
 
-        Values longer than the available width keep one separating space and may extend
-        past the banner. Color markers do not contribute to the visible width.
+        Args:
+            name: Visible label printed before the colon.
+            value: Value converted to text; an empty value receives no trailing padding.
+            color: Semantic palette name used for the label.
+            value_color: Semantic palette name used for the value.
+
+        Output:
+            A summary line whose nonempty value ends at BANNER_WIDTH - 1. Values longer than
+            the available width keep one separating space and may extend past the banner.
+            Color markers do not contribute to the visible width.
         """
 
         value = str(value)
@@ -162,10 +189,18 @@ class Report:
     def check(self, name, path, directory=False):
         """Check a required file or directory while preserving the shell transcript.
 
+        Purpose:
+            Couple every filesystem decision to the exact path visible to the operator. Unlike
+            value(), this safety output is intentionally not right-aligned to the banner.
+
         Args:
             name: Label printed beside the path status.
             path: Required filesystem path.
             directory: Check for a directory when true, a file otherwise.
+
+        Output:
+            The compact ``NAME: path`` line, a description of the test, and a colored success or
+            failure result. Successful directory checks add one blank separator line.
 
         Failure:
             Print the specific missing-path message, then raise RuntimeError so no dependent
@@ -447,10 +482,14 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # is validated below and deliberately bypasses this standard-version directory convention.
     expected_gemc_data = None
 
-    # A code block that handles GEMC version
-    load_gemc(values['GEMC_VERSION'], environment, report)
+    # Resolve standard shared data before altering the module environment. Custom clas12Tags
+    # inputs bypass only this standard-directory lookup; they still use a verified GEMC binary.
     if not values['CLAS12TAGS_DIR']:
         expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
+
+    # The module transition runs only after the precheck, and verification proves that both the
+    # resulting data path and executable agree with the requested version.
+    load_gemc(values['GEMC_VERSION'], environment, report)
     verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
 
     # Module initialization may publish its own settings. Reapply the validated worker contract
