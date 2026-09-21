@@ -13,6 +13,7 @@ CLEAR_FAR_OUT:                                                                  
 GEMC_VERSION:                                                                                  5.14
 Sample type:                                                                       physical (genie)
 
+Switching GEMC version to 5.14...
 Unloading gemc
 Loading gemc/5.14
 SLURM_GEMC_EXECUTABLE: {CHECKOUT}/clas12Tags/5.14/bin/gemc

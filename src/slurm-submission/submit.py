@@ -228,17 +228,20 @@ def check_gemc_version(version, environment, report):
 
     return requested
 
-def load_gemc(version, environment):
+def load_gemc(version, environment, report):
     """Load one resolved GEMC module into the environment inherited by Slurm.
 
     Args:
         version: Validated GEMC module version selected for this sample.
         environment: Invocation-owned environment updated in place.
+        report: Shared renderer used for the version-switch status message.
 
     Failure:
         A missing module command, rejected unload/load, or malformed environment result raises
         ValueError before output replacement or job submission.
     """
+
+    report.text('{START}Switching GEMC version to {END}{INFO}' + version + '{END}{START}...{END}')
 
     modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
 
@@ -443,11 +446,11 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # is validated below and deliberately bypasses this standard-version directory convention.
     expected_gemc_data = None
 
-    load_gemc(values['GEMC_VERSION'], environment)
-    verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
-
     if not values['CLAS12TAGS_DIR']:
         expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
+
+    load_gemc(values['GEMC_VERSION'], environment, report)
+    verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
 
     # Module initialization may publish its own settings. Reapply the validated worker contract
     # so explicit sample values and fixed coordinator paths retain final precedence.
