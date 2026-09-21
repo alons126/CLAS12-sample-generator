@@ -193,6 +193,41 @@ class Report:
 # Setup and submission -------------------------------------------------------
 
 # region Submission
+IFARM_CLAS12TAGS_BASE = Path('/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags')
+
+def check_gemc_version(version, environment, report):
+    """Verify that an ifarm clas12Tags version exists before changing GEMC modules.
+
+    Purpose:
+        Prevent a requested standard GEMC version from replacing the working module environment
+        when its matching clas12Tags data is unavailable.
+
+    Workflow:
+        Derive the shared clas12Tags base by removing the active version component from the
+        inherited GEMC_DATA_DIR. When no active path is available, use the documented ifarm base.
+        Check both that base and its requested-version child before module loading begins.
+
+    Args:
+        version: Validated GEMC version requested for the sample.
+        environment: Pre-load environment inherited from the sourced ifarm launcher.
+        report: Shared renderer used for visible safety checks.
+
+    Returns:
+        The checked directory expected to become GEMC_DATA_DIR after loading the module.
+
+    Failure:
+        A missing base or version directory raises before the active GEMC module is changed.
+    """
+
+    active_data = environment.get('GEMC_DATA_DIR')
+    base = Path(active_data).parent if active_data else IFARM_CLAS12TAGS_BASE
+    requested = base / version
+
+    report.check('CLAS12TAGS_BASE_DIR', str(base), directory=True)
+    report.check('REQUESTED_GEMC_DATA_DIR', str(requested), directory=True)
+
+    return requested
+
 def load_gemc(version, environment):
     """Load one resolved GEMC module into the environment inherited by Slurm.
 
@@ -238,6 +273,55 @@ def load_gemc(version, environment):
 
     environment.clear()
     environment.update(loaded)
+
+def verify_gemc(version, expected_data, environment, report):
+    """Verify the module-selected data and executable before any Slurm handoff.
+
+    Purpose:
+        Prove that loading ``gemc/VERSION`` changed both the detector-data directory and the
+        executable search path, rather than trusting the requested module name alone.
+
+    Args:
+        version: Validated GEMC version requested for the sample.
+        expected_data: Prechecked standard ifarm version directory, or None when a custom
+            CLAS12TAGS_DIR will replace module data after executable validation.
+        environment: Environment returned by the module command.
+        report: Shared renderer used for the executable safety check.
+
+    Returns:
+        Absolute GEMC executable path inherited by Slurm.
+
+    Failure:
+        Missing/mismatched module data or an executable outside that data tree raises before
+        simulation outputs are replaced.
+    """
+
+    loaded_data_text = environment.get('GEMC_DATA_DIR')
+
+    if not loaded_data_text:
+        raise ValueError('loading GEMC ' + version + ' did not set GEMC_DATA_DIR.')
+
+    loaded_data = Path(loaded_data_text).resolve()
+
+    if expected_data is not None and loaded_data != expected_data.resolve():
+        raise ValueError(f'loading GEMC {version} selected unexpected GEMC_DATA_DIR: {loaded_data}')
+
+    if loaded_data.name != version:
+        raise ValueError(f'loading GEMC {version} selected mismatched GEMC_DATA_DIR: {loaded_data}')
+
+    executable_text = shutil.which('gemc', path=environment.get('PATH'))
+
+    if executable_text is None:
+        raise ValueError(f'gemc is unavailable after loading GEMC module {version}.')
+
+    executable = Path(executable_text).resolve()
+
+    if loaded_data != executable and loaded_data not in executable.parents:
+        raise ValueError(f'loading GEMC {version} selected an executable outside {loaded_data}: {executable}')
+
+    report.check('SLURM_GEMC_EXECUTABLE', str(executable))
+
+    return executable
 
 def clear_farm(values, root, execute, report, cleared):
     """Handle the optional farm_out log cleanup once for the whole invocation.
@@ -325,10 +409,6 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         stop later samples. Already accepted Slurm arrays are not canceled.
     """
 
-    # Load the requested executable/data environment first. Resolved worker settings are then
-    # applied with final precedence before the environment is inherited by Slurm.
-    load_gemc(values['GEMC_VERSION'], environment)
-
     # Copy only worker-facing sample values into this invocation's environment. source and
     # farm_out control Python branches, while RUNNING_DIR and the protected payload path
     # are fixed to the checked-out project.
@@ -357,6 +437,23 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     farm_cleared = clear_farm(values, root, execute, report, farm_cleared)
 
     report.text()
+
+    # A standard ifarm module selection must have matching shared clas12Tags data. Validate it
+    # against the still-active environment before changing modules. An explicit custom checkout
+    # is validated below and deliberately bypasses this standard-version directory convention.
+    expected_gemc_data = None
+
+    if not values['CLAS12TAGS_DIR']:
+        expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
+
+    load_gemc(values['GEMC_VERSION'], environment)
+    verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
+
+    # Module initialization may publish its own settings. Reapply the validated worker contract
+    # so explicit sample values and fixed coordinator paths retain final precedence.
+    environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
+    environment.update(RUNNING_DIR=str(root), SLURM_EXPORT_ENV='ALL', SBATCH_EXPORT='ALL',
+                       SUBMIT_SCRIPT_FILE=str(root / 'src/slurm-submission/external/submit_GEMC_sample.sh'))
 
     # A custom clas12Tags checkout is optional. When supplied, it becomes GEMC_DATA_DIR
     # for this and subsequent samples in the invocation after its directory check passes.

@@ -46,7 +46,8 @@ def fixture(root, source, energy, channel='en', fc=0):
 
     run = root / 'output/run'
 
-    for directory in (run / 'lundfiles', root / 'requirements', root / 'tags', root / 'gemc-data', root / 'farm_out'):
+    for directory in (run / 'lundfiles', root / 'requirements', root / 'tags', root / 'clas12Tags/5.14',
+                      root / 'clas12Tags/6.1', root / 'farm_out'):
         directory.mkdir(parents=True)
 
     for directory in ('mchipo', 'reconhipo'):
@@ -86,18 +87,25 @@ def fixture(root, source, energy, channel='en', fc=0):
     sbatch.write_text('#!' + sys.executable + '\nimport json,os,sys\nwith open(os.environ["SBATCH_LOG"],"a") as f: f.write(json.dumps({"argv":sys.argv[1:],"env":dict(os.environ)})+"\\n")\nsys.exit(int(os.environ.get("SBATCH_STATUS","0")))\n')
     sbatch.chmod(0o755)
 
-    for tool in ('gemc', 'recon-util'):
+    for tool in ('recon-util',):
         path = bin_dir / tool
 
         path.write_text('#!/bin/sh\nexit 0\n')
         path.chmod(0o755)
+
+    module_bin = root / 'clas12Tags/5.14/bin'
+    module_bin.mkdir()
+    module_gemc = module_bin / 'gemc'
+    module_gemc.write_text('#!/bin/sh\nexit 0\n')
+    module_gemc.chmod(0o755)
 
     modulecmd = bin_dir / 'modulecmd'
 
     modulecmd.write_text('#!' + sys.executable + '\nimport os,sys\n'
                          'if sys.argv[1:] == ["python", "unload", "gemc"]: print("import os")\n'
                          'elif sys.argv[1:] == ["python", "load", "gemc/5.14"]: '
-                         'print("import os; os.environ[\\"GEMC_DATA_DIR\\"] = " + repr(os.environ["MODULE_GEMC_DATA_DIR"]))\n'
+                         'print("import os; p=" + repr(os.environ["MODULE_GEMC_DATA_DIR"]) + '
+                         '"; os.environ[\\"GEMC_DATA_DIR\\"] = p; os.environ[\\"PATH\\"] = p + \\"/bin:\\" + os.environ[\\"PATH\\"]")\n'
                          'else: sys.exit(1)\n')
     modulecmd.chmod(0o755)
 
@@ -136,8 +144,8 @@ def fixture(root, source, energy, channel='en', fc=0):
     new_path.write_text(f'source src/slurm-submission/setup_and_submit.csh --config "{config}" $argv:q\n')
 
     env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + '/usr/bin:/bin',
-               SBATCH_LOG=str(root / 'sbatch.jsonl'), GEMC_DATA_DIR=str(root / 'gemc-data'),
-               MODULE_GEMC_DATA_DIR=str(root / 'gemc-data'), SBATCH_STATUS='0')
+               SBATCH_LOG=str(root / 'sbatch.jsonl'), GEMC_DATA_DIR=str(root / 'clas12Tags/6.1'),
+               MODULE_GEMC_DATA_DIR=str(root / 'clas12Tags/5.14'), SBATCH_STATUS='0')
 
     return new_path, values, env
 
@@ -187,6 +195,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
 
                 assert calls[0]['env']['SBATCH_EXPORT'] == calls[0]['env']['SLURM_EXPORT_ENV'] == 'ALL'
                 assert calls[0]['env']['GEMC_DATA_DIR'] == str(new.parent / 'tags')
+                assert (shutil.which('gemc', path=calls[0]['env']['PATH'])
+                        == str(new.parent / 'clas12Tags/5.14/bin/gemc'))
                 run = Path(values['OUTPATH'])
                 assert not list((run / 'mchipo').iterdir()) and not list((run / 'reconhipo').iterdir())
                 assert len(list((run / 'lundfiles').glob('*.txt'))) == 2
@@ -352,22 +362,31 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
 
     # The selected GEMC module supplies its data directory. Missing module/worker programs fail
     # before output reset; a stale inherited GEMC_DATA_DIR is deliberately replaced.
-    for failure in ('none', 'gemc', 'recon-util', 'sbatch', 'modulecmd', 'inherited-GEMC_DATA_DIR'):
+    for failure in ('none', 'gemc', 'recon-util', 'sbatch', 'modulecmd', 'missing-GEMC_DATA_DIR',
+                    'requested-GEMC-version'):
         new, values, env = fixture(root / f'environment-{failure}', 'uniform', '2070MeV')
         config = new.parent / 'submission.conf'
 
         config.write_text('\n'.join(line for line in config.read_text().splitlines() if not line.startswith('clas12tags-dir')))
 
-        if failure == 'inherited-GEMC_DATA_DIR':
+        if failure == 'missing-GEMC_DATA_DIR':
             env.pop('GEMC_DATA_DIR')
+        elif failure == 'requested-GEMC-version':
+            (new.parent / 'clas12Tags/5.14/bin/gemc').unlink()
+            (new.parent / 'clas12Tags/5.14/bin').rmdir()
+            (new.parent / 'clas12Tags/5.14').rmdir()
+        elif failure == 'gemc':
+            (new.parent / 'clas12Tags/5.14/bin/gemc').unlink()
         elif failure != 'none':
             (new.parent / 'bin' / failure).unlink()
 
-        success = failure in ('none', 'inherited-GEMC_DATA_DIR')
+        success = failure == 'none'
         _, calls = run_script(new, env, success=success)
 
         if success:
             assert calls[0]['env']['GEMC_DATA_DIR'] == env['MODULE_GEMC_DATA_DIR']
+            assert (shutil.which('gemc', path=calls[0]['env']['PATH'])
+                    == str(new.parent / 'clas12Tags/5.14/bin/gemc'))
         else:
             assert not calls and (Path(values['OUTPATH']) / 'mchipo/old.hipo').exists()
 
@@ -387,7 +406,8 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     stub = '#!' + sys.executable + '\nimport json,os,sys\nwith open(os.environ["COMMAND_LOG"],"a") as f: f.write(json.dumps([os.path.basename(sys.argv[0]),*sys.argv[1:]])+"\\n")\n'
 
     for tool in ('gemc', 'recon-util'):
-        executable = new.parent / 'bin' / tool
+        executable = (new.parent / 'clas12Tags/5.14/bin/gemc' if tool == 'gemc'
+                      else new.parent / 'bin/recon-util')
 
         executable.write_text(stub)
         executable.chmod(0o755)
