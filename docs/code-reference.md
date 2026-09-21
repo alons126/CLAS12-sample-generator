@@ -69,8 +69,9 @@ The reader arrays replace the archived fixed 250-element buffers. Input errors, 
 | --- | --- |
 | `run.csh` | Guarded ifarm refresh; source submission directly or dispatch LUND creation |
 | `src/launcher/workflow.py` | LUND configuration, build/test stages and application dispatch |
-| `src/slurm-submission/resolve_inputs.py` | Manifest/config/CLI precedence, truth validation, portable file inventory and safe shell assignments |
-| `src/slurm-submission/setup_and_submit.csh` | Resolved input handoff, GEMC module, legacy report/checks, output reset and one array per sample |
+| `src/slurm-submission/resolve_inputs.py` | Manifest/config/CLI precedence, truth validation, portable file inventory and in-memory resolved settings |
+| `src/slurm-submission/setup_and_submit.csh` | Small sourced bridge: shared palette, quoted arguments and Python exit status |
+| `src/slurm-submission/submit.py` | Preloaded environment, established report/checks, guarded output reset and one array per sample |
 | `src/slurm-submission/external/submit_GEMC_sample.sh` | Protected Slurm task payload; GEMC followed by reconstruction |
 
 The resolver obtains the prefix and task count from the completed manifest or explicit input, then the setup script consumes the validated LUND files. It exports a shared event limit for the array, defaulting to the largest selected manifest file count. The payload retains its original scheduler defaults. See the [submission guide](gemc-reconstruction-batch-submission.md).
@@ -118,4 +119,4 @@ The archived root `genie_job_submission_script.csh` is another historical submis
 
 See [source documentation conventions](source-documentation.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with sourced-shell setup.
+The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.

@@ -19,8 +19,8 @@
 #      The updater validates the Git worktree, cleans untracked/ignored files except build/, resets
 #      tracked server changes, pulls the configured upstream, initializes pinned submodules, and
 #      prints the resulting HEAD/branch.
-#   3. After synchronization, initialize the LUND environment or let the sourced submission script
-#      load its GEMC module in the login shell, retaining that environment for sbatch.
+#   3. After synchronization, initialize the LUND environment or pass preloaded GEMC/reconstruction
+#      through the sourced submission bridge to Python and sbatch.
 #   4. Source the single submission script for submit; otherwise forward the original quoted
 #      arguments to src/launcher/workflow.py for building, testing and LUND creation.
 #   5. Restore the caller's directory and return the captured result as both CLAS12_SAMPLE_STATUS and
@@ -47,7 +47,7 @@
 # 
 # Forwarded options:
 #   create-lund forwards remaining options to the selected LUND executable. Submit forwards them
-#   to resolve_inputs.py; key submission controls include --lund-dir, --config, and --execute.
+#   to submit.py (which imports resolve_inputs.py); key submission controls include --lund-dir, --config, and --execute.
 # 
 # Inputs:
 #   $argv carries launcher and child options. CLAS12_SAMPLES_DIR is an optional environment variable
@@ -228,7 +228,7 @@ endif
 # Workflow dispatch -----------------------------------------------------------
 
 # region Workflow dispatch
-# Submission is sourced in the login shell so module aliases and exported settings reach sbatch.
+# The sourced submission bridge gives Python the preloaded environment and preserves its return status.
 # LUND creation retains its existing Python build/creation driver.
 if ($CLAS12_SAMPLE_STATUS == 0) then
     if ($_clas12_submit == 1) then

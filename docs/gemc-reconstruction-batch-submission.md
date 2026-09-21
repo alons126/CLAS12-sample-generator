@@ -9,13 +9,14 @@ source run.csh --workflow create-lund --source uniform|physical ...
 source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
   -> guarded server-checkout update
   -> source src/slurm-submission/setup_and_submit.csh
-     -> resolve_inputs.py: manifest + configuration + CLI -> validated shell settings
-     -> GEMC module, legacy setup report/checks, output preparation
-     -> sbatch --job-name=NAME --array=1-N <protected payload>
+     -> submit.py
+        -> resolve_inputs.py: manifest + configuration + CLI -> validated settings
+        -> preloaded GEMC checks, setup report, output preparation
+        -> sbatch --job-name=NAME --array=1-N <protected payload>
   -> Slurm task: GEMC -> recon-util
 ```
 
-Creation may run locally or on the server. Setup runs in the server login shell; detector execution runs only in Slurm jobs. The Python helper reads and validates inputs only; the sourced shell owns modules, output replacement and submission. The protected payload is unchanged.
+Creation may run locally or on the server. Submission runs in a Python child of the server login shell; detector execution runs only in Slurm jobs. The small sourced shell bridge initializes the shared colors and returns the Python status. `submit.py` owns reports, checks, output replacement and submission; `resolve_inputs.py` only resolves inputs. The protected payload is unchanged.
 
 ## Submit workflow-1 output
 
@@ -23,7 +24,7 @@ Creation may run locally or on the server. Setup runs in the server login shell;
 source run.csh --workflow submit --lund-dir /shared/Uniform_sample_enFD_2070MeV/lundfiles
 ```
 
-Without `--execute`, this previews the resolved setup and exact `sbatch` command. It loads/checks the configured software environment but does not call `sbatch`, clear farm logs, or create/replace simulation output directories. Add `--execute` to perform those actions:
+Without `--execute`, this previews the resolved setup and exact `sbatch` command. It checks the preloaded software environment but does not call `sbatch`, clear farm logs, or create/replace simulation output directories. Add `--execute` to perform those actions:
 
 ```tcsh
 source run.csh --workflow submit --lund-dir /shared/sample/lundfiles --execute
@@ -40,7 +41,7 @@ source run.csh --workflow submit \
   --execute
 ```
 
-The resolver validates every selected sample first and writes one temporary numbered `.csh` assignment file for each directory. The sourced setup loops over those files; each file configures one sample and produces one independent Slurm array. The temporary files contain only validated tcsh variable assignments and are deleted when the submission command finishes. If a later sample fails setup or `sbatch`, subsequent samples are skipped while arrays already accepted by Slurm remain submitted.
+The resolver validates every selected sample first and returns in-memory settings to `submit.py`. The coordinator processes those samples in order and produces one independent Slurm array per sample. No temporary shell assignments or generated wrappers are needed. If a later sample fails setup or `sbatch`, subsequent samples are skipped while arrays already accepted by Slurm remain submitted.
 
 The resolver reads `lund-gen-monitoring/lund-gen-log.json` under the supplied directory. It obtains source, beam energy, target identity, detector target variation, channel/hadron/region, generator/tune/Q² labels, filename prefix and completed file counts from the manifest. `OUTPATH` is the supplied directory's parent, so copied samples do not depend on the original absolute generation path. It does not infer scientific metadata from directory names.
 
@@ -96,7 +97,7 @@ Use a csh/tcsh login shell with GEMC and reconstruction already available. The s
 
 For a custom GEMC detector implementation, such as testing target geometry, clone or fork [gemc/clas12Tags](https://github.com/gemc/clas12Tags) on shared storage and pass its checkout with `--clas12tags-dir DIRECTORY`. The setup validates `CLAS12TAGS_DIR` and then exports `GEMC_DATA_DIR=$CLAS12TAGS_DIR` before submission. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the selected directory in every Slurm task. Scheduler/log defaults remain in the protected payload's `#SBATCH` directives.
 
-Before each project-owned `setenv`, the maintained submission path removes both a same-named tcsh local variable and any inherited environment value. Resolver-generated handoff files follow the same rule. This prevents persistent login-shell state from shadowing validated submission settings; the preloaded `GEMC_DATA_DIR` remains active unless the workflow replaces it with `--clas12tags-dir`.
+Python copies the inherited environment, then overwrites its sample settings with the resolved values before calling `sbatch`. Stale shell locals cannot shadow these values. The preloaded `GEMC_DATA_DIR` remains active unless `--clas12tags-dir` replaces it. Unlike the former shell coordinator, Python does not leave per-sample exports in the interactive shell; the configured environment is passed to Slurm and its workers. `--gemc-version` selects resources and labels; it does not load or verify the installed software version.
 
 `run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ssh-workflow.md).
 
@@ -106,4 +107,11 @@ One array is submitted per sample. Failure stops later samples and returns a non
 
 ## Validation
 
-`submission-legacy-parity` compares full archived setup stdout, module calls, array arguments and exported settings using temporary configs and fake tools. It also exercises the manifest-to-shell handoff, multiple samples, failures and protected detector-command parity. `submission-input-resolution` checks defaults (including GEMC 5.14), precedence, moved manifests, partial final files, manual input, truth conflicts and malformed inputs; when built, it also consumes actual uniform-generator output. Tests never submit real jobs. Server detector behavior requires a small ifarm validation run.
+`submission-legacy-parity` checks captured working C-shell report fixtures for both sources in preview/execute modes, array arguments and exported settings using temporary configs and fake tools. It also exercises manifest-driven submission, multiple samples, cleanup, failures and the protected detector-command contract. The migration comparison preserved report text and ANSI colors, normalizing platform-specific `wc` padding. Physical reporting retains the resolved generator/tune instead of unsetting them before use, and farm cleanup uses the intended banner color; these correct two failures in the former shell implementation. `submission-input-resolution` checks defaults (including GEMC 5.14), precedence, moved manifests, partial final files, manual input, truth conflicts and malformed inputs; when built, it also consumes actual uniform-generator output. Tests never submit real jobs. Server detector behavior requires a small ifarm validation run.
+
+Run the submission and launcher checks with the shared palette initialized (the existing launcher preflight uses it):
+
+```tcsh
+source src/launcher/environment/set_colors.csh
+ctest --test-dir build/debug --output-on-failure -R 'submission|ssh-launcher'
+```

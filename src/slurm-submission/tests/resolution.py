@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
         manifest_path.write_text(json.dumps(data))
 
     def rejected(overrides=None, data=None):
-        """Require an invalid input to fail before returning a shell environment."""
+        """Require an invalid input to fail before returning resolved settings."""
         save(manifest if data is None else data)
         try:
             resolve(lund, overrides or {}, project)
@@ -84,15 +84,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     save(manifest)
     config = root / 'submission.conf'
     config.write_text('lund-dir = copied-sample/lundfiles\ngemc-version = 5.15\ngcard = custom.gcard\nyaml = custom.yaml\nnum-jobs = 1\n')
-    environment = root / 'environment'
-    environment.mkdir()
-    subprocess.run([sys.executable, str(helper), '--config', str(config), '--gemc-version', '5.14',
-                    '--environment-dir', str(environment)], check=True, capture_output=True, text=True)
-    emitted = (environment / '000001.csh').read_text()
-    assert 'setenv GEMC_VERSION "5.14"' in emitted and 'setenv NUM_OF_JOBS "1"' in emitted
-    assert f'setenv GCARD_FILE "{card}"' in emitted
-    assert 'unset GEMC_VERSION\nunsetenv GEMC_VERSION\nsetenv GEMC_VERSION "5.14"' in emitted
-    assert 'unset source\nset source = "uniform"' in emitted
+    args = module['parser']().parse_args(['--config', str(config), '--gemc-version', '5.14'])
+    result = module['resolve_samples'](args, project)[0]
+    assert result['GEMC_VERSION'] == '5.14' and result['NUM_OF_JOBS'] == '1'
+    assert result['GCARD_FILE'] == str(card) and result['SUBMISSION_EXECUTE'] == 'false'
     for overrides in ({'beam-energy': '4.02962'}, {'rgm-target': 'C12'}, {'source': 'physical'},
                       {'hadron': 'proton'}, {'channel': '1e'}, {'prefix': 'wrong'}, {'num-jobs': '3'},
                       {'events-per-job': '0'}, {'torus': 'NaN'}, {'job-name': '$(touch bad)'},

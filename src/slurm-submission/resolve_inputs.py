@@ -1,61 +1,16 @@
+#!/usr/bin/env python3
+
 #
 # Created by Alon Sportes on 19/09/2026.
 #
 
-#!/usr/bin/env python3
+"""Resolve completed LUND manifests, optional key=value configuration and CLI settings.
 
-"""Resolve submission inputs into a small, safely quoted C-shell environment.
-
-Purpose:
-    bridge completed LUND output to the existing sourced setup without owning module
-    loading, output removal, Slurm submission, or detector commands.
-
-Workflow:
-    parse CLI/config -> read optional completed manifest -> merge explicit settings ->
-    validate truth metadata and selected files -> emit one environment per sample.
-
-Inputs:
-    lundfiles directories, optional key=value config, CLI overrides and manifest schema 1.
-
-Outputs:
-    whitelisted unset/set/setenv assignments, on stdout or in a private directory supplied
-    by setup_and_submit.csh. Every exported name has both tcsh namespaces cleared before it is
-    assigned. All samples are validated before any environment file is written.
-
-Failure:
-    malformed input, contradictory truth metadata or unsafe values return nonzero. Missing
-    metadata is never inferred from parent-directory names. No simulation outputs are modified.
-
-Submission options:
-    --execute                     Submit after validation; default behavior is preview only.
-    --config FILE                 Read optional key = value submission settings.
-    --lund-dir DIRECTORY          Select completed RUN/lundfiles input; repeat for several samples.
-    --source uniform|physical     Override or confirm the manifest workflow.
-    --beam-energy GeV             Override or confirm truth beam energy.
-    --rgm-target ID               Override or confirm truth target identity.
-    --channel LABEL               Select uniform 1e, eh, electron-tester, or a resolved channel label.
-    --hadron NAME                 Select proton, neutron, pip, or pim when channel is eh.
-    --hadron-region FD|CD         Select the uniform hadron detector region.
-    --event-generator NAME        Select physical generator metadata (default: genie).
-    --tune NAME / --q2-cut NAME  Set physical-input provenance labels.
-    --prefix NAME                 Set the LUND filename stem when no manifest supplies it.
-    --gemc-version VERSION        Select the GEMC module/version (fallback: 5.14).
-    --gemc-target-variation NAME  Select the detector target variation.
-    --gcard FILE / --yaml FILE    Override detector-simulation/reconstruction inputs.
-    --torus SCALE                 Override the beam-dependent torus scale.
-    --num-jobs N                  Submit the first N completed files (default: all).
-    --events-per-job N            Set the shared worker event limit (default: largest selected file).
-    --job-name NAME               Override the derived Slurm job name.
-    --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
-    --clear-farm-out true|false   Remove direct farm_out files once (default: false).
-    --farm-out DIRECTORY          Supply the required cleanup directory when clearing farm_out.
-    --fc-status 0|1               Set the legacy physical report/filename label only.
-    --help                        Print this option list without modifying simulation output.
-
-Precedence and output:
-    CLI values override config values, which override manifest values and defaults. With
-    --execute, validated samples are passed to setup_and_submit.csh; simulation output directories
-    are replaced there while completed LUND files are preserved.
+Workflow: merge CLI > config > manifest > defaults, check truth consistency and completed
+files, then return one environment dictionary per distinct sample to submit.py. No shell
+assignment files, software loading, output cleanup, detector execution or Slurm calls occur
+here. run.csh also uses --check-arguments to validate syntax before refreshing ifarm.
+Invalid metadata, missing inputs and unsafe paths raise before submission starts.
 """
 
 import argparse
@@ -82,7 +37,7 @@ OPTIONS = {
     'tune': 'Physical tune label (default: unknown for physical, none for uniform)',
     'q2-cut': 'Physical input Q2 label, not a cut applied here',
     'prefix': 'Filename prefix before _INDEX.txt; required without a manifest',
-    'gemc-version': 'GEMC module version (fallback default: 5.14)',
+    'gemc-version': 'GEMC resource version (fallback default: 5.14)',
     'gemc-target-variation': 'Detector target variation; normally supplied by the manifest',
     'gcard': 'Explicit detector GCARD; otherwise selected from beam/variation/version',
     'yaml': 'Explicit reconstruction YAML; otherwise selected from beam/version',
@@ -96,9 +51,7 @@ OPTIONS = {
     'fc-status': '0 or 1 legacy physical filename/report label only (default: 0)',
 }
 PATH_KEYS = {'lund-dir', 'gcard', 'yaml', 'clas12tags-dir', 'farm-out'}
-# Values entering the sourced file cannot contain shell syntax. Worker paths are more restrictive
-# because the protected payload deliberately retains its original unquoted detector arguments.
-SAFE_VALUE = re.compile(r'[A-Za-z0-9_./:+ -]*\Z')
+# Worker paths remain restrictive because the protected payload retains unquoted detector arguments.
 SAFE_TOKEN = re.compile(r'[A-Za-z0-9_][A-Za-z0-9_.-]*\Z')
 SAFE_PATH = re.compile(r'/[A-Za-z0-9_./-]+\Z')
 BEAMS = {2070: ('2GeV', '0.5', 'rgm_fall2021-cv.yaml'),
@@ -112,8 +65,8 @@ LABELS = {'1e', 'electron-tester', 'ep', 'en'} | {label + region for label in HA
 
 # region Parsing
 def parser():
-    """Define the shared CLI/config vocabulary and private shell-integration switches."""
-    p = argparse.ArgumentParser(description='Resolve LUND inputs and submit through the sourced shell workflow.',
+    """Define the shared CLI/config vocabulary and launcher syntax check."""
+    p = argparse.ArgumentParser(description='Resolve LUND inputs and preview or submit one Slurm array per sample.',
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
                'With --execute, submission replaces mchipo/reconhipo while preserving lundfiles. '
                'GEMC defaults to 5.14. Use source run.csh --workflow submit --lund-dir RUN/lundfiles.')
@@ -121,7 +74,6 @@ def parser():
     p.add_argument('--config', type=Path, help='Optional key = value submission settings')
     for key, help_text in OPTIONS.items():
         p.add_argument('--' + key, action='append' if key == 'lund-dir' else 'store', help=help_text)
-    p.add_argument('--environment-dir', type=Path, help=argparse.SUPPRESS)
     p.add_argument('--check-arguments', action='store_true', help=argparse.SUPPRESS)
     return p
 
@@ -146,7 +98,7 @@ def read_config(path):
     return result
 
 def positive(value, name):
-    """Require a positive bounded integer usable by the C-shell array loop."""
+    """Require a positive bounded integer usable by the Slurm array."""
     if isinstance(value, bool) or not re.fullmatch(r'[1-9][0-9]*', str(value)) or int(value) > 2147483647:
         raise ValueError(f'{name} must be an integer from 1 to 2147483647')
     return int(value)
@@ -208,7 +160,7 @@ def read_manifest(lund_dir):
 
 # region Resolution
 def resolve(lund_directory, explicit, root):
-    """Resolve one run; return only environment values consumed by the existing shell setup.
+    """Resolve one run; return only environment values consumed by the submission coordinator.
 
     Truth fields in an existing manifest must agree with effective explicit input. Detector choices
     may override generation-time plans. File paths are rebased onto the supplied directory, never
@@ -335,31 +287,15 @@ def resolve(lund_directory, explicit, root):
                 FC_STATUS_ENABLED=values['fc-status'], FC_STATUS=fc)
 # endregion Resolution
 
-# Environment handoff ---------------------------------------------------------
+# Invocation resolution -------------------------------------------------------
 
-# region Handoff
-def shell_environment(values):
-    """Encode known settings after clearing stale tcsh local and environment values."""
-    lines = []
-    for key, value in values.items():
-        if not SAFE_VALUE.fullmatch(value):
-            raise ValueError(f'Unsupported shell characters in resolved setting {key}')
-        if key in ('source', 'farm_out'):
-            lines.extend((f'unset {key}', f'set {key} = "{value}"'))
-        else:
-            # tcsh permits a local and exported variable with the same name. The local value wins
-            # during `$name` expansion, so clearing only the environment is not sufficient.
-            lines.extend((f'unset {key}', f'unsetenv {key}', f'setenv {key} "{value}"'))
-    return '\n'.join(lines) + '\n'
+# region Invocation
+def resolve_samples(args, root):
+    """Resolve every sample before side effects, with CLI > config > manifest > defaults.
 
-def main():
-    """Resolve all requested runs, then emit assignments; return before any shell work on error."""
-    p = parser()
-    args = p.parse_args()
-    if not args.lund_dir and not args.config:
-        p.error('provide --lund-dir RUN/lundfiles or --config FILE')
-    if args.check_arguments:
-        return 0
+    Return distinct, validated environment dictionaries in CLI order. Errors stop the entire
+    invocation before cleanup or submission; detector setup remains the coordinator's responsibility.
+    """
     explicit = read_config(args.config)
     for key in OPTIONS:
         value = getattr(args, key.replace('-', '_'))
@@ -367,27 +303,25 @@ def main():
             explicit[key] = value
     directories = args.lund_dir or ([explicit['lund-dir']] if 'lund-dir' in explicit else [])
     if not directories:
-        p.error('configuration must specify lund-dir, or provide --lund-dir on the CLI')
+        raise ValueError('provide --lund-dir RUN/lundfiles or a config specifying lund-dir')
     explicit.pop('lund-dir', None)
-    root = Path(__file__).resolve().parents[2]
     resolved = [resolve(directory, explicit, root) for directory in directories]
     if len({sample['OUTPATH'] for sample in resolved}) != len(resolved):
         raise ValueError('Each selected sample must have a distinct OUTPATH')
     for sample in resolved:
         sample['SUBMISSION_EXECUTE'] = 'true' if args.execute else 'false'
-    contents = [shell_environment(sample) for sample in resolved]
-    if args.environment_dir:
-        for index, content in enumerate(contents, 1):
-            with (args.environment_dir / f'{index:06d}.csh').open('x') as output:
-                output.write(content)
-    else:
-        sys.stdout.write('\n'.join(contents))
+    return resolved
+
+def main():
+    """Check launcher syntax without touching input files or performing submission work."""
+    p = parser()
+    args = p.parse_args()
+    if not args.lund_dir and not args.config:
+        p.error('provide --lund-dir RUN/lundfiles or --config FILE')
+    if not args.check_arguments:
+        p.error('use source run.csh --workflow submit to preview or submit')
     return 0
 
 if __name__ == '__main__':
-    try:
-        sys.exit(main())
-    except (OSError, ValueError, TypeError, KeyError) as error:
-        print(f'Error: {error}', file=sys.stderr)
-        sys.exit(1)
-# endregion Handoff
+    sys.exit(main())
+# endregion Invocation

@@ -1,6 +1,6 @@
 # Local editing and SSH execution
 
-Edit and validate the checkout locally, commit the changes, then transfer them through your normal Git remote or file-copy workflow. On the SSH server, load the site's compiler, ROOT, CMake and Python 3.9+ environment. For submission, initialize the login shell’s module command and reconstruction environment and use shared storage visible to workers. The sourced setup script loads the configured GEMC version. The launcher does not SSH or install software.
+Edit and validate the checkout locally, commit the changes, then transfer them through your normal Git remote or file-copy workflow. On the SSH server, load the site's compiler, ROOT, CMake and Python 3.9+ environment. For submission, preload GEMC and reconstruction in the login shell and use shared storage visible to workers. Submission inherits that environment without loading modules. The launcher does not SSH or install software.
 
 ## Sourced entry point
 
@@ -56,7 +56,7 @@ A failed command stops subsequent stages and returns a nonzero `$status` without
 
 Tcsh maintains local variables created by `set` separately from exported environment variables created by `setenv`. Both may have the same name, and `$NAME` expands the local value even after `setenv NAME ...` replaces the exported value. A stale local value can therefore make a freshly sourced workflow appear to ignore its configuration until a new terminal session is opened.
 
-Every maintained project-owned environment assignment clears both namespaces immediately before setting its authoritative value: `unset NAME`, then `unsetenv NAME`, then `setenv NAME VALUE`. This applies to the shared color and launcher environment, resolver-generated submission handoff files, and submission variables passed to Slurm. User-owned inputs such as `CLAS12_SAMPLES_DIR`, values established by external site modules, protected payloads, and archived sources are not rewritten unless a maintained workflow explicitly owns an override. Regression tests begin with conflicting local and exported values to verify that sourcing repairs the shell state.
+Every maintained project-owned environment assignment clears both namespaces immediately before setting its authoritative value: `unset NAME`, then `unsetenv NAME`, then `setenv NAME VALUE`. This applies to the shared color and launcher environment. Submission settings are now resolved in Python, which overwrites its child-process environment directly before calling `sbatch`; stale shell locals cannot shadow them. User-owned inputs such as `CLAS12_SAMPLES_DIR`, values established by external site modules, protected payloads, and archived sources are not rewritten unless a maintained workflow explicitly owns an override. Regression tests begin with conflicting local and exported values to verify shell palette repair and authoritative Slurm exports. Per-sample submission values are no longer written back into the login shell.
 
 ## Run settings and build controls
 
@@ -75,7 +75,7 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 
 `--workflow create-lund|submit` is required. `--source uniform|physical` is required for `create-lund` and invalid for `submit`.
 
-`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/slurm-submission/setup_and_submit.csh` directly; its helper accepts `--lund-dir`, `--config` and CLI overrides without invoking the LUND build driver. See the [submission guide](gemc-reconstruction-batch-submission.md).
+`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/slurm-submission/setup_and_submit.csh` directly; its Python coordinator accepts `--lund-dir`, `--config` and CLI overrides without invoking the LUND build driver. See the [submission guide](gemc-reconstruction-batch-submission.md).
 
 Building always invokes CMake dependency checking, so replacing an uncommitted `src/lund-generation/external/targets.h` is sufficient to trigger rebuilding. With `--test false`, the launcher configures BUILD_TESTING=OFF; use `--build true --test true` to enable tests again. `--build false --test true` requires an already configured test build.
 
@@ -99,4 +99,4 @@ This previews setup and the Slurm command. Add `--execute` to submit the selecte
 
 ## Supporting shell files
 
-`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/build_and_run.csh` is a LUND build helper without refresh. `src/launcher/code_updater.csh` performs checked Git operations in a child shell. Submission is sourced so login-shell module aliases and environment updates remain available to `sbatch`.
+`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/build_and_run.csh` is a LUND build helper without refresh. `src/launcher/code_updater.csh` performs checked Git operations in a child shell. The sourced submission bridge invokes Python with the preloaded environment and returns its status without exiting the login shell. Python passes resolved settings directly to `sbatch`.

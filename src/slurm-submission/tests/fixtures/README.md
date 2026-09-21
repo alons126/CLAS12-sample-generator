@@ -1,0 +1,5 @@
+These four reports preserve the working submission coordinator's output before the Python migration. They cover uniform and physical samples, both with `--execute` and in default preview mode. Fixtures use two LUND files, one prior output in each simulation directory, explicit detector inputs and a custom clas12Tags checkout.
+
+Captured from the C-shell implementation in the repository revision immediately preceding this migration. Only temporary reference copies were adjusted for two existing failures: retain the physical generator/tune instead of unsetting them before use, and supply the main banner color during farm cleanup. Protected scripts were not edited.
+
+The reference shell used `echo_style=both` for the Linux/ifarm escape convention. ANSI escapes are removed, the temporary checkout becomes `{CHECKOUT}`, and platform-dependent `wc` padding is normalized. The one-time migration check additionally compared the full colored output and captured Slurm arguments/configured exports. These files are inert test data, not runnable setup scripts.

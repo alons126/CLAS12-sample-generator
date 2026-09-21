@@ -7,7 +7,7 @@ Two separate workflows:
 
 ```text
 run.csh --workflow create-lund -> Python build driver -> LUND application -> completed files
-run.csh --workflow submit      -> sourced setup_and_submit.csh -> sbatch array -> GEMC -> recon-util
+run.csh --workflow submit      -> setup_and_submit.csh -> submit.py -> sbatch array -> GEMC -> recon-util
 ```
 
 On ifarm, use `source run.csh --workflow submit --lund-dir RUN/lundfiles`. The completed manifest supplies sample settings; optional CLI flags or `--config config/submission.conf` override simulation defaults. GEMC falls back to 5.14. The default is preview; add `--execute` to submit and replace the selected simulation output directories while preserving LUND inputs. See the [setup and submission guide](docs/gemc-reconstruction-batch-submission.md).
@@ -16,7 +16,7 @@ This repository does not run the physical event generator or calculate final acc
 
 ## First build and sample
 
-Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, and Python 3.9+ for tests and the LUND build driver, and csh/tcsh for sourced ifarm submission. GEMC and `recon-util` are needed only when executing simulation.
+Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, and Python 3.9+ for tests and both workflow drivers, and csh/tcsh for the sourced ifarm launcher. The submission preview and execution checks require preloaded GEMC and `recon-util`; only execution requires `sbatch`.
 
 Clone with the pinned legacy reference submodule, or initialize it after an existing clone:
 

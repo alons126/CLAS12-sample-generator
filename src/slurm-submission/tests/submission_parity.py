@@ -2,14 +2,12 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Compare legacy setup transcripts and Slurm handoffs using isolated shell fixtures.
+"""Verify the Python submission contract without real Slurm or detector execution.
 
-Purpose: exercise the pre-sbatch contract for both sources, all three beam energies,
-    and maintained channel extensions without submitting jobs or changing protected files.
-Workflow: read archived scripts, relocate settings in temporary copies, intercept module
-    and sbatch, and compare complete stdout and exported settings to the unified script.
-Inputs: repository root and tcsh executable from CTest. Outputs: assertion diagnostics.
-Failure: any unexpected transcript, environment, directory or exit-status difference fails.
+Workflow: isolated checkout fixtures -> sourced bridge -> inert sbatch capture. Golden
+reports were captured from the working C-shell coordinator before its Python migration.
+Cover both source types, beam/channel variations, preview, failures and array environments.
+Protected payload execution uses only fake gemc/recon-util commands in temporary directories.
 """
 
 import difflib
@@ -24,7 +22,6 @@ import tempfile
 
 PROJECT = Path(sys.argv[1]).resolve()
 SHELL = sys.argv[2] if len(sys.argv) > 2 else shutil.which('tcsh')
-LEGACY = PROJECT / 'legacy/GEMC-samples'
 SETUP = PROJECT / 'src/slurm-submission/setup_and_submit.csh'
 PAYLOAD = PROJECT / 'src/slurm-submission/external/submit_GEMC_sample.sh'
 
@@ -32,7 +29,7 @@ PAYLOAD = PROJECT / 'src/slurm-submission/external/submit_GEMC_sample.sh'
 
 # region Fixtures
 def fixture(root, source, energy, channel='en', fc=0):
-    """Create a self-contained reference/new setup pair and inert module/Slurm tools.
+    """Create a self-contained checkout with inert Slurm and detector tools.
 
     All script replacements happen under the temporary root. Real detector configuration
     and external payload files are only read or copied. Returns paths, explicit settings,
@@ -41,6 +38,7 @@ def fixture(root, source, energy, channel='en', fc=0):
     root.mkdir(parents=True)
     bin_dir = root / 'bin'
     bin_dir.mkdir()
+    (bin_dir / 'python3').symlink_to(sys.executable)
     run = root / 'output/run'
     for directory in (run / 'lundfiles', root / 'requirements', root / 'tags', root / 'gemc-data', root / 'farm_out'):
         directory.mkdir(parents=True)
@@ -68,11 +66,6 @@ def fixture(root, source, energy, channel='en', fc=0):
     payload = root / 'src/slurm-submission/external/submit_GEMC_sample.sh'
     payload.parent.mkdir(parents=True)
     shutil.copy2(PAYLOAD, payload)
-    env_file = root / 'scripts/set_env.csh'
-    env_file.parent.mkdir(parents=True)
-    shutil.copy2(LEGACY / 'scripts/set_env.csh', env_file)
-    module = root / 'module.csh'
-    module.write_text('echo "$argv" >> "$MODULE_LOG"\nif ("$argv[1]" == "load") setenv GEMC_DATA_DIR "$FIXTURE_GEMC_DATA"\n/bin/sh -c "exit $MODULE_STATUS"\n')
     sbatch = bin_dir / 'sbatch'
     sbatch.write_text('#!' + sys.executable + '\nimport json,os,sys\nwith open(os.environ["SBATCH_LOG"],"a") as f: f.write(json.dumps({"argv":sys.argv[1:],"env":dict(os.environ)})+"\\n")\nsys.exit(int(os.environ.get("SBATCH_STATUS","0")))\n')
     sbatch.chmod(0o755)
@@ -80,19 +73,6 @@ def fixture(root, source, energy, channel='en', fc=0):
         path = bin_dir / tool
         path.write_text('#!/bin/sh\nexit 0\n')
         path.chmod(0o755)
-    basename = 'uniform_setup_and_submit.csh' if source == 'uniform' else 'genie_job_submission_script.csh'
-    old = (LEGACY / 'scripts/setup_and_submission_scripts' / basename).read_text()
-    old = re.sub(r'(?m)^setenv NUM_OF_JOBS .*$', 'setenv NUM_OF_JOBS 2', old)
-    old = re.sub(r'(?m)^(\s*)setenv OUTPATH_BASE .*$', lambda m: m[1] + f'setenv OUTPATH_BASE {root}/output', old)
-    old = re.sub(r'(?m)^(\s*)setenv OUTPATH .*$', lambda m: m[1] + f'setenv OUTPATH {run}', old)
-    old = re.sub(r'(?m)^(\s*)setenv CLAS12TAGS_DIR .*$', lambda m: m[1] + f'setenv CLAS12TAGS_DIR {root}/tags', old)
-    old = re.sub(r'(?m)^(\s*)setenv REQUIREMENTS_PATH .*$', lambda m: m[1] + f'setenv REQUIREMENTS_PATH {root}/requirements', old)
-    old = re.sub(r'(?m)^(\s*)setenv SUBMIT_SCRIPT_FILE .*$', lambda m: m[1] + f'setenv SUBMIT_SCRIPT_FILE {payload}', old)
-    old = re.sub(r'(?m)^(\s*)foreach BEAM_E \( .* \)$', lambda m: m[1] + f'foreach BEAM_E ( {energy} )', old)
-    old = re.sub(r'(?m)^foreach FC_STATUSES \( .* \)$', f'foreach FC_STATUSES ( {fc} )', old)
-    old = re.sub(r'(?m)^(\s*)foreach OUTPATH_PARTICLE \( .* \)$', lambda m: m[1] + f'foreach OUTPATH_PARTICLE ( {channel} )', old)
-    old_path = root / 'old.csh'
-    old_path.write_text(old)
     values = dict(NUM_OF_JOBS='2', JOB_NEVENTS='3', BEAM_ENERGY_LABEL=energy,
                   UNIFORM_SAMPLE_CHANNEL=channel if source == 'uniform' else 'none', TARGET_VARIATION=target,
                   SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie',
@@ -111,23 +91,27 @@ def fixture(root, source, energy, channel='en', fc=0):
         settings.pop('channel')
     config = root / 'submission.conf'
     config.write_text('\n'.join(f'{key} = {value}' for key, value in settings.items()) + '\n')
-    shutil.copy2(PROJECT / 'src/slurm-submission/resolve_inputs.py', payload.parent.parent / 'resolve_inputs.py')
+    for name in ('resolve_inputs.py', 'submit.py'):
+        shutil.copy2(PROJECT / 'src/slurm-submission' / name, payload.parent.parent / name)
+    shutil.copytree(PROJECT / 'src/launcher/environment', root / 'src/launcher/environment')
+    (run / 'lundfiles/lund-gen-monitoring').mkdir()
     new_path = root / 'new.csh'
     # Test wrapper supplies a normal config, leaving the maintained setup completely unmodified.
     shutil.copy2(SETUP, payload.parent.parent / 'setup_and_submit.csh')
     new_path.write_text(f'source src/slurm-submission/setup_and_submit.csh --config "{config}" $argv:q\n')
-    env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'], MODULE_LOG=str(root / 'modules.log'),
-               SBATCH_LOG=str(root / 'sbatch.jsonl'), FIXTURE_GEMC_DATA=str(root / 'gemc-data'),
-               MODULE_STATUS='0', GEMC_DATA_DIR=str(root / 'gemc-data'), SBATCH_STATUS='0')
-    return new_path, old_path, values, env
+    env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + '/usr/bin:/bin',
+               SBATCH_LOG=str(root / 'sbatch.jsonl'), GEMC_DATA_DIR=str(root / 'gemc-data'), SBATCH_STATUS='0')
+    return new_path, values, env
 
 def run_script(path, env, success=True, arguments=(), execute=True):
-    """Source a fixture with a shell module alias; verify status and caller-shell survival."""
+    """Source a fixture; verify status and caller-shell survival, including stale locals."""
     if execute:
         arguments = (*arguments, '--execute')
-    for key in ('MODULE_LOG', 'SBATCH_LOG'):
-        Path(env[key]).unlink(missing_ok=True)
-    program = 'source "' + str(PROJECT / 'src/launcher/environment/set_colors.csh') + '"; alias module \'source "' + str(path.parent / 'module.csh') + '" \\!*\'; set script_path="$argv[1]"; shift argv; source "$script_path" $argv:q; set result=$status; echo "SHELL_ALIVE=$result"; /bin/sh -c "exit $result"'
+    Path(env['SBATCH_LOG']).unlink(missing_ok=True)
+    program = ('set echo_style=both; set OUTPATH=stale; set GEMC_VERSION=stale; '
+               'setenv GEMC_VERSION stale; set script_path="$argv[1]"; shift argv; '
+               'source "$script_path" $argv:q; set result=$status; '
+               'echo "SHELL_ALIVE=$result"; /bin/sh -c "exit $result"')
     result = subprocess.run([SHELL, '-f', '-c', program, str(path), *arguments], cwd=path.parent, env=env, capture_output=True, text=True)
     assert f'SHELL_ALIVE={result.returncode}\n' in result.stdout, result.stdout + result.stderr
     assert (result.returncode == 0) == success, result.stdout + result.stderr
@@ -147,37 +131,25 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         for energy in ('2070MeV', '4029MeV', '5986MeV'):
             for selection in (('1e', 0), ('ep', 0), ('en', 0)) if source == 'uniform' else (('en', 0), ('en', 1)):
                 channel, fc = selection
-                new, old, values, env = fixture(root / f'{source}-{energy}-{channel}-{fc}', source, energy, channel, fc)
-                reference, old_calls = run_script(old, env)
-                # Restore stale outputs so the new setup must perform its own replacement.
-                for directory in ('mchipo', 'reconhipo'):
-                    (Path(values['OUTPATH']) / directory / 'old.hipo').write_text('old simulation output')
-                shutil.rmtree(Path(values['OUTPATH']) / 'rootfiles', ignore_errors=True)
+                new, values, env = fixture(root / f'{source}-{energy}-{channel}-{fc}', source, energy, channel, fc)
                 actual, calls = run_script(new, env)
-                # The shared palette replaces archived channel colors; compare the complete visible report.
-                reference = re.sub(r'(?:\x1b|\\033)\[[0-9;]*m', '', reference)
-                actual = re.sub(r'(?:\x1b|\\033)\[[0-9;]*m', '', actual)
-                assert reference == actual, ''.join(difflib.unified_diff(reference.splitlines(True), actual.splitlines(True), fromfile='legacy', tofile='unified'))
-                assert len(calls) == len(old_calls) == 1
-                assert calls[0]['argv'] == old_calls[0]['argv']
-                assert calls[0]['argv'][1] == '--array=1-2'
-                for name in ('OUTPATH', 'GCARD_FILE', 'YAML_FILE', 'TORUS_FIELD', 'ARRAY', 'SLURM_JOB_NAME'):
-                    assert calls[0]['env'][name] == old_calls[0]['env'][name], name
+                assert len(calls) == 1
+                assert calls[0]['argv'] == ['--job-name=' + values['SLURM_JOB_NAME'], '--array=1-2',
+                                            str(new.parent / 'src/slurm-submission/external/submit_GEMC_sample.sh')]
                 for name, value in values.items():
                     assert calls[0]['env'][name] == value, name
                 assert calls[0]['env']['SBATCH_EXPORT'] == calls[0]['env']['SLURM_EXPORT_ENV'] == 'ALL'
-                assert not Path(env['MODULE_LOG']).exists()
                 assert calls[0]['env']['GEMC_DATA_DIR'] == str(new.parent / 'tags')
                 run = Path(values['OUTPATH'])
                 assert not list((run / 'mchipo').iterdir()) and not list((run / 'reconhipo').iterdir())
                 assert len(list((run / 'lundfiles').glob('*.txt'))) == 2
                 assert not (run / 'rootfiles').exists()
     for channel in ('enFD', 'enCD', 'epFD', 'epCD', 'epipFD', 'epipCD', 'epimFD', 'epimCD', 'electron-tester'):
-        new, _, values, env = fixture(root / channel, 'uniform', '2070MeV', channel)
+        new, values, env = fixture(root / channel, 'uniform', '2070MeV', channel)
         _, calls = run_script(new, env)
         assert len(calls) == 1 and calls[0]['env']['UNIFORM_SAMPLE_CHANNEL'] == channel
     for failure in ('gcard', 'yaml', 'lund', 'tags', 'symlink', 'unsafe', 'sbatch'):
-        new, _, values, env = fixture(root / failure, 'uniform', '2070MeV')
+        new, values, env = fixture(root / failure, 'uniform', '2070MeV')
         run = Path(values['OUTPATH'])
         if failure in ('gcard', 'yaml'):
             Path(values['GCARD_FILE' if failure == 'gcard' else 'YAML_FILE']).unlink()
@@ -199,10 +171,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
             assert (run / 'reconhipo/old.hipo').exists()
     # Feed a completed manifest through the real resolver and sourced shell, with no sample config.
     for source in ('uniform', 'physical'):
-        new, _, values, env = fixture(root / f'manifest-{source}', source, '2070MeV', 'enFD')
+        new, values, env = fixture(root / f'manifest-{source}', source, '2070MeV', 'enFD')
         lund = Path(values['OUTPATH']) / 'lundfiles'
         monitoring = lund / 'lund-gen-monitoring'
-        monitoring.mkdir()
+        monitoring.mkdir(exist_ok=True)
         metadata = {'beam-energy': '2.07052', 'rgm-target': 'C12', 'prefix': values['SAMPLE_FILE_PREFIX'],
                     'gemc-target-variation': values['TARGET_VARIATION'], 'gemc-version': 'unknown',
                     'output': '/old-machine/run', 'tune': values['GENERATOR_TUNE'], 'q2-cut': values['Q2_CUT']}
@@ -228,7 +200,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         assert not calls
 
     # Preview must leave both existing and absent output directories unchanged, and never call sbatch.
-    new, _, values, env = fixture(root / 'preview', 'uniform', '2070MeV')
+    new, values, env = fixture(root / 'preview', 'uniform', '2070MeV')
     run = Path(values['OUTPATH'])
     log = new.parent / 'farm_out/keep.log'
     log.write_text('preserve log')
@@ -245,11 +217,10 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     assert not (run / 'rootfiles').exists()
 
     # Exercise the real run.csh branch without sync or the Python/build machinery.
-    new, _, values, env = fixture(root / 'launcher', 'uniform', '2070MeV')
+    new, values, env = fixture(root / 'launcher', 'uniform', '2070MeV')
     checkout = new.parent
     (checkout / '.git').mkdir()
-    (checkout / 'src/launcher').mkdir()
-    (checkout / 'src/launcher/workflow.py').write_text('raise AssertionError("Submission must bypass Python")\n')
+    (checkout / 'src/launcher/workflow.py').write_text('raise AssertionError("Submission must bypass the LUND build driver")\n')
     entry = checkout / 'run.csh'
     shutil.copy2(PROJECT / 'run.csh', entry)
     env['CLAS12_SKIP_SERVER_SYNC'] = '1'
@@ -258,7 +229,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     _, calls = run_script(entry, env, success=False, arguments=('--workflow', 'submit', '--site', 'removed.json'))
     assert not calls
     # Multiple samples repeat setup with distinct outputs and make exactly one array each.
-    new, _, values, env = fixture(root / 'multiple', 'uniform', '2070MeV')
+    new, values, env = fixture(root / 'multiple', 'uniform', '2070MeV')
     first_run = Path(values['OUTPATH'])
     second_run = first_run.with_name('second')
     shutil.copytree(first_run, second_run)
@@ -268,29 +239,79 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
     _, calls = run_script(new, env, success=False, arguments=('--lund-dir', str(first_run / 'lundfiles'), '--lund-dir', str(first_run / 'lundfiles')))
     assert not calls  # Resolve every sample before performing any setup or submission.
 
-    # Preserve the detector command contract, independently of setup presentation.
+    # A scheduler rejection stops before the next sample's outputs are replaced.
+    (second_run / 'mchipo/keep.hipo').write_text('second sample untouched')
+    env['SBATCH_STATUS'] = '1'
+    _, calls = run_script(new, env, success=False, arguments=('--lund-dir', str(first_run / 'lundfiles'),
+                                                            '--lund-dir', str(second_run / 'lundfiles')))
+    assert len(calls) == 1 and (second_run / 'mchipo/keep.hipo').is_file()
+
+    # Clear direct regular logs only once, retaining symlinks, nested logs and fresh scheduler logs.
+    new, values, env = fixture(root / 'farm-cleanup', 'uniform', '2070MeV')
+    first_run = Path(values['OUTPATH'])
+    second_run = first_run.with_name('second')
+    shutil.copytree(first_run, second_run)
+    farm = new.parent / 'farm_out'
+    (farm / 'old.log').write_text('old')
+    (farm / 'nested').mkdir()
+    (farm / 'nested/keep.log').write_text('keep')
+    (farm / 'link.log').symlink_to(farm / 'nested/keep.log')
+    scheduler = new.parent / 'bin/sbatch'
+    scheduler.write_text(scheduler.read_text().replace('sys.exit(',
+        'from pathlib import Path\np=Path(os.environ["FRESH_LOG"])\nassert not p.exists() or p.read_text()=="first"\np.write_text("first" if not p.exists() else "second")\nsys.exit('))
+    env['FRESH_LOG'] = str(farm / 'fresh.log')
+    _, calls = run_script(new, env, arguments=('--clear-farm-out', 'true', '--lund-dir', str(first_run / 'lundfiles'),
+                                              '--lund-dir', str(second_run / 'lundfiles')))
+    assert len(calls) == 2 and not (farm / 'old.log').exists()
+    assert (farm / 'fresh.log').read_text() == 'second'
+    assert (farm / 'link.log').is_symlink() and (farm / 'nested/keep.log').read_text() == 'keep'
+    (first_run / 'mchipo/keep.hipo').write_text('keep')
+    _, calls = run_script(new, env, success=False, arguments=('--clear-farm-out', 'true', '--farm-out', str(new.parent / 'tags')))
+    assert not calls and (first_run / 'mchipo/keep.hipo').is_file()
+
+    # Preloaded data is used unchanged without an override; missing worker programs/data fail before output reset.
+    for failure in ('none', 'gemc', 'recon-util', 'sbatch', 'GEMC_DATA_DIR'):
+        new, values, env = fixture(root / f'environment-{failure}', 'uniform', '2070MeV')
+        config = new.parent / 'submission.conf'
+        config.write_text('\n'.join(line for line in config.read_text().splitlines() if not line.startswith('clas12tags-dir')))
+        if failure == 'GEMC_DATA_DIR':
+            env.pop('GEMC_DATA_DIR')
+        elif failure != 'none':
+            (new.parent / 'bin' / failure).unlink()
+        _, calls = run_script(new, env, success=failure == 'none')
+        if failure == 'none':
+            assert calls[0]['env']['GEMC_DATA_DIR'] == env['GEMC_DATA_DIR']
+        else:
+            assert not calls and (Path(values['OUTPATH']) / 'mchipo/old.hipo').exists()
+
+    # Freeze the working C-shell report for both sources and preview/execute modes.
+    for source in ('uniform', 'physical'):
+        new, values, env = fixture(root / f'report-{source}', source, '2070MeV')
+        for execute in (False, True):
+            actual, _ = run_script(new, env, execute=execute)
+            actual = re.sub(r'(?:\x1b|\\033)\[[0-9;]*m', '', actual).replace(str(new.parent), '{CHECKOUT}')
+            mode = 'execute' if execute else 'preview'
+            expected = (PROJECT / f'src/slurm-submission/tests/fixtures/{source}-{mode}.txt').read_text()
+            assert actual == expected, ''.join(difflib.unified_diff(expected.splitlines(True), actual.splitlines(True)))
+
+    # Execute only the protected worker with inert commands, checking the unchanged detector interface.
     command_log = root / 'detector-commands.jsonl'
     stub = '#!' + sys.executable + '\nimport json,os,sys\nwith open(os.environ["COMMAND_LOG"],"a") as f: f.write(json.dumps([os.path.basename(sys.argv[0]),*sys.argv[1:]])+"\\n")\n'
     for tool in ('gemc', 'recon-util'):
         executable = new.parent / 'bin' / tool
         executable.write_text(stub)
         executable.chmod(0o755)
-    env['COMMAND_LOG'] = str(command_log)
-    for source in ('uniform', 'GENIE'):
-        for energy, torus in (('2070MeV', '0.5'), ('4029MeV', '-1.0'), ('5986MeV', '-1.0')):
-            prefix = f'Uniform_en_sample_{energy}' if source == 'uniform' else f'C12_GEM21_11a_00_000_Q2_0_02_{energy}'
-            worker_env = dict(env, OUTPATH=str(first_run), BEAM_ENERGY_LABEL=energy, UNIFORM_SAMPLE_CHANNEL='en',
-                              SAMPLE_TARGET_NUCLEUS='C12', GENIE_TUNE='GEM21_11a_00_000', GENERATOR_TUNE='GEM21_11a_00_000',
-                              SAMPLE_GENERATOR=source, Q2_CUT='Q2_0_02', TORUS_FIELD=torus,
-                              GCARD_FILE=values['GCARD_FILE'], YAML_FILE=values['YAML_FILE'],
-                              SLURM_ARRAY_TASK_ID='1', SAMPLE_FILE_PREFIX=prefix, JOB_NEVENTS='10000')
-            logs = []
-            for payload in (LEGACY / f'scripts/job_submission_scripts/submit_GEMC_{source}_sample.sh', PAYLOAD):
-                command_log.unlink(missing_ok=True)
-                subprocess.run(['bash', str(payload)], env=worker_env, check=True, capture_output=True, text=True)
-                logs.append(command_log.read_text())
-            assert logs[0] == logs[1]
-    legacy_payload = (LEGACY / 'scripts/job_submission_scripts/submit_GEMC_GENIE_sample.sh').read_bytes()
-    assert PAYLOAD.read_bytes().split(b'JOB_TARGET=')[0] == legacy_payload.split(b'JOB_TARGET=')[0]
-print('Full legacy setup stdout, arrays/environment, launcher, detector argv and failure tests passed.')
+    _, calls = run_script(new, env)
+    worker_env = dict(calls[0]['env'], COMMAND_LOG=str(command_log), SLURM_ARRAY_TASK_ID='2')
+    subprocess.run(['bash', str(PAYLOAD)], env=worker_env, check=True, capture_output=True, text=True)
+    commands = [json.loads(line) for line in command_log.read_text().splitlines()]
+    prefix = values['SAMPLE_FILE_PREFIX']
+    out = values['OUTPATH']
+    mc = f'{out}/mchipo/mc_{prefix}_2_torus0.5.hipo'
+    assert commands == [
+        ['gemc', '-USE_GUI=0', '-SCALE_FIELD=binary_torus, 0.5', '-SCALE_FIELD=binary_solenoid, -1.0',
+         '-N=3', f'-INPUT_GEN_FILE=lund, {out}/lundfiles/{prefix}_2.txt', '-OUTPUT=hipo, ' + mc, values['GCARD_FILE']],
+        ['recon-util', '-y', values['YAML_FILE'], '-n', '3', '-i', mc,
+         '-o', f'{out}/reconhipo/recon_{prefix}_2_torus0.5.hipo']]
+print('Submission reports, array exports, preview, failure guards and protected worker contract passed.')
 # endregion Tests

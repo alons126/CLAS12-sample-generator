@@ -40,10 +40,10 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | `TORUS_FIELD` | +0.5 at 2 GeV; −1 at 4/6 GeV |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction configurations |
 
-The sourced `src/slurm-submission/setup_and_submit.csh` exports these settings, loads the selected GEMC module, checks inputs, recreates simulation output directories and submits one array per sample. Slurm exports the configured environment and supplies the task index. The configured event limit is shared by the array, including a shorter final LUND file; it is not an exact per-file count.
+The sourced `src/slurm-submission/setup_and_submit.csh` invokes `submit.py`, which passes these settings to `sbatch`, checks the preloaded environment and inputs, recreates simulation output directories with `--execute`, and submits one array per sample. Slurm exports the configured environment and supplies the task index. The configured event limit is shared by the array, including a shorter final LUND file; it is not an exact per-file count.
 
 ## Integration with the maintained launcher
 
-`source run.csh --workflow submit` refreshes the disposable server checkout and sources the setup script directly in the login shell. The helper resolves submission settings from the LUND manifest, optional key=value config and CLI. There is no site JSON, Python coordinator, local detector runner, lock database or generated wrapper. The payload retains its scheduler directives and detector commands unchanged.
+`source run.csh --workflow submit` refreshes the disposable server checkout and sources the setup script directly in the login shell. The Python coordinator imports `resolve_inputs.py` to resolve the LUND manifest, optional key=value config and CLI. There is no site JSON, local detector runner, lock database or generated wrapper. The payload retains its scheduler directives and detector commands unchanged.
 
 CMake installs only this protected payload under `bin/`. The setup workflow runs from the checkout through `run.csh`. Review the [submission guide](gemc-reconstruction-batch-submission.md) for settings, output replacement and tests.

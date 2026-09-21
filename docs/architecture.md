@@ -42,10 +42,10 @@ The two workflows start at `run.csh`, after the guarded disposable-server refres
 run.csh
   --workflow create-lund -> launcher/workflow.py -> selected LUND application
   --workflow submit      -> source slurm-submission/setup_and_submit.csh
-                            -> sbatch array -> protected GEMC/reconstruction payload
+                            -> submit.py (imports resolve_inputs.py) -> sbatch array -> protected GEMC/reconstruction payload
 ```
 
-The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its small Python helper resolves manifest/config/CLI inputs and passes validated settings to the sourced shell. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](gemc-reconstruction-batch-submission.md) for the full call chain and editable settings.
+The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](gemc-reconstruction-batch-submission.md) for the full call chain and editable settings.
 
 ## Sample configuration boundary
 
@@ -84,7 +84,7 @@ The converter stops at the configured output capacity or end of input. The final
 
 ## Simulation boundary
 
-`src/slurm-submission/setup_and_submit.csh` combines the legacy uniform/GENIE setup workflows. It loads GEMC in the sourced login shell, prints the legacy setup report, checks inputs, resets the selected simulation output directories, and submits one array per sample. The protected payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
+`src/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python prints the established setup report, checks preloaded GEMC and inputs, resets simulation output directories only with `--execute`, and submits one array per sample. The protected payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
 
 ## Adding functionality
 

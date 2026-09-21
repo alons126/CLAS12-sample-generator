@@ -4,7 +4,7 @@
 
 ## Abstract
 
-The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A unified sourced setup script loads the GEMC environment and submits Slurm arrays whose protected payload runs GEMC and reconstruction. Legacy-compatible output is tested against external reference implementations. Production uniform sampling balances momentum and inverse-momentum coverage for 1e electrons and charged hadrons, while neutrons cover zero to beam momentum; hadron region selects the documented FD or CD flat-theta window.
+The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A small sourced bridge invokes Python setup with the preloaded GEMC environment and submits Slurm arrays whose protected payload runs GEMC and reconstruction. Legacy-compatible output is tested against external reference implementations. Production uniform sampling balances momentum and inverse-momentum coverage for 1e electrons and charged hadrons, while neutrons cover zero to beam momentum; hadron region selects the documented FD or CD flat-theta window.
 
 ## Reading and assembly order
 
