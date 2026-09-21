@@ -359,7 +359,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         else:
             assert not calls and (Path(values['OUTPATH']) / 'mchipo/old.hipo').exists()
 
-    # Freeze the working C-shell report for both sources and preview/execute modes.
+    # Freeze the regrouped submission report for both sources and preview/execute modes.
     for source in ('uniform', 'physical'):
         new, values, env = fixture(root / f'report-{source}', source, '2070MeV')
 

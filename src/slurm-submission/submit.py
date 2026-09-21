@@ -212,8 +212,6 @@ def clear_farm(values, root, execute, report, cleared):
         A missing, linked, broad, or non-farm_out destination raises before any deletion.
     """
 
-    report.banner('Handling farm_out directory clearing and GEMC data')
-
     # The first two branches make the operation a no-op when disabled or already handled
     # for a previous sample in this invocation.
     if values['CLEAR_FAR_OUT'] == 'false':
@@ -228,8 +226,6 @@ def clear_farm(values, root, execute, report, cleared):
         if (not farm.is_dir() or farm.is_symlink() or farm in (Path('/'), Path.home().resolve(), root)
                 or farm in root.parents or 'farm_out' not in farm.parts):
             raise ValueError('invalid setting or unsafe path; check the submission config or CLI settings.')
-
-        report.banner('Clearing farm_out directory', main=True)
 
         # Iterate one directory level only. A link to a regular file is left untouched,
         # and preview reports the action without unlinking anything.
@@ -288,16 +284,19 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         report.text('{INFO}PREVIEW:{END}\nNo sbatch, output replacement or farm_out cleanup; add --execute to submit.')
         report.text()
 
-    report.banner('Setup environment variables and paths')
+    report.banner('Slurm submission workflow parameters')
 
     # Display the inherited checkout plus resolved cleanup and GEMC version so the
     # operator can verify the job environment before any simulation output is replaced.
     for key, spaces in (('RUNNING_DIR', 3), ('CLEAR_FAR_OUT', 1), ('GEMC_VERSION', 2)):
         report.value(key, environment[key], spaces)
 
-    identity = '   uniform' if uniform else '  physical (' + values['SAMPLE_GENERATOR'] + ')'
+    identity = '   uniform' if uniform else '   physical (' + values['SAMPLE_GENERATOR'] + ')'
 
     report.text('{START}Sample type:{INFO}' + identity + '{END}')
+    
+    farm_cleared = clear_farm(values, root, execute, report, farm_cleared)
+
     report.text()
 
     # A custom clas12Tags checkout is optional. When supplied, it becomes GEMC_DATA_DIR
@@ -306,12 +305,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         report.value('CLAS12TAGS_DIR', values['CLAS12TAGS_DIR'])
         report.check('CLAS12TAGS_DIR', values['CLAS12TAGS_DIR'], directory=True)
 
-    farm_cleared = clear_farm(values, root, execute, report, farm_cleared)
-
-    # The GEMC environment is preloaded by run.csh. An explicit custom checkout can
+    # The GEMC environment is preloaded by user ifarm environment. An explicit custom checkout can
     # override GEMC_DATA_DIR, but either source must name an existing directory.
-    report.banner('Checking preloaded GEMC data')
-
     if values['CLAS12TAGS_DIR']:
         environment['GEMC_DATA_DIR'] = values['CLAS12TAGS_DIR']
 
@@ -321,50 +316,40 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     report.value('GEMC_DATA_DIR', environment['GEMC_DATA_DIR'])
     report.check('GEMC_DATA_DIR', environment['GEMC_DATA_DIR'], directory=True)
 
-    # The source-specific banner changes presentation only. Both paths use the same
-    # validated target, beam, torus, and array-size values below.
-    report.banner('Uniform sample job parameters' if uniform else values['SAMPLE_GENERATOR'] + ' sample job parameters')
+    # Both sources report the resolved target, beam, and torus settings here.
+    # Array size is reported later with the Slurm job settings.
+    report.banner('Sample parameters')
 
     for key, spaces in (('SAMPLE_TARGET_NUCLEUS', 2), ('TARGET_VARIATION', 7), ('BEAM_ENERGY_LABEL', 6),
-                        ('DETECTOR_ENERGY_GROUP', 2), ('TORUS_FIELD', 12), ('NUM_OF_JOBS', 12)):
+                        ('DETECTOR_ENERGY_GROUP', 2), ('TORUS_FIELD', 12)):
         report.value(key, values[key], spaces)
 
     report.text()
 
-    # Uniform output is identified by its resolved channel; physical output also reports
-    # generator tune, Q2 label, and the legacy field-cage naming flag. The latter is a
-    # label, not an event-selection cut performed during submission.
+    # Keep all sample identity fields together. The field-cage flag affects the physical
+    # job label; it does not apply an event-selection cut during submission.
     if uniform:
         report.value('UNIFORM_SAMPLE_CHANNEL', values['UNIFORM_SAMPLE_CHANNEL'], color='INFO')
-        report.text()
-        report.banner('Setting paths for channel ' + values['UNIFORM_SAMPLE_CHANNEL'])
     else:
-        report.banner('Setting paths and parameters')
-        report.text()
-
-        for key, spaces in (('SAMPLE_TARGET_NUCLEUS', 1), ('GENERATOR_TUNE', 8), ('Q2_CUT', 16),
-                            ('BEAM_ENERGY_LABEL', 5), ('FC_STATUS', 13), ('FC_STATUS_ENABLED', 5)):
+        for key, spaces in (('GENERATOR_TUNE', 8), ('Q2_CUT', 16), ('FC_STATUS', 13), ('FC_STATUS_ENABLED', 5)):
             report.value(key, values[key], spaces)
 
-    report.value('OUTPATH', values['OUTPATH'])
+    report.text()
 
-    # OUTPATH is the existing run derived from the selected lundfiles directory.
-    # The detector-resource folder, GCARD, and YAML must also exist before handoff.
+    # Check detector inputs before simulation-output replacement. Their visible status
+    # report follows the output inventory in the Slurm jobs parameters section below.
+    required_paths = [('OUTPATH', values['OUTPATH'], True),
+                      ('REQUIREMENTS_DIR', values['REQUIREMENTS_DIR'], True),
+                      ('GCARD_FILE', values['GCARD_FILE'], False),
+                      ('YAML_FILE', values['YAML_FILE'], False),
+                      ('SUBMIT_SCRIPT_FILE', environment['SUBMIT_SCRIPT_FILE'], False)]
+
     if not uniform:
-        report.text()
+        required_paths.insert(1, ('RUNNING_DIR', str(root), True))
 
-    report.check('OUTPATH', values['OUTPATH'], directory=True)
-
-    if not uniform:
-        report.check('RUNNING_DIR', str(root), directory=True)
-
-    report.value('REQUIREMENTS_DIR', values['REQUIREMENTS_DIR'])
-    report.check('REQUIREMENTS_DIR', values['REQUIREMENTS_DIR'], directory=True)
-
-    for key in ('GCARD_FILE', 'YAML_FILE'):
-        report.value(key, values[key])
-        report.check(key, values[key])
-        report.text()
+    for name, path, directory in required_paths:
+        if not (Path(path).is_dir() if directory else Path(path).is_file()):
+            raise ValueError(f'missing required {"directory" if directory else "file"} {name}: {path}')
 
     # Recheck all selected array inputs at handoff time, after resolver validation.
     # A missing or newly emptied LUND file must stop before output replacement.
@@ -395,7 +380,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # new array. Preview prints that intention and leaves existing products untouched.
     # Neither branch removes or rewrites run/lundfiles.
     if execute:
-        report.text('{START}Removing old directory structure for MC simulation here...{END}')
+        report.text('{INFO}Removing old directory structure for MC simulation here...{END}')
 
         for path in output_dirs:
             if path.is_dir():
@@ -403,8 +388,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
             elif path.exists():
                 path.unlink()
 
-        report.text()
-        report.text('{START}Setting up directory structure for MC simulation here...{END}')
+        report.text('{INFO}Setting up directory structure for MC simulation here...{END}')
 
         for path in output_dirs:
             path.mkdir()
@@ -430,21 +414,35 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     report.text()
 
-    # One Slurm array task corresponds to each selected PREFIX_INDEX.txt input. The
-    # protected payload receives ARRAY, the job name, and the other resolved exports.
-    report.banner('Submitting sbatch job for ' + ('uniform' if uniform else values['SAMPLE_GENERATOR']) + ' sample')
+    # One Slurm array task corresponds to each selected PREFIX_INDEX.txt input. All
+    # paths have passed preflight before output replacement; report them in one place.
+    report.banner('Slurm jobs parameters')
+    report.value('OUTPATH', values['OUTPATH'])
+    report.check('OUTPATH', values['OUTPATH'], directory=True)
 
+    if not uniform:
+        report.check('RUNNING_DIR', str(root), directory=True)
+
+    report.value('REQUIREMENTS_DIR', values['REQUIREMENTS_DIR'])
+    report.check('REQUIREMENTS_DIR', values['REQUIREMENTS_DIR'], directory=True)
+
+    for key in ('GCARD_FILE', 'YAML_FILE'):
+        report.value(key, values[key])
+        report.check(key, values[key])
+        report.text()
+
+    report.value('NUM_OF_JOBS', values['NUM_OF_JOBS'], 12)
     environment['ARRAY'] = '1-' + values['NUM_OF_JOBS']
-
     report.value('SLURM_JOB_NAME', values['SLURM_JOB_NAME'])
     report.value('ARRAY', environment['ARRAY'], 10)
     report.text()
 
     payload = environment['SUBMIT_SCRIPT_FILE']
-
     report.value('SUBMIT_SCRIPT_FILE', payload)
     report.check('SUBMIT_SCRIPT_FILE', payload)
     report.text()
+
+    report.banner('Submitting sbatch job for ' + ('uniform' if uniform else values['SAMPLE_GENERATOR']) + ' sample')
 
     # Show the exact command in both modes; only the execution branch calls it.
     report.text('{START}Submitted job with command:{END}' if execute else '{INFO}Preview command (not submitted):{END}')

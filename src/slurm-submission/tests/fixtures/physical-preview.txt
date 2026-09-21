@@ -6,7 +6,7 @@ PREVIEW:
 No sbatch, output replacement or farm_out cleanup; add --execute to submit.
 
 ====================================================================================================
-=                              Setup environment variables and paths                               =
+=                               Slurm submission workflow parameters                               =
 ====================================================================================================
 RUNNING_DIR:   {CHECKOUT}
 CLEAR_FAR_OUT: false
@@ -17,40 +17,42 @@ CLAS12TAGS_DIR: {CHECKOUT}/tags
 --> Checking if CLAS12TAGS_DIR is a directory...
 --> CLAS12TAGS_DIR exists.
 
-====================================================================================================
-=                        Handling farm_out directory clearing and GEMC data                        =
-====================================================================================================
 CLEAR_FAR_OUT$ is set to 'false', skipping farm_out directory clearing...
 
-====================================================================================================
-=                                   Checking preloaded GEMC data                                   =
-====================================================================================================
 GEMC_DATA_DIR: {CHECKOUT}/tags
 --> Checking if GEMC_DATA_DIR is a directory...
 --> GEMC_DATA_DIR exists.
 
 ====================================================================================================
-=                                   genie sample job parameters                                    =
+=                                        Sample parameters                                         =
 ====================================================================================================
 SAMPLE_TARGET_NUCLEUS:  C12
 TARGET_VARIATION:       rgm_fall2021_C_S
 BEAM_ENERGY_LABEL:      2070MeV
 DETECTOR_ENERGY_GROUP:  2GeV
 TORUS_FIELD:            0.5
-NUM_OF_JOBS:            2
 
-====================================================================================================
-=                                   Setting paths and parameters                                   =
-====================================================================================================
-
-SAMPLE_TARGET_NUCLEUS: C12
 GENERATOR_TUNE:        GEM21_11a_00_000
 Q2_CUT:                Q2_0_02
-BEAM_ENERGY_LABEL:     2070MeV
 FC_STATUS:             
 FC_STATUS_ENABLED:     0
-OUTPATH: {CHECKOUT}/output/run
 
+====================================================================================================
+=                                    Setting output directories                                    =
+====================================================================================================
+PREVIEW: would replace mchipo reconhipo under {CHECKOUT}/output/run; existing outputs are preserved.
+OUTPATH: {CHECKOUT}/output/run
+Number of files in target directory (OUTPATH):
+Number of lund files:      2
+Number of mchipo files:    1
+Number of reconhipo files: 1
+
+====================================================================================================
+=                                      Slurm jobs parameters                                       =
+====================================================================================================
+NUM_OF_JOBS:            2
+
+OUTPATH: {CHECKOUT}/output/run
 --> Checking if OUTPATH is a directory...
 --> OUTPATH exists.
 
@@ -69,19 +71,6 @@ YAML_FILE: {CHECKOUT}/requirements/rgm_fall2021-cv.yaml
 --> Checking if YAML_FILE is a file...
 --> YAML_FILE exists.
 
-====================================================================================================
-=                                    Setting output directories                                    =
-====================================================================================================
-PREVIEW: would replace mchipo reconhipo under {CHECKOUT}/output/run; existing outputs are preserved.
-OUTPATH: {CHECKOUT}/output/run
-Number of files in target directory (OUTPATH):
-Number of lund files:      2
-Number of mchipo files:    1
-Number of reconhipo files: 1
-
-====================================================================================================
-=                              Submitting sbatch job for genie sample                              =
-====================================================================================================
 SLURM_JOB_NAME: C12_GEM21_11a_00_000_2070MeV_Q2_0_02_GEMC5.14
 ARRAY:          1-2
 
@@ -89,6 +78,9 @@ SUBMIT_SCRIPT_FILE: {CHECKOUT}/src/slurm-submission/external/submit_GEMC_sample.
 --> Checking if SUBMIT_SCRIPT_FILE is a file...
 --> SUBMIT_SCRIPT_FILE exists.
 
+====================================================================================================
+=                              Submitting sbatch job for genie sample                              =
+====================================================================================================
 Preview command (not submitted):
 sbatch --job-name=C12_GEM21_11a_00_000_2070MeV_Q2_0_02_GEMC5.14 --array=1-2 {CHECKOUT}/src/slurm-submission/external/submit_GEMC_sample.sh
 
