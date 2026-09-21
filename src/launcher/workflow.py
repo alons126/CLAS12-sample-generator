@@ -28,7 +28,7 @@ Notes:
     run.csh handles --workflow submit itself by sourcing setup_and_submit.csh in the login shell.
     It bypasses this Python driver, CMake, and the LUND build settings entirely.
 
-Launcher options:
+CLI options (owned by this launcher):
     --run-settings FILE          Read strict build/test settings (default: config/run.json).
     --workflow create-lund       Select the LUND-creation workflow (required here).
     --source uniform|physical    Select the LUND event source (required for create-lund).

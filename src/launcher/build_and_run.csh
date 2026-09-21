@@ -18,6 +18,20 @@
 # 
 # Usage (csh/tcsh, including files named .sh):
 #   source src/launcher/build_and_run.csh --workflow create-lund --source uniform --output runs/example
+#
+# CLI options (forwarded unchanged to workflow.py):
+#   --run-settings FILE          Read build/test JSON (default: config/run.json).
+#   --workflow create-lund       Select the LUND workflow (required by this driver).
+#   --source uniform|physical    Select LUND event source (required).
+#   --build true|false           Configure and build (JSON default: true).
+#   --test true|false            Run CTest (JSON default: false).
+#   --run true|false             Run the LUND executable (JSON default: true).
+#   --build-dir DIRECTORY        Select CMake binary tree (JSON default: build/release).
+#   --build-type TYPE            Select CMake build type (default: Release).
+#   --jobs N                     Set positive parallel build workers (JSON default: 4).
+#   --help                       Print launcher help.
+#   Other sample options pass through workflow.py to the selected LUND executable; its --help
+#   is authoritative for source-specific settings.
 # 
 # Inputs:
 #   $argv carries launcher/child options; CLAS12_SAMPLES_DIR overrides the root.

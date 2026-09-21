@@ -26,9 +26,10 @@
 #   5. Restore the caller's directory and return the captured result as both CLAS12_SAMPLE_STATUS and
 #      immediate tcsh `$status`, without using `exit` in this normally sourced launcher.
 # 
-# Launcher options:
+# CLI options (launcher-owned for create-lund):
 #   --workflow create-lund|submit  Select one of the two user-facing workflows (required).
-#   --source uniform|physical      Select event content for create-lund; invalid for submit.
+#   --source uniform|physical      Select event content for create-lund; submit has its own
+#                                  forwarded --source option for manifest-free inputs.
 #   --run-settings FILE            Select strict build/test JSON (default: config/run.json).
 #   --build true|false             Configure and build LUND applications (default from run JSON).
 #   --test true|false              Run CTest before LUND creation (default from run JSON).
@@ -37,6 +38,32 @@
 #   --build-type TYPE              Select Debug, Release, RelWithDebInfo, or MinSizeRel.
 #   --jobs N                       Select positive parallel build workers.
 #   --help                         Print launcher help without synchronizing the ifarm checkout.
+#
+# CLI options (forwarded to submit.py for submit):
+#   --lund-dir DIRECTORY           Select completed LUND input; repeat for multiple samples.
+#   --config FILE                  Read optional key = value submission settings.
+#   --execute                      Replace simulation outputs and submit; default is preview.
+#   --source uniform|physical      Override source metadata when no manifest supplies it.
+#   --beam-energy GeV              Set truth beam energy; normally read from the manifest.
+#   --rgm-target ID                Set truth target identity; normally read from the manifest.
+#   --channel NAME                 Set uniform channel; normally read from the manifest.
+#   --hadron NAME                  Set uniform hadron when channel=eh.
+#   --hadron-region FD|CD          Set uniform hadron region when channel=eh.
+#   --event-generator NAME         Set physical generator; default: genie without a manifest.
+#   --tune NAME                    Set physical tune; default: unknown without a manifest.
+#   --q2-cut NAME                  Set physical Q2 label; no cut is applied here.
+#   --prefix NAME                  Set LUND filename prefix; required without a manifest.
+#   --gemc-version VERSION         Select GEMC resources; fallback default: 5.14.
+#   --gemc-target-variation NAME   Select detector target variation.
+#   --gcard FILE / --yaml FILE     Override detector and reconstruction inputs.
+#   --torus SCALE                  Override the beam-dependent torus default.
+#   --num-jobs N                   Submit first N completed LUND files; default: all.
+#   --events-per-job N             Set common event limit; default: selected-file maximum.
+#   --job-name NAME                Override the metadata-derived Slurm job name.
+#   --clas12tags-dir DIRECTORY     Use a custom clas12Tags checkout as GEMC_DATA_DIR.
+#   --clear-farm-out true|false    Clear direct farm log files with --execute; default: false.
+#   --farm-out DIRECTORY           Set farm_out path when clearing it.
+#   --fc-status 0|1                Set legacy physical report/filename label; default: 0.
 # 
 # Usage:
 #   source run.csh --workflow create-lund --source uniform \

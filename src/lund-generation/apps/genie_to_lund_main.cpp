@@ -12,7 +12,7 @@
  * Workflow:
  *   Help returns immediately; otherwise parse -> convertGenie -> report success or caught failure.
  *
- * Command-line options:
+ * CLI options:
  *   --config FILE                     Read `key = value` settings; CLI values take precedence.
  *   --event-generator genie           Select the physical adapter (default/currently supported: genie).
  *   --input GST_GLOB                  Required GENIE GST ROOT input file or glob.

@@ -12,7 +12,7 @@
  * Workflow:
  *   Help returns immediately; otherwise parse -> generateUniform -> report success or caught failure.
  *
- * Command-line options:
+ * CLI options:
  *   --config FILE                    Read `key = value` settings; CLI values take precedence.
  *   --channel 1e|eh|electron-tester  Select the generated final state (default: 1e).
  *   --hadron proton|neutron|pip|pim  Select the hadron when `--channel eh` (default: proton).

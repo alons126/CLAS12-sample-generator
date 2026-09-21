@@ -11,7 +11,36 @@ Workflow:
     files, then return one environment dictionary per distinct sample to submit.py. No shell
     assignment files, software loading, output cleanup, detector execution or Slurm calls occur
     here. run.csh also uses --check-arguments to validate syntax before refreshing ifarm.
-Invalid metadata, missing inputs and unsafe paths raise before submission starts.
+
+Failure:
+    Invalid metadata, missing inputs and unsafe paths raise before submission starts.
+
+CLI options:
+    --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
+    --config FILE                 Read optional key = value submission settings.
+    --execute                     Replace simulation outputs and submit; default: preview.
+    --source uniform|physical     Set source when no completed manifest supplies it.
+    --beam-energy GeV             Set truth beam energy when no manifest supplies it.
+    --rgm-target ID               Set truth target identity when no manifest supplies it.
+    --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy channel label.
+    --hadron NAME                 Set proton, neutron, pip, or pim for an eh channel.
+    --hadron-region FD|CD         Select the eh hadron detector region.
+    --event-generator NAME        Set physical generator; default: genie without a manifest.
+    --tune NAME                   Set physical tune; default: unknown without a manifest.
+    --q2-cut NAME                 Record physical input Q2 label; no cut is applied here.
+    --prefix NAME                 Set LUND filename prefix; required without a manifest.
+    --gemc-version VERSION        Select GEMC resources; fallback default: 5.14.
+    --gemc-target-variation NAME  Select detector target variation.
+    --gcard FILE / --yaml FILE    Override detector and reconstruction inputs.
+    --torus SCALE                 Override the beam-dependent torus default.
+    --num-jobs N                  Select the first N LUND files; default: all completed files.
+    --events-per-job N            Set event limit; required without a manifest.
+    --job-name NAME               Override the metadata-derived Slurm job name.
+    --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
+    --clear-farm-out true|false   Clear direct farm log files with --execute; default: false.
+    --farm-out DIRECTORY          Set farm_out directory when clearing it.
+    --fc-status 0|1               Set legacy physical filename/report label; default: 0.
+    --help                        Print submission help before any server synchronization.
 """
 
 import argparse

@@ -11,6 +11,33 @@
 # Usage:
 #     source run.csh --workflow submit --lund-dir RUN/lundfiles [options].
 #
+# CLI options (forwarded unchanged to submit.py and parsed by resolve_inputs.py):
+#     --lund-dir DIRECTORY          Completed RUN/lundfiles; repeat for multiple samples.
+#     --config FILE                 Optional key = value submission settings.
+#     --execute                     Submit and replace simulation output; default: preview.
+#     --source uniform|physical     Source when no manifest supplies it.
+#     --beam-energy GeV             Truth beam energy when no manifest supplies it.
+#     --rgm-target ID               Truth target identity when no manifest supplies it.
+#     --channel NAME                Uniform 1e, eh, electron-tester, or a legacy label.
+#     --hadron NAME                 Proton, neutron, pip, or pim for eh.
+#     --hadron-region FD|CD         Eh hadron detector region.
+#     --event-generator NAME        Physical generator; default: genie without a manifest.
+#     --tune NAME                   Physical tune; default: unknown without a manifest.
+#     --q2-cut NAME                 Physical input Q2 label; no cut is applied here.
+#     --prefix NAME                 LUND filename prefix; required without a manifest.
+#     --gemc-version VERSION        GEMC resources; fallback default: 5.14.
+#     --gemc-target-variation NAME  Detector target variation.
+#     --gcard FILE / --yaml FILE    Detector and reconstruction input overrides.
+#     --torus SCALE                 Beam-dependent torus override.
+#     --num-jobs N                  First N LUND files; default: all completed files.
+#     --events-per-job N            Event limit; required without a manifest.
+#     --job-name NAME               Metadata-derived Slurm job name override.
+#     --clas12tags-dir DIRECTORY    Custom clas12Tags checkout as GEMC_DATA_DIR.
+#     --clear-farm-out true|false   Clear direct farm logs with --execute; default: false.
+#     --farm-out DIRECTORY          farm_out directory when clearing it.
+#     --fc-status 0|1               Legacy physical filename/report label; default: 0.
+#     --help                        Print submission help before synchronization.
+#
 # Workflow:
 #     initialize colors -> submit.py -> resolve_inputs.py -> sbatch -> protected payload.
 #

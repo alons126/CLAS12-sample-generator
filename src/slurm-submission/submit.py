@@ -13,8 +13,36 @@ Workflow:
     sbatch inherits that environment with resolved sample settings taking precedence. Nothing
     is exported back into the interactive shell. No detector commands are implemented here.
 
-Preview preserves sample outputs and farm logs. Failures stop subsequent samples, return
-nonzero and never cancel arrays already accepted by Slurm. Invoke through run.csh.
+CLI options (parsed by resolve_inputs.py):
+    --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
+    --config FILE                 Read optional key = value submission settings.
+    --execute                     Replace simulation outputs and submit; default: preview.
+    --source uniform|physical     Set source when no manifest supplies it.
+    --beam-energy GeV             Set truth beam energy when no manifest supplies it.
+    --rgm-target ID               Set truth target identity when no manifest supplies it.
+    --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy label.
+    --hadron NAME                 Set proton, neutron, pip, or pim for eh.
+    --hadron-region FD|CD         Select the eh hadron detector region.
+    --event-generator NAME        Set physical generator; default: genie without a manifest.
+    --tune NAME                   Set physical tune; default: unknown without a manifest.
+    --q2-cut NAME                 Record physical input Q2 label; no cut is applied here.
+    --prefix NAME                 Set LUND filename prefix; required without a manifest.
+    --gemc-version VERSION        Select GEMC resources; fallback default: 5.14.
+    --gemc-target-variation NAME  Select detector target variation.
+    --gcard FILE / --yaml FILE    Override detector and reconstruction inputs.
+    --torus SCALE                 Override the beam-dependent torus default.
+    --num-jobs N                  Select first N LUND files; default: all completed files.
+    --events-per-job N            Set event limit; required without a manifest.
+    --job-name NAME               Override the metadata-derived Slurm job name.
+    --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
+    --clear-farm-out true|false   Clear direct farm log files with --execute; default: false.
+    --farm-out DIRECTORY          Set farm_out directory when clearing it.
+    --fc-status 0|1               Set legacy physical filename/report label; default: 0.
+    --help                        Print submission help before any server synchronization.
+
+Failure:
+    Failures stop subsequent samples, return nonzero and never cancel arrays already accepted
+    by Slurm. Invoke through run.csh.
 """
 
 import os
