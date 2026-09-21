@@ -260,13 +260,20 @@ def check_gemc_version(version, environment, report):
         A missing base or version directory raises before the active GEMC module is changed.
     """
 
+    # A standard active module points GEMC_DATA_DIR at ``BASE/VERSION``. Remove exactly the
+    # version component so another requested version is resolved within the same ifarm module
+    # family. With no active module data, fall back to the documented shared installation root.
     active_data = environment.get('GEMC_DATA_DIR')
     base = Path(active_data).parent if active_data else IFARM_CLAS12TAGS_BASE
     requested = base / version
 
+    # Check the family root separately from its version child so the transcript distinguishes a
+    # missing shared mount from an unavailable GEMC release. Both checks finish before unload.
     report.check('CLAS12TAGS_BASE_DIR', str(base), directory=True)
     report.check('REQUESTED_GEMC_DATA_DIR', str(requested), directory=True)
 
+    # The returned path is not applied here. load_gemc() changes the private environment, and
+    # verify_gemc() compares the module-produced GEMC_DATA_DIR with this prechecked expectation.
     return requested
 
 def load_gemc(version, environment, report):
