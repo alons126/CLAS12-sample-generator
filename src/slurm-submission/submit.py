@@ -431,7 +431,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         report.check(key, values[key])
         report.text()
 
-    report.value('NUM_OF_JOBS', values['NUM_OF_JOBS'], 12)
+    report.value('NUM_OF_JOBS', values['NUM_OF_JOBS'], 4)
     environment['ARRAY'] = '1-' + values['NUM_OF_JOBS']
     report.value('SLURM_JOB_NAME', values['SLURM_JOB_NAME'])
     report.value('ARRAY', environment['ARRAY'], 10)
