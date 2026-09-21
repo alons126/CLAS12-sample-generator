@@ -5,16 +5,14 @@
 ====================================================================================================
 =                               Slurm submission workflow parameters                               =
 ====================================================================================================
-RUNNING_DIR:   {CHECKOUT}
-CLEAR_FAR_OUT: false
-GEMC_VERSION:  5.14
-Sample type:   uniform
+RUNNING_DIR: {CHECKOUT}
+CLEAR_FAR_OUT:                                                                                false
+GEMC_VERSION:                                                                                  5.14
+Sample type:                                                                                uniform
 
 CLAS12TAGS_DIR: {CHECKOUT}/tags
 --> Checking if CLAS12TAGS_DIR is a directory...
 --> CLAS12TAGS_DIR exists.
-
-CLEAR_FAR_OUT$ is set to 'false', skipping farm_out directory clearing...
 
 GEMC_DATA_DIR: {CHECKOUT}/tags
 --> Checking if GEMC_DATA_DIR is a directory...
@@ -23,35 +21,44 @@ GEMC_DATA_DIR: {CHECKOUT}/tags
 ====================================================================================================
 =                                        Sample parameters                                         =
 ====================================================================================================
-SAMPLE_TARGET_NUCLEUS:  C12
-TARGET_VARIATION:       rgm_fall2021_C_S
-BEAM_ENERGY_LABEL:      2070MeV
-DETECTOR_ENERGY_GROUP:  2GeV
-TORUS_FIELD:            0.5
+SAMPLE_TARGET_NUCLEUS:                                                                          C12
+TARGET_VARIATION:                                                                  rgm_fall2021_C_S
+BEAM_ENERGY_LABEL:                                                                          2070MeV
+DETECTOR_ENERGY_GROUP:                                                                         2GeV
+TORUS_FIELD:                                                                                    0.5
 
-UNIFORM_SAMPLE_CHANNEL: en
+UNIFORM_SAMPLE_CHANNEL:                                                                          en
 
 ====================================================================================================
 =                                Setting output directories for en                                 =
 ====================================================================================================
 Removing old directory structure for MC simulation here...
-
 Setting up directory structure for MC simulation here...
 
 OUTPATH: {CHECKOUT}/output/run
 Number of files in target directory (OUTPATH):
-Number of lund files:      2
-Number of mchipo files:    0
-Number of reconhipo files: 0
+Number of lund files:                                                                             2
+Number of mchipo files:                                                                           0
+Number of reconhipo files:                                                                        0
 
 ====================================================================================================
 =                                      Slurm jobs parameters                                       =
 ====================================================================================================
-NUM_OF_JOBS:            2
+NUM_OF_JOBS:                                                                                      2
+SLURM_JOB_NAME:                                                   Uniform_en_ConstPn_sample_2070MeV
+ARRAY:                                                                                          1-2
 
 OUTPATH: {CHECKOUT}/output/run
 --> Checking if OUTPATH is a directory...
 --> OUTPATH exists.
+
+mchipo: {CHECKOUT}/output/run/mchipo
+--> Checking if mchipo is a directory...
+--> mchipo exists.
+
+reconhipo: {CHECKOUT}/output/run/reconhipo
+--> Checking if reconhipo is a directory...
+--> reconhipo exists.
 
 REQUIREMENTS_DIR: {CHECKOUT}/requirements
 --> Checking if REQUIREMENTS_DIR is a directory...
@@ -64,9 +71,6 @@ GCARD_FILE: {CHECKOUT}/requirements/rgm_fall2021_C_S_2GeV.gcard
 YAML_FILE: {CHECKOUT}/requirements/rgm_fall2021-cv.yaml
 --> Checking if YAML_FILE is a file...
 --> YAML_FILE exists.
-
-SLURM_JOB_NAME: Uniform_en_ConstPn_sample_2070MeV
-ARRAY:          1-2
 
 SUBMIT_SCRIPT_FILE: {CHECKOUT}/src/slurm-submission/external/submit_GEMC_sample.sh
 --> Checking if SUBMIT_SCRIPT_FILE is a file...

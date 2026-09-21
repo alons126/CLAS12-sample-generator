@@ -269,7 +269,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
 
     (new.parent / 'bin/sbatch').unlink()
 
-    _, calls = run_script(new, env, execute=False)
+    _, calls = run_script(new, env, success=False, execute=False)
     assert not calls and all(not (run / folder).exists() for folder in ('mchipo', 'reconhipo'))
     assert not (run / 'rootfiles').exists()
 

@@ -90,6 +90,8 @@ class Report:
         before raising so the caller can stop without a duplicate diagnostic.
     """
 
+    BANNER_WIDTH = 100
+
     def __init__(self, environment):
         """Copy and decode the palette supplied by the sourced launcher.
 
@@ -135,22 +137,26 @@ class Report:
 
         # Split remaining title width across both sides; the asymmetric remainder
         # matches the existing shell printout rather than changing its visual contract.
-        padding = 96 - len(title.encode())
+        padding = self.BANNER_WIDTH - 4 - len(title.encode())
         left = max(0, padding // 2)
         right = max(0, padding - padding // 2)
         border, opening, closing = ('/', '//', '//') if main else ('=', '= ', ' =')
 
-        self.text('{START}' + border * 100 + '{END}')
+        self.text('{START}' + border * self.BANNER_WIDTH + '{END}')
         self.text('{START}' + opening + ' ' * left + '{END}' + title + '{START}' + ' ' * right + closing + '{END}')
-        self.text('{START}' + border * 100 + '{END}')
+        self.text('{START}' + border * self.BANNER_WIDTH + '{END}')
 
-    def value(self, name, value, spaces=1, color='START'):
-        """Print one colored label and its uncolored value.
+    def value(self, name, value, color='START', value_color='END'):
+        """Print a label and value, aligning the value's end to banner column 99.
 
-        The caller chooses the legacy alignment width and a semantic palette name.
+        Values longer than the available width keep one separating space and may extend
+        past the banner. Color markers do not contribute to the visible width.
         """
 
-        self.text('{' + color + '}' + name + ':{END}' + ' ' * spaces + value)
+        value = str(value)
+        spaces = max(1, self.BANNER_WIDTH - 1 - len(name) - 1 - len(value)) if value else 0
+
+        self.text('{' + color + '}' + name + ':{END}' + ' ' * spaces + '{' + value_color + '}' + value + '{END}')
 
     def check(self, name, path, directory=False):
         """Check a required file or directory while preserving the shell transcript.
@@ -215,8 +221,9 @@ def clear_farm(values, root, execute, report, cleared):
     # The first two branches make the operation a no-op when disabled or already handled
     # for a previous sample in this invocation.
     if values['CLEAR_FAR_OUT'] == 'false':
-        report.text("CLEAR_FAR_OUT$ {START}is set to '{END}false{START}', skipping farm_out directory clearing...{END}")
-    elif cleared:
+        return cleared
+
+    if cleared:
         report.text('farm_out was already cleared for this submission invocation. Preserve newly created job logs.')
     else:
         farm = Path(values['farm_out'])
@@ -288,13 +295,13 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     # Display the inherited checkout plus resolved cleanup and GEMC version so the
     # operator can verify the job environment before any simulation output is replaced.
-    for key, spaces in (('RUNNING_DIR', 3), ('CLEAR_FAR_OUT', 1), ('GEMC_VERSION', 2)):
-        report.value(key, environment[key], spaces)
+    for key in ('RUNNING_DIR', 'CLEAR_FAR_OUT', 'GEMC_VERSION'):
+        report.value(key, environment[key])
 
-    identity = '   uniform' if uniform else '   physical (' + values['SAMPLE_GENERATOR'] + ')'
+    identity = 'uniform' if uniform else 'physical (' + values['SAMPLE_GENERATOR'] + ')'
 
-    report.text('{START}Sample type:{INFO}' + identity + '{END}')
-    
+    report.value('Sample type', identity, value_color='INFO')
+
     farm_cleared = clear_farm(values, root, execute, report, farm_cleared)
 
     report.text()
@@ -320,9 +327,9 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # Array size is reported later with the Slurm job settings.
     report.banner('Sample parameters')
 
-    for key, spaces in (('SAMPLE_TARGET_NUCLEUS', 2), ('TARGET_VARIATION', 7), ('BEAM_ENERGY_LABEL', 6),
-                        ('DETECTOR_ENERGY_GROUP', 2), ('TORUS_FIELD', 12)):
-        report.value(key, values[key], spaces)
+    for key in ('SAMPLE_TARGET_NUCLEUS', 'TARGET_VARIATION', 'BEAM_ENERGY_LABEL',
+                'DETECTOR_ENERGY_GROUP', 'TORUS_FIELD'):
+        report.value(key, values[key])
 
     report.text()
 
@@ -331,8 +338,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     if uniform:
         report.value('UNIFORM_SAMPLE_CHANNEL', values['UNIFORM_SAMPLE_CHANNEL'], color='INFO')
     else:
-        for key, spaces in (('GENERATOR_TUNE', 8), ('Q2_CUT', 16), ('FC_STATUS', 13), ('FC_STATUS_ENABLED', 5)):
-            report.value(key, values[key], spaces)
+        for key in ('GENERATOR_TUNE', 'Q2_CUT', 'FC_STATUS', 'FC_STATUS_ENABLED'):
+            report.value(key, values[key], color='INFO')
 
     report.text()
 
@@ -404,13 +411,13 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # monitoring directory. This is a report count, not the selected Slurm array size.
     lund_count = sum(not path.name.startswith('.') for path in (run / 'lundfiles').iterdir()) - 1
 
-    report.text('{START}Number of lund files:     {END} ' + str(lund_count))
+    report.value('Number of lund files', lund_count)
 
-    for name, label in (('mchipo', 'Number of mchipo files:   '), ('reconhipo', 'Number of reconhipo files:')):
+    for name, label in (('mchipo', 'Number of mchipo files'), ('reconhipo', 'Number of reconhipo files')):
         directory = run / name
         count = sum(not path.name.startswith('.') for path in directory.iterdir()) if directory.is_dir() else 0
 
-        report.text('{START}' + label + '{END} ' + str(count))
+        report.value(label, count)
 
     report.text()
 
@@ -418,14 +425,20 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # paths have passed preflight before output replacement; report them in one place.
     report.banner('Slurm jobs parameters')
 
-    report.value('NUM_OF_JOBS', values['NUM_OF_JOBS'], 4)
+    report.value('NUM_OF_JOBS', values['NUM_OF_JOBS'])
     environment['ARRAY'] = '1-' + values['NUM_OF_JOBS']
     report.value('SLURM_JOB_NAME', values['SLURM_JOB_NAME'])
-    report.value('ARRAY', environment['ARRAY'], 10)
+    report.value('ARRAY', environment['ARRAY'])
     report.text()
 
     report.value('OUTPATH', values['OUTPATH'])
     report.check('OUTPATH', values['OUTPATH'], directory=True)
+
+    for name in ('mchipo', 'reconhipo'):
+        path = str(run / name)
+
+        report.value(name, path)
+        report.check(name, path, directory=True)
 
     if not uniform:
         report.check('RUNNING_DIR', str(root), directory=True)
