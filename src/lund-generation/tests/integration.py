@@ -351,6 +351,27 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert [int(float(h[9])) for h,p in events]==[1,2,3,4,1,1]
         assert [int(h[8]) for h,p in events]==[0,1,2,3,5,6]
 
+        # A submission-tail check may prevent a follow-up file from starting, but it must never interrupt
+        # a file after that file has begun. Six accepted events therefore fill two three-event files even
+        # though one unsupported GST entry occurs between them.
+        boundary_root = root/'boundary-cutoff'
+
+        run(executable, '--input', gst, '--output', boundary_root, '--events', '6', '--events-per-file', '3')
+
+        boundary_manifest,_ = read_run(physical_output(boundary_root))
+        assert boundary_manifest['scanned_events']==7 and boundary_manifest['written_events']==6
+        assert [entry['events'] for entry in boundary_manifest['files']]==[3,3]
+
+        # Conversely, do not start a follow-up file when the next accepted entry begins a raw-input tail
+        # shorter than one block. The accepted entry is scanned to make that decision but is not written.
+        tail_root = root/'short-followup-tail'
+
+        run(executable, '--input', gst, '--output', tail_root, '--events', '6', '--events-per-file', '4')
+
+        tail_manifest,_ = read_run(physical_output(tail_root))
+        assert tail_manifest['scanned_events']==6 and tail_manifest['written_events']==4
+        assert [entry['events'] for entry in tail_manifest['files']]==[4]
+
         for h,p in events:
             assert [int(float(x)) for x in h[1:4]]==[40,18,7]
             assert [int(x[3]) for x in p]==[11,2212,2112,211,-211,22]

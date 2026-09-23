@@ -207,7 +207,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             assert len(old)==1 and m['written_events']==10000
             compare(new/m['files'][0]['path'],old[0],drop_legacy_pi0=True,compare_mass_energy=True)
 
-        # Expose rather than reproduce the archived early-termination defect.
+        # Demonstrate the corrected short-input behavior alongside the archived early-termination defect.
         gst=root/'C12_GEM21_11a_00_000_2070MeV_short.root'
 
         run(fixture,gst)
@@ -220,9 +220,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         new=new_root/'rgm_fall2021_Ar__genie-unknown__unknown__Q2_0_02__2070MeV_GEMC-unknown'
         old_path=next((original/'lundfiles').glob('*.txt'))
         m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
-        assert len(old_path.read_text().splitlines())==8 and m['written_events']==1
-        compare(new/m['files'][0]['path'],old_path,drop_legacy_pi0=True,compare_mass_energy=True)
-        print('Confirmed physical-input cutoff: short input writes the first accepted event and then stops.')
+        assert len(old_path.read_text().splitlines())==8 and m['scanned_events']==7 and m['written_events']==6
+        assert [entry['events'] for entry in m['files']]==[6]
+        print('Confirmed corrected cutoff: a short first file is completed through input exhaustion.')
 
 print(mode+' legacy LUND parity passed')
 

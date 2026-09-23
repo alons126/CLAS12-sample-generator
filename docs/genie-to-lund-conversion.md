@@ -36,7 +36,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
   a decay or replace it with photons because the required daughter four-momenta are absent.
 - Give every particle in an event the same sampled vertex.
 - Store `resid` in LUND header field 4.
-- Store process code 1=QE, 2=MEC, 3=RES, 4=DIS in header field 10. When multiple flags are true, use that priority order. Events with none of these flags are skipped.
+- Store process code 1=QE, 2=MEC, 3=RES, 4=DIS in header field 10. The converter requires and supports only these four reactions. Events with none of these flags are skipped; supporting another reaction requires updating the required GST branches, process-code mapping, validation, documentation, and tests. When multiple supported flags are true, use the listed priority order.
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
@@ -50,8 +50,8 @@ requirements.
 
 ## Splitting and completion
 
-`events` is the maximum number of **written** events. Skipped processes do not count toward it. `events-per-file` defaults to 10,000, controls file rollover, and defines the physical-input submission cutoff block. After writing each accepted event, the converter computes the inclusive number of GST input entries remaining from that entry. If fewer than `events-per-file` entries remain, conversion stops. The test is deliberately based on input entries rather than accepted events because the generated files feed array tasks with one `JOB_NEVENTS` scale.
+`events` is the maximum number of **written** events. Skipped processes do not count toward it. `events-per-file` defaults to 10,000, controls file rollover, and defines the physical-input submission cutoff block. Before an accepted event would start a follow-up LUND file, the converter computes the inclusive number of GST input entries beginning with that event. If fewer than `events-per-file` input entries remain, conversion stops without creating the follow-up file. The first file is always allowed, including when the complete input is shorter than one block.
 
-The cutoff is evaluated after writing, so an input shorter than one block produces one event when its first entry is accepted and then stops. A later final file can likewise be shorter than `JOB_NEVENTS`. The manifest records exact scanned, written, and per-file counts; no successful manifest is published after an I/O or schema error.
+Once a file starts, the cutoff is not evaluated again inside it. An exact-multiple final block is therefore completed instead of being interrupted after its second event. The cutoff is deliberately based on input entries rather than accepted events; unsupported reactions inside an allowed block can still make its LUND file shorter than `JOB_NEVENTS`. The manifest records exact scanned, written, and per-file counts; no successful manifest is published after an I/O or schema error.
 
 The resolved metadata-named run directory is recreated when it already exists, following the documented replacement lifecycle. Physical conversion writes the split LUND files and `lund-gen-log.json`; it creates no ROOT monitoring file, PDF, or PNG. Monitoring is a uniform-generation responsibility. Historical command mappings and compatibility profiles are isolated in the [migration guide](migration.md) and [launch-chain reference](legacy-workflows.md).

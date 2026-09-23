@@ -29,7 +29,8 @@
  *
  * Assumptions:
  *   GST final-state arrays use nf as their per-entry leaf count. Neutral pions have already been decayed
- *   upstream, so their photons—not PDG 111 records—must be present in detector-simulation input.
+ *   upstream, so their photons—not PDG 111 records—must be present in detector-simulation input. Only QE,
+ *   MEC, RES and DIS reactions are supported; adding another reaction requires updating this adapter.
  *
  * Failure:
  *   Empty input, missing or mistyped branches, inconsistent per-entry arrays, unsupported-only input,
@@ -68,15 +69,15 @@ namespace samples {
  *   2. Scan entries and select QE/MEC/RES/DIS events.
  *   3. Assign a common target vertex and retain detector-stable final-state species, skipping any
  *      residual neutral pion because its two-photon decay must already be present in the GST truth.
- *   4. After each written event, stop when fewer than one configured submission-sized input block
- *      remains; otherwise continue through accepted-event capacity and publish the generation log.
+ *   4. Before starting a follow-up output file, require at least one configured submission-sized block of
+ *      input entries to remain; otherwise continue through accepted-event capacity and publish the log.
  *
  * @param c Resolved input, beam, metadata, target and output settings.
  *
  * @note The configured target selects only the vertex distribution; A and Z are copied independently
  *       into each LUND header. One sampled vertex is shared by every particle in an accepted event.
- * @note No value is returned. Schema, read and output failures throw. An accepted partial final file is
- *       retained when the submission-block tail cutoff ends scanning.
+ * @note No value is returned. Schema, read and output failures throw. The submission cutoff is evaluated
+ *       only before a follow-up file starts, so it never interrupts a file that is already being written.
  */
 void convertGenie(const RunConfig& c) {
     c.validate(false);
@@ -163,11 +164,26 @@ void convertGenie(const RunConfig& c) {
         }
 
         // Map the supported interaction flags to the LUND interaction code: QE=1, MEC=2, RES=3 and
-        // DIS=4. GST is expected to make these flags mutually exclusive; the expression has the stated
-        // priority if malformed input sets more than one. Code zero rejects all other processes before
-        // vertex sampling or output, so rejected entries consume neither RNG draws nor writer capacity.
+        // DIS=4. This converter requires one of these four reactions. Supporting another reaction requires
+        // adding its GST flag branch, LUND code mapping, validation and tests here. GST is expected to make
+        // the supported flags mutually exclusive; the expression has the stated priority if malformed
+        // input sets more than one. Code zero skips every other reaction before vertex sampling or output,
+        // so skipped entries consume neither RNG draws nor writer capacity.
         double code = *qel ? 1 : *mec ? 2 : *res ? 3 : *dis ? 4 : 0;
         if (!code) { continue; }
+
+        // Use the submission block only to decide whether a follow-up LUND file may start. The first file
+        // is always allowed, including for inputs shorter than one block. At each later file boundary,
+        // require at least one inclusive block of GST entries beginning with the current accepted entry.
+        // Once a file starts, do not reapply this test inside it: doing so would interrupt an exact final
+        // block after its second event because the inclusive remaining count has fallen below the block.
+        const auto current_entry = scanned - 1;
+        const auto inclusive_entries_remaining = total_entries - current_entry;
+        const bool starting_followup_file = writer.count() > 0 && writer.count() % submission_block == 0;
+        if (starting_followup_file && inclusive_entries_remaining < submission_block) {
+            stopped_at_submission_cutoff = true;
+            break;
+        }
 
         // Build the LUND header state directly from the accepted GST entry and resolved configuration.
         // resonance_id is serialized in the established target-polarization position, while weight
@@ -201,16 +217,6 @@ void convertGenie(const RunConfig& c) {
         // LundWriter derives mass-shell energies, serializes the complete event, rotates files at the
         // configured split size and increments its accepted-event count only after successful output.
         writer.write(event);
-
-        // Submission gives every array task one JOB_NEVENTS limit. After writing the current accepted
-        // event, stop once the remaining GST input (including that current entry in this comparison)
-        // is smaller than one configured block. The cutoff is deliberately based on input entries, not
-        // accepted events, and therefore can leave the current output file shorter than JOB_NEVENTS.
-        const auto current_entry = scanned - 1;
-        if (total_entries - current_entry < submission_block) {
-            stopped_at_submission_cutoff = true;
-            break;
-        }
     }
 #pragma endregion
 

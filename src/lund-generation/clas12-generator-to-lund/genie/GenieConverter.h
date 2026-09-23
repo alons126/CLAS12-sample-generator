@@ -30,6 +30,7 @@
  * Invariants:
  *   GST particle momenta and ordering are preserved for supported identities; one sampled vertex is
  *   shared by all particles in a written event. Neutral-pion decay photons must already exist upstream.
+ *   Only QE, MEC, RES and DIS reactions are supported; another reaction requires an adapter update.
  *
  * Failure:
  *   Invalid configuration, unusable GST schema or data, absence of supported interactions, unsafe output
@@ -55,7 +56,8 @@ namespace samples {
  * Workflow:
  *   Revalidate the resolved settings, validate required GST branches, traverse entries in chain order,
  *   retain QE/MEC/RES/DIS interactions, copy the scattered electron and supported detector-stable final
- *   state, stop at capacity or the configured submission-block tail cutoff, then finalize the run.
+ *   state, apply the submission-block cutoff only before a follow-up file starts, stop at capacity or
+ *   input exhaustion, then finalize the run.
  *
  * Inputs:
  *   config is an immutable, caller-owned RunConfig whose physical fields have already been resolved. The
@@ -67,7 +69,8 @@ namespace samples {
  *
  * Assumptions:
  *   Final-state PDG and momentum arrays are parallel variable-length GST branches counted by nf. PDG 111
- *   is not serialized because neutral pions must be decayed into photons before GST production.
+ *   is not serialized because neutral pions must be decayed into photons before GST production. Reaction
+ *   selection supports only QE, MEC, RES and DIS; adding another process requires changing this adapter.
  *
  * Failure:
  *   Throws on invalid configuration, empty or incompatible input, inconsistent final-state array lengths,

@@ -23,7 +23,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
 | `gemc-target-variation` | `auto` | Optional GCARD target-variation override applied after the catalog default |
 | `events` | Required | Total number of accepted events to write |
-| `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold; for physical input it also sets the remaining-entry cutoff block aligned with submission `JOB_NEVENTS` |
+| `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold; before each physical follow-up file it also sets the minimum remaining-input block aligned with submission `JOB_NEVENTS` |
 | `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused in physical conversion |
 | `vertex-seed` | `12345` | Vertex RNG seed; zero requests ROOT automatic, nonrepeatable seeding |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |

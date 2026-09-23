@@ -761,7 +761,7 @@ std::string help(bool uniform) {
         result +=
             "Physical: --event-generator genie (default), --event-generator-version VERSION, --tune NAME,\n"
             "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n"
-            "For physical input, --events-per-file also sets the remaining-entry cutoff block aligned with JOB_NEVENTS.\n";
+            "For physical input, --events-per-file also sets the minimum inclusive input block required before a follow-up file starts, aligned with JOB_NEVENTS.\n";
     }
 
     // Query the authoritative maintained identity table instead of duplicating its supported names.
