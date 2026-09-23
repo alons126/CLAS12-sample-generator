@@ -101,15 +101,15 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     // ============================================================
 
     std::cout << env::SYSTEM_COLOR << "\n- Run configuration -----------------------------------------\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
-    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << '\n';
-    std::cout << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " " << config.get("events-per-file") << '\n\n';
+    std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << "\n";
+    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "\n";
+    std::cout << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " " << config.get("events-per-file") << "\n\n";
 
-    std::cout << env::SYSTEM_COLOR << "Target:" << env::RESET_COLOR << " " << config.get("target") << '\n';
-    std::cout << env::SYSTEM_COLOR << "A:" << env::RESET_COLOR << " " << config.get("A") << '\n';
-    std::cout << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << '\n\n';
+    std::cout << env::SYSTEM_COLOR << "Target:" << env::RESET_COLOR << " " << config.get("target") << "\n";
+    std::cout << env::SYSTEM_COLOR << "A:" << env::RESET_COLOR << " " << config.get("A") << "\n";
+    std::cout << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << "\n\n";
 
-    std::cout << env::SYSTEM_COLOR << "Output prefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Output prefix:" << env::RESET_COLOR << " " << config.get("prefix") << "\n";
 
     // ============================================================
     // Generation / input configuration
@@ -120,20 +120,20 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     if (uniform) {
         // Reproduce CodeRun-style labels and constants alongside the resolved channel/mode.
         std::cout << env::SYSTEM_COLOR << "GenerateLundFiles:" << env::RESET_COLOR << " true\n";
-        std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " " << config.get("electron-momentum") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << "\n";
+        std::cout << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " " << config.get("electron-momentum") << "\n";
+        std::cout << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << "\n";
         std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed");
         if (config.get("seed") == "0") { std::cout << "  (0 requests ROOT automatic, nonrepeatable seeding)"; }
-        std::cout << '\n';
+        std::cout << "\n";
         std::cout << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " " << config.get("vertex-seed");
         if (config.get("vertex-seed") == "0") { std::cout << "  (0 requests ROOT automatic, nonrepeatable seeding)"; }
-        std::cout << '\n';
+        std::cout << "\n";
     } else {
         // Physical setup identifies the input generator and source provenance.
-        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Event generator version:" << env::RESET_COLOR << " " << config.get("event-generator-version") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Input files:" << env::RESET_COLOR << " " << config.get("input") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << "\n";
+        std::cout << env::SYSTEM_COLOR << "Event generator version:" << env::RESET_COLOR << " " << config.get("event-generator-version") << "\n";
+        std::cout << env::SYSTEM_COLOR << "Input files:" << env::RESET_COLOR << " " << config.get("input") << "\n";
     }
 
     // ============================================================
@@ -146,14 +146,14 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 
     if (uniform) {
         std::cout << env::SYSTEM_COLOR << "Number of particles:" << env::RESET_COLOR << " 2\n";
-        std::cout << env::SYSTEM_COLOR << "Electron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::electron_pdg) << '\n';
-        std::cout << env::SYSTEM_COLOR << "Proton mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::proton_pdg) << '\n';
-        std::cout << env::SYSTEM_COLOR << "Neutron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::neutron_pdg) << '\n';
+        std::cout << env::SYSTEM_COLOR << "Electron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::electron_pdg) << "\n";
+        std::cout << env::SYSTEM_COLOR << "Proton mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::proton_pdg) << "\n";
+        std::cout << env::SYSTEM_COLOR << "Neutron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::neutron_pdg) << "\n";
         std::cout << env::SYSTEM_COLOR << "Target polarization:" << env::RESET_COLOR << " 0\n";
         std::cout << env::SYSTEM_COLOR << "Beam polarization:" << env::RESET_COLOR << " 0\n";
         std::cout << env::SYSTEM_COLOR << "Interaction number:" << env::RESET_COLOR << " 1\n";
-        std::cout << env::SYSTEM_COLOR << "Beam type:" << env::RESET_COLOR << " " << constants::electron_pdg << '\n';
-        std::cout << env::SYSTEM_COLOR << "Beam energy in LUND files [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Beam type:" << env::RESET_COLOR << " " << constants::electron_pdg << "\n";
+        std::cout << env::SYSTEM_COLOR << "Beam energy in LUND files [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << "\n";
         std::cout << env::SYSTEM_COLOR << "Event weight:" << env::RESET_COLOR << " 1\n";
     }
 
@@ -162,12 +162,12 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     // ============================================================
 
     std::cout << env::SYSTEM_COLOR << "\n- Output paths ----------------------------------------------\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << '\n';
-    std::cout << env::SYSTEM_COLOR << "LUND directory:" << env::RESET_COLOR << " " << lund_dir << '\n';
-    std::cout << env::SYSTEM_COLOR << "MC HIPO directory:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
-    std::cout << env::SYSTEM_COLOR << "Reconstructed HIPO directory:" << env::RESET_COLOR << " " << recon_dir << '\n';
-    std::cout << env::SYSTEM_COLOR << "Monitoring directory:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
-    if (uniform) { std::cout << env::SYSTEM_COLOR << "Monitoring plot file:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_monitoring_plots.root") << '\n'; }
+    std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << "\n";
+    std::cout << env::SYSTEM_COLOR << "LUND directory:" << env::RESET_COLOR << " " << lund_dir << "\n";
+    std::cout << env::SYSTEM_COLOR << "MC HIPO directory:" << env::RESET_COLOR << " " << mchipo_dir << "\n";
+    std::cout << env::SYSTEM_COLOR << "Reconstructed HIPO directory:" << env::RESET_COLOR << " " << recon_dir << "\n";
+    std::cout << env::SYSTEM_COLOR << "Monitoring directory:" << env::RESET_COLOR << " " << monitoring_dir << "\n";
+    if (uniform) { std::cout << env::SYSTEM_COLOR << "Monitoring plot file:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_monitoring_plots.root") << "\n"; }
 
     // ============================================================
     // Setup status
@@ -175,7 +175,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 
     if (uniform) {
         std::cout << env::SYSTEM_COLOR << "\n- Setup -----------------------------------------------------\n" << env::RESET_COLOR;
-        std::cout << env::SYSTEM_COLOR << "Creating plot directories..." << env::RESET_COLOR << '\n';
+        std::cout << env::SYSTEM_COLOR << "Creating plot directories..." << env::RESET_COLOR << "\n";
     }
 
     // ============================================================
@@ -184,16 +184,16 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 
     if (final) {
         std::cout << env::SYSTEM_COLOR << "\n- Completion summary ----------------------------------------\n" << env::RESET_COLOR;
-        std::cout << env::SYSTEM_COLOR << "Total entries scanned:" << env::RESET_COLOR << " " << scanned << '\n';
-        std::cout << env::SYSTEM_COLOR << "Events written:" << env::RESET_COLOR << " " << written << '\n';
+        std::cout << env::SYSTEM_COLOR << "Total entries scanned:" << env::RESET_COLOR << " " << scanned << "\n";
+        std::cout << env::SYSTEM_COLOR << "Events written:" << env::RESET_COLOR << " " << written << "\n";
 
         const auto events_per_file = config.integer("events-per-file");
         const auto output_files = (written + events_per_file - 1) / events_per_file;
-        std::cout << env::SYSTEM_COLOR << "Output files written:" << env::RESET_COLOR << " " << output_files << '\n';
-        std::cout << env::SYSTEM_COLOR << "\nOperation finished!" << env::RESET_COLOR << '\n';
+        std::cout << env::SYSTEM_COLOR << "Output files written:" << env::RESET_COLOR << " " << output_files << "\n";
+        std::cout << env::SYSTEM_COLOR << "\nOperation finished!" << env::RESET_COLOR << "\n";
     }
 
-    std::cout << '\n';
+    std::cout << "\n";
 }
 #pragma endregion
 
@@ -252,7 +252,7 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     // final path are disposable by the documented legacy rerun contract.
     std::filesystem::create_directories(directory_.parent_path());
     if (std::filesystem::exists(directory_)) {
-        std::cout << env::WARNING_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << env::RESET_COLOR << '\n';
+        std::cout << env::WARNING_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << env::RESET_COLOR << "\n";
         std::filesystem::remove_all(directory_);
     }
 
