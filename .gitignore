@@ -21,7 +21,7 @@
 
 # Compiled and ROOT-generated artifacts ---------------------------------------
 # ROOT data and C++/ROOT build byproducts are reproducible from maintained input.
-*.root
+# *.root
 *.so
 *.pcm
 *.d
