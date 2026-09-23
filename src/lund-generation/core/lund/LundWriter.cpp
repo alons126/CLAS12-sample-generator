@@ -101,12 +101,15 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     // ============================================================
 
     std::cout << env::SYSTEM_COLOR << "\n- Run configuration -----------------------------------------\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "Output prefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
-    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
-              << config.get("events-per-file") << '\n';
     std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
-    std::cout << env::SYSTEM_COLOR << "Target:" << env::RESET_COLOR << " " << config.get("target") << "  " << env::SYSTEM_COLOR << "A:" << env::RESET_COLOR << " " << config.get("A") << "  "
-              << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " " << config.get("events-per-file") << '\n\n';
+
+    std::cout << env::SYSTEM_COLOR << "Target:" << env::RESET_COLOR << " " << config.get("target") << '\n';
+    std::cout << env::SYSTEM_COLOR << "A:" << env::RESET_COLOR << " " << config.get("A") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << '\n\n';
+
+    std::cout << env::SYSTEM_COLOR << "Output prefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
 
     // ============================================================
     // Generation / input configuration
@@ -118,14 +121,18 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         // Reproduce CodeRun-style labels and constants alongside the resolved channel/mode.
         std::cout << env::SYSTEM_COLOR << "GenerateLundFiles:" << env::RESET_COLOR << " true\n";
         std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " " << config.get("electron-momentum") << "  " << env::SYSTEM_COLOR
-                  << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed") << "  " << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " "
-                  << config.get("vertex-seed") << (config.get("seed") == "0" || config.get("vertex-seed") == "0" ? "  (0 requests ROOT automatic, nonrepeatable seeding)" : "") << '\n';
-
+        std::cout << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " " << config.get("electron-momentum") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed");
+        if (config.get("seed") == "0") { std::cout << "  (0 requests ROOT automatic, nonrepeatable seeding)"; }
+        std::cout << '\n';
+        std::cout << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " " << config.get("vertex-seed");
+        if (config.get("vertex-seed") == "0") { std::cout << "  (0 requests ROOT automatic, nonrepeatable seeding)"; }
+        std::cout << '\n';
     } else {
         // Physical setup identifies the input generator and source provenance.
-        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << " " << config.get("event-generator-version") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Event generator version:" << env::RESET_COLOR << " " << config.get("event-generator-version") << '\n';
         std::cout << env::SYSTEM_COLOR << "Input files:" << env::RESET_COLOR << " " << config.get("input") << '\n';
     }
 
@@ -139,13 +146,13 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 
     if (uniform) {
         std::cout << env::SYSTEM_COLOR << "Number of particles:" << env::RESET_COLOR << " 2\n";
-        std::cout << env::SYSTEM_COLOR << "Electron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::electron_pdg) << "  " << env::SYSTEM_COLOR
-                  << "Proton mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::proton_pdg) << "  " << env::SYSTEM_COLOR << "Neutron mass [GeV/c²]:" << env::RESET_COLOR
-                  << " " << particleMass(constants::neutron_pdg) << '\n';
-        std::cout << env::SYSTEM_COLOR << "Target polarization:" << env::RESET_COLOR << " 0"
-                  << "  " << env::SYSTEM_COLOR << "Beam polarization:" << env::RESET_COLOR << " 0"
-                  << "  " << env::SYSTEM_COLOR << "Interaction number:" << env::RESET_COLOR << " 1"
-                  << "  " << env::SYSTEM_COLOR << "Beam type:" << env::RESET_COLOR << " " << constants::electron_pdg << '\n';
+        std::cout << env::SYSTEM_COLOR << "Electron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::electron_pdg) << '\n';
+        std::cout << env::SYSTEM_COLOR << "Proton mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::proton_pdg) << '\n';
+        std::cout << env::SYSTEM_COLOR << "Neutron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::neutron_pdg) << '\n';
+        std::cout << env::SYSTEM_COLOR << "Target polarization:" << env::RESET_COLOR << " 0\n";
+        std::cout << env::SYSTEM_COLOR << "Beam polarization:" << env::RESET_COLOR << " 0\n";
+        std::cout << env::SYSTEM_COLOR << "Interaction number:" << env::RESET_COLOR << " 1\n";
+        std::cout << env::SYSTEM_COLOR << "Beam type:" << env::RESET_COLOR << " " << constants::electron_pdg << '\n';
         std::cout << env::SYSTEM_COLOR << "Beam energy in LUND files [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
         std::cout << env::SYSTEM_COLOR << "Event weight:" << env::RESET_COLOR << " 1\n";
     }
