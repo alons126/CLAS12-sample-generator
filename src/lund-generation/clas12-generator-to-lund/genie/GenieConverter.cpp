@@ -12,7 +12,28 @@
  *   upstream GENIE production into photons and are not copied into detector-simulation input.
  *
  * Workflow:
- *   Validate GST schema -> scan and select -> write events -> publish the LUND-generation log.
+ *   Resolve one or more GST ROOT files into a TChain -> validate the required scalar and variable-
+ *   length branches -> scan entries in chain order -> retain QE/MEC/RES/DIS interactions -> construct
+ *   one LUND event from the scattered electron and supported final-state particles -> apply the
+ *   submission-block tail cutoff -> publish the completed LUND-generation log.
+ *
+ * Inputs:
+ *   RunConfig supplies the GST input path or glob, target geometry, independent nuclear A/Z metadata,
+ *   beam energy, vertex RNG seed, event capacity, split size and output metadata. The GST tree supplies
+ *   the interaction flags, resonance identifier, scattered-electron momentum and counted final-state
+ *   PDG/momentum arrays.
+ *
+ * Outputs:
+ *   The shared LundWriter creates split LUND text files and the completion manifest in the resolved run
+ *   directory. This physical adapter creates no monitoring histograms.
+ *
+ * Assumptions:
+ *   GST final-state arrays use nf as their per-entry leaf count. Neutral pions have already been decayed
+ *   upstream, so their photons—not PDG 111 records—must be present in detector-simulation input.
+ *
+ * Failure:
+ *   Empty input, missing or mistyped branches, inconsistent per-entry arrays, unsupported-only input,
+ *   ROOT read failures and output failures terminate conversion with an exception.
  */
 
 #include "clas12-generator-to-lund/genie/GenieConverter.h"
@@ -50,24 +71,39 @@ namespace samples {
  *   4. After each written event, stop when fewer than one configured submission-sized input block
  *      remains; otherwise continue through accepted-event capacity and publish the generation log.
  *
- * @param c Resolved input, beam, metadata, target, mass and output settings.
+ * @param c Resolved input, beam, metadata, target and output settings.
  *
- * @note No value; schema/read/output failures throw. Accepted partial final files are retained.
+ * @note The configured target selects only the vertex distribution; A and Z are copied independently
+ *       into each LUND header. One sampled vertex is shared by every particle in an accepted event.
+ * @note No value is returned. Schema, read and output failures throw. An accepted partial final file is
+ *       retained when the submission-block tail cutoff ends scanning.
  */
 void convertGenie(const RunConfig& c) {
     c.validate(false);
     LundWriter::printWorkflowSummary(c, "physical");
 
 #pragma region /* GST input preparation */
-    // Validate the input chain before constructing any output products.
+    // TChain accepts either one GST file or the resolved input glob and exposes matching files as one
+    // ordered `gst` tree. Require at least one entry, then load the first underlying tree so its branch
+    // metadata is available for validation. These checks happen before LundWriter is constructed, so an
+    // empty input or missing required branch cannot replace an existing resolved run directory.
     TChain chain("gst");
     if (!chain.Add(c.get("input").c_str()) || chain.GetEntries() == 0) { throw std::runtime_error("No GST entries found for: " + c.get("input")); }
     if (chain.LoadTree(0) < 0) { throw std::runtime_error("Cannot load GST tree"); }
+
+    // Interaction flags determine whether an entry is retained and which historical code is written in
+    // the LUND header. resid is copied to the target-polarization header position. nf counts the parallel
+    // final-state arrays; pxl/pyl/pzl describe the scattered electron, which is always written first.
     for (const char* branch : {"qel", "mec", "res", "dis", "resid", "nf", "pdgf", "pxf", "pyf", "pzf", "pxl", "pyl", "pzl"}) {
         if (!chain.GetBranch(branch)) { throw std::runtime_error(std::string("Missing GST branch: ") + branch); }
     }
-    // Use typed ROOT array views whose current-entry sizes come from leaf-count metadata; the event
-    // loop cross-checks every reported size against nf before indexed access.
+
+    // TTreeReader owns traversal state across every tree in the chain. Value readers expose one scalar
+    // from the current entry. Array readers are dynamically sized ROOT views: on every reader.Next(),
+    // ROOT derives each view's exact current-entry length from that branch's nf leaf-count metadata. This
+    // adapter allocates no fixed particle buffer; the event loop still cross-checks every view before
+    // using an index, so corrupt or mutually inconsistent lengths fail instead of causing an out-of-
+    // bounds read.
     TTreeReader reader(&chain);
     TTreeReaderValue<Bool_t> qel(reader, "qel"), mec(reader, "mec"), res(reader, "res"), dis(reader, "dis");
     TTreeReaderValue<Int_t> resid(reader, "resid"), nf(reader, "nf");
@@ -76,36 +112,66 @@ void convertGenie(const RunConfig& c) {
     TTreeReaderArray<Double_t> pxf(reader, "pxf"), pyf(reader, "pyf"), pzf(reader, "pzf");
 #pragma endregion
 
+#pragma region /* Resolved run state */
+
     // A nonzero vertex seed is repeatable. ROOT interprets TRandom3(0) as automatic seeding; accepting
     // zero leaves that nonrepeatable behavior available when the user values independence over replay.
+    // This stream is used only for target vertices; GST particle momenta are copied without resampling.
     TRandom3 random(c.integer("vertex-seed"));
+
+    // Geometry controls spatial sampling only. Nuclear A and Z remain explicit LUND header metadata and
+    // are not inferred from the geometry key. LundWriter is constructed only after GST validation; it
+    // then safely prepares the resolved run directory and owns splitting, formatting and the manifest.
     TargetGeometry geometry(c.get("target"));
     const double beam = c.number("beam-energy");
     const int A = static_cast<int>(c.integer("A")), Z = static_cast<int>(c.integer("Z"));
     LundWriter writer(c, "physical");
+
+    // total_entries is the fixed number of input entries across the complete chain. submission_block is
+    // both the LUND split size and the input-tail cutoff aligned with one submission task's JOB_NEVENTS.
+    // scanned counts successful reader.Next() calls, including retained and rejected interactions.
     const auto total_entries = static_cast<std::uint64_t>(chain.GetEntries());
     const auto submission_block = static_cast<std::uint64_t>(c.integer("events-per-file"));
     std::uint64_t scanned = 0;
     bool stopped_at_submission_cutoff = false;
 
+#pragma endregion
+
 #pragma region /* Event conversion */
-    // Scan until output capacity or input exhaustion; counts distinguish scanned and accepted events.
+    // reader.Next() advances through the chained GST entries in order and refreshes every scalar and
+    // array view. Stop before reading another entry when LundWriter has reached the configured accepted-
+    // event capacity; otherwise continue until ROOT reports end of input or the submission cutoff fires.
     while (!writer.full() && reader.Next()) {
+        // Branch existence alone does not prove that its stored ROOT type matches the typed reader. The
+        // setup status becomes authoritative after an entry is loaded and is checked for every reader,
+        // including after TChain crosses into another input file with a potentially different schema.
         if (qel.GetSetupStatus() < 0 || mec.GetSetupStatus() < 0 || res.GetSetupStatus() < 0 || dis.GetSetupStatus() < 0 || resid.GetSetupStatus() < 0 || nf.GetSetupStatus() < 0 ||
             pxl.GetSetupStatus() < 0 || pyl.GetSetupStatus() < 0 || pzl.GetSetupStatus() < 0 || pdgf.GetSetupStatus() < 0 || pxf.GetSetupStatus() < 0 || pyf.GetSetupStatus() < 0 ||
             pzf.GetSetupStatus() < 0) {
             throw std::runtime_error("GST branch type mismatch");
         }
+
+        // Increment after a successful read. Consequently scanned is a one-based count, while
+        // scanned - 1 is the zero-based TChain entry number preserved as the LUND event identifier.
         ++scanned;
+
         // TTreeReaderArray obtains each current-entry length from ROOT's variable-length leaf metadata.
         // Require the declared nf and every parallel array view to agree before any indexed access. A
         // malformed or truncated entry is rejected rather than trusting one branch as the bound.
         if (*nf < 0 || pdgf.GetSize() != static_cast<std::size_t>(*nf) || pxf.GetSize() != pdgf.GetSize() || pyf.GetSize() != pdgf.GetSize() || pzf.GetSize() != pdgf.GetSize()) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
         }
-        // Retain the historical process-tag convention in the LUND header.
+
+        // Map the supported interaction flags to the LUND interaction code: QE=1, MEC=2, RES=3 and
+        // DIS=4. GST is expected to make these flags mutually exclusive; the expression has the stated
+        // priority if malformed input sets more than one. Code zero rejects all other processes before
+        // vertex sampling or output, so rejected entries consume neither RNG draws nor writer capacity.
         double code = *qel ? 1 : *mec ? 2 : *res ? 3 : *dis ? 4 : 0;
         if (!code) { continue; }
+
+        // Build the LUND header state directly from the accepted GST entry and resolved configuration.
+        // resonance_id is serialized in the established target-polarization position, while weight
+        // carries the interaction code. A/Z and beam energy remain constant across the run.
         Event event;
         event.id = scanned - 1;
         event.A = A;
@@ -113,17 +179,27 @@ void convertGenie(const RunConfig& c) {
         event.beam_energy = beam;
         event.resonance_id = *resid;
         event.weight = code;
+
+        // Sample exactly one accepted-event vertex and assign it first to the scattered electron. Every
+        // retained final-state particle below receives the same position, preserving one interaction
+        // point per event. The electron remains the first serialized particle by construction.
         auto vertex = geometry.sample(random);
         event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg), {*pxl, *pyl, *pzl}, vertex});
+
         // Copy only detector-stable supported species while preserving input order and momenta. A
         // residual PDG 111 is deliberately skipped: this converter cannot reconstruct the missing
         // two-photon decay kinematics, so GENIE production must decay pi0 before writing the GST tree.
+        // Other unsupported PDG identities are also omitted; none are substituted or given invented
+        // kinematics. particleMass obtains the maintained targets.h value for every retained identity.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
             if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::photon_pdg) {
                 event.particles.push_back({pid, particleMass(pid), {pxf[i], pyf[i], pzf[i]}, vertex});
             }
         }
+
+        // LundWriter derives mass-shell energies, serializes the complete event, rotates files at the
+        // configured split size and increments its accepted-event count only after successful output.
         writer.write(event);
 
         // Submission gives every array task one JOB_NEVENTS limit. After writing the current accepted
@@ -138,14 +214,28 @@ void convertGenie(const RunConfig& c) {
     }
 #pragma endregion
 
-    // Distinguish normal input exhaustion from a schema or later-chain read failure.
+#pragma region /* Completion and publication */
+
+    // A false reader.Next() is successful only when ROOT reached the normal end of the chain. Capacity
+    // and submission-cutoff exits do not call reader.Next() again, so their current reader status is not
+    // an error. Any other status indicates a read or schema failure, including one encountered only in a
+    // later chained file.
     if (!writer.full() && !stopped_at_submission_cutoff && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) {
         throw std::runtime_error("Failed reading GST entries (check branch types and input files)");
     }
+
+    // An input containing no QE/MEC/RES/DIS interaction is not a successful empty production run. Fail
+    // before publishing the completion manifest so downstream submission cannot treat it as consumable.
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
+
+    // finish() closes and verifies the last LUND stream, records scanned/written counts and split-file
+    // metadata, then atomically publishes lund-gen-log.json. The following calls report the same final
+    // counters for operators; they do not modify the generated content.
     writer.finish(scanned);
     LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);
     std::cout << env::SYSTEM_COLOR << "Scanned " << scanned << ", wrote " << writer.count() << " events to " << env::RESET_COLOR << c.get("output") << '\n';
+
+#pragma endregion
 }
 #pragma endregion
 
