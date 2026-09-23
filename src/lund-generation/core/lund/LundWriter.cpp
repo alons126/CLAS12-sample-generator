@@ -17,10 +17,10 @@
  *   stream -> write lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp -> atomically rename it to
  *   lund-gen-log.json.
  *
- * Compatibility:
- *   The LUND format preserves archived whitespace, precision, and uniform per-file IDs. Particle
- *   masses come from the rounded constants.h table, with a massless electron. Records use momentum in
- *   GeV/c, mass in GeV/c², energy in GeV, and vertices in cm.
+ * Format contract:
+ *   The LUND format uses fixed whitespace, precision, and uniform per-file IDs. Particle masses come
+ *   from the protected target source through particleMass(). Records use momentum in GeV/c, mass in
+ *   GeV/c², energy in GeV, and vertices in cm.
  *
  * Failure behavior:
  *   Unsafe replacement targets are rejected before deletion. Stream and filesystem failures throw and
@@ -40,7 +40,6 @@
 #include <stdexcept>
 
 #include "Version.h"
-#include "core/support/constants.h"
 #include "core/support/environment.h"
 
 namespace env = environment;
@@ -150,8 +149,8 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
               << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << '\n';
     std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
               << config.get("events-per-file") << '\n';
-    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " legacy-compatible  " << env::SYSTEM_COLOR << "Masses:" << env::RESET_COLOR
-              << " rounded constants.h values; electron massless\n";
+    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " fixed project format  " << env::SYSTEM_COLOR << "Masses:" << env::RESET_COLOR
+              << " protected targets.h values; photon massless\n";
 
     if (final) {
         // Uniform generation writes every generated event, so scanned equals written. Physical scanned

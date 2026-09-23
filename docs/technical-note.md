@@ -28,7 +28,7 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 - Hadron theta and phi are always uniform inside the configured detector window for acceptance-map coverage.
 - GENIE header field 10 retains a process code, not a physical event weight.
 - Compatibility requires matching beam energy, geometry, A/Z, seeds, selected mode and file settings. The archived launch scripts contain independent manual selections; they must not be assumed to describe one consistent campaign.
-- Legacy LUND precision, historical pion constants and the retained short-input correction are explicit in the data/validation chapters.
+- LUND precision, target-source masses, neutral-pion handling, and the physical-input cutoff are explicit in the data/validation chapters.
 
 ## Material still needed for a publication
 

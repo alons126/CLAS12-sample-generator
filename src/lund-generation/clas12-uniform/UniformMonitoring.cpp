@@ -30,8 +30,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/support/constants.h"
-
 namespace samples {
 
 // UniformMonitoring::Impl object ----------------------------------------------------------------------------------------------------------------------------------------

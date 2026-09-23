@@ -14,7 +14,7 @@ source Uniform-sample-generator/run.sh
 
 `CodeRun.cpp` selects channels through three booleans and currently makes three active calls: **1e, ep and en at 2.07052 GeV**, each under a GEMC 5.14 `rgm_fall2021_C_S` output label. Each call inherits 5000 files × 10000 events. The generator itself hardcodes `1-foil-small` vertex geometry and A=Z=1 header metadata. Its local kinematic `TRandom3(0)` is automatically seeded; the target helper uses a global seed of 12345. Consequently, the exact historical production event sequence cannot be reconstructed unless the automatically chosen kinematic seed/state was recorded.
 
-The three active `CodeRun.cpp` calls map to these maintained commands. `legacy-coderun.conf` already supplies 50,000,000 total events, 10,000 events per file, `1-foil-small` geometry, A=Z=1, the maintained rounded masses/formatting, and the archived angular ranges. `--seed 0` preserves the archived request for ROOT automatic seeding, although it cannot reproduce an earlier automatically seeded sequence.
+The three active `CodeRun.cpp` calls map to these maintained commands. `legacy-coderun.conf` already supplies 50,000,000 total events, 10,000 events per file, `1-foil-small` geometry, A=Z=1, the target-source masses, established formatting, and the archived angular ranges. `--seed 0` preserves the archived request for ROOT automatic seeding, although it cannot reproduce an earlier automatically seeded sequence.
 
 ```bash
 source run.csh --workflow create-lund --source uniform \

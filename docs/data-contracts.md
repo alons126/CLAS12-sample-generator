@@ -2,7 +2,7 @@
 
 ## 1. In-memory representation
 
-`Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one selected hadron. Converted events contain the scattered electron followed by retained GST particles in their input order.
+`Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one selected hadron. Converted events contain the scattered electron followed by retained GST particles in their input order. Retained physical species are protons, neutrons, charged pions and photons. Neutral pions must be decayed upstream into photons before GST production; residual PDG 111 entries are skipped rather than copied or decayed by the converter.
 
 These types are defined in [Event.h](../src/lund-generation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../src/lund-generation/core/lund/LundWriter.cpp).
 
@@ -28,10 +28,10 @@ The GENIE process tag and resonance metadata are historical application conventi
 | Fields | Contents |
 | --- | --- |
 | 1 | One-based particle index |
-| 2 | 0 (legacy placeholder) |
+| 2 | 0 (reserved placeholder) |
 | 3 | 1 (active particle) |
 | 4 | PDG code |
-| 5–6 | 0, 0 (legacy parent/daughter placeholders) |
+| 5–6 | 0, 0 (reserved parent/daughter placeholders) |
 | 7–9 | p_x, p_y, p_z |
 | 10 | Energy recomputed as sqrt(p²+m²) |
 | 11 | Mass |
@@ -41,34 +41,34 @@ The writer rejects empty events and non-finite particle energy/vertex data. GENI
 
 ## 4. Output precision and compatibility
 
-The single maintained format matches the archived whitespace, five decimal places for particle momenta, energy, mass, and vertices, and per-file uniform numbering. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal, as in the archived format (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
+The single maintained format uses established whitespace, five decimal places for particle momenta, energy, mass, and vertices, and per-file uniform numbering. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
 
 Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`. `--prefix` remains an explicit override for a downstream naming requirement. Output directories are explicit and never inferred from the current machine.
 
 ## 5. Mass convention
 
-All maintained particle identities and masses come from [`src/lund-generation/core/support/constants.h`](../src/lund-generation/core/support/constants.h). The values below are based on the [Particle Data Group 2026](https://pdg.lbl.gov/2026/listings/particle_properties.html), converted to GeV/c² and rounded to the five decimal places stored by the LUND writer. The electron is deliberately approximated as massless.
+Supported PDG identifiers are declared with the particle record in [`Event.h`](../src/lund-generation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes protected [`targets.h`](../src/lund-generation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
 
 | Species (PDG) | LUND mass (GeV/c²) |
 | --- | ---: |
-| electron (11) | 0 |
+| electron (11) | 0.00051 |
 | proton (2212) | 0.93827 |
 | neutron (2112) | 0.93957 |
 | pip/pim (±211) | 0.13957 |
-| pi0 (111) | 0.13498 |
 | photon (22) | 0 |
 
-`particleMass()` reads this one table. The stored value also controls the mass-shell energy calculated by the writer.
+The table shows five-decimal serialized values. Internally, `targets.h` supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
+Neutral-pion mass is deliberately absent from the maintained table because PDG 111 is not a supported LUND output species. CLAS12 reconstructs neutral pions from their two-photon decays, so physical GST input must already contain the daughter photons generated upstream.
 
 ## 6. File splitting and completion
 
-Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that capacity after process selection and keeps the final partial file. `events-per-file` controls rollover: the maintained uniform default is 25,000, retained from the earlier imported launcher, while the pinned upstream generator currently defaults to 10,000; physical conversion also defaults to 10,000. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and uniform event IDs restart from zero in each file.
+Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that accepted-event capacity, with an additional submission cutoff tied to `events-per-file`. After each accepted event is written, conversion compares the remaining GST input-entry count, including the current entry, with `events-per-file`; it stops when the remaining count is smaller. Because this is an input-entry test rather than an accepted-event test, rejected processes do not extend the tail and the last created file can be short. `events-per-file` defaults to 10,000 for physical conversion and also controls normal rollover. Uniform generation defaults to 25,000 events per file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and uniform event IDs restart from zero in each file.
 
-Submission resolves manifest/config/CLI inputs into shell settings: `NUM_OF_JOBS` selects numbered LUND files and `JOB_NEVENTS` supplies the shared per-task event limit to GEMC and reconstruction. A shorter final file stays in the same array and reaches input EOF; the limit is not an exact per-file count. The completed manifest supplies metadata and actual counts automatically; explicit configuration supports archived input without a manifest.
+Submission resolves manifest/config/CLI inputs into shell settings: `NUM_OF_JOBS` selects numbered LUND files and `JOB_NEVENTS` supplies the shared per-task event limit to GEMC and reconstruction. Physical conversion uses its `events-per-file` value as the input-tail cutoff block so generation and the intended per-task limit share one scale. The cutoff can still leave the final created file short because it is evaluated immediately after writing an accepted event. The completed manifest supplies actual per-file counts automatically; explicit configuration supports inputs without a manifest.
 
 The writer warns, removes and recreates an existing run directory before generation. It writes `lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp` only after LUND output and any required uniform monitoring finish, then renames it to `lundfiles/lund-gen-monitoring/lund-gen-log.json`. Physical conversion has no monitoring stage. Failure leaves partial output for inspection without publishing a completed manifest; rerunning the same resolved output replaces those partial results.
 
-The archived converter's short-input and near-end early termination is intentionally not reproduced; see [validation](validation.md).
+For an input shorter than `events-per-file`, the first accepted event is written and conversion stops immediately. For longer input, the same rule takes effect at the first accepted event whose inclusive remaining-entry count is below the configured block size. See [validation](validation.md).
 
 ## 7. Manifest schema version 1
 

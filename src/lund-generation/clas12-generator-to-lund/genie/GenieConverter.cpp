@@ -7,8 +7,9 @@
  * @brief Existing GENIE GST events converted into LUND records.
  *
  * Purpose:
- *   Serve as the nested GENIE adapter: read supported processes and final-state species,
- *   retain their momenta, and assign a target vertex.
+ *   Serve as the nested GENIE adapter: read supported processes and detector-stable final-state
+ *   species, retain their momenta, and assign a target vertex. Neutral pions must be decayed by the
+ *   upstream GENIE production into photons and are not copied into detector-simulation input.
  *
  * Workflow:
  *   Validate GST schema -> scan and select -> write events -> publish the LUND-generation log.
@@ -26,7 +27,6 @@
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
-#include "core/support/constants.h"
 #include "core/support/environment.h"
 
 namespace env = environment;
@@ -45,8 +45,10 @@ namespace samples {
  * Algorithm:
  *   1. Validate required branches and construct typed readers.
  *   2. Scan entries and select QE/MEC/RES/DIS events.
- *   3. Assign a common target vertex and retain supported final-state species.
- *   4. Write through capacity or end of input and publish the generation log.
+ *   3. Assign a common target vertex and retain detector-stable final-state species, skipping any
+ *      residual neutral pion because its two-photon decay must already be present in the GST truth.
+ *   4. After each written event, stop when fewer than one configured submission-sized input block
+ *      remains; otherwise continue through accepted-event capacity and publish the generation log.
  *
  * @param c Resolved input, beam, metadata, target, mass and output settings.
  *
@@ -64,7 +66,8 @@ void convertGenie(const RunConfig& c) {
     for (const char* branch : {"qel", "mec", "res", "dis", "resid", "nf", "pdgf", "pxf", "pyf", "pzf", "pxl", "pyl", "pzl"}) {
         if (!chain.GetBranch(branch)) { throw std::runtime_error(std::string("Missing GST branch: ") + branch); }
     }
-    // Use typed, dynamically sized readers rather than fixed final-state buffers.
+    // Use typed ROOT array views whose current-entry sizes come from leaf-count metadata; the event
+    // loop cross-checks every reported size against nf before indexed access.
     TTreeReader reader(&chain);
     TTreeReaderValue<Bool_t> qel(reader, "qel"), mec(reader, "mec"), res(reader, "res"), dis(reader, "dis");
     TTreeReaderValue<Int_t> resid(reader, "resid"), nf(reader, "nf");
@@ -80,7 +83,10 @@ void convertGenie(const RunConfig& c) {
     const double beam = c.number("beam-energy");
     const int A = static_cast<int>(c.integer("A")), Z = static_cast<int>(c.integer("Z"));
     LundWriter writer(c, "physical");
+    const auto total_entries = static_cast<std::uint64_t>(chain.GetEntries());
+    const auto submission_block = static_cast<std::uint64_t>(c.integer("events-per-file"));
     std::uint64_t scanned = 0;
+    bool stopped_at_submission_cutoff = false;
 
 #pragma region /* Event conversion */
     // Scan until output capacity or input exhaustion; counts distinguish scanned and accepted events.
@@ -91,6 +97,9 @@ void convertGenie(const RunConfig& c) {
             throw std::runtime_error("GST branch type mismatch");
         }
         ++scanned;
+        // TTreeReaderArray obtains each current-entry length from ROOT's variable-length leaf metadata.
+        // Require the declared nf and every parallel array view to agree before any indexed access. A
+        // malformed or truncated entry is rejected rather than trusting one branch as the bound.
         if (*nf < 0 || pdgf.GetSize() != static_cast<std::size_t>(*nf) || pxf.GetSize() != pdgf.GetSize() || pyf.GetSize() != pdgf.GetSize() || pzf.GetSize() != pdgf.GetSize()) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
         }
@@ -106,20 +115,33 @@ void convertGenie(const RunConfig& c) {
         event.weight = code;
         auto vertex = geometry.sample(random);
         event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg), {*pxl, *pyl, *pzl}, vertex});
-        // Copy only supported final-state species while preserving the input momenta.
+        // Copy only detector-stable supported species while preserving input order and momenta. A
+        // residual PDG 111 is deliberately skipped: this converter cannot reconstruct the missing
+        // two-photon decay kinematics, so GENIE production must decay pi0 before writing the GST tree.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
-            if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::pi_zero_pdg ||
-                pid == constants::photon_pdg) {
+            if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::photon_pdg) {
                 event.particles.push_back({pid, particleMass(pid), {pxf[i], pyf[i], pzf[i]}, vertex});
             }
         }
         writer.write(event);
+
+        // Submission gives every array task one JOB_NEVENTS limit. After writing the current accepted
+        // event, stop once the remaining GST input (including that current entry in this comparison)
+        // is smaller than one configured block. The cutoff is deliberately based on input entries, not
+        // accepted events, and therefore can leave the current output file shorter than JOB_NEVENTS.
+        const auto current_entry = scanned - 1;
+        if (total_entries - current_entry < submission_block) {
+            stopped_at_submission_cutoff = true;
+            break;
+        }
     }
 #pragma endregion
 
     // Distinguish normal input exhaustion from a schema or later-chain read failure.
-    if (!writer.full() && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) { throw std::runtime_error("Failed reading GST entries (check branch types and input files)"); }
+    if (!writer.full() && !stopped_at_submission_cutoff && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) {
+        throw std::runtime_error("Failed reading GST entries (check branch types and input files)");
+    }
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
     writer.finish(scanned);
     LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);

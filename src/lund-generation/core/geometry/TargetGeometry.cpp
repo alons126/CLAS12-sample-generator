@@ -35,6 +35,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "core/lund/Event.h"
+
 // External geometry bridge ----------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* External geometry bridge */
@@ -79,6 +81,35 @@ std::mutex geometry_mutex;
 #pragma endregion
 
 namespace samples {
+
+// TargetGeometry::mass --------------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* TargetGeometry::mass */
+/**
+ * @brief Map a supported PDG identity to the mass owned by protected targets.h.
+ *
+ * @param pid Supported particle identity from Event.h.
+ * @return Mass in GeV/c², or exact zero for a photon.
+ * @throws std::runtime_error If the identity is not supported by maintained LUND output.
+ */
+double TargetGeometry::mass(int pid) {
+    switch (pid) {
+        case constants::electron_pdg:
+            return external_targets::mass_e;
+        case constants::proton_pdg:
+            return external_targets::mass_p;
+        case constants::neutron_pdg:
+            return external_targets::mass_n;
+        case constants::pi_plus_pdg:
+        case constants::pi_minus_pdg:
+            return external_targets::mass_pi;
+        case constants::photon_pdg:
+            return 0.;
+        default:
+            throw std::runtime_error("Unsupported output PDG code: " + std::to_string(pid));
+    }
+}
+#pragma endregion
 
 // TargetGeometry::validate ----------------------------------------------------------------------------------------------------------------------------------------------
 

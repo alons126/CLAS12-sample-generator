@@ -18,7 +18,7 @@ build/debug/apps/clas12-uniform \
   --events 100 --output runs
 ```
 
-`events` is the total run size. `events-per-file` controls splitting and defaults to 25,000. The completed manifest records every file count; submission passes that exact value to GEMC and reconstruction as `JOB_NEVENTS`.
+`events` is the total run size. `events-per-file` controls splitting and defaults to 25,000. The completed manifest records every file count; submission uses the largest selected file count as the shared GEMC/reconstruction `JOB_NEVENTS` limit.
 
 ## Reviewed profiles
 
@@ -74,7 +74,7 @@ The tester always scans electron θ from 5–40° and all φ at beam momentum, a
 
 `seed` controls kinematics and `vertex-seed` controls geometry. Defaults 67890 and 12345 are repeatable. `TRandom3(0)` asks ROOT to choose an automatic seed; a manifest that records zero therefore cannot reproduce the event sequence. The streams are separate so geometry draws do not shift kinematics.
 
-Masses come only from `src/lund-generation/core/support/constants.h`: PDG 2026-based values rounded to LUND's five decimal places, with the electron approximated as massless.
+Electron, proton, neutron, and charged-pion masses come directly from the protected `src/lund-generation/external/targets.h` source through `particleMass()`. The photon mass is exactly zero. LUND serialization still writes every mass and derived energy to five decimal places.
 
 ## Output and diagnostics
 

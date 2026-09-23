@@ -38,7 +38,6 @@
 #include "clas12-uniform/UniformMonitoring.h"
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
-#include "core/support/constants.h"
 #include "core/support/environment.h"
 
 namespace env = environment;

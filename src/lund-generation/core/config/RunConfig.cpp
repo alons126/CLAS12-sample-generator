@@ -215,7 +215,8 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */
     // Store all settings as text so the exact resolved values used by generation can also be written
     // to provenance. Shared defaults preserve the established RG-M beam/Ar setup, separate vertex and
-    // kinematic seeds, the single supported LUND text contract, and centralized rounded masses.
+    // kinematic seeds and the single supported LUND text contract. Particle masses are owned by the
+    // protected target source and are not configurable here.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
                  {"rgm-target", "Ar40"},
@@ -759,7 +760,8 @@ std::string help(bool uniform) {
         // selection, detector, and target-variation provenance in the output contract.
         result +=
             "Physical: --event-generator genie (default), --event-generator-version VERSION, --tune NAME,\n"
-            "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n";
+            "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n"
+            "For physical input, --events-per-file also sets the remaining-entry cutoff block aligned with JOB_NEVENTS.\n";
     }
 
     // Query the authoritative maintained identity table instead of duplicating its supported names.

@@ -38,18 +38,33 @@ int main(int argc, char** argv) {
     TTree tree("gst", "Synthetic conversion fixture");
     Bool_t qel = true, mec = false, res = false, dis = false;
     const std::string mode = argc > 2 ? argv[2] : "normal";
-    Int_t resid = 7, nf = mode == "large" ? 300 : 7, pdgf[320] = {2212, 2112, 211, -211, 111, 22, 321};
+    // Include one residual pi0 and one unrelated kaon to verify that the converter skips both while
+    // retaining the upstream-provided photon. Large mode repeats zero-initialized unsupported entries.
+    Int_t resid = 7, nf = mode == "large" ? 300 : 7, coordinate_count = mode == "mismatched-arrays" ? 6 : nf;
+    Int_t pdgf[320] = {2212, 2112, 211, -211, 111, 22, 321};
     Double_t pxf[320] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7};
     Double_t pyf[320] = {}, pzf[320] = {1, 1, 1, 1, 1, 1, 1};
     Double_t pxl = 0.5, pyl = 0.1, pzl = 2;
+
+    // Make every entry in the 300-element case supported and distinguishable. The integration test
+    // then proves that conversion traverses the complete ROOT-reported length rather than a fixed cap.
+    if (mode == "large") {
+        for (int i = 0; i < nf; ++i) {
+            pdgf[i] = 22;
+            pxf[i] = 0.001 * i;
+            pyf[i] = 0.002 * i;
+            pzf[i] = 1. + 0.003 * i;
+        }
+    }
     tree.Branch("qel", &qel, "qel/O");
     tree.Branch("mec", &mec, "mec/O");
     tree.Branch("res", &res, "res/O");
     tree.Branch("dis", &dis, "dis/O");
     tree.Branch("resid", &resid, "resid/I");
     tree.Branch("nf", &nf, "nf/I");
+    tree.Branch("coordinate_count", &coordinate_count, "coordinate_count/I");
     tree.Branch("pdgf", pdgf, "pdgf[nf]/I");
-    tree.Branch("pxf", pxf, "pxf[nf]/D");
+    tree.Branch("pxf", pxf, mode == "mismatched-arrays" ? "pxf[coordinate_count]/D" : "pxf[nf]/D");
     tree.Branch("pyf", pyf, "pyf[nf]/D");
     tree.Branch("pzf", pzf, "pzf[nf]/D");
     tree.Branch("pxl", &pxl, "pxl/D");
@@ -63,7 +78,7 @@ int main(int argc, char** argv) {
     } else if (mode != "missing") {
         tree.Branch("pzl", &pzl, "pzl/D");
     }
-    // Four supported processes plus a skipped event and a final partial file.
+    // Four supported processes plus a skipped event and an input tail that exercises the cutoff.
     for (int i = 0; i < (mode == "empty" ? 0 : mode == "parity" ? 24000 : 7); ++i) {
         qel = (i == 0 || i >= 5);
         mec = i == 1;

@@ -19,7 +19,7 @@ Maintained code is grouped first by the two user-facing workflows. `src/lund-gen
 | `src/lund-generation/external/` | Protected imported target geometry |
 | `src/slurm-submission/external/` | Protected GEMC/reconstruction worker payload |
 
-The two source-specific directories intentionally match the installed executable names. The GENIE reader is nested under `clas12-generator-to-lund` because it implements one physical-input adapter rather than an independent workflow. A future adapter belongs beside it, such as `src/lund-generation/clas12-generator-to-lund/gibuu/`. Cross-layer includes state dependencies directly, for example `core/config/RunConfig.h`, `core/lund/Event.h`, and `core/support/constants.h`.
+The two source-specific directories intentionally match the installed executable names. The GENIE reader is nested under `clas12-generator-to-lund` because it implements one physical-input adapter rather than an independent workflow. A future adapter belongs beside it, such as `src/lund-generation/clas12-generator-to-lund/gibuu/`. Cross-layer includes state dependencies directly, for example `core/config/RunConfig.h`, `core/lund/Event.h`, and `core/geometry/TargetGeometry.h`.
 
 ## Build targets
 
@@ -78,9 +78,9 @@ This boundary is intentionally side-effect-free with respect to run products: pa
 
 ## Following a physical run
 
-`convertPhysical` selects the `event-generator` adapter; GENIE is the implemented default. `convertGenie` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and dynamically sized `TTreeReaderArray` objects avoid the imported fixed arrays of 250 particles. The adapter assigns the legacy process code, filters supported PDG codes, creates an `Event`, and calls the shared writer. Physical conversion creates no ROOT monitoring file or rendered monitoring plots.
+`convertPhysical` selects the `event-generator` adapter; GENIE is the implemented default. `convertGenie` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and `TTreeReaderArray` objects obtain each entry's array lengths from ROOT leaf metadata. Before indexed access, the adapter requires nonnegative `nf`, `pdgf.GetSize() == nf`, and identical `pxf`, `pyf`, and `pzf` sizes. This validates the complete parallel-array boundary without imposing a fixed particle limit. The adapter assigns the process code, filters supported PDG codes, creates an `Event`, and calls the shared writer. Physical conversion creates no ROOT monitoring file or rendered monitoring plots.
 
-The converter stops at the configured output capacity or end of input. The final partial file is retained. No empty rollover file is opened. Errors reading later chain entries prevent publication of a completed manifest.
+The converter stops at accepted-event capacity, input exhaustion, or the physical-input submission cutoff. After writing an accepted event, it stops when the number of input entries remaining from that index is smaller than `events-per-file`. The comparison is intentionally entry-based, so rejected processes do not extend the tail and the last created file can be short. No empty rollover file is opened. Errors reading later chain entries prevent publication of a completed manifest.
 
 ## Simulation boundary
 

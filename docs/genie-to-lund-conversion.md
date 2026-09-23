@@ -22,28 +22,36 @@ Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>_
 | `pdgf[nf]` | `Int_t` array |
 | `pxf[nf]`, `pyf[nf]`, `pzf[nf]` | `Double_t` arrays |
 
-Missing branches, wrong types, inconsistent array lengths, empty inputs and unsupported-only inputs produce errors. `El` and `Ef` are not required: output energy is calculated from momentum and the selected particle mass, as in the imported converter.
+Missing branches, wrong types, inconsistent array lengths, empty inputs and unsupported-only inputs produce errors. `El` and `Ef` are not required: output energy is calculated from momentum and the selected particle mass.
+
+`pdgf`, `pxf`, `pyf`, and `pzf` are read through `TTreeReaderArray`. For every loaded entry, ROOT derives each array view's current length from the branch leaf-count metadata. Before any indexed access, conversion requires `nf >= 0`, `pdgf.GetSize() == nf`, and the three momentum-array sizes to equal `pdgf.GetSize()`. A mismatch aborts the run without a completion manifest. This establishes the proper length for every well-formed ROOT entry and rejects inconsistent metadata/data instead of imposing a fixed maximum. No software can promise correctness for a physically corrupted file or a defect inside ROOT itself; within ROOT's validated branch contract, the converter checks every available length before use. Integration tests exercise 300 supported particles and an intentionally mismatched array.
 
 ## Retained physics conventions
 
 - Write the scattered electron first.
-- Retain protons, neutrons, charged/neutral pions and photons; skip other final-state species.
+- Retain protons, neutrons, charged pions and photons; skip other final-state species.
+- Do not write neutral pions (PDG 111). GENIE production must decay each neutral pion upstream, before
+  the GST files are produced, so that GST final-state truth contains the two photons that GEMC can
+  transport and CLAS12 can detect. A residual PDG 111 entry is skipped; the converter does not invent
+  a decay or replace it with photons because the required daughter four-momenta are absent.
 - Give every particle in an event the same sampled vertex.
 - Store `resid` in LUND header field 4.
 - Store process code 1=QE, 2=MEC, 3=RES, 4=DIS in header field 10. When multiple flags are true, use that priority order. Events with none of these flags are skipped.
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
-Field 10 is a legacy process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers and the single rounded mass table come from `src/lund-generation/core/support/constants.h`; the electron is approximated as massless. See the [data contract](data-contracts.md).
+Field 10 is a process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers are declared with the particle record. Electron, proton, neutron, and charged-pion masses come from protected `src/lund-generation/external/targets.h`; the photon mass is zero. See the [data contract](data-contracts.md).
+
+This neutral-pion contract follows the CLAS12 forward electromagnetic-calorimeter design: neutral
+mesons are reconstructed from their two-photon decays, and the detector resolves the resulting photon
+showers. See G. Asryan et al., [The CLAS12 forward electromagnetic
+calorimeter](https://doi.org/10.1016/j.nima.2020.163425), especially the overview and detector
+requirements.
 
 ## Splitting and completion
 
-`events` is the maximum number of **written** events. Skipped processes do not count toward it. `events-per-file` defaults to 10,000 for physical conversion and may be overridden; conversion retains a final partial file instead of stopping early when fewer than one full output file of input entries remains.
+`events` is the maximum number of **written** events. Skipped processes do not count toward it. `events-per-file` defaults to 10,000, controls file rollover, and defines the physical-input submission cutoff block. After writing each accepted event, the converter computes the inclusive number of GST input entries remaining from that entry. If fewer than `events-per-file` entries remain, conversion stops. The test is deliberately based on input entries rather than accepted events because the generated files feed array tasks with one `JOB_NEVENTS` scale.
 
-For six accepted events with `--events 6`, output contains one file with count 6. GEMC/reconstruction consume those exact counts from the manifest. A successfully published manifest records scanned and written counts; no successful manifest is published after an I/O or schema error.
+The cutoff is evaluated after writing, so an input shorter than one block produces one event when its first entry is accepted and then stops. A later final file can likewise be shorter than `JOB_NEVENTS`. The manifest records exact scanned, written, and per-file counts; no successful manifest is published after an I/O or schema error.
 
-The resolved metadata-named run directory is recreated when it already exists, matching the legacy lifecycle. Physical conversion writes the split LUND files and `lund-gen-log.json`; it creates no ROOT monitoring file, PDF, or PNG. Monitoring is a uniform-generation responsibility.
-
-## Reproduce the legacy wrapper settings
-
-Use `config/samples/legacy-genie-wrapper.conf` to reproduce the active C12 / 2.07052 GeV / small-foil settings in the archived csh wrapper. The [launch-chain reference](legacy-workflows.md) lists the former input-path convention and maps every launch stage to a current command.
+The resolved metadata-named run directory is recreated when it already exists, following the documented replacement lifecycle. Physical conversion writes the split LUND files and `lund-gen-log.json`; it creates no ROOT monitoring file, PDF, or PNG. Monitoring is a uniform-generation responsibility. Historical command mappings and compatibility profiles are isolated in the [migration guide](migration.md) and [launch-chain reference](legacy-workflows.md).

@@ -31,17 +31,17 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### LUND records and serialization (`src/lund-generation/core/lund/`)
 
-[Event.h](../src/lund-generation/core/lund/Event.h) declares `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../src/lund-generation/core/lund/Particle.cpp) reads the centralized rounded mass table and rejects unsupported species.
+[Event.h](../src/lund-generation/core/lund/Event.h) declares supported PDG identifiers, `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../src/lund-generation/core/lund/Particle.cpp) delegates mass lookup to the target-source adapter. [TargetGeometry.cpp](../src/lund-generation/core/geometry/TargetGeometry.cpp) is the only maintained translation unit that includes protected `targets.h`; it returns that source's electron, proton, neutron, and charged-pion masses, returns zero for photons, and rejects unsupported species.
 
 [LundWriter.h](../src/lund-generation/core/lund/LundWriter.h) / [LundWriter.cpp](../src/lund-generation/core/lund/LundWriter.cpp): constructor validates and recreates the resolved run directory; `full` checks event capacity; `write` serializes an event and rotates files at the resolved `events-per-file` threshold; `finish(scanned)` publishes the manifest. Uniform construction also prepares the archived downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
 ### Geometry (`src/lund-generation/core/geometry/`)
 
-[RgmTarget.h](../src/lund-generation/core/config/RgmTarget.h) / [RgmTarget.cpp](../src/lund-generation/core/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/lund-generation/core/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../src/lund-generation/core/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock. Fixed tester coordinates bypass target sampling. The adapter includes the protected `src/lund-generation/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained geometry code.
+[RgmTarget.h](../src/lund-generation/core/config/RgmTarget.h) / [RgmTarget.cpp](../src/lund-generation/core/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../src/lund-generation/core/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../src/lund-generation/core/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock and expose the same protected source's particle masses through a read-only lookup. Fixed tester coordinates bypass target sampling. The adapter is the only maintained translation unit that includes `src/lund-generation/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained code.
 
 ### Support (`src/lund-generation/core/support/`)
 
-[constants.h](../src/lund-generation/core/support/constants.h) is the single maintained catalog of supported PDG identifiers, current PDG 2026 masses, and explicitly separated archived compatibility masses consumed by the LUND layer and generators. [environment.h](../src/lund-generation/core/support/environment.h) is the only maintained C++ source of ANSI color definitions. It exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. Shell and Python launchers retain their separate environment-variable palette because they cannot include a C++ header.
+[environment.h](../src/lund-generation/core/support/environment.h) is the only maintained C++ source of ANSI color definitions. It exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. Shell and Python launchers retain their separate environment-variable palette because they cannot include a C++ header.
 
 [Version.h.in](../src/lund-generation/core/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 
@@ -61,7 +61,7 @@ The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p 
 
 [GenieConverter.h](../src/lund-generation/clas12-generator-to-lund/genie/GenieConverter.h) / [GenieConverter.cpp](../src/lund-generation/clas12-generator-to-lund/genie/GenieConverter.cpp) are nested below the physical dispatcher because GENIE is one adapter of the `clas12-generator-to-lund` executable. They expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, selects process/species, and writes an `Event`. Physical conversion creates no monitoring histograms.
 
-The reader arrays replace the archived fixed 250-element buffers. Input errors, unsupported-only input and output failures do not publish a manifest. Complete splitting retains partial files; the capacity limit counts accepted events, not scanned entries. Schema and process conventions are in the [GENIE guide](genie-to-lund-conversion.md).
+The reader arrays have no maintained fixed-size particle buffer. ROOT reports each current-entry length through `TTreeReaderArray::GetSize()` from the branch's leaf-count metadata. Conversion requires every reported length to equal nonnegative `nf` before accessing index zero, and a 300-supported-particle fixture verifies traversal through the final element. Protons, neutrons, charged pions and photons are copied in input order. Residual neutral pions are skipped because their two-photon decay must be generated upstream. Input errors, unsupported-only input and output failures do not publish a manifest. The physical-input cutoff is applied after a write when the remaining input-entry count is smaller than `events-per-file`; capacity still counts accepted events. Schema and process conventions are in the [GENIE guide](genie-to-lund-conversion.md).
 
 ## 5. Execution scripts
 
@@ -96,7 +96,7 @@ The resolver obtains the prefix and task count from the completed manifest or ex
 | `make_gst_fixture.cpp` | Generates normal, long parity, short, missing/wrong-type, empty, unsupported and >250-particle GST fixtures |
 | `legacy_uniform_driver.cpp` | Calls archived uniform/tester kernels and archived histogram initialization with controlled seeds and temporary files |
 | `prepare_legacy_genie.py` | Builds a redirected reference converter without changing its event loop |
-| `legacy_parity.py` | Compares reference/current LUND bytes and invokes histogram comparison; demonstrates the short-input correction |
+| `legacy_parity.py` | Development-only comparison of reference/current LUND bytes and histograms; verifies the physical-input cutoff |
 | `compare_histograms.cpp` | Compares ROOT histogram names/counts, axes, entries, contents/errors including flow bins |
 | `distributions.py` | Compares new neutron/proton draws to analytic CDFs |
 | `src/slurm-submission/tests/submission_parity.py` | Compares full archived setup stdout and Slurm environment using temporary fixtures |

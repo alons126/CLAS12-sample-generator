@@ -140,7 +140,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
 
     if mode == 'uniform':
         cases = [
-            ('1e', 11, 0.0, [], 5, 40, 0.7),
+            ('1e', 11, 0.00051, [], 5, 40, 0.7),
             ('epFD', 2212, 0.93827, ['--channel','eh','--hadron','proton','--hadron-region','FD'], 5, 45, 0.3),
             ('enFD', 2112, 0.93957, ['--channel','eh','--hadron','neutron','--hadron-region','FD'], 5, 35, 0),
             ('epipFD', 211, 0.13957, ['--channel','eh','--hadron','pip','--hadron-region','FD'], 5, 45, 0.2),
@@ -342,18 +342,18 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
 
         output_root = root/'converted'; output = physical_output(output_root)
 
-        run(executable, '--input', gst, '--output', output_root, '--events', '6', '--A','40','--Z','18')
+        run(executable, '--input', gst, '--output', output_root, '--events', '6', '--events-per-file', '1', '--A','40','--Z','18')
 
         m,events=read_run(output)
         assert m['workflow']=='physical' and m['config']['event-generator']=='genie'
         assert m['scanned_events']==7 and m['written_events']==6
-        assert [f['events'] for f in m['files']]==[6]
+        assert [f['events'] for f in m['files']]==[1]*6
         assert [int(float(h[9])) for h,p in events]==[1,2,3,4,1,1]
         assert [int(h[8]) for h,p in events]==[0,1,2,3,5,6]
 
         for h,p in events:
             assert [int(float(x)) for x in h[1:4]]==[40,18,7]
-            assert [int(x[3]) for x in p]==[11,2212,2112,211,-211,111,22]
+            assert [int(x[3]) for x in p]==[11,2212,2112,211,-211,22]
             assert p[0][6:9]==[0.5,0.1,2]
 
         named_root=root/'named'
@@ -366,7 +366,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         assert nm['config']['A']=='12' and nm['config']['Z']=='6' and nm['config']['target']=='1-foil-small'
         limited_root=root/'limited'
 
-        run(executable,'--input',gst,'--output',limited_root,'--events','2')
+        run(executable,'--input',gst,'--output',limited_root,'--events','2','--events-per-file','2')
 
         m,_=read_run(physical_output(limited_root))
         assert m['written_events']==2 and m['scanned_events']==2 and len(m['files'])==1
@@ -374,7 +374,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable,'--input',root/'missing.root','--output',root/'bad',ok=False)
         run(executable,'--input',root/'absent.root','--output',root/'absent',ok=False)
 
-        for kind in ['wrong-type','empty','unsupported']:
+        for kind in ['wrong-type','empty','unsupported','mismatched-arrays']:
             run(fixture,root/(kind+'.root'),kind)
 
             bad=root/(kind+'-output')
@@ -386,10 +386,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
 
         large_root=root/'large-output'
 
-        run(executable,'--input',root/'large.root','--output',large_root,'--events','4')
+        run(executable,'--input',root/'large.root','--output',large_root,'--events','1')
 
         m,e=read_run(physical_output(large_root))
-        assert m['written_events']==4 and all(len(p)==7 for h,p in e)
+        assert m['written_events']==1 and len(e[0][1])==301
+        assert [int(particle[3]) for particle in e[0][1][1:]]==[22]*300
         run(fixture,root/'chain-a.root')
         run(fixture,root/'chain-b.root','missing')
         run(executable,'--input',root/'chain-*.root','--output',root/'chain-output',ok=False)

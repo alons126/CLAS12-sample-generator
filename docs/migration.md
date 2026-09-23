@@ -15,7 +15,7 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 
 ## Legacy-compatible settings
 
-The writer always uses the established whitespace, precision, and uniform per-file IDs. It uses one rounded PDG-based mass table and approximates the electron as massless. Production sampling now uses the documented electron/charged-hadron p/1-p mixtures and uniform neutron momentum; `hadron-momentum=fixed` preserves the optional neutron-only 1 GeV/c study. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
+The writer always uses the established whitespace, precision, and uniform per-file IDs. Particle masses now come directly from the protected target source, including its nonzero electron and six-decimal proton values. Production sampling uses the documented electron/charged-hadron p/1-p mixtures and uniform neutron momentum; `hadron-momentum=fixed` preserves the optional neutron-only 1 GeV/c study. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
 
 `legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture active reference launch settings. Their counts are production-sized; override `--events` for local tests. The maintained uniform default remains 25,000 events per file, while the pinned upstream uniform generator and physical conversion currently use 10,000; the compatibility profile selects the upstream value explicitly.
 
@@ -37,6 +37,6 @@ Uniform generation writes one `lundfiles/lund-gen-monitoring/<prefix>_monitoring
 
 ## Retained corrections
 
-The software retains all accepted events in the final partial GENIE file instead of reproducing the archived early-termination bug. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completed manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](ssh-workflow.md).
+Physical conversion now applies the historical remaining-input cutoff after each accepted write, generalized to the configured `events-per-file` block used to align with submission `JOB_NEVENTS`. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completed manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](ssh-workflow.md).
 
 Full parity scope and limitations—including unknown historical random states and untested detector execution—are listed in [validation](validation.md).

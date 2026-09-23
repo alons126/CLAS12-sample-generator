@@ -22,7 +22,8 @@
  *   --A N / --Z N                     Override LUND target metadata (default: auto).
  *   --output DIRECTORY                Required parent directory for the resolved run directory.
  *   --events N                        Required maximum number of accepted events to write.
- *   --events-per-file N               Split output after N accepted events (default: 10000).
+ *   --events-per-file N               Split after N accepted events and set the physical input-tail
+ *                                     cutoff block used to align with JOB_NEVENTS (default: 10000).
  *   --seed N / --vertex-seed N        Set configured kinematic/vertex seeds (defaults: 67890/12345).
  *   --prefix NAME                     Override the automatic LUND filename prefix.
  *   --event-generator-version VERSION Record generator-version provenance (default: unknown).

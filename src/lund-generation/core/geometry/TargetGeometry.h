@@ -4,16 +4,18 @@
 
 /**
  * @file TargetGeometry.h
- * @brief Seeded target-vertex adapter interface.
+ * @brief Read-only adapter for protected target geometry and particle masses.
  *
  * Purpose:
- *   Expose the protected targets.h geometry catalog through a small maintained API while hiding its
- *   global symbols and allowing each run to own an explicit, reproducible vertex-random stream.
+ *   Expose the protected targets.h geometry catalog and particle masses through a small maintained API
+ *   while hiding its global symbols and allowing each run to own an explicit, reproducible vertex-
+ *   random stream.
  *
  * Workflow:
  *   RunConfig resolves and validates a geometry key -> construct one TargetGeometry without consuming
  *   random numbers -> pass the run-owned vertex TRandom3 to sample() exactly once per written/retained
- *   event -> assign the returned cm vertex to every particle in that event.
+ *   event -> assign the returned cm vertex to every particle in that event. The LUND particle adapter
+ *   requests supported masses through mass() without exposing or duplicating target-source values.
  *
  * Scope:
  *   This adapter selects spatial distributions only. RG-M target identity, nuclear A/Z header metadata,
@@ -83,6 +85,20 @@ class TargetGeometry {
      * @note Validation does not infer a geometry from A, Z, or an RG-M identifier.
      */
     static void validate(const std::string& name);
+
+    /**
+     * @brief Return one supported particle mass from the protected target source.
+     *
+     * @param pid PDG identifier for electron, proton, neutron, charged pion, or photon.
+     *
+     * @return Mass in GeV/c². Electron, nucleon, and charged-pion values are read from targets.h;
+     *         photon mass is exactly zero.
+     *
+     * @throws std::runtime_error If pid is not part of the maintained LUND particle contract.
+     *
+     * @note Read-only; consumes no random numbers and owns no duplicate maintained mass table.
+     */
+    static double mass(int pid);
 
     /**
      * @brief Produce one finite interaction vertex from the selected geometry.

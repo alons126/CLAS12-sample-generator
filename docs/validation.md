@@ -16,7 +16,7 @@ Uniform FD pion modes and every uniform CD mode currently have structural integr
 
 `legacy_uniform_driver.cpp` includes event functions, tester and histogram initialization from the pinned `legacy/Uniform-sample-generator` submodule. It supplies missing compilation context, output streams, target/channel parameters and deterministic RNG seeds. It bypasses launcher cleanup and large production defaults. The production executable and reference do not share sampling or LUND-writing implementations. Initialize the submodule before configuring tests. Exact comparisons explicitly select the matching upstream ep/en momentum and angular modes.
 
-`prepare_legacy_genie.py` generates a test-only copy of the archived converter. Changes are limited to resolving includes, replacing external output setup with a new temporary directory, safe directory creation, and retaining its original diagnostic output inside the isolated reference. The maintained physical converter creates no monitoring histograms. The event loop, species/process selection, formatting and early-stop behavior remain unchanged, so tests reveal the short-input difference instead of modifying it out of the reference.
+`prepare_legacy_genie.py` generates a test-only copy of the archived converter. Changes are limited to resolving includes, replacing external output setup with a new temporary directory, safe directory creation, and retaining its original diagnostic output inside the isolated reference. The maintained physical converter creates no monitoring histograms. This comparison is development-only; the production contract and its explanations stand independently of the reference.
 
 Archived files remain untouched. Reference binaries are not installed and tests do not submit real jobs.
 
@@ -41,14 +41,14 @@ The full suite currently registers nine tests when both workflows are enabled an
 | Test | Cases | Pass criterion |
 | --- | --- | --- |
 | `uniform-integration` | 1e plus all proton/neutron/pip/pim FD/CD labels, seed repeat, tester, config overrides, invalid inputs | Output counts/PDGs, bounds, one monitoring ROOT file, rounded-record mass-shell relation, unchanged repeat output and rejection semantics |
-| `genie-integration` | Processes/species, partial files, capacity limit, missing/wrong branches, empty/unsupported input, 300-particle arrays, broken later chain file | Correct records/counts, no monitoring ROOT files, and no completed manifest on failures |
+| `genie-integration` | Processes/species, submission cutoff, capacity limit, missing/wrong branches, mismatched arrays, empty/unsupported input, 300 supported particles, broken later chain file | Correct records/counts, complete traversal of valid arrays, malformed-array rejection, no monitoring ROOT files, and no completed manifest on failures |
 | `uniform-legacy-parity` | 1e/ep/en/tester at 2.07052/4.02962/5.98636 GeV; additional target geometries | Exact LUND bytes with matching upstream settings; exact archived 1e histogram numerics; intentional FD/CD naming for hadrons |
-| `genie-legacy-parity` | 10000 accepted events at each legacy energy and associated C12 geometry; all retained species/processes; short fixture | Exact LUND bytes, no maintained physical monitoring file, and explicitly confirmed short-input correction |
+| `genie-legacy-parity` | 10000 accepted events at each reference energy and associated C12 geometry; supported species/processes plus a residual pi0; short fixture | Exact retained fields including mass-derived energy after removing the intentionally unsupported reference pi0, no maintained physical monitoring file, and matching short-input cutoff |
 | `uniform-distributions` | 20000 default 1e events plus 20000 sampled enFD and epFD events | Bounds and empirical-CDF distance <0.025 for electron/proton mixture components, uniform neutron momentum, phi and flat theta |
 | `submission-input-resolution` | Real uniform output plus portable/manual fixtures, defaults and overrides | Correct counts, GEMC 5.14 fallback, config/CLI precedence, conflict and malformed-input rejection |
 | `submission-legacy-parity` | Legacy uniform/physical setup at 2/4/6 GeV, FC labels, FD/CD channels, failures | Exact full stdout and array/environment handoff, one array per sample, safe failure and shell survival |
 
-Uniform reference seeds are kinematic 67890 and vertex 12345. Target checks cover Ar plus liquid, 4-foil, 1-foil, 1-foil-small, 1-foil-large and Ca; maintained tester events use the configured target geometry. Photon and all pion/nucleon species are included in the GENIE fixture. Comparisons use the restored archived pion constants, including π⁰=0.13957 GeV.
+Uniform reference seeds are kinematic 67890 and vertex 12345. Target checks cover Ar plus liquid, 4-foil, 1-foil, 1-foil-small, 1-foil-large and Ca; maintained tester events use the configured target geometry. Photon, charged pions, nucleons, one residual neutral pion and an unrelated kaon are included in the GENIE fixture. The maintained converter must retain the supported detector-stable particles and photon, while skipping both PDG 111 and the unrelated species. The comparison removes the reference pi0 record, adjusts multiplicity and particle indices, and then requires every retained field, including mass and energy, to match.
 
 CDF tests independently evaluate the formulas in [sampling models](sampling-models.md). The ep test checks the uniform-p subsequence, uniform-1/p subsequence and the combined mixture; the en test checks flat theta, phi and p. A fixed numerical threshold is used as a regression criterion, not as a formal significance claim across arbitrary seeds.
 
@@ -56,9 +56,10 @@ The `replacement-geometry` test verifies header-only geometry updates, new targe
 
 ## 5. Intentional differences and limits
 
-- **Short GENIE input:** the archived loop stops after one accepted event when fewer than 10000 entries remain. In the seven-entry fixture, the old converter writes one event while the new converter writes all six accepted events. The correction is retained; parity is not claimed for this defect or for its near-end truncation behavior.
+- **Physical-input cutoff:** after writing an accepted event, conversion stops when the inclusive remaining input-entry count is smaller than `events-per-file`. In the seven-entry/default-10000 fixture, one accepted event is written. This is an input-entry cutoff, not an accepted-event calculation.
 - **Unknown historical RNG state:** archived `TRandom3(0)` runs cannot be reconstructed from a seed that was never recorded. Deterministic parity uses an explicitly substituted nonzero seed.
-- **Maintained masses:** rounded current values, including the massless electron approximation, intentionally differ from some archived mass fields and therefore from exact legacy bytes.
+- **Mass source:** electron, proton, neutron, and charged-pion masses are read from protected `targets.h`; photons use exact zero. Tests require the serialized mass and derived energy fields.
+- **Neutral pions:** the archived converter copied PDG 111 directly. The maintained converter requires neutral pions to be decayed during upstream GENIE production and consumes the resulting photons; residual PDG 111 entries are skipped because this adapter does not generate missing decay kinematics.
 - **Production sampling modes:** the 1e/ep mixtures and en zero-to-beam uniform momentum follow the requested acceptance-map coverage and differ from upstream unless its settings are selected explicitly.
 - **Diagnostics and paths:** monitoring is uniform-only and stored once in `<prefix>_monitoring_plots.root`. Legacy 1e definitions remain exact; hadron definitions add the requested species/region notation. The generation log adds provenance.
 - **Metadata:** ready-made Ar examples use A=40/Z=18, while the original uniform launcher used A=Z=1. Match settings explicitly; `legacy-coderun.conf` captures the archived values.

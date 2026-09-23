@@ -5,7 +5,7 @@
 """Compare new outputs to controlled archived reference runs.
 
 Purpose:
-    Check exact LUND bytes and numerical histograms while identifying the short-input correction.
+    Check exact LUND bytes, numerical histograms, and the physical-input cutoff during development.
 
 Workflow:
     CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
@@ -50,32 +50,79 @@ def run(*args):
 
 # compare --------------------------------------------------------------------
 # region compare
-def compare(actual, expected, ignore_vertex=False):
-    """Compare archived and maintained LUND semantics unaffected by intentional mass changes.
+def comparable_lines(path, drop_pi0=False):
+    """Return tokenized LUND lines with an optional legacy-pi0 normalization.
 
     Algorithm:
-        Compare headers and particle fields, excluding energy/mass and optionally tester vertices.
+        Parse complete events, remove legacy PDG 111 particle records when requested, and update the
+        corresponding header multiplicity to match the maintained upstream-decay contract.
+
+    Args:
+        path: LUND file to read.
+        drop_pi0: Whether to remove archived neutral-pion output records.
+
+    Returns:
+        Token lists in original event and retained-particle order.
+    """
+
+    source = [line.split() for line in path.read_text().splitlines()]
+
+    if not drop_pi0:
+        return source
+
+    result = []
+    offset = 0
+
+    while offset < len(source):
+        header = source[offset]
+        count = int(header[0])
+        particles = source[offset + 1:offset + 1 + count]
+        retained = [particle for particle in particles if int(particle[3]) != 111]
+        for index, particle in enumerate(retained, 1):
+            particle[0] = str(index)
+        result.append([str(len(retained)), *header[1:]])
+        result.extend(retained)
+        offset += count + 1
+
+    assert offset == len(source), f'{path}: incomplete LUND event'
+
+    return result
+
+def compare(actual, expected, ignore_vertex=False, drop_legacy_pi0=False, compare_mass_energy=False):
+    """Compare archived and maintained LUND records under selected normalization rules.
+
+    Algorithm:
+        Compare headers and selected particle fields, optionally including energy/mass or omitting
+        tester vertices.
+        Physical parity may also remove archived neutral pions, which the maintained converter requires
+        GENIE to decay upstream into photons.
 
     Args:
         actual: New output path.
         expected: Archived-reference output path.
+        ignore_vertex: Whether to omit vertex columns from the comparison.
+        drop_legacy_pi0: Whether to normalize away archived PDG 111 records and renumber particles.
+        compare_mass_energy: Whether energy and mass must also match exactly.
 
     Returns:
         None; mismatches raise an assertion with file context.
     """
 
-    al, el = actual.read_text().splitlines(), expected.read_text().splitlines()
+    al = comparable_lines(actual)
+    el = comparable_lines(expected, drop_legacy_pi0)
     assert len(al) == len(el), f'{actual}: new {len(al)} lines vs legacy {len(el)} lines'
     remaining = 0
 
     for i, (a, e) in enumerate(zip(al, el), 1):
-        av, ev = a.split(), e.split()
+        av, ev = a, e
 
         if remaining == 0:
             assert av == ev, f'{actual.name}, header line {i}: new={a!r}; legacy={e!r}'
             remaining = int(av[0])
         else:
             keep = list(range(9)) + ([] if ignore_vertex else [11, 12, 13])
+            if compare_mass_energy:
+                keep.extend([9, 10])
             assert [av[j] for j in keep] == [ev[j] for j in keep], f'{actual.name}, particle line {i}: new={a!r}; legacy={e!r}'
             remaining -= 1
 # endregion
@@ -158,7 +205,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             assert not list((new/'lundfiles/lund-gen-monitoring').glob('*.root'))
             old=list((original/'lundfiles').glob('*.txt'))
             assert len(old)==1 and m['written_events']==10000
-            compare(new/m['files'][0]['path'],old[0])
+            compare(new/m['files'][0]['path'],old[0],drop_legacy_pi0=True,compare_mass_energy=True)
 
         # Expose rather than reproduce the archived early-termination defect.
         gst=root/'C12_GEM21_11a_00_000_2070MeV_short.root'
@@ -171,10 +218,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         run(current,'--input',gst,'--beam-energy',2.07052,'--target','1-foil-small','--A',12,'--Z',6,'--events',10000,'--output',new_root)
 
         new=new_root/'rgm_fall2021_Ar__genie-unknown__unknown__Q2_0_02__2070MeV_GEMC-unknown'
-        old=next((original/'lundfiles').glob('*.txt')).read_text().splitlines()
+        old_path=next((original/'lundfiles').glob('*.txt'))
         m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
-        assert len(old)==8 and m['written_events']==6
-        print('Confirmed intentional difference: legacy short-input truncation writes 1 event; new writes all 6 accepted events.')
+        assert len(old_path.read_text().splitlines())==8 and m['written_events']==1
+        compare(new/m['files'][0]['path'],old_path,drop_legacy_pi0=True,compare_mass_energy=True)
+        print('Confirmed physical-input cutoff: short input writes the first accepted event and then stops.')
 
 print(mode+' legacy LUND parity passed')
 

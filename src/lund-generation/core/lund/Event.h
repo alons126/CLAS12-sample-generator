@@ -34,6 +34,28 @@ namespace samples {
 
 #pragma region /* Public interface */
 
+// Supported particle identities ----------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* Supported particle identities */
+/**
+ * @namespace constants
+ * @brief PDG identifiers supported by maintained LUND event producers.
+ *
+ * Purpose:
+ *   Give generation, conversion, serialization, and monitoring one particle-identity vocabulary
+ *   without coupling identity to a duplicate mass table. particleMass() obtains nonzero masses from
+ *   the protected target source.
+ */
+namespace constants {
+constexpr int electron_pdg = 11;    ///< Electron identifier used for the beam and scattered electron.
+constexpr int photon_pdg = 22;      ///< Photon identifier retained from physical GST truth.
+constexpr int pi_plus_pdg = 211;    ///< Positive charged-pion identifier.
+constexpr int pi_minus_pdg = -211;  ///< Negative charged-pion identifier.
+constexpr int neutron_pdg = 2112;   ///< Neutron identifier.
+constexpr int proton_pdg = 2212;    ///< Proton identifier.
+}  // namespace constants
+#pragma endregion
+
 // Particle object -------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Particle object */
@@ -61,7 +83,7 @@ namespace samples {
 struct Particle {
     int pid;  ///< Supported PDG identity used verbatim in LUND and for monitoring groups.
 
-    double mass;  ///< Central rounded LUND mass in GeV/c²; particleMass() normally supplies it.
+    double mass;  ///< LUND mass in GeV/c²; particleMass() normally supplies it from the target source.
 
     TVector3 momentum;  ///< Truth/generated Cartesian momentum in GeV/c; never resampled by the writer.
 
@@ -122,16 +144,14 @@ struct Event {
 /**
  * @brief Return the configured mass convention for one supported output species.
  *
- * @param pid PDG code for electron, proton, neutron, charged/neutral pion, or photon.
- * @param legacy Select the archived rounded compatibility table when true; false selects the current
- *               PDG table. Every value comes from constants.h.
- *
+ * @param pid PDG code for electron, proton, neutron, charged pion, or photon. Neutral pions are not
+ *            output particles; physical inputs must contain their upstream-generated decay photons.
  * @return Particle mass in GeV/c².
  *
  * @throws std::runtime_error If pid is not part of the supported LUND particle contract.
  *
- * @note This lookup does not validate event-generator status or particle selection. Adapters decide
- *       which truth particles are retained before requesting a mass.
+ * @note Nonzero values come from protected targets.h. This lookup does not validate event-generator
+ *       status or particle selection; adapters decide which truth particles are retained first.
  */
 double particleMass(int pid);
 #pragma endregion
