@@ -54,3 +54,8 @@ GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d
 # User presets and local run overrides must not replace reviewed shared defaults.
 /CMakeUserPresets.json
 /config/run.local.json
+
+# Personal stuff list ---------------------------------------------------------
+output/
+tutorials/uniform-samples/uniform-lund-generation copy.txt
+tutorials/uniform-samples/uniform-slurm-submission copy.txt
