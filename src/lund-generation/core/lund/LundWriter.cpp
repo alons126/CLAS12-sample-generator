@@ -91,78 +91,99 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto monitoring_dir = diagnostics / "MonitoringPlotsPath";
 
     // Keep the archived yellow separator style so long interactive and Slurm logs expose run boundaries.
-    std::cout << env::SYSTEM_COLOR << "\n=============================================================\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "\n= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << " summary\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "=============================================================\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "\n=============================================================\n"
+              << "= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << " summary\n"
+              << "=============================================================\n"
+              << env::RESET_COLOR;
 
-    if (uniform) {
-        // Reproduce CodeRun-style labels and constants alongside the resolved channel/mode. Several
-        // listed downstream paths are planning information for later GEMC/reconstruction workflows.
-        std::cout << env::SYSTEM_COLOR << "\nOutputFileNamePrefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
-                  << config.get("events-per-file") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
-        std::cout << env::SYSTEM_COLOR << "GenerateLundFiles:" << env::RESET_COLOR << " true\n";
-        std::cout << env::SYSTEM_COLOR << "nParticles:" << env::RESET_COLOR << " 2\n";
-        std::cout << env::SYSTEM_COLOR << "mass_e [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::electron_pdg) << "  " << env::SYSTEM_COLOR
-                  << "mass_p [GeV/c²]:" << env::RESET_COLOR << ' ' << particleMass(constants::proton_pdg) << "  " << env::SYSTEM_COLOR << "mass_n [GeV/c²]:" << env::RESET_COLOR << ' '
-                  << particleMass(constants::neutron_pdg) << '\n';
-        std::cout << env::SYSTEM_COLOR << "OutPutFolder:" << env::RESET_COLOR << " " << output << '\n';
-        std::cout << env::SYSTEM_COLOR << "lundPath:" << env::RESET_COLOR << " " << lund_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "mchipoPath:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "reconhipoPath:" << env::RESET_COLOR << " " << recon_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "MonitoringPlotsPath:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Plot list path:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_monitoring_plots.root") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << "  " << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " "
-                  << config.get("electron-momentum") << "  " << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed") << "  " << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " "
-                  << config.get("vertex-seed") << (config.get("seed") == "0" || config.get("vertex-seed") == "0" ? "  (0 requests ROOT automatic, nonrepeatable seeding)" : "") << '\n';
-        std::cout << env::SYSTEM_COLOR << "targP:" << env::RESET_COLOR << " 0  " << env::SYSTEM_COLOR << "beamP:" << env::RESET_COLOR << " 0  " << env::SYSTEM_COLOR
-                  << "interactN:" << env::RESET_COLOR << " 1  " << env::SYSTEM_COLOR << "beamType:" << env::RESET_COLOR << " " << constants::electron_pdg << '\n';
-        std::cout << env::SYSTEM_COLOR << "beamE_in_lundfiles:" << env::RESET_COLOR << " " << config.get("beam-energy") << "\n";
-        std::cout << env::SYSTEM_COLOR << "weight:" << env::RESET_COLOR << " 1\n";
-        std::cout << env::SYSTEM_COLOR << "Creating plot directories..." << env::RESET_COLOR << "\n";
-    } else {
-        // Physical setup text identifies the adapter/input provenance and the requested accepted-event
-        // capacity before the converter begins scanning its source entries.
-        std::cout << env::SYSTEM_COLOR << "\nProceeding input arguments..." << env::RESET_COLOR << "\n";
-        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << " " << config.get("event-generator-version") << '\n';
-        std::cout << env::SYSTEM_COLOR << "InputFiles:" << env::RESET_COLOR << " " << config.get("input") << '\n';
-        std::cout << env::SYSTEM_COLOR << "LUND file prefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << '\n';
-        std::cout << env::SYSTEM_COLOR << "Generating lundfiles directory:" << env::RESET_COLOR << " " << lund_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Generating mchipo directory:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Generating reconhipo directory:" << env::RESET_COLOR << " " << recon_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Generating monitoring plots directory:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Saving lundfiles into" << env::RESET_COLOR << " " << lund_dir << '\n';
-        std::cout << env::SYSTEM_COLOR << "Number of events" << env::RESET_COLOR << " " << config.get("events") << '\n';
-        std::cout << env::SYSTEM_COLOR << "Events per output file:" << env::RESET_COLOR << " " << config.get("events-per-file") << '\n';
-    }
+    // ============================================================
+    // Run configuration
+    // ============================================================
 
-    // Shared fields make uniform and physical logs comparable without erasing their source semantics.
-    // Target is the geometry key; A and Z remain independent LUND header metadata.
-    std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << '\n';
-    std::cout << env::SYSTEM_COLOR << "LUND directory:" << env::RESET_COLOR << " " << lund_dir << '\n';
+    std::cout << env::SYSTEM_COLOR << "\n- Run configuration -----------------------------------------\n" << env::RESET_COLOR;
     std::cout << env::SYSTEM_COLOR << "Output prefix:" << env::RESET_COLOR << " " << config.get("prefix") << '\n';
+    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
+              << config.get("events-per-file") << '\n';
     std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
     std::cout << env::SYSTEM_COLOR << "Target:" << env::RESET_COLOR << " " << config.get("target") << "  " << env::SYSTEM_COLOR << "A:" << env::RESET_COLOR << " " << config.get("A") << "  "
               << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << '\n';
-    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "  " << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " "
-              << config.get("events-per-file") << '\n';
-    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " fixed project format  " << env::SYSTEM_COLOR << "Masses:" << env::RESET_COLOR
-              << " protected targets.h values; photon massless\n";
+
+    // ============================================================
+    // Generation / input configuration
+    // ============================================================
+
+    std::cout << env::SYSTEM_COLOR << "\n- " << (uniform ? "Generation configuration" : "Input generator configuration") << " ------------------------------\n" << env::RESET_COLOR;
+
+    if (uniform) {
+        // Reproduce CodeRun-style labels and constants alongside the resolved channel/mode.
+        std::cout << env::SYSTEM_COLOR << "GenerateLundFiles:" << env::RESET_COLOR << " true\n";
+        std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " " << config.get("electron-momentum") << "  " << env::SYSTEM_COLOR
+                  << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed") << "  " << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " "
+                  << config.get("vertex-seed") << (config.get("seed") == "0" || config.get("vertex-seed") == "0" ? "  (0 requests ROOT automatic, nonrepeatable seeding)" : "") << '\n';
+
+    } else {
+        // Physical setup identifies the input generator and source provenance.
+        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << " " << config.get("event-generator-version") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Input files:" << env::RESET_COLOR << " " << config.get("input") << '\n';
+    }
+
+    // ============================================================
+    // LUND configuration
+    // ============================================================
+
+    std::cout << env::SYSTEM_COLOR << "\n- LUND configuration ----------------------------------------\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " fixed project format\n";
+    std::cout << env::SYSTEM_COLOR << "Mass handling:" << env::RESET_COLOR << " protected targets.h values; photon massless\n";
+
+    if (uniform) {
+        std::cout << env::SYSTEM_COLOR << "Number of particles:" << env::RESET_COLOR << " 2\n";
+        std::cout << env::SYSTEM_COLOR << "Electron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::electron_pdg) << "  " << env::SYSTEM_COLOR
+                  << "Proton mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::proton_pdg) << "  " << env::SYSTEM_COLOR << "Neutron mass [GeV/c²]:" << env::RESET_COLOR
+                  << " " << particleMass(constants::neutron_pdg) << '\n';
+        std::cout << env::SYSTEM_COLOR << "Target polarization:" << env::RESET_COLOR << " 0"
+                  << "  " << env::SYSTEM_COLOR << "Beam polarization:" << env::RESET_COLOR << " 0"
+                  << "  " << env::SYSTEM_COLOR << "Interaction number:" << env::RESET_COLOR << " 1"
+                  << "  " << env::SYSTEM_COLOR << "Beam type:" << env::RESET_COLOR << " " << constants::electron_pdg << '\n';
+        std::cout << env::SYSTEM_COLOR << "Beam energy in LUND files [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << '\n';
+        std::cout << env::SYSTEM_COLOR << "Event weight:" << env::RESET_COLOR << " 1\n";
+    }
+
+    // ============================================================
+    // Output paths
+    // ============================================================
+
+    std::cout << env::SYSTEM_COLOR << "\n- Output paths ----------------------------------------------\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << '\n';
+    std::cout << env::SYSTEM_COLOR << "LUND directory:" << env::RESET_COLOR << " " << lund_dir << '\n';
+    std::cout << env::SYSTEM_COLOR << "MC HIPO directory:" << env::RESET_COLOR << " " << mchipo_dir << '\n';
+    std::cout << env::SYSTEM_COLOR << "Reconstructed HIPO directory:" << env::RESET_COLOR << " " << recon_dir << '\n';
+    std::cout << env::SYSTEM_COLOR << "Monitoring directory:" << env::RESET_COLOR << " " << monitoring_dir << '\n';
+    if (uniform) { std::cout << env::SYSTEM_COLOR << "Monitoring plot file:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_monitoring_plots.root") << '\n'; }
+
+    // ============================================================
+    // Setup status
+    // ============================================================
+
+    if (uniform) {
+        std::cout << env::SYSTEM_COLOR << "\n- Setup -----------------------------------------------------\n" << env::RESET_COLOR;
+        std::cout << env::SYSTEM_COLOR << "Creating plot directories..." << env::RESET_COLOR << '\n';
+    }
+
+    // ============================================================
+    // Completion summary
+    // ============================================================
 
     if (final) {
-        // Uniform generation writes every generated event, so scanned equals written. Physical scanned
-        // includes unsupported interactions skipped before serialization; `written` and the resolved
-        // split threshold determine the number of files, including a possible partial last file.
         std::cout << env::SYSTEM_COLOR << "\n- Completion summary ----------------------------------------\n" << env::RESET_COLOR;
         std::cout << env::SYSTEM_COLOR << "Total entries scanned:" << env::RESET_COLOR << " " << scanned << '\n';
-        std::cout << env::SYSTEM_COLOR << "Events passing cuts:" << env::RESET_COLOR << " " << written << '\n';
+        std::cout << env::SYSTEM_COLOR << "Events written:" << env::RESET_COLOR << " " << written << '\n';
+
         const auto events_per_file = config.integer("events-per-file");
         const auto output_files = (written + events_per_file - 1) / events_per_file;
         std::cout << env::SYSTEM_COLOR << "Output files written:" << env::RESET_COLOR << " " << output_files << '\n';
-        std::cout << env::SYSTEM_COLOR << "\nOperation finished!" << env::RESET_COLOR << "\n";
+        std::cout << env::SYSTEM_COLOR << "\nOperation finished!" << env::RESET_COLOR << '\n';
     }
 
     std::cout << '\n';
