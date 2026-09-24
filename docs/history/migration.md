@@ -1,6 +1,6 @@
 # Migration and compatibility options
 
-The imported sources are retained under `legacy/`. Use the root build and supported CLIs; historical launch scripts perform site-specific operations and may clean/reset repositories. Detailed provenance is in the [launch-chain reference](legacy-workflows.md).
+The imported sources are retained under `legacy/` and recorded by the public [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0). Use the root build and supported CLIs; historical launch scripts perform site-specific operations and may clean/reset repositories. Detailed provenance is in the [launch-chain reference](legacy-workflows.md).
 
 ## Entry points
 

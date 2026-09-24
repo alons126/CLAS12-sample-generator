@@ -1,5 +1,7 @@
 # Legacy launch chains and current equivalents
 
+These archived call chains correspond to the legacy baseline recorded by the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0). The Uniform source remains a pinned submodule, so the tag records its exact referenced revision rather than duplicating that independent repository.
+
 ## 1. Uniform generation
 
 The archived entry point was sourced in a csh/tcsh environment:
