@@ -3,14 +3,22 @@
 This project has exactly two user-facing workflows. First create completed LUND files from uniform acceptance sampling or existing physical event-generator truth. Later, and only as a separate action, submit those LUND files to ifarm Slurm for GEMC detector simulation followed by CLAS12 reconstruction.
 
 ```mermaid
-flowchart LR
-    U[Uniform acceptance sampling] --> C[Create LUND files]
-    P[Existing physical generator truth] --> C
-    C --> L[Split LUND files and completion manifest]
-    L --> S[Submit ifarm Slurm array]
-    S --> G[CLAS12 simulation (GEMC)]
-    G --> R[CLAS12 reconstruction (COATJAVA)]
-    R --> H[Reconstructed HIPO]
+flowchart TB
+    subgraph CREATE["1. Create LUND files"]
+        direction LR
+        U["Uniform acceptance<br/>sampling"] --> C["Create LUND files"]
+        P["Existing physical<br/>generator truth"] --> C
+        C --> L["Split LUND files and<br/>completion manifest"]
+    end
+
+    subgraph SIMULATE["2. Submit and simulate"]
+        direction RL
+        S["Submit ifarm<br/>Slurm array"] --> G["CLAS12 simulation<br/>(GEMC)"]
+        G --> R["CLAS12 reconstruction<br/>(COATJAVA)"]
+        R --> H["Reconstructed HIPO"]
+    end
+
+    CREATE --> SIMULATE
 ```
 
 The project does not run a physical event generator, derive acceptance maps, or perform physics analysis.
