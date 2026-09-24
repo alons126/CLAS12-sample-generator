@@ -1,3 +1,7 @@
+# Git commit and publication authority
+
+Never create or amend a Git commit, push a branch or tag, or otherwise publish repository changes unless the user explicitly requests that exact Git action in the current request. A request to edit, implement, fix, patch, validate, or "do it" authorizes working-tree changes only and must never be interpreted as permission to commit or push them. Permission from an earlier request does not carry forward to a later request. By default, leave completed changes uncommitted for the user to inspect and report that state clearly.
+
 # Maintained source documentation
 
 Document maintained C++ with file/class purpose and workflow descriptions, named separator banners, Doxygen function contracts, and `#pragma region` / `#pragma endregion` around meaningful sections. Explain algorithm stages, inputs, outputs, assumptions and failure behavior. Keep brief accessors concise and comments consistent with implementation.
