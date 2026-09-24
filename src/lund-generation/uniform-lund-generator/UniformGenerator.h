@@ -4,20 +4,20 @@
 
 /**
  * @file UniformGenerator.h
- * @brief Uniform LUND generation entry-point contract.
+ * @brief Declares uniform LUND sample generation.
  *
  * Purpose:
- *   Expose deliberately unphysical CLAS12 acceptance-sample production through one small maintained
- *   API while keeping channel sampling, target vertices, LUND writing, and monitoring internals private.
+ *   Provide one function that creates deliberately unphysical CLAS12 acceptance samples. Sampling,
+ *   target vertices, LUND writing, and monitoring stay inside the implementation.
  *
  * Workflow:
  *   Parse a uniform RunConfig -> call generateUniform() once -> consume the completed LUND files,
  *   monitoring files, and manifest from the resolved run directory.
  *
  * Scientific scope:
- *   The implementation generates configured 1e or electron–hadron probes from random kinematics. It is not an
- *   interaction model and does not read or run an event generator. Physical truth conversion enters
- *   through the separate physical adapter workflow.
+ *   The code generates configured 1e or electron-hadron probes from random kinematics. It is not a
+ *   physics interaction model and does not read or run an event generator. Physical event conversion
+ *   uses the separate physical workflow.
  */
 
 #pragma once
@@ -32,8 +32,8 @@ namespace samples {
  * @brief Generate the requested acceptance channel and its completed run outputs.
  *
  * Purpose:
- *   Produce one reproducible uniform acceptance run using the same target geometry, LUND serializer,
- *   naming, provenance, and completion contract used by physical conversion where semantics coincide.
+ *   Produce one uniform acceptance run using the shared target geometry, LUND writer, naming, settings
+ *   record, and completion marker.
  *
  * Workflow:
  *   1. Revalidate and cache the uniform configuration.
@@ -45,19 +45,19 @@ namespace samples {
  *      single `<prefix>_monitoring_plots.root` file, finalize LUND output, and publish the completion
  *      log in the same monitoring directory.
  *
- * @param config Borrowed configuration returned by RunConfig::parse(..., true). The function reads it
- *               for the duration of the call and neither retains nor modifies it. Momentum values
- *               are GeV/c, beam energy is GeV, angles are degrees, and vertex coordinates are cm.
+ * @param config Checked settings returned by RunConfig::parse(..., true). The function reads them during
+ *               the call and does not store or change them. Momentum uses GeV/c, beam energy uses GeV,
+ *               angles use degrees, and vertices use cm.
  *
- * @return Nothing. Normal return means the requested events and diagnostics were written and the run
- *         was made consumable through its completion manifest.
+ * @return Nothing. Normal return means the requested events, monitoring files, and completion manifest
+ *         were written successfully.
  *
  * @throws std::exception If validation, target sampling, safe output preparation, LUND serialization,
  *         monitoring output, or manifest publication fails. The CLI boundary converts the exception
  *         to an error diagnostic and nonzero process status.
  *
- * @note Every particle in an electron–hadron event receives the same sampled interaction vertex. Kinematic and
- *       vertex RNG ownership remains separate so target draws do not change the kinematic sequence.
+ * @note Every particle in an electron-hadron event gets the same sampled vertex. Separate RNGs keep
+ *       vertex draws from changing the kinematic random sequence.
  *
  * @note Uniform files default to 25,000 events each. `events-per-file` remains configurable, and the
  *       completed manifest supplies each actual file count to GEMC and reconstruction submission.

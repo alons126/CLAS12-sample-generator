@@ -59,6 +59,10 @@ def read_run(directory):
     """
 
     manifest = json.loads((directory / 'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
+    assert set(manifest['git']) == {
+        'repository', 'branch', 'commit_message', 'full_commit_hash', 'commit_datetime',
+        'commit_author', 'status_porcelain_summary', 'nearest_tag', 'head_detached',
+        'tracking_branch', 'tracking_ahead', 'tracking_behind', 'github_files_url'}
     events = []
 
     for entry in manifest['files']:

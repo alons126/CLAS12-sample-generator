@@ -4,29 +4,68 @@
 
 /**
  * @file Version.h.in
- * @brief CMake template for compiled run provenance.
+ * @brief CMake template for build and Git information stored in run manifests.
  *
  * Purpose:
- *   Embed the source revision, project version, checkout location, and external
- *   target-geometry hash in the binaries that create completed run manifests.
+ *   Put the project version, Git state, source path, and targets.h hash into the programs that create
+ *   run manifests.
  *
  * Workflow:
- *   CMake substitutes every @...@ token while configuring the build. LundWriter
- *   then copies the resulting constants into each completed manifest.
+ *   CMake replaces every @...@ token when it configures the build -> the compiler includes the generated
+ *   constants -> LundWriter copies them into each completed manifest.
  *
  * Inputs and outputs:
- *   Inputs come from CMake project metadata, Git, and the SHA-256 calculation for
- *   targets.h. The generated output is build/generated/Version.h.
+ *   CMake project data, Git, and the SHA-256 hash of targets.h are the inputs. CMake writes the completed
+ *   header to build/generated/Version.h.
  */
 
 #pragma once
 
-// Compiled provenance ---------------------------------------------------------------------------------------------------------------------------------------------------
+// Build information -----------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Compiled provenance */
+#pragma region /* Build information */
 
 /** @brief Git description of the configured source checkout. */
 #define SAMPLE_REVISION "@SAMPLE_REVISION@"
+
+/** @brief Origin remote of the configured source checkout. */
+#define SAMPLE_GIT_REPOSITORY "@SAMPLE_GIT_REPOSITORY@"
+
+/** @brief Branch checked out when CMake configured the build. */
+#define SAMPLE_GIT_BRANCH "@SAMPLE_GIT_BRANCH@"
+
+/** @brief Subject of the commit used to configure the build. */
+#define SAMPLE_GIT_COMMIT_MESSAGE "@SAMPLE_GIT_COMMIT_MESSAGE@"
+
+/** @brief Full hash of the commit used to configure the build. */
+#define SAMPLE_GIT_COMMIT_HASH "@SAMPLE_GIT_COMMIT_HASH@"
+
+/** @brief ISO date and time of the commit used to configure the build. */
+#define SAMPLE_GIT_COMMIT_DATETIME "@SAMPLE_GIT_COMMIT_DATETIME@"
+
+/** @brief Author of the commit used to configure the build. */
+#define SAMPLE_GIT_COMMIT_AUTHOR "@SAMPLE_GIT_COMMIT_AUTHOR@"
+
+/** @brief Short machine-readable Git status at configure time, or `clean` when it was empty. */
+#define SAMPLE_GIT_STATUS "@SAMPLE_GIT_STATUS@"
+
+/** @brief Nearest Git tag at configure time. */
+#define SAMPLE_GIT_NEAREST_TAG "@SAMPLE_GIT_NEAREST_TAG@"
+
+/** @brief Whether CMake configured the build from a detached HEAD. */
+#define SAMPLE_GIT_HEAD_DETACHED "@SAMPLE_GIT_HEAD_DETACHED@"
+
+/** @brief Upstream branch tracked at configure time. */
+#define SAMPLE_GIT_TRACKING_BRANCH "@SAMPLE_GIT_TRACKING_BRANCH@"
+
+/** @brief Number of local commits not yet in the tracked branch at configure time. */
+#define SAMPLE_GIT_TRACKING_AHEAD "@SAMPLE_GIT_TRACKING_AHEAD@"
+
+/** @brief Number of tracked-branch commits not yet in the local branch at configure time. */
+#define SAMPLE_GIT_TRACKING_BEHIND "@SAMPLE_GIT_TRACKING_BEHIND@"
+
+/** @brief GitHub tree link for the configured full commit, when the origin is GitHub. */
+#define SAMPLE_GIT_FILES_URL "@SAMPLE_GIT_FILES_URL@"
 
 /** @brief Project version declared by the root CMake project. */
 #define SAMPLE_VERSION "@PROJECT_VERSION@"
@@ -34,7 +73,7 @@
 /** @brief Absolute source checkout used when the build was configured. */
 #define SAMPLE_SOURCE_DIR "@PROJECT_SOURCE_DIR@"
 
-/** @brief SHA-256 digest of the external target-geometry header. */
+/** @brief SHA-256 hash of the external target-geometry header. */
 #define SAMPLE_TARGETS_SHA256 "@SAMPLE_TARGETS_SHA256@"
 
 #pragma endregion

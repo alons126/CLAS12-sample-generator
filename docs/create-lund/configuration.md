@@ -92,7 +92,7 @@ The maintained catalog centralizes the same kind of selection that the legacy su
 
 ## Manifest
 
-Schema version 1 contains `workflow`, project `version`, configure-time Git `revision` (including a dirty marker when applicable), `root_version`, the compiled header hash `targets_sha256`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
+Schema version 1 contains `workflow`, project `version`, the short configure-time Git `revision`, a full `git` object (repository, branch, commit, status, tag, tracking state, and GitHub tree link), `root_version`, the compiled header hash `targets_sha256`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
 
 It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Rounded masses and all LUND fields/precision are defined in the [data contract](../concepts/lund-data-contract.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
 

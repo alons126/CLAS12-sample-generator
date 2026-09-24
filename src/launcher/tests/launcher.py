@@ -118,6 +118,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     m=json.loads((output/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
     assert m['written_events']==4
     assert m['targets_sha256'] == hashlib.sha256((project/'src/lund-generation/external/targets.h').read_bytes()).hexdigest()
+    assert len(m['git']['full_commit_hash']) == 40 and m['git']['repository'].endswith('CLAS12-sample-generator.git')
     sourced(args)  # legacy behavior replaces the resolved run directory
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false','--jobs','0'],success=False)
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false','--build-dir',root/'missing-build'])

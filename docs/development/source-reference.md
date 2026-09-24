@@ -44,7 +44,7 @@ The imported header is kept as an exact RG-M copy, while `src/slurm-submission/e
 
 [set_colors.csh](../../src/launcher/environment/set_colors.csh) owns the shared ANSI palette and exports it through `*_COLOR` environment variables. [environment.h](../../src/lund-generation/core/support/environment.h) decodes those inherited values once for C++ and exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. A C++ executable launched without the shared environment uses empty color strings, so its output remains readable without introducing a second fallback palette.
 
-[Version.h.in](../../src/lund-generation/core/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
+[Version.h.in](../../src/lund-generation/core/support/Version.h.in) embeds project version, target-header SHA-256, and full configure-time Git repository/commit/status/tracking metadata into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 
 ## 3. Uniform-to-LUND implementation
 
@@ -75,7 +75,7 @@ The reader arrays have no maintained fixed-size particle buffer. ROOT reports ea
 | `src/slurm-submission/submit.py` | Preloaded environment, established report/checks, guarded output reset and one array per sample |
 | `src/slurm-submission/external/submit_GEMC_sample.sh` | External Slurm task payload; GEMC followed by reconstruction |
 
-The resolver obtains the prefix and task count from the completed manifest or explicit input, then the setup script consumes the validated LUND files. It exports a shared event limit for the array, defaulting to the largest selected manifest file count. The payload retains its original scheduler defaults. See the [submission guide](../submit-simulation/guide.md).
+The resolver obtains the prefix and task count from the completed manifest or explicit input, then the setup script consumes the validated LUND files. It exports a shared event limit for the array, defaulting to the largest selected manifest file count. Before handoff, the Python coordinator writes `reconhipo/slurm-submission-log.json` with resolved settings, runtime Git identity, the exact `sbatch` command, and detector-input/payload hashes. The payload retains its original scheduler defaults. See the [submission guide](../submit-simulation/guide.md).
 
 ## 6. Configuration and resources
 

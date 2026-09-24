@@ -4,34 +4,31 @@
 
 /**
  * @file PhysicalConverter.cpp
- * @brief Physical event-generator adapter dispatch.
+ * @brief Chooses the converter for one physical input format.
  *
  * Purpose:
- *   Implement the single generator-independent routing point for physical LUND conversion. The
- *   dispatcher knows which adapter corresponds to each public event-generator identifier but does not
- *   know generator schemas, construct events, sample vertices, or serialize output itself.
+ *   Map the configured event-generator name to its converter. This file does not read generator data,
+ *   build events, sample vertices, or write output.
  *
  * Workflow:
- *   Receive resolved physical configuration -> inspect `event-generator` -> invoke exactly one matching
- *   synchronous adapter -> return after that adapter finalizes the run, or reject an unsupported value.
+ *   Read `event-generator` -> call exactly one matching converter -> return after it finishes, or reject
+ *   an unsupported name.
  *
  * Inputs:
- *   RunConfig supplies the already resolved generator identifier and every setting borrowed by the
- *   selected adapter. This layer reads only `event-generator` and passes the complete object unchanged.
+ *   RunConfig contains the final generator name and all settings needed by its converter. This file reads
+ *   only the generator name and passes the complete object unchanged.
  *
  * Outputs:
- *   The dispatcher returns no value and creates no files directly. Output artifacts and terminal
- *   reporting belong to the selected adapter and the shared LUND writer it uses.
+ *   This function returns no value and creates no files itself. The selected converter and LundWriter
+ *   create and report the output.
  *
  * Design:
- *   Explicit branches keep the supported set visible and the call chain direct. Adding a generator
- *   requires including its adapter and adding one branch here; it does not require a registry, plugin
- *   lifecycle, generic orchestration layer, or duplicated output workflow.
+ *   Each supported format has one visible branch. Adding a format requires its converter and one new
+ *   branch here; the shared LUND workflow does not need to be copied.
  *
  * Failure:
- *   Unsupported identifiers throw before any adapter is invoked. Exceptions from a selected adapter are
- *   intentionally not caught here and propagate to the command-line boundary for one consistent failure
- *   report and nonzero exit status.
+ *   An unsupported name throws before conversion starts. Errors from the selected converter pass to the
+ *   command-line program, which prints them and returns a nonzero status.
  */
 
 #include "event-generator-to-lund-converter/PhysicalConverter.h"
@@ -47,18 +44,15 @@ namespace samples {
 #pragma region /* convertPhysical */
 
 void convertPhysical(const RunConfig& config) {
-    // Keep dispatch as a direct exact-name comparison. The adapter receives the same immutable RunConfig
-    // used by the surrounding workflow and owns all GENIE-GST-specific validation, reading and conversion.
+    // Use an exact name match and pass the same unchanged settings to the GENIE converter.
     if (config.get("event-generator") == "genie-gst") {
         convertGenie(config);
 
-        // A completed adapter call satisfies this dispatch request; return explicitly so later adapter
-        // branches or the unsupported-generator failure can never run for the same conversion.
+        // Stop after the selected converter completes.
         return;
     }
 
-    // No adapter has claimed the configured identifier. Fail before generator-specific code can prepare
-    // or replace an output directory, and include the exact rejected value in the operator-facing error.
+    // Fail before any converter can prepare or replace an output directory.
     throw std::runtime_error("Unsupported physical event generator: " + config.get("event-generator"));
 }
 

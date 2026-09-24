@@ -4,19 +4,19 @@
 
 /**
  * @file UniformConfig.h
- * @brief Typed configuration for the uniform LUND generator.
+ * @brief Stores uniform-generator settings in their C++ types.
  *
  * Purpose:
- *   Translate the already resolved string values needed on every uniform event into a small immutable-
- *   by-convention value object, avoiding repeated map lookup and numeric parsing in the production loop.
+ *   Convert the final RunConfig strings used for every event into numbers, flags, and enums once before
+ *   the event loop.
  *
  * Workflow:
- *   RunConfig parses, resolves `auto`/`sampled`, and validates -> UniformConfig maps channel/mode strings
- *   and converts numeric fields once -> UniformGenerator reads the cached members while sampling events.
+ *   RunConfig reads and checks text settings -> UniformConfig converts them once -> UniformGenerator
+ *   reads the stored values while creating events.
  *
  * Scope:
- *   This object caches particle-content and kinematic settings only. Output, formatting, RNG seeds, and
- *   target geometry selection remains in RunConfig because vertex sampling occurs outside this object.
+ *   This object stores particle and kinematic settings only. Output, formatting, RNG seeds, and target
+ *   geometry remain in RunConfig.
  */
 
 #pragma once
@@ -34,14 +34,14 @@ namespace samples {
 #pragma region /* UniformChannel object */
 /**
  * @enum UniformChannel
- * @brief Typed multiplicity selected from the validated 1e or eh setting.
+ * @brief Event type selected from the checked channel setting.
  *
  * Purpose:
- *   Let the event loop dispatch particle construction without repeatedly comparing configuration text.
+ *   Let the event loop choose its particle-building branch without comparing strings for every event.
  *
  * Creation and use:
- *   UniformConfig maps one validated channel string to this enum. UniformGenerator then selects the
- *   corresponding multiplicity and sampling prescription for every event.
+ *   UniformConfig converts the checked channel string to this enum. UniformGenerator uses it to choose
+ *   the number of particles and their sampling rules.
  *
  * Scientific meaning:
  *   Electron writes one sampled electron. ElectronHadron writes an artificial trigger electron followed
@@ -80,16 +80,15 @@ enum class HadronSpecies {
 #pragma region /* UniformConfig object */
 /**
  * @struct UniformConfig
- * @brief Typed, cached sampling settings used in the production loop.
+ * @brief Converted sampling settings used in the event loop.
  *
  * Purpose:
- *   Hold the complete set of typed values needed to choose uniform particle content and sample its
- *   kinematics without owning general run configuration or mutable generator state.
+ *   Store the converted values needed to choose particles and sample their kinematics. It does not own
+ *   the full run configuration or any changing generator state.
  *
  * Creation and lifetime:
- *   Construct once from a RunConfig returned by RunConfig::parse(..., true), after `auto` and `sampled`
- *   aliases are resolved and uniform constraints are validated. All values are copied; UniformConfig
- *   does not retain a reference and may safely outlive the source RunConfig.
+ *   Construct once from a checked RunConfig after `auto` and `sampled` have been replaced. Every value
+ *   is copied, so this object does not depend on the RunConfig after construction.
  *
  * Units:
  *   Beam energy is GeV, momenta are GeV/c, and all angles are degrees. UniformGenerator converts angles
@@ -102,7 +101,7 @@ enum class HadronSpecies {
  *   compatibility were checked by RunConfig::validate(true).
  */
 struct UniformConfig {
-    // Channel and resolved prescriptions --------------------------------------------------------------------------------------------------------------------------------
+    // Channel and sampling choices --------------------------------------------------------------------------------------------------------------------------------------
     UniformChannel channel;          ///< Electron-only or electron-hadron branch.
     HadronSpecies hadron;            ///< Hadron identity used by the eh branch.
     int hadron_pid;                  ///< Centralized PDG identifier for the selected hadron.
@@ -128,13 +127,13 @@ struct UniformConfig {
     int Z;                      ///< LUND target charge-number metadata; does not select geometry.
 
     /**
-     * @brief Cache one resolved and validated uniform configuration.
+     * @brief Copy and convert one checked uniform configuration.
      *
-     * @param c Borrowed RunConfig read only during construction. It must contain uniform-source keys,
-     *          resolved automatic aliases, valid numeric text, and compatible bounds/modes.
+     * @param c RunConfig read during construction. It must contain checked uniform settings with all
+     *          automatic values already replaced.
      *
      * @throws std::exception If a required key is absent or a numeric conversion fails. This constructor
-     *         deliberately does not call validate(), resolve aliases, or repair incompatible values.
+     *         does not call validate(), replace automatic values, or repair invalid combinations.
      *
      * @note The channel fallback maps the only other validated value, `eh`, to ElectronHadron. Hadron text is likewise safe because RunConfig admits exactly four species.
      */

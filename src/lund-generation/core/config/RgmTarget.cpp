@@ -4,20 +4,18 @@
 
 /**
  * @file RgmTarget.cpp
- * @brief RG-M catalog mapped onto the replaceable external geometry implementation.
+ * @brief Defines the supported RG-M target records.
  *
  * Purpose:
- *   Maintain the small, reviewable mapping from RG-M target identity to the default A/Z header values,
- *   external targets.h geometry key, and GEMC target-variation provenance used by RunConfig.
+ *   Keep the default A, Z, targets.h geometry name, and GEMC variation for each RG-M target in one list.
  *
  * Workflow:
- *   Lazily initialize immutable catalog storage -> expose it by const reference -> perform exact
- *   identifier lookup during configuration resolution -> format the same ordered identifiers for help
- *   and invalid-target diagnostics.
+ *   Create the list on first use -> return read-only references -> look up exact target names -> use the
+ *   same ordered names in help and error messages.
  *
  * Separation of responsibilities:
- *   This file owns target-identity metadata only. TargetGeometry and external targets.h own spatial
- *   vertex distributions; detector GCARD resources own GEMC geometry implementation.
+ *   This file stores target names and defaults. TargetGeometry and targets.h sample vertices. GCARD
+ *   files define the detector geometry used by GEMC.
  */
 
 #include "core/config/RgmTarget.h"
@@ -31,8 +29,7 @@ namespace samples {
 
 #pragma region /* Catalog */
 const std::vector<RgmTarget>& rgmTargets() {
-    // Catalog order controls help/error presentation only; lookup is by exact identifier. Records are
-    // immutable after this thread-safe first initialization.
+    // This order is used in help and error messages. Target lookup still requires an exact name.
     static const std::vector<RgmTarget> targets = {
         {"H1", "liquid hydrogen", 1, 1, "liquid", "rga_spring2019"},
         {"D2", "liquid deuterium", 2, 1, "liquid", "rgb_fall2019"},
@@ -49,8 +46,7 @@ const std::vector<RgmTarget>& rgmTargets() {
         {"Sn120-legacy", "archived tin-120 single foil", 120, 50, "1-foil", "rgm_fall2021_Sn"},
     };
 
-    // Returning by const reference avoids rebuilding or copying the catalog and keeps references from
-    // findRgmTarget() valid for the remainder of the process.
+    // Return the stored list without copying it. References to its records stay valid until exit.
     return targets;
 }
 #pragma endregion
@@ -59,8 +55,7 @@ const std::vector<RgmTarget>& rgmTargets() {
 
 #pragma region /* Exact target lookup */
 const RgmTarget& findRgmTarget(const std::string& identifier) {
-    // Linear lookup keeps the catalog representation direct and readable; its fixed small size does not
-    // justify a second index whose contents or ordering could diverge.
+    // The list is small, so a direct loop is clearer than keeping a second lookup table.
     for (const auto& target : rgmTargets()) {
         if (target.identifier == identifier) { return target; }
     }

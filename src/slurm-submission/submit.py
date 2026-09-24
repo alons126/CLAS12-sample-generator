@@ -14,7 +14,8 @@ Purpose:
 
 Workflow:
     resolve every input -> check/load/verify selected GEMC -> validate worker inputs ->
-    prepare mchipo/reconhipo only with --execute -> submit one Slurm array per sample.
+    prepare mchipo/reconhipo only with --execute -> write submission provenance -> submit one Slurm
+    array per sample.
     The sourced shell supplies the shared palette and module command. Python copies that process
     environment, applies the selected GEMC module to the copy, verifies GEMC_DATA_DIR and the
     executable, then gives the result to sbatch. A child process cannot rewrite its parent shell,
@@ -29,8 +30,10 @@ Inputs:
 
 Outputs:
     Preview prints the intended checks and commands without replacing outputs or submitting.
-    --execute replaces the selected simulation directories and submits Slurm arrays; it
-    preserves lundfiles. Both modes print the module transition and the exact GEMC executable
+    --execute replaces the selected simulation directories, writes
+    reconhipo/slurm-submission-log.json, and submits Slurm arrays; it preserves lundfiles. The log
+    contains every resolved parameter, the exact command, Git information, and hashes of the GCARD,
+    YAML, and worker payload. Both modes print the module transition and the exact GEMC executable
     that their Slurm environment would inherit.
 
 CLI options (parsed by resolve_inputs.py):
@@ -66,6 +69,8 @@ Failure:
     never canceled. Invoke through run.csh so colors and the ifarm environment are available.
 """
 
+from datetime import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -74,6 +79,130 @@ import subprocess
 import sys
 
 from resolve_inputs import parser, path_value, resolve_samples
+
+# Provenance -----------------------------------------------------------------
+
+# region Provenance
+def git_information(root):
+    """Read the current checkout identity without changing repository state.
+
+    Purpose:
+        Give submission logs the same repository, branch, commit, status, tracking, and source-link
+        information recorded by LUND generation.
+
+    Args:
+        root: Verified project checkout passed to Git as its working directory.
+
+    Returns:
+        A JSON-ready dictionary. Unavailable optional Git values are written explicitly instead of
+        preventing submission; an empty porcelain status is recorded as ``clean``.
+    """
+
+    def read(*arguments, empty='Not available'):
+        """Return one stripped Git result or the requested unavailable value."""
+
+        result = subprocess.run(['git', *arguments], cwd=root, capture_output=True, text=True)
+
+        if result.returncode:
+            return 'Not available'
+
+        return result.stdout.rstrip() or empty
+
+    repository = read('remote', 'get-url', 'origin')
+    branch = read('branch', '--show-current')
+    commit_hash = read('rev-parse', 'HEAD')
+    status = read('status', '--porcelain', empty='clean').replace('\n', ' | ')
+    tracking = read('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}')
+    counts = read('rev-list', '--left-right', '--count', 'HEAD...@{upstream}')
+    ahead = behind = 'Not available'
+
+    if counts != 'Not available':
+        fields = counts.split()
+
+        if len(fields) == 2 and all(field.isdigit() for field in fields):
+            ahead, behind = fields
+
+    github_files_url = 'Not available'
+
+    if repository.startswith('https://github.com/'):
+        github_path = repository.removeprefix('https://github.com/').removesuffix('.git')
+        github_files_url = f'https://github.com/{github_path}/tree/{commit_hash}'
+    elif repository.startswith('git@github.com:'):
+        github_path = repository.removeprefix('git@github.com:').removesuffix('.git')
+        github_files_url = f'https://github.com/{github_path}/tree/{commit_hash}'
+
+    return {
+        'repository': repository,
+        'branch': branch,
+        'commit_message': read('log', '-1', '--format=%s'),
+        'full_commit_hash': commit_hash,
+        'commit_datetime': read('log', '-1', '--format=%cI'),
+        'commit_author': read('log', '-1', '--format=%an'),
+        'status_porcelain_summary': status,
+        'nearest_tag': read('describe', '--tags', '--always', '--long'),
+        'head_detached': branch == 'Not available',
+        'tracking_branch': tracking,
+        'tracking_ahead': ahead,
+        'tracking_behind': behind,
+        'github_files_url': github_files_url,
+    }
+
+def file_sha256(path):
+    """Return the SHA-256 digest of one validated submission input."""
+
+    digest = hashlib.sha256()
+
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+
+    return digest.hexdigest()
+
+def write_submission_log(values, environment, root, executables, command):
+    """Atomically record the exact coordinator settings before Slurm handoff.
+
+    Args:
+        values: Fully resolved sample and detector settings returned by the resolver.
+        environment: Final private environment that will be passed to ``sbatch``.
+        root: Verified checkout containing the submitted payload.
+        executables: Verified absolute paths for GEMC, reconstruction, and sbatch.
+        command: Exact argument list passed to ``subprocess.run``.
+
+    Returns:
+        Path to the completed JSON log in ``OUTPATH/reconhipo``.
+
+    Failure:
+        File hashing or atomic publication errors stop submission so an accepted array never lacks
+        its coordinator-level provenance record.
+    """
+
+    parameters = dict(values)
+    parameters.update({key: environment[key] for key in (
+        'RUNNING_DIR', 'SUBMIT_SCRIPT_FILE', 'GEMC_DATA_DIR', 'ARRAY', 'SBATCH_EXPORT', 'SLURM_EXPORT_ENV')})
+    parameters.update({name: str(path) for name, path in executables.items()})
+    payload = Path(environment['SUBMIT_SCRIPT_FILE'])
+    inputs = {
+        'gcard': {'path': values['GCARD_FILE'], 'sha256': file_sha256(values['GCARD_FILE'])},
+        'reconstruction_yaml': {'path': values['YAML_FILE'], 'sha256': file_sha256(values['YAML_FILE'])},
+        'worker_payload': {'path': str(payload), 'sha256': file_sha256(payload)},
+    }
+    data = {
+        'schema_version': 1,
+        'workflow': 'slurm-submission',
+        'created_datetime': datetime.now().astimezone().isoformat(timespec='seconds'),
+        'parameters': dict(sorted(parameters.items())),
+        'command': command,
+        'git': git_information(root),
+        'inputs': inputs,
+    }
+    completed = Path(values['OUTPATH']) / 'reconhipo/slurm-submission-log.json'
+    temporary = completed.with_suffix('.json.tmp')
+
+    temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + '\n')
+    temporary.replace(completed)
+
+    return completed
+# endregion Provenance
 
 # Reporting ------------------------------------------------------------------
 
@@ -507,7 +636,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output replacement.
         6. Preserve outputs in preview or recreate only mchipo/reconhipo during execution.
-        7. Report the array contract and call the external payload through sbatch only in execute.
+        7. Report the array contract, publish its provenance log, and call the external payload
+            through sbatch only in execute.
 
     Args:
         values: One validated sample dictionary returned by resolve_samples().
@@ -526,7 +656,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     Failure:
         Missing inputs, unsafe output children, absent commands, or sbatch failure raise and
         stop later samples. All read-only preflight checks occur before mchipo/reconhipo replacement.
-        Already accepted Slurm arrays are not canceled when a later sample fails.
+        Provenance publication occurs after replacement and before sbatch. Already accepted Slurm
+        arrays are not canceled when a later sample fails.
     """
 
     # Copy only worker-facing sample values into this invocation's environment. source and
@@ -571,7 +702,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # The module transition runs only after the precheck, and verification proves that both the
     # resulting data path and executable agree with the requested version.
     load_gemc(values['GEMC_VERSION'], environment, report)
-    verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
+    gemc_executable = verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
 
     # Module initialization may publish its own settings. Reapply the validated worker contract
     # so explicit sample values and fixed coordinator paths retain final precedence.
@@ -641,9 +772,20 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     # Preview still verifies the detector executables. Only execution needs sbatch,
     # allowing local inspection of a completed sample without a scheduler command.
+    executables = {}
+
     for executable in (('sbatch', 'gemc', 'recon-util') if execute else ('gemc', 'recon-util')):
-        if shutil.which(executable, path=environment.get('PATH')) is None:
+        resolved_executable = shutil.which(executable, path=environment.get('PATH'))
+
+        if resolved_executable is None:
             raise ValueError(f'{executable} is unavailable in the loaded environment.')
+
+        executables[{'gemc': 'SLURM_GEMC_EXECUTABLE',
+                     'recon-util': 'SLURM_RECON_EXECUTABLE',
+                     'sbatch': 'SBATCH_EXECUTABLE'}[executable]] = resolved_executable
+
+    # verify_gemc() also proves that the selected program belongs to the requested module data tree.
+    executables['SLURM_GEMC_EXECUTABLE'] = gemc_executable
 
     report.banner('Setting output directories' + (' for ' + values['UNIFORM_SAMPLE_CHANNEL'] if uniform else ''))
 
@@ -735,6 +877,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         # Pass argv as a list and use the resolved environment without shell evaluation.
         # A scheduler rejection raises immediately, so no later sample is submitted.
         command = ['sbatch', '--job-name=' + values['SLURM_JOB_NAME'], '--array=' + environment['ARRAY'], payload]
+        write_submission_log(values, environment, root, executables, command)
+        sys.stdout.flush()
 
         if subprocess.run(command, env=environment, cwd=root).returncode:
             raise ValueError('sbatch failed; no subsequent sample was submitted.')
@@ -768,9 +912,10 @@ def main():
         root because maintained resource paths and the external payload are checkout-relative.
 
     Outputs:
-        A complete preview or execution transcript on standard output. Execution may create fresh
-        mchipo/reconhipo directories and submit arrays; preview performs the same validation without
-        those mutations. Neither mode exports its private environment back to the caller's shell.
+        A complete preview or execution transcript on standard output. Execution creates fresh
+        mchipo/reconhipo directories, publishes a submission-provenance log, and submits arrays;
+        preview performs the same validation without those mutations. Neither mode exports its
+        private environment back to the caller's shell.
 
     Returns:
         Zero when every selected sample is previewed or submitted successfully; one for a

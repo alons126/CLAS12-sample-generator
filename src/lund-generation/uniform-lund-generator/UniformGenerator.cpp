@@ -4,22 +4,20 @@
 
 /**
  * @file UniformGenerator.cpp
- * @brief Electron and electron-hadron acceptance-sample generation.
+ * @brief Generates electron and electron-hadron acceptance samples.
  *
  * Purpose:
- *   Implement the deliberately unphysical 1e and configurable electron–hadron acceptance probes behind generateUniform(),
- *   preserving scientifically relevant legacy prescriptions while sharing maintained target geometry,
- *   LUND serialization, monitoring, naming, and provenance infrastructure.
+ *   Create the deliberately unphysical 1e and electron-hadron samples requested by generateUniform().
+ *   Keep the established sampling rules while using the shared target, writer, monitoring, and naming code.
  *
  * Workflow:
- *   Validate and cache settings -> initialize independent RNG streams and outputs -> sample one vertex
- *   and the selected particle content per event -> serialize successful events with the configured split
- *   size -> fill unified legacy-style diagnostics -> save one monitoring ROOT file and rendered views ->
- *   finalize LUND files and publish the manifest.
+ *   Check and convert settings -> start separate kinematic and vertex RNGs -> create particles and one
+ *   shared vertex per event -> write split LUND files -> fill monitoring -> save ROOT/PDF/PNG plots ->
+ *   finish the LUND files and publish the manifest.
  *
  * Reproducibility:
- *   Kinematics and target vertices use separate configured TRandom3 streams. Draw order is part of the
- *   reproducibility contract, so target-geometry sampling cannot consume kinematic random numbers.
+ *   Kinematics and target vertices use separate TRandom3 objects. Vertex sampling therefore cannot
+ *   change the kinematic random sequence.
  */
 
 #include "uniform-lund-generator/UniformGenerator.h"
@@ -40,10 +38,10 @@ namespace samples {
 #pragma region /* Private kinematic helpers */
 /**
  * @namespace samples::<anonymous>
- * @brief Translation-unit-only conversions used by the uniform event loop.
+ * @brief Small calculations used only by the uniform event loop.
  *
- * These helpers contain coordinate and legacy trigger-sector mechanics. Keeping them private prevents
- * other workflows from depending on prescriptions that are specific to uniform acceptance samples.
+ * These helpers build names, convert coordinates, and choose the trigger sector. They stay private
+ * because these rules belong only to uniform samples.
  */
 namespace {
 
@@ -88,20 +86,19 @@ std::string legacyBeamLabel(double beam) {
  * @brief Convert sampled polar coordinates to a momentum vector.
  *
  * Purpose:
- *   Centralize the degrees-to-radians boundary between configuration/sampling code and ROOT's vector
- *   API so every generated particle uses the same coordinate convention.
+ *   Convert configured degrees to the radians required by ROOT in one place.
  *
  * Algorithm:
  *   Create an empty TVector3, convert theta and phi to radians, and assign magnitude plus spherical
  *   direction through TVector3::SetMagThetaPhi().
  *
- * @param p Momentum magnitude in GeV/c. RunConfig/UniformConfig validation owns range constraints.
+ * @param p Momentum magnitude in GeV/c. The configuration checks its allowed range.
  * @param theta Polar angle from the positive z axis, in degrees.
  * @param phi Azimuth about the z axis, in degrees.
  *
  * @return Cartesian momentum vector whose component unit is GeV/c.
  *
- * @note The helper consumes no random numbers and performs no wrapping or acceptance checks.
+ * @note This function draws no random numbers and does not check acceptance ranges.
  */
 TVector3 momentum(double p, double theta, double phi) {
     // ROOT expects angular inputs in radians even though profiles and monitoring use degrees.
@@ -119,8 +116,8 @@ TVector3 momentum(double p, double theta, double phi) {
  * @brief Choose the historical trigger-electron azimuth.
  *
  * Purpose:
- *   Reproduce the legacy artificial trigger electron for two-particle samples, which lies near the CLAS12 sector closest
- *   to the direction opposite the sampled hadron rather than using an independent random azimuth.
+ *   Place the artificial trigger electron near the CLAS12 sector closest to the direction opposite the
+ *   sampled hadron instead of drawing a separate random azimuth.
  *
  * Algorithm:
  *   1. Add 180 degrees to the hadron azimuth and wrap once into the legacy [-180, 180] convention.
@@ -137,13 +134,11 @@ TVector3 momentum(double p, double theta, double phi) {
  *       to be sure the trigger electron follows the established separated placement.
  */
 double triggerPhi(double phi, double offset) {
-    // Expected inputs require at most one full-turn correction; preserving ±180 endpoints maintains
-    // the historical sector representation.
+    // One full-turn correction is enough for the expected input range. Keep the ±180 endpoints.
     auto wrap = [](double angle) { return angle > 180 ? angle - 360 : angle < -180 ? angle + 360 : angle; };
     const double target = wrap(phi + 180);
 
-    // Seed with the first sector center, then visit remaining centers in legacy order. Strict `<`
-    // prevents a later equidistant sector from replacing the earlier tie winner.
+    // Check sector centers in order. Strict `<` keeps the first center when two are equally close.
     double closest = -120, difference = std::abs(wrap(target - closest));
 
     for (double angle : {-60., 0., 60., 120., 180.}) {
@@ -155,7 +150,7 @@ double triggerPhi(double phi, double offset) {
         }
     }
 
-    // Apply the beam-setting correction after sector selection, without consuming RNG state.
+    // Add the configured offset after choosing the sector. This draws no random value.
     return closest + offset;
 }
 #pragma endregion
@@ -168,12 +163,11 @@ double triggerPhi(double phi, double offset) {
 #pragma region /* generateUniform */
 void generateUniform(const RunConfig& c) {
 #pragma region /* Run preparation */
-    // Recheck the public contract at the workflow boundary even when the caller used RunConfig::parse.
-    // The initial summary exposes resolved settings before the writer replaces an existing run.
+    // Check the settings again and print them before the writer replaces an existing run.
     c.validate(true);
     LundWriter::printWorkflowSummary(c, "uniform");
 
-    // Convert repeated string lookups into immutable typed fields before entering the production loop.
+    // Convert strings to typed values once before the event loop.
     const UniformConfig settings(c);
     const auto channel = settings.channel;
 
@@ -183,29 +177,26 @@ void generateUniform(const RunConfig& c) {
     // target draws from shifting the electron/hadron sequence when both streams are reproducible.
     TRandom3 random(c.integer("seed")), vertex_random(c.integer("vertex-seed"));
 
-    // Every event delegates its vertex draw to the selected external target-geometry implementation.
+    // Use the selected targets.h geometry for every event vertex.
     TargetGeometry geometry(c.get("target"));
 
-    // Construction validates the final path, replaces an existing exact run, creates the legacy uniform
-    // directory layout, and stores the requested total capacity and per-file split threshold.
+    // The writer checks and replaces the exact run directory, creates its folders, and stores file limits.
     LundWriter writer(c, "uniform");
 
-    // Monitoring retains the archived plot contract and extends hadron notation with FD/CD labels.
+    // Monitoring keeps the established plots and adds FD/CD to hadron names.
     const double beam = settings.beam;
     UniformMonitoring monitoring(sampleLabel(c), settings.hadron_pid, beam);
 #pragma endregion
 
 #pragma region /* Event generation */
-    // Generate exactly one complete event per iteration until the writer reaches the configured total.
-    // writer.count() advances only after successful LUND serialization.
+    // Create one complete event per loop. writer.count() changes only after a successful write.
     while (!writer.full()) {
         Event event;
 
-        // The run-global ID also chooses the mixed ep component. In legacy output mode the serializer
-        // may present a per-file ID without changing this internal run ordering.
+        // The run-wide ID also chooses which half of mixed momentum sampling is used.
         event.id = writer.count();
 
-        // A/Z are LUND header metadata and do not select or alter the vertex geometry.
+        // A and Z are LUND header values and do not choose the vertex geometry.
         event.A = settings.A;
         event.Z = settings.Z;
         event.beam_energy = beam;
@@ -249,16 +240,14 @@ void generateUniform(const RunConfig& c) {
             event.particles.push_back({pid, particleMass(pid), momentum(p, theta, phi), vertex});
         }
 
-        // Serialize first so monitoring does not count an event rejected by the writer. A later
-        // monitoring failure leaves inspectable partial output but cannot publish a completion manifest.
+        // Write first so monitoring never counts an event that failed to write.
         writer.write(event);
         monitoring.fill(event);
     }
 #pragma endregion
 
 #pragma region /* Run completion */
-    // Persist one diagnostic contract before making the run consumable. Every uniform channel writes
-    // its ROOT histograms and renders the legacy-style PDF/PNG views into MonitoringPlotsPath.
+    // Save ROOT, PDF, and PNG monitoring before publishing the completion manifest.
     const auto output = std::filesystem::path(c.get("output"));
     const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
     const auto monitoring_root = diagnostics / (c.get("prefix") + "_monitoring_plots.root");
@@ -267,12 +256,11 @@ void generateUniform(const RunConfig& c) {
     const auto pdf_name = "Uniform_" + plot_channel + "_plots_" + legacyBeamLabel(beam) + ".pdf";
     monitoring.save(monitoring_root, plot_directory, pdf_name);
 
-    // Uniform generation scans and writes the same number of events, so the written count is also the
-    // completion count supplied to the manifest. finish() closes files before publishing readiness.
+    // Uniform generation creates and writes the same number of events. finish() closes the files and
+    // publishes that count in the manifest.
     writer.finish(writer.count());
 
-    // Print the generated/written counters only after successful manifest publication. Uniform creation
-    // examines exactly one generated event for every successful write, so both counters use count().
+    // Print final counts only after the manifest is published. Both counts are equal for uniform runs.
     LundWriter::printWorkflowSummary(c, "uniform", writer.count(), writer.count(), true);
 #pragma endregion
 }

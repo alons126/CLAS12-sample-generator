@@ -7,10 +7,11 @@
  * @brief Uniform LUND generator command-line entry point.
  *
  * Purpose:
- *   Translate CLI settings into one generation call and a process exit status.
+ *   Read command-line settings, run uniform generation, and return a process status.
  *
  * Workflow:
- *   Help returns immediately; otherwise parse -> generateUniform -> report success or caught failure.
+ *   Print help when requested -> read and check the options -> generate the sample -> return success or
+ *   print a caught error.
  *
  * CLI options:
  *   --config FILE                    Read `key = value` settings; CLI values take precedence.
@@ -35,10 +36,10 @@
  *   --hadron-momentum MODE           Select auto, fixed, sampled, uniform, or mixed momentum.
  *   --trigger-theta DEG              Set the electron trigger angle for eh (default: 25 degrees).
  *   --trigger-phi-offset DEG         Override the electron/hadron azimuthal separation (default: auto).
- *   --help                           Print the authoritative runtime option summary.
+ *   --help                           Print the complete runtime option summary.
  *
  * Output:
- *   A replaced run directory containing split LUND files, provenance, and uniform monitoring output.
+ *   A replaced run directory containing split LUND files, a settings record, and monitoring output.
  */
 
 #include <exception>
@@ -57,9 +58,8 @@ namespace env = environment;
  * @brief Uniform-generator command-line entry point.
  *
  * Purpose:
- *   Keep process-level concerns at the application boundary: select uniform-mode configuration,
- *   handle the standalone help request, invoke the maintained generator, and translate exceptions
- *   into a stable command-line failure status.
+ *   Handle help, errors, and the exit code here. RunConfig checks the settings, and generateUniform()
+ *   creates the sample and its output files.
  *
  * Workflow:
  *   1. Mark this executable as the uniform source for shared help and configuration parsing.
@@ -69,8 +69,7 @@ namespace env = environment;
  *   5. Return success, or report a caught standard exception and return failure.
  *
  * @param argc Number of argv entries, including the executable name.
- * @param argv Borrowed process argument array. The parser reads its strings during this call; this
- *             function neither owns nor modifies their storage.
+ * @param argv Process arguments read during this call. This function does not change or store them.
  *
  * @return `0` after help or successful generation; `1` when parsing or generation throws a
  *         `std::exception`.
@@ -82,29 +81,23 @@ namespace env = environment;
  *         standard error. Non-standard exceptions are outside this boundary.
  */
 int main(int argc, char** argv) {
-    // Shared CLI/configuration helpers serve both uniform and physical applications. This immutable
-    // mode selector chooses uniform help text and uniform-only validation for this entire process.
+    // The shared parser serves both applications. This flag selects uniform help and checks.
     constexpr bool uniform = true;
 
     try {
-        // Treat only the exact standalone request as launcher help. All other argument combinations,
-        // including `--help` mixed with run options, go through RunConfig::parse for one consistent
-        // syntax and validation decision.
+        // Only a standalone --help request prints help. Mixed arguments go through normal parsing.
         if (argc == 2 && std::string(argv[1]) == "--help") {
             std::cout << samples::help(uniform);
             return 0;
         }
 
-        // RunConfig::parse owns option validation and returns the complete value object consumed by
-        // generateUniform. The generator then owns output-directory replacement, event production,
-        // LUND serialization, monitoring, provenance, and completion reporting for this run.
+        // Read and check every option before generation can replace an output directory.
         samples::generateUniform(samples::RunConfig::parse(argc, argv, uniform));
 
-        // Reaching this point means configuration and the complete generation workflow succeeded.
+        // Reaching this point means the complete generation run succeeded.
         return 0;
     } catch (const std::exception& error) {
-        // Keep the prefix visually distinct while resetting color before the exception detail. A
-        // single stable status lets workflow.py stop subsequent stages and report command failure.
+        // Reset the color before printing the exception text. Status 1 tells workflow.py to stop.
         std::cerr << env::ERROR_COLOR << "Error: " << env::RESET_COLOR << error.what() << '\n';
 
         return 1;

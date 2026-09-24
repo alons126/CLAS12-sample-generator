@@ -200,7 +200,17 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
                 assert (shutil.which('gemc', path=calls[0]['env']['PATH'])
                         == str(new.parent / 'clas12Tags/5.14/bin/gemc'))
                 run = Path(values['OUTPATH'])
-                assert not list((run / 'mchipo').iterdir()) and not list((run / 'reconhipo').iterdir())
+                assert not list((run / 'mchipo').iterdir())
+                submission_log = json.loads((run / 'reconhipo/slurm-submission-log.json').read_text())
+                assert submission_log['workflow'] == 'slurm-submission'
+                assert submission_log['parameters']['OUTPATH'] == str(run)
+                assert submission_log['parameters']['ARRAY'] == '1-2'
+                assert submission_log['command'] == ['sbatch', *calls[0]['argv']]
+                assert set(submission_log['git']) == {
+                    'repository', 'branch', 'commit_message', 'full_commit_hash', 'commit_datetime',
+                    'commit_author', 'status_porcelain_summary', 'nearest_tag', 'head_detached',
+                    'tracking_branch', 'tracking_ahead', 'tracking_behind', 'github_files_url'}
+                assert all(len(item['sha256']) == 64 for item in submission_log['inputs'].values())
                 assert len(list((run / 'lundfiles').glob('*.txt'))) == 2
                 assert not (run / 'rootfiles').exists()
 

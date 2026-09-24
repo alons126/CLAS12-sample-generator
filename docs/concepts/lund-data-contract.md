@@ -84,12 +84,13 @@ For an input shorter than `events-per-file`, the first file is allowed to consum
 | --- | --- | --- |
 | `schema_version` | integer | Currently 1 |
 | `workflow` | string | `uniform` or `physical`; physical generator identity is in `config.event-generator` |
-| `version`, `revision`, `root_version` | strings | Project version, configure-time Git revision/dirty marker, ROOT version |
+| `version`, `revision`, `root_version` | strings | Project version, short configure-time Git description/dirty marker, ROOT version |
 | `targets_sha256` | string | SHA-256 of the external [`targets.h`](../../src/lund-generation/external/targets.h) used at compilation |
+| `git` | object | Configure-time repository URL, branch, commit subject/hash/date/author, porcelain status summary, nearest tag, detached-HEAD state, tracking branch and ahead/behind counts, and GitHub tree link |
 | `scanned_events`, `written_events` | integers | Input scan count and output count |
 | `config` | object of strings | Fully merged/resolved settings, including RNG/output/mass/sampling modes |
 | `files` | array | Each element has relative `path` and integer `events` |
 
-Local input patterns and output paths are resolved to absolute paths in configuration. The manifest does not hash or freeze original GST inputs; preserve them and the source checkout. A dirty revision identifies a modified checkout but is not a complete source snapshot.
+Local input patterns and output paths are resolved to absolute paths in configuration. Git fields describe the checkout when CMake configured the executable, not a later working-tree change made without rebuilding. The manifest does not hash or freeze original GST inputs; preserve them and the source checkout. A dirty status identifies modified paths but is not a complete source snapshot.
 
-Simulation records at `reconhipo/simulation/INDEX.json` contain executed argument lists and gcard/reconstruction-YAML SHA-256 hashes, plus `payload_sha256` identifying the executed external Bash payload. Per-file lock files use the same directory while local execution is in progress. They do not yet capture every environment variable, external database or detector RNG state. Those must be recorded separately for production provenance.
+Before `sbatch` is called, execution writes `reconhipo/slurm-submission-log.json`. It contains the exact submission command, every resolved coordinator/worker parameter, runtime Git information, and SHA-256 hashes of the selected GCARD, reconstruction YAML, and external worker payload. The record proves what the coordinator handed to Slurm; it does not claim that an accepted array task completed, capture external databases or detector RNG state, or replace scheduler task logs.

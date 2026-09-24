@@ -4,13 +4,14 @@
 
 /**
  * @file RunConfig.h
- * @brief Public sample-configuration interface.
+ * @brief Public interface for reading and checking run settings.
  *
  * Purpose:
- *   Merge defaults, a sample profile and CLI overrides into validated settings.
+ *   Combine defaults, an optional profile, and command-line values into one checked configuration.
  *
  * Workflow:
- *   Call parse once; generators read typed values; the writer records values in the manifest.
+ *   Call parse() once -> generators read strings or converted numbers -> the writer records every final
+ *   value in the manifest.
  */
 
 #pragma once
@@ -30,68 +31,63 @@ namespace samples {
 #pragma region /* RunConfig object */
 /**
  * @class RunConfig
- * @brief Validated settings shared by the generator, converter and writer.
+ * @brief Checked settings shared by the generator, converter, and writer.
  *
  * Purpose:
- *   Provide one typed access boundary over the strict key/value configuration used by uniform LUND
- *   generation and physical event conversion. Keeping the resolved strings together ensures physics
- *   code and manifest provenance observe the same final settings.
+ *   Store every final key/value setting in one object. Generators can read numbers through checked
+ *   conversion functions, and the manifest can record the same final text values.
  *
- * Architectural role:
- *   RunConfig is the handoff between the command-line applications and the LUND workflows. It owns
- *   policy for accepted setting names, precedence, automatic-value resolution, validation, and final
- *   path/name construction. UniformGenerator, physical adapters, and LundWriter consume the resulting
- *   read-only value object instead of reparsing arguments or independently deriving configuration.
+ * Role:
+ *   RunConfig sits between the command-line programs and the LUND workflows. It defines accepted names,
+ *   which source wins when values are repeated, how `auto` is resolved, which values are valid, and how
+ *   final paths are named. Other components read this object instead of parsing settings again.
  *
  * Non-responsibilities:
- *   This object does not sample or convert events, own random-number generators, inspect GST trees,
- *   serialize LUND records, create or replace output directories, render monitoring, or submit detector
- *   jobs. Those effects begin only after parse() has returned successfully and belong to the selected
- *   generator/converter and writer.
+ *   This object does not create events, read GST trees, sample random numbers, write LUND files, replace
+ *   output directories, draw monitoring plots, or submit jobs. Those steps start only after parse()
+ *   succeeds.
  *
  * Creation and workflow:
- *   1. parse() installs shared and source-specific defaults.
- *   2. It applies one optional profile, followed by command-line overrides.
- *   3. It resolves automatic target, channel, beam, naming, and path values.
- *   4. validate() rejects inconsistent settings before an output directory can be replaced.
- *   5. Generators read individual typed values; the writer serializes values() as provenance.
+ *   1. parse() adds shared and source-specific defaults.
+ *   2. It reads one optional profile and then applies command-line values.
+ *   3. It replaces `auto` with the correct target, channel, beam, name, and path values.
+ *   4. validate() rejects invalid combinations before output can be replaced.
+ *   5. Generators read individual values, and the writer saves values() in the manifest.
  *
  * Units and representation:
- *   Values remain strings so their resolved spelling can be recorded exactly. Individual key
- *   contracts define units: momenta are GeV/c, beam energy is GeV, angles are degrees, vertices are cm,
- *   counts/seeds/A/Z are unsigned integers, and paths are normalized strings.
+ *   Values stay as strings so the manifest can record their exact final spelling. Momentum uses GeV/c,
+ *   beam energy uses GeV, angles use degrees, vertices use cm, and counts, seeds, A, and Z are unsigned
+ *   integers.
  *
  * Ownership and lifetime:
- *   Each RunConfig owns its map by value and may be copied or moved normally. Public access is
- *   read-only after construction. References returned by values() remain valid while that object is
- *   alive and unchanged; consumers must not retain them beyond the configuration lifetime.
+ *   Each RunConfig owns its map and can be copied or moved. Public functions do not change it after
+ *   construction. A reference returned by values() is valid only while that RunConfig still exists.
  *
  * Invariants:
- *   An instance returned by parse() contains every key required by its selected source mode, contains
- *   no unknown keys, has resolved automatic values, satisfies validate(), and has an absolute output
- *   path. Consumers must obtain operational configurations from parse(); a default-constructed object
- *   has an empty map and is not valid input to a generator.
+ *   A value returned by parse() contains every required key, no unknown keys, no unresolved automatic
+ *   values, and an absolute output path. A default-constructed RunConfig is empty and must not be passed
+ *   to a generator.
  */
 class RunConfig {
    public:
     /**
-     * @brief Construct one complete, validated run configuration.
+     * @brief Build one complete and checked run configuration.
      *
      * @param argc Number of argv entries, including the executable name.
-     * @param argv Borrowed process arguments read during this call; storage is not retained.
+     * @param argv Process arguments read during this call. The object does not store argv.
      * @param uniform Select uniform-generation keys and defaults when true, or physical-conversion
      *                keys and defaults when false.
      *
-     * @return An owning, read-only configuration ready for generator, adapter, and writer consumption;
-     *         all stored `auto` values have been resolved and local operational paths normalized.
+     * @return Configuration ready for the generator, converter, and writer. All `auto` values are
+     *         resolved and local paths are normalized.
      *
-     * @throws std::exception For malformed/repeated/unknown options, unreadable profiles, invalid
-     *         values, unsupported source settings, path failures, or unsafe/incomplete run metadata.
+     * @throws std::exception For malformed, repeated, or unknown options; unreadable profiles; invalid
+     *         values; unsupported modes; or path errors.
      */
     static RunConfig parse(int argc, char** argv, bool uniform);
 
     /**
-     * @brief Return one resolved setting in its provenance-preserving text form.
+     * @brief Return one final setting as text.
      * @param key Known source-specific or shared configuration key.
      * @return A copy of the stored value.
      * @throws std::out_of_range If the key is absent.
@@ -99,7 +95,7 @@ class RunConfig {
     std::string get(const std::string& key) const;
 
     /**
-     * @brief Convert a resolved setting to a finite double without accepting trailing text.
+     * @brief Read one complete setting as a finite double.
      * @param key Key whose documented unit remains the unit of the returned value.
      * @return The finite numeric value.
      * @throws std::exception If the key is absent or its complete value is not a finite number.
@@ -107,7 +103,7 @@ class RunConfig {
     double number(const std::string& key) const;
 
     /**
-     * @brief Convert a decimal-digits-only setting to an unsigned 64-bit integer.
+     * @brief Read a digits-only setting as an unsigned 64-bit integer.
      * @param key Total count, per-file count, seed, or nuclear-metadata key to read.
      * @return The parsed unsigned value.
      * @throws std::exception If the key is absent, malformed, negative, or out of range.
@@ -115,15 +111,15 @@ class RunConfig {
     std::uint64_t integer(const std::string& key) const;
 
     /**
-     * @brief Expose all resolved settings for deterministic provenance serialization.
-     * @return Const view owned by this RunConfig; callers must not outlive this object.
+     * @brief Return all final settings for the manifest.
+     * @return Read-only reference owned by this RunConfig. Do not keep it after the object is destroyed.
      */
     const std::map<std::string, std::string>& values() const { return values_; }
 
     /**
-     * @brief Recheck shared and selected-source invariants before output creation.
-     * @param uniform Apply uniform constraints when true or physical-conversion constraints when false;
-     *                this must match the mode used to create the object.
+     * @brief Check shared settings and the selected source mode before output creation.
+     * @param uniform Check uniform rules when true or physical-conversion rules when false. This must
+     *                match the mode used by parse().
      * @throws std::exception If a required value, range, relationship, target, or mode is invalid.
      */
     void validate(bool uniform) const;
@@ -131,24 +127,24 @@ class RunConfig {
     // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:
     /**
-     * @brief Complete resolved key/value state owned by this object.
+     * @brief All final key/value settings owned by this object.
      *
-     * Keys are fixed by parse() for the selected source. Values retain their final text form for both
-     * typed access and manifest output; downstream code receives copies or a const view only.
+     * parse() fixes the allowed keys for the selected source. Values stay as text for conversion and
+     * manifest output. Other code receives copies or a read-only reference.
      */
     std::map<std::string, std::string> values_;
 };
 #pragma endregion
 
 /**
- * @brief Build usage text for one LUND source application without executing it.
+ * @brief Build help text for one LUND application without running it.
  * @param uniform Select uniform-generator help when true or physical-converter help when false.
  * @return Shared options, source-specific options, units, and supported RG-M target names.
  */
 std::string help(bool uniform);
 
 /**
- * @brief Encode arbitrary provenance text as one complete JSON string literal.
+ * @brief Encode text as one complete JSON string.
  * @param text Unescaped source text.
  * @return Escaped text including surrounding double quotes.
  */

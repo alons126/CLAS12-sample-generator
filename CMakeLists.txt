@@ -57,12 +57,76 @@ set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 # Compiled provenance ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiled provenance
-# Purpose: Read the Git revision and target-header hash; configure a maintained header template. External inputs are never modified.
+# Purpose: Read full Git/build provenance and the target-header hash; configure a maintained header template. External inputs are never modified.
+# read_git_value:
+#   Read one Git value from the source checkout and escape it for a generated C++ string literal.
+#
+# Inputs:
+#   The destination CMake variable followed by the Git subcommand and its arguments.
+#
+# Outputs:
+#   One parent-scope string, using `Not available` when Git cannot provide the requested value.
+#
+# Failure:
+#   Git errors remain nonfatal so source archives without repository metadata can still build.
+function(read_git_value output)
+    execute_process(COMMAND git ${ARGN}
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE value
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+    if(NOT result EQUAL 0 OR NOT value)
+        set(value "Not available")
+    endif()
+    string(REPLACE "\\" "\\\\" value "${value}")
+    string(REPLACE "\"" "\\\"" value "${value}")
+    string(REPLACE "\n" " | " value "${value}")
+    string(REPLACE "\r" "" value "${value}")
+    set(${output} "${value}" PARENT_SCOPE)
+endfunction()
+
 execute_process(COMMAND git describe --always --dirty
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE SAMPLE_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
 if(NOT SAMPLE_REVISION)
     set(SAMPLE_REVISION "unknown")
+endif()
+read_git_value(SAMPLE_GIT_REPOSITORY remote get-url origin)
+read_git_value(SAMPLE_GIT_BRANCH branch --show-current)
+read_git_value(SAMPLE_GIT_COMMIT_MESSAGE log -1 --format=%s)
+read_git_value(SAMPLE_GIT_COMMIT_HASH rev-parse HEAD)
+read_git_value(SAMPLE_GIT_COMMIT_DATETIME log -1 --format=%cI)
+read_git_value(SAMPLE_GIT_COMMIT_AUTHOR log -1 --format=%an)
+read_git_value(SAMPLE_GIT_STATUS status --porcelain)
+read_git_value(SAMPLE_GIT_NEAREST_TAG describe --tags --always --long)
+read_git_value(SAMPLE_GIT_TRACKING_BRANCH rev-parse --abbrev-ref --symbolic-full-name @{upstream})
+if(SAMPLE_GIT_BRANCH STREQUAL "Not available")
+    set(SAMPLE_GIT_HEAD_DETACHED "true")
+else()
+    set(SAMPLE_GIT_HEAD_DETACHED "false")
+endif()
+if(SAMPLE_GIT_STATUS STREQUAL "Not available")
+    set(SAMPLE_GIT_STATUS "clean")
+endif()
+execute_process(COMMAND git rev-list --left-right --count HEAD...@{upstream}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    RESULT_VARIABLE tracking_result
+    OUTPUT_VARIABLE tracking_counts
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET)
+if(tracking_result EQUAL 0 AND tracking_counts MATCHES "^([0-9]+)[ \t]+([0-9]+)$")
+    set(SAMPLE_GIT_TRACKING_AHEAD "${CMAKE_MATCH_1}")
+    set(SAMPLE_GIT_TRACKING_BEHIND "${CMAKE_MATCH_2}")
+else()
+    set(SAMPLE_GIT_TRACKING_AHEAD "Not available")
+    set(SAMPLE_GIT_TRACKING_BEHIND "Not available")
+endif()
+set(SAMPLE_GIT_FILES_URL "Not available")
+if(SAMPLE_GIT_REPOSITORY MATCHES "^(https://github\\.com/|git@github\\.com:)(.+)$")
+    set(github_path "${CMAKE_MATCH_2}")
+    string(REGEX REPLACE "\\.git$" "" github_path "${github_path}")
+    set(SAMPLE_GIT_FILES_URL "https://github.com/${github_path}/tree/${SAMPLE_GIT_COMMIT_HASH}")
 endif()
 # Reconfigure when the replaceable geometry source changes, including its manifest hash.
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h")

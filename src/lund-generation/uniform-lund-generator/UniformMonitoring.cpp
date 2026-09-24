@@ -4,12 +4,11 @@
 
 /**
  * @file UniformMonitoring.cpp
- * @brief Implements generalized legacy-style monitoring for uniform samples.
+ * @brief Creates and saves monitoring plots for uniform samples.
  *
  * Purpose:
- *   Preserve the archive's histogram order, bins, axis conventions, canvas geometry, margins, title
- *   sizes, label sizes, and drawing modes while extending hadron notation to FD/CD protons, neutrons,
- *   positive pions, and negative pions. All histograms are stored once in one ROOT file.
+ *   Keep the established histogram order, bins, axes, canvas size, margins, text sizes, and drawing
+ *   modes. Add clear FD/CD names for protons, neutrons, and charged pions. Store each histogram once.
  *
  * Workflow:
  *   Create the histograms for one uniform channel -> fill them after each event is written -> apply the
@@ -42,16 +41,15 @@ namespace samples {
 
 /**
  * @struct UniformMonitoring::Impl
- * @brief Own the ordered plots and resolved sample metadata used during filling.
+ * @brief Stores the plots in fill and output order.
  *
- * Entry keeps a detached histogram plus its x/y metric and particle identity. Empty y_metric denotes
- * a one-dimensional plot. Ordering matches the archive: electron TH1, hadron TH1, particle TH2, then
- * electron-hadron correlations.
+ * Entry stores one histogram and the particle values used for its axes. An empty y_metric means the
+ * histogram is one-dimensional. The order is electron TH1, hadron TH1, particle TH2, then correlations.
  */
 struct UniformMonitoring::Impl {
-    /** @struct Entry @brief One owned histogram and the quantities used to fill its axes. */
+    /** @struct Entry @brief One histogram and the particle values used to fill it. */
     struct Entry {
-        std::unique_ptr<TH1> histogram;  ///< Detached ROOT histogram with exclusive ownership.
+        std::unique_ptr<TH1> histogram;  ///< ROOT histogram owned only by this Entry.
         std::string x_metric;            ///< `P`, `Theta`, `Phi`, `Vx`, `Vy`, or `Vz`.
         int x_pid;                       ///< PDG identity supplying the x quantity.
         std::string y_metric;            ///< Empty for TH1; otherwise the y-axis metric.
@@ -76,7 +74,7 @@ struct HadronLabel {
 };
 
 /**
- * @brief Build the ROOT-name and TLatex-title tokens for one supported regional hadron.
+ * @brief Build the ROOT name and TLatex title for one supported hadron and region.
  *
  * @param pid Supported hadron PDG identifier.
  * @param region Detector-region suffix, normally `FD` or `CD`.
@@ -101,7 +99,7 @@ HadronLabel hadronLabel(int pid, const std::string& region) {
 /**
  * @brief Read one monitored scalar from the first particle with the requested identity.
  *
- * @param event Borrowed event whose particle order and values are not changed.
+ * @param event Event to read without changing its particle order or values.
  * @param pid PDG identifier of the particle to inspect.
  * @param metric Supported quantity name: `P`, `Theta`, `Phi`, `Vx`, `Vy`, or `Vz`.
  * @return Momentum in GeV/c, angle in degrees, or vertex coordinate in cm, as selected by metric.
@@ -164,9 +162,8 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
 
     const std::string region = sample_label.size() >= 2 && sample_label.compare(sample_label.size() - 2, 2, "CD") == 0 ? "CD" : "FD";
     const auto hadron = hadronLabel(hadron_pid, region);
-    // ROOT displays the histogram object name in its statistics box. Use the complete resolved sample
-    // label so every plot identifies its actual hadron species and detector region (for example,
-    // `Theta_pipCD_epipCD`) rather than collapsing pion and regional samples to legacy `ep`/`en` names.
+    // ROOT shows the object name in its statistics box. Use the complete sample label so the name shows
+    // the hadron and detector region, for example `Theta_pipCD_epipCD`.
     const std::string& channel = sample_label;
     const std::string context = "(e,e'" + hadron.title + ") sample";
     const double theta_high = region == "CD" ? 150 : 50;
@@ -248,8 +245,7 @@ void UniformMonitoring::fill(const Event& event) {
 #pragma region /* Output and rendering */
 
 void UniformMonitoring::save(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
-    // Apply the archived axis presentation before ROOT serialization so the stored histograms and
-    // rendered canvases carry the same title alignment and text sizing.
+    // Apply the axis style before writing so stored and rendered plots use the same text settings.
     for (auto& entry : impl_->entries) {
         auto* histogram = entry.histogram.get();
         histogram->Sumw2();

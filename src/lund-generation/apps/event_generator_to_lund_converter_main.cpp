@@ -4,17 +4,18 @@
 
 /**
  * @file event_generator_to_lund_converter_main.cpp
- * @brief Generator-independent physical conversion command-line entry point.
+ * @brief Command-line entry point for converting physical events to LUND.
  *
  * Purpose:
- *   Select the configured physical event-generator adapter and return its process status.
+ *   Read the requested physical input format, run its converter, and return a process status.
  *
  * Workflow:
- *   Help returns immediately; otherwise parse -> convertPhysical -> report success or caught failure.
+ *   Print help when requested -> read and check the options -> convert the events -> return success or
+ *   print a caught error.
  *
  * CLI options:
  *   --config FILE                     Read `key = value` settings; CLI values take precedence.
- *   --event-generator genie-gst       Select the GENIE GST adapter (default/currently supported: genie-gst).
+ *   --event-generator genie-gst       Select the GENIE GST input converter (default/currently supported: genie-gst).
  *   --input GST_GLOB                  Required GENIE GST ROOT input file or glob.
  *   --beam-energy GeV                 Set beam energy metadata (default: 5.98636 GeV).
  *   --rgm-target ID                   Select nuclear metadata and automatic geometry (default: Ar40).
@@ -26,15 +27,15 @@
  *                                     entries before starting a follow-up file (default: 10000).
  *   --seed N / --vertex-seed N        Set configured kinematic/vertex seeds (defaults: 67890/12345).
  *   --prefix NAME                     Override the automatic LUND filename prefix.
- *   --event-generator-version VERSION Record generator-version provenance (default: unknown).
- *   --tune NAME                       Record generator-tune provenance (default: unknown).
+ *   --event-generator-version VERSION Record the generator version (default: unknown).
+ *   --tune NAME                       Record the generator tune (default: unknown).
  *   --q2-cut NAME                     Record the input selection label (default: auto; no cut is applied here).
- *   --gemc-version VERSION            Record intended GEMC-version provenance (default: unknown).
+ *   --gemc-version VERSION            Record the intended GEMC version (default: unknown).
  *   --gemc-target-variation NAME      Record detector target variation (default: auto).
- *   --help                            Print the authoritative runtime option summary.
+ *   --help                            Print the complete runtime option summary.
  *
  * Output:
- *   A replaced metadata-named run directory containing split LUND files and conversion provenance.
+ *   A replaced metadata-named run directory containing split LUND files and a record of the settings.
  */
 
 #include <exception>
@@ -53,12 +54,11 @@ namespace env = environment;
  * @brief Event-generator-to-LUND converter command-line entry point.
  *
  * Purpose:
- *   Keep process-level concerns at the application boundary while the selected format adapter owns
- *   physical-event decoding.
+ *   Handle help, errors, and the exit code here while the selected converter reads the event data.
  *
  * Workflow:
- *   Parse and validate physical-conversion settings, dispatch the configured adapter, and translate
- *   standard exceptions into a stable process failure status.
+ *   Read and check the settings, call the selected converter, and return status 1 when a standard
+ *   exception is caught.
  *
  * @param argc Number of executable arguments.
  * @param argv Paths and options supplied by the caller.

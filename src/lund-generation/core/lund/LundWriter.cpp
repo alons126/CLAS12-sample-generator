@@ -4,18 +4,16 @@
 
 /**
  * @file LundWriter.cpp
- * @brief LUND serialization and completed-run manifests.
+ * @brief Implements LUND file writing and completed-run manifests.
  *
  * Purpose:
- *   Implement the common output boundary for uniform and physical LUND creation: topic-grouped run
- *   reporting, guarded directory replacement, split-file serialization, exact bookkeeping, resolved-
- *   configuration provenance, and completion publication.
+ *   Print run settings, safely replace the requested run directory, write split LUND files, count every
+ *   successful event, and record the final settings, build information, and output files.
  *
  * Workflow:
- *   Print resolved setup -> validate and claim the exact run directory -> lazily open/rotate LUND files
- *   -> serialize headers and ordered particles -> let the source save diagnostics -> close the active
- *   stream -> write lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp -> atomically rename it to
- *   lund-gen-log.json.
+ *   Print the setup -> check and replace the exact run directory -> open or rotate LUND files as needed
+ *   -> write headers and particles in order -> let the source save monitoring -> close the active file
+ *   -> write lund-gen-log.json.tmp -> rename it to lund-gen-log.json.
  *
  * Format contract:
  *   The LUND format uses fixed whitespace, precision, and uniform per-file IDs. Particle masses come
@@ -50,18 +48,16 @@ namespace samples {
 
 #pragma region /* LundWriter::printWorkflowSummary */
 void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned, std::uint64_t written, bool final) {
-    // Maintained callers use exactly `uniform` or `physical`; only the former selects uniform settings
-    // and paths. Constructing the display-only paths below has no filesystem side effects.
+    // Only `uniform` uses the uniform settings and paths. Building these path values creates no files.
     const bool uniform = workflow == "uniform";
     const auto output = std::filesystem::path(config.get("output"));
     const auto lund_dir = output / "lundfiles";
     const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
 
-    // Centralize the one-value-per-line presentation contract. The label includes its separator, while
-    // value preserves the stream representation of strings, numbers and filesystem paths.
+    // Print every label and value in the same one-line form.
     const auto print_value = [](const std::string& label, const auto& value) { std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << " " << value << "\n"; };
 
-    // Keep a prominent colored boundary so setup and completion remain visible in long batch logs.
+    // Make setup and completion easy to find in long batch logs.
     std::cout << env::SYSTEM_COLOR << "\n=============================================================\n"
               << "= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << (final ? " completion\n" : " setup\n")
               << "=============================================================\n"
@@ -102,8 +98,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         const bool electron_hadron = channel == "eh";
         const bool electron_tester = channel == "electron-tester";
 
-        // Print only kinematic settings consumed by the selected uniform branch. Values configured for a
-        // different branch are intentionally absent even though RunConfig retains them for validation.
+        // Print only the kinematic settings used by the selected channel.
         std::cout << env::SYSTEM_COLOR << "\n- Uniform event content -------------------------------------\n" << env::RESET_COLOR;
         print_value("Channel", channel);
         print_value("Kinematic seed", config.get("seed") + (config.get("seed") == "0" ? " (ROOT automatic; nonrepeatable)" : ""));
@@ -135,7 +130,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
             }
         }
     } else {
-        // Physical settings identify the input adapter and the provenance used by naming and manifests.
+        // These values identify the physical input and are saved in names and the manifest.
         std::cout << env::SYSTEM_COLOR << "\n- Physical input --------------------------------------------\n" << env::RESET_COLOR;
         print_value("Event generator", config.get("event-generator"));
         print_value("Event generator version", config.get("event-generator-version"));
@@ -169,44 +164,36 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 #pragma region /* LundWriter::LundWriter */
 LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     : config_(c), workflow_(std::move(workflow)), directory_(c.get("output")), events_per_file_(c.integer("events-per-file")), capacity_(c.integer("events")) {
-    // Re-normalize defensively at the destructive-operation boundary even though RunConfig::parse()
-    // already returns an absolute output path.
+    // Check the path again immediately before code may delete an existing directory.
     directory_ = std::filesystem::absolute(directory_).lexically_normal();
 
-    // Resolve high-risk reference paths without requiring HOME to exist. SAMPLE_SOURCE_DIR is supplied
-    // by the build and identifies the checkout whose deletion (or deletion through an ancestor) must be
-    // refused.
+    // Read the paths that must never be deleted. HOME may be missing in some batch environments.
     const auto root = directory_.root_path();
     const auto source = std::filesystem::path(SAMPLE_SOURCE_DIR).lexically_normal();
     const char* home_value = std::getenv("HOME");
     const auto home = home_value ? std::filesystem::path(home_value).lexically_normal() : std::filesystem::path();
 
-    // Appending the preferred separator makes the prefix test path-component-aware: `/work/run` is an
-    // ancestor of `/work/run/source`, while `/work/run-old` is not.
+    // Add a path separator so `/work/run` matches `/work/run/source` but not `/work/run-old`.
     const auto directory_text = directory_.string() + std::filesystem::path::preferred_separator;
     const bool contains_checkout = source == directory_ || source.string().rfind(directory_text, 0) == 0;
 
-    // Refuse paths whose recursive removal could erase a filesystem root, user home, active working
-    // directory, the source checkout, or an ancestor containing that checkout.
+    // Refuse any path whose removal could erase a root, home, working directory, or source checkout.
     if (directory_.empty() || directory_ == root || (!home.empty() && directory_ == home) || directory_.filename().empty() || directory_ == std::filesystem::current_path() ||
         contains_checkout) {
         throw std::runtime_error("Refusing unsafe output-directory replacement: " + directory_.string());
     }
 
-    // Ensure the parent exists before checking/replacing the final run. Existing contents at the exact
-    // final path are disposable by the documented legacy rerun contract.
+    // Create the parent, then replace only the exact final run directory when it already exists.
     std::filesystem::create_directories(directory_.parent_path());
     if (std::filesystem::exists(directory_)) {
         std::cout << env::WARNING_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << env::RESET_COLOR << "\n";
         std::filesystem::remove_all(directory_);
     }
 
-    // LUND streams are opened lazily by write(); no empty numbered file is created at construction.
+    // write() opens the first LUND file, so construction cannot create an empty numbered file.
     std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring");
 
-    // Uniform creation historically prepared the complete downstream directory layout and plot folder
-    // before event generation. Keep the directories consumed by later simulation and reconstruction
-    // workflows without running either workflow here.
+    // Uniform runs prepare the folders later used by simulation, reconstruction, and plot output.
     if (workflow_ == "uniform") {
         for (const auto* child : {"mchipo", "reconhipo"}) { std::filesystem::create_directories(directory_ / child); }
         std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring" / "MonitoringPlotsPath");
@@ -224,21 +211,20 @@ bool LundWriter::full() const { return count_ >= capacity_; }
 
 #pragma region /* LundWriter::write */
 void LundWriter::write(const Event& e) {
-    // Enforce capacity internally even when a caller forgets to check full(). LUND events must contain
-    // at least one particle because the header multiplicity and following records form one unit.
+    // Check the limit here even when the caller already used full(). A LUND event must have a particle.
     if (full()) { throw std::runtime_error("Run file limit reached"); }
     if (e.particles.empty()) { throw std::runtime_error("Cannot write an empty event"); }
 
     // Open a new file only when the next event actually needs one. This avoids empty trailing files for
     // exact multiples of the configured split size and allows a partially filled final file.
     if (files_.empty() || files_.back().events == events_per_file_) {
-        // Closing the previous stream flushes it before a new manifest record and path are selected.
+        // Close and flush the previous file before opening the next one.
         if (stream_.is_open()) { stream_.close(); }
 
-        // Number files from one in creation order and store a run-relative path for portable manifests.
+        // Number files from one and store paths relative to the run directory.
         files_.push_back({"lundfiles/" + config_.get("prefix") + "_" + std::to_string(files_.size() + 1) + ".txt", 0});
 
-        // Convert bad/fail stream states into exceptions. Records below use explicit archived field precision.
+        // Turn open and write failures into exceptions.
         stream_.exceptions(std::ios::badbit | std::ios::failbit);
         stream_.open(directory_ / files_.back().path);
     }
@@ -270,7 +256,7 @@ void LundWriter::write(const Event& e) {
                                    p.momentum.Y(), p.momentum.Z(), energy, p.mass, p.vertex.X(), p.vertex.Y(), p.vertex.Z());
     }
 
-    // Commit bookkeeping only after the full event has reached the stream successfully.
+    // Increase the counts only after the complete event is written.
     ++files_.back().events;
     ++count_;
 }
@@ -280,13 +266,10 @@ void LundWriter::write(const Event& e) {
 
 #pragma region /* LundWriter::finish */
 void LundWriter::finish(std::uint64_t scanned) {
-    // Close first so every numbered LUND file is flushed and no further event can be appended through
-    // the active stream while its counts are being published.
+    // Close the LUND file before recording its final counts.
     if (stream_.is_open()) { stream_.close(); }
 
-    // Write completion metadata to a temporary sibling so consumers never observe a partially written
-    // final manifest. Stream exceptions turn open, serialization, flush, and close failures into the
-    // same workflow error path used by LUND output.
+    // Write to a temporary file so readers never see a partly written final manifest.
     std::ofstream manifest;
     manifest.exceptions(std::ios::badbit | std::ios::failbit);
     const auto monitoring_directory = directory_ / "lundfiles" / "lund-gen-monitoring";
@@ -294,15 +277,27 @@ void LundWriter::finish(std::uint64_t scanned) {
     const auto completed_log = monitoring_directory / "lund-gen-log.json";
     manifest.open(temporary_log);
 
-    // Fixed top-level provenance identifies the manifest schema, this project build/revision, the ROOT
-    // runtime, and the exact external targets.h content compiled into the application. count_ records
-    // successful serialization independently of how many source events were examined.
+    // Record the manifest version, project build, Git state, ROOT version, targets.h hash, and event
+    // counts. scanned may be larger than count_ when physical input events are rejected.
     manifest << "{\n  \"schema_version\": 1,\n  \"workflow\": " << jsonString(workflow_) << ",\n  \"version\": " << jsonString(SAMPLE_VERSION)
              << ",\n  \"revision\": " << jsonString(SAMPLE_REVISION) << ",\n  \"root_version\": " << jsonString(gROOT->GetVersion())
-             << ",\n  \"targets_sha256\": " << jsonString(SAMPLE_TARGETS_SHA256) << ",\n  \"scanned_events\": " << scanned << ",\n  \"written_events\": " << count_ << ",\n  \"config\": {";
+             << ",\n  \"targets_sha256\": " << jsonString(SAMPLE_TARGETS_SHA256) << ",\n  \"git\": {\n"
+             << "    \"repository\": " << jsonString(SAMPLE_GIT_REPOSITORY) << ",\n"
+             << "    \"branch\": " << jsonString(SAMPLE_GIT_BRANCH) << ",\n"
+             << "    \"commit_message\": " << jsonString(SAMPLE_GIT_COMMIT_MESSAGE) << ",\n"
+             << "    \"full_commit_hash\": " << jsonString(SAMPLE_GIT_COMMIT_HASH) << ",\n"
+             << "    \"commit_datetime\": " << jsonString(SAMPLE_GIT_COMMIT_DATETIME) << ",\n"
+             << "    \"commit_author\": " << jsonString(SAMPLE_GIT_COMMIT_AUTHOR) << ",\n"
+             << "    \"status_porcelain_summary\": " << jsonString(SAMPLE_GIT_STATUS) << ",\n"
+             << "    \"nearest_tag\": " << jsonString(SAMPLE_GIT_NEAREST_TAG) << ",\n"
+             << "    \"head_detached\": " << SAMPLE_GIT_HEAD_DETACHED << ",\n"
+             << "    \"tracking_branch\": " << jsonString(SAMPLE_GIT_TRACKING_BRANCH) << ",\n"
+             << "    \"tracking_ahead\": " << jsonString(SAMPLE_GIT_TRACKING_AHEAD) << ",\n"
+             << "    \"tracking_behind\": " << jsonString(SAMPLE_GIT_TRACKING_BEHIND) << ",\n"
+             << "    \"github_files_url\": " << jsonString(SAMPLE_GIT_FILES_URL) << "\n  },\n"
+             << "  \"scanned_events\": " << scanned << ",\n  \"written_events\": " << count_ << ",\n  \"config\": {";
 
-    // RunConfig stores a std::map, so iteration produces deterministic key order. jsonString() escapes
-    // both names and resolved values while preserving the exact provenance spelling used by the run.
+    // std::map keeps the keys sorted. jsonString() safely writes each key and its exact final value.
     bool first = true;
     for (const auto& [k, v] : config_.values()) {
         manifest << (first ? "\n" : ",\n") << "    " << jsonString(k) << ": " << jsonString(v);
@@ -319,8 +314,7 @@ void LundWriter::finish(std::uint64_t scanned) {
     }
     manifest << "\n  ]\n}\n";
 
-    // Explicit close verifies buffered manifest output before publication. The sibling rename is the
-    // visibility boundary: only after it succeeds does lund-gen-log.json advertise a completed run.
+    // Close the temporary file before renaming it. The final name marks the run as complete.
     manifest.close();
     std::filesystem::rename(temporary_log, completed_log);
 }
