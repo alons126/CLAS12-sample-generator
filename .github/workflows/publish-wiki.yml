@@ -3,6 +3,7 @@ name: Publish documentation wiki
 on:
   push:
     branches:
+      - dev
       - main
     paths:
       - README.md
@@ -36,7 +37,7 @@ jobs:
           python3 scripts/build_wiki.py
           --output "${RUNNER_TEMP}/generated-wiki"
           --repository "${GITHUB_REPOSITORY}"
-          --branch main
+          --branch "${GITHUB_REF_NAME}"
 
       - name: Check out wiki repository
         env:
