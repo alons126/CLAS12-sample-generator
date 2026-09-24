@@ -67,6 +67,8 @@ Code shown in the diagram: [`run.csh`](../run.csh), [`setup_and_submit.csh`](../
 
 See [Submit simulation](submit-simulation/index.md) for preview, execution, environment, and worker details.
 
+Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later Slurm task failures or validate reconstructed output. After the jobs finish, inspect the scheduler and job logs and use `hipo-utils -dump` on at least one file in `RUN/reconhipo/` to confirm that readable CLAS12 data banks are present.
+
 The project does not run a physical event generator, derive acceptance maps, or perform physics analysis.
 
 ## Choose where to start

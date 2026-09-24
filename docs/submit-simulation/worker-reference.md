@@ -25,7 +25,7 @@ OUTPATH/mchipo/mc_SAMPLE_FILE_PREFIX_SLURM_ARRAY_TASK_ID_torusTORUS_FIELD.hipo
 OUTPATH/reconhipo/recon_SAMPLE_FILE_PREFIX_SLURM_ARRAY_TASK_ID_torusTORUS_FIELD.hipo
 ```
 
-Create the directories before direct execution. `gemc` and `recon-util` must be available in PATH. Execute with Bash or submit with `sbatch`; the script does not itself submit a job. Direct execution retains legacy failure behavior: without a caller-supplied Bash `-e`, a failed GEMC command does not automatically prevent reconstruction.
+Create the directories before direct execution. `gemc` and `recon-util` must be available in PATH. Execute with Bash or submit with `sbatch`; the script does not itself submit a job. Direct execution retains legacy failure behavior: without a caller-supplied Bash `-e`, a failed GEMC command does not automatically prevent reconstruction. After Slurm accepts an array, neither this worker nor the coordinator reports task failures back into a maintained job ledger, retries them, or validates their reconstructed HIPO content. Operators must inspect Slurm states and logs and verify at least one `reconhipo/` file with `hipo-utils -dump`; see the [submission guide](guide.md#post-submission-verification).
 
 ## Caller settings
 

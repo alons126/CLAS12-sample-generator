@@ -96,4 +96,14 @@ source run.csh \
 
 Use cleanup only with an exact reviewed directory. It deletes files directly inside that directory once per invocation; it does not broaden simulation-output replacement.
 
+## Verify reconstructed output
+
+The workflow does not monitor array tasks after `sbatch` accepts them. Once the jobs finish, review the Slurm states and logs and test at least one file under the run's `reconhipo/` directory:
+
+```tcsh
+hipo-utils -dump /shared/runs/physical/reconhipo/<hipo-file-name>.hipo
+```
+
+Confirm that `hipo-utils` opens the file and displays CLAS12 data banks. Also check the remaining task states and output inventory; one valid HIPO file does not guarantee that the complete array succeeded.
+
 The repository also contains a matched [uniform submission command list](../../tutorials/uniform-samples/uniform-slurm-submission.txt) for 1e, enFD, and epFD at the three established beam energies.

@@ -105,6 +105,22 @@ Python copies the inherited environment, loads the selected GEMC module in that 
 
 One array is submitted per sample. Failure stops later samples and returns a nonzero `$status` without closing the sourced shell; already submitted jobs remain submitted. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-`, because the protected payload retains its legacy unquoted command arguments. There is no local detector-execution workflow.
 
+## Post-submission verification
+
+The submission command can report only setup failures and whether `sbatch` accepted the array. After that handoff, the repository does not poll Slurm job states, collect per-task exit status, retry failed tasks, reconcile expected and actual outputs, or inspect reconstructed HIPO contents. A zero submission status therefore means that Slurm accepted the request, not that GEMC and reconstruction later succeeded for every task.
+
+After the array finishes:
+
+1. Review the Slurm state and job logs for every array task.
+2. Compare the contents of `OUTPATH/mchipo/` and `OUTPATH/reconhipo/` with the submitted task range.
+3. Test at least one reconstructed HIPO file:
+
+   ```text
+   hipo-utils -dump OUTPATH/reconhipo/<hipo-file-name>.hipo
+   ```
+
+The dump must open successfully and display CLAS12 data banks. Treat this as a minimum smoke test only: one readable file does not prove that the remaining tasks or files succeeded.
+
 ## Validation
 
 `submission-legacy-parity` checks captured working C-shell report fixtures for both sources in preview/execute modes, array arguments and exported settings using temporary configs and fake tools. It also exercises manifest-driven submission, multiple samples, cleanup, failures and the protected detector-command contract. The migration comparison preserved report text and ANSI colors, normalizing platform-specific `wc` padding. Physical reporting retains the resolved generator/tune instead of unsetting them before use, and farm cleanup uses the intended banner color; these correct two failures in the former shell implementation. `submission-input-resolution` checks defaults (including GEMC 5.14), precedence, moved manifests, partial final files, manual input, truth conflicts and malformed inputs; when built, it also consumes actual uniform-generator output. Tests never submit real jobs. Server detector behavior requires a small ifarm validation run.

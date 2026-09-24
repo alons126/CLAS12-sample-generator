@@ -39,3 +39,15 @@ Code shown in the diagram: [`run.csh`](../../run.csh), [`setup_and_submit.csh`](
 4. Consult the [worker reference](worker-reference.md) only when maintaining detector-command integration.
 
 The manifest normally supplies truth metadata, prefix, file inventory, event counts, and detector defaults. Resolution precedence is CLI → optional submission config → manifest → safe fallback defaults. Explicit truth metadata that conflicts with a completed manifest is rejected.
+
+## Verify jobs after submission
+
+The maintained coordinator stops accounting for a job after `sbatch` accepts its array. It does not poll later task states, detect or retry failed array tasks, or validate the HIPO files produced by GEMC and reconstruction. An accepted submission therefore does not guarantee that every task completed successfully.
+
+After the array finishes, inspect its Slurm state and job logs, confirm the expected output inventory, and dump at least one reconstructed file:
+
+```text
+hipo-utils -dump RUN/reconhipo/<hipo-file-name>.hipo
+```
+
+Confirm that the file opens and displays CLAS12 data banks. This is a required smoke test, but one valid file does not establish that every array task succeeded; review the remaining task states, logs, and output files as well.
