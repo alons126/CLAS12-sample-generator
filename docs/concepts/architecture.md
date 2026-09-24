@@ -21,6 +21,8 @@ Maintained code is grouped first by the two user-facing workflows. `src/lund-gen
 
 The two implementation directories intentionally match their installed executable names, so source ownership and runtime diagnostics use the same vocabulary. The GENIE reader is nested under `event-generator-to-lund-converter` as `genie-gst` because the adapter accepts one particular GENIE output format rather than every format GENIE can produce. A future adapter belongs beside it and should identify both generator and input format where necessary. Cross-layer includes state dependencies directly, for example `core/config/RunConfig.h`, `core/lund/Event.h`, and `core/geometry/TargetGeometry.h`.
 
+The architecture is intentionally modestly modular around two files obtained from RG-M code. [`targets.h`](../../src/lund-generation/external/targets.h) is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted; `TargetGeometry` supplies the maintained interface around it. [`submit_GEMC_sample.sh`](../../src/slurm-submission/external/submit_GEMC_sample.sh) is a modified RG-M-derived payload that retains the original structure and usage pattern; the maintained submission coordinator supplies its validated environment. These boundaries are kept narrow so future RG-M updates can be reviewed and incorporated without duplicating geometry or GEMC/reconstruction commands elsewhere.
+
 ## Build targets
 
 | Target | Source | Responsibility |

@@ -1,6 +1,8 @@
 # Unified legacy GEMC payload
 
-`src/slurm-submission/external/submit_GEMC_sample.sh` follows the structure of the external `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` scripts under `legacy/GEMC-samples/scripts/job_submission_scripts/`. The archived originals remain untouched. The unified script is also external and excluded from routine edits; only minimal integration changes outside the payload should be needed when updating the external source.
+`src/slurm-submission/external/submit_GEMC_sample.sh` was obtained from the RG-M job-submission code represented by `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` under `legacy/GEMC-samples/scripts/job_submission_scripts/`. It has been modified for this project, but keeps the RG-M scripts' overall structure and usage pattern: Slurm supplies one array index, environment variables identify the input and detector settings, GEMC runs first, and reconstruction follows. The archived originals remain untouched.
+
+This external payload is one of the project's deliberately modular RG-M boundaries. Maintained Python code validates and resolves inputs but does not duplicate the detector commands. When RG-M provides an updated job script, compare it with this payload and carry forward the small generator-independent adaptation described below. The external payload remains excluded from routine edits so its RG-M lineage and update path stay clear.
 
 ## What is generalized
 

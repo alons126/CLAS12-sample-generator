@@ -7,7 +7,7 @@
  * @brief Implements the supported LUND particle-mass lookup.
  *
  * Purpose:
- *   Expose the particle masses owned by the external target source without duplicating them in
+ *   Expose the particle masses owned by the external target source (targets.h) without duplicating them in
  *   maintained code. Event producers select particle identities and momenta; this module supplies only
  *   the corresponding rest mass and does not alter event kinematics.
  *
@@ -39,8 +39,8 @@ namespace samples {
  *   corresponding Particle and ultimately written to its LUND record.
  *
  * Algorithm:
- *   Delegate the exact PDG lookup to the target-source adapter so external values remain isolated and
- *   are included in one translation unit only.
+ *   Ask TargetGeometry for the mass that matches the PDG code. This keeps access to external targets.h
+ *   in one source file.
  *
  * @param pid Particle PDG identifier selected by the event-source adapter.
  * @return Rest mass in GeV/c².
