@@ -5,9 +5,9 @@ All commands below start at the repository root. `run.csh` is a tcsh/csh workflo
 ## Build and test
 
 ```bash
-cmake --preset debug
-cmake --build --preset debug --parallel 4
-ctest --preset debug
+cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+cmake --build build/debug --parallel 4
+ctest --test-dir build/debug --output-on-failure
 ```
 
 ## Create a small uniform sample

@@ -27,9 +27,9 @@ git submodule update --init --recursive
 ```
 
 ```bash
-cmake --preset debug
-cmake --build --preset debug --parallel 4
-ctest --preset debug
+cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+cmake --build build/debug --parallel 4
+ctest --test-dir build/debug --output-on-failure
 
 build/debug/apps/clas12-uniform \
   --config config/samples/uniform-1e-5986MeV.conf \

@@ -50,7 +50,6 @@ SPECIAL_PAGES = {
     Path("tutorials/README.md"): "Workflow-Examples.md",
     Path("config/samples/README.md"): "Sample-Profiles.md",
     Path("config/run.json.md"): "Launcher-Settings.md",
-    Path("CMakePresets.json.md"): "CMake-Presets.md",
 }
 
 SIDEBAR_SECTIONS = (
@@ -265,12 +264,7 @@ def build(output, repository, branch):
             sidebar.append(f"- [{titles['Sample-Profiles.md']}](Sample-Profiles)")
 
         if directory == "development":
-            sidebar.extend(
-                (
-                    f"- [{titles['Launcher-Settings.md']}](Launcher-Settings)",
-                    f"- [{titles['CMake-Presets.md']}](CMake-Presets)",
-                )
-            )
+            sidebar.append(f"- [{titles['Launcher-Settings.md']}](Launcher-Settings)")
 
     sidebar.extend(("", "## EXAMPLES", "", f"- [{titles['Workflow-Examples.md']}](Workflow-Examples)"))
     sidebar.append("")

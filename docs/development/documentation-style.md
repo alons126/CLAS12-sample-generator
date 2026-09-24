@@ -14,11 +14,10 @@ External and archived files are excluded and protected from edits: `legacy/`, `s
 
 Maintained `CMakeLists.txt` files use comment-based description, purpose, workflow, input/output and failure notes, plus named `# region` / `# endregion` sections. The comments explain target dependencies, optional workflows, generated files and installation boundaries without changing CMake commands.
 
-Strict JSON does not support comments. CMake presets use their supported `displayName` and `description` metadata; runtime profiles keep their existing schemas and have adjacent `.json.md` field references. Do not add invented `_comment` keys to readers that reject unknown settings. VS Code's JSONC files support inline comment banners and regions despite their `.json` filenames.
+Strict JSON does not support comments. Runtime profiles keep their existing schemas and have adjacent `.json.md` field references. Do not add invented `_comment` keys to readers that reject unknown settings. VS Code's JSONC files support inline comment banners and regions despite their `.json` filenames.
 
 | Configuration | Explanation |
 | --- | --- |
-| `CMakePresets.json` | [Preset commands and fields](../../CMakePresets.json.md), plus descriptions inside the presets |
 | `config/run.json` | [Launcher build/test defaults and precedence](../../config/run.json.md) |
 | `.vscode/c_cpp_properties.json` | Inline comments explain compile-command-based editor configuration |
 | `.vscode/settings.json` | Inline comments explain language associations, formatting, folding and highlighting |

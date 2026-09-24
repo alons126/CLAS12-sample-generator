@@ -7,7 +7,6 @@ This chapter inventories the supported code and the archived support code so a f
 | File | Responsibilities and interfaces |
 | --- | --- |
 | `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds libraries/apps/tests and installation |
-| `CMakePresets.json` | Debug and Release configure/build presets; Debug CTest preset |
 | `src/CMakeLists.txt` | Adds the LUND-generation, Slurm-submission, and shared-launcher source trees |
 | `src/lund-generation/CMakeLists.txt` | Defines `LundCore`, `UniformGeneration`, `GenieConversion`, and `PhysicalConversion` |
 | `src/slurm-submission/CMakeLists.txt` | Installs submission programs and registers submission tests |

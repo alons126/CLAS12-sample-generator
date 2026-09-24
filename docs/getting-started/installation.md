@@ -21,9 +21,9 @@ git submodule update --init --recursive
 CMake configuration fails to provide the uniform reference tests if the submodule files are absent. The supported ifarm `run.csh` path initializes the pinned revision automatically after updating the disposable checkout.
 
 ```bash
-cmake --preset debug
-cmake --build --preset debug --parallel 4
-ctest --preset debug
+cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+cmake --build build/debug --parallel 4
+ctest --test-dir build/debug --output-on-failure
 ```
 
 Executables are `build/debug/apps/clas12-uniform` and `build/debug/apps/clas12-generator-to-lund`. Both support `--help` and return nonzero on failure.
@@ -31,17 +31,20 @@ Executables are `build/debug/apps/clas12-uniform` and `build/debug/apps/clas12-g
 For production:
 
 ```bash
-cmake --preset release
-cmake --build --preset release --parallel 4
+cmake -S . -B build/release -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build build/release --parallel 4
 ```
 
 Select ROOT explicitly if discovery fails:
 
 ```bash
-cmake --preset debug -DCMAKE_PREFIX_PATH="$(root-config --prefix)"
+cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug \
+  -DBUILD_TESTING=ON -DCMAKE_PREFIX_PATH="$(root-config --prefix)"
 ```
 
-The project adopts `ROOT_CXX_STANDARD`, so the compiled application uses the same language standard as the chosen ROOT. It does not force C++17 against a C++20 ROOT installation. When changing ROOT or compiler installations, configure a fresh build directory. Machine-specific settings can go in an untracked `CMakeUserPresets.json`.
+`-S .` selects the checkout as the source tree, `-B` selects an out-of-source build directory, `-G "Unix Makefiles"` keeps the supported build-tool choice explicit, and `CMAKE_BUILD_TYPE` selects Debug or Release compiler settings. `BUILD_TESTING=ON` makes the expected test targets explicit instead of relying on a previous build-directory cache. The build and test commands address the same selected directory directly.
+
+The project adopts `ROOT_CXX_STANDARD`, so the compiled application uses the same language standard as the chosen ROOT. It does not force C++17 against a C++20 ROOT installation. When changing ROOT or compiler installations, configure a fresh build directory. Add machine-specific CMake cache settings as additional `-DNAME=VALUE` arguments or use a separate build directory.
 
 ## Individual workflows
 

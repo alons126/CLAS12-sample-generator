@@ -7,7 +7,6 @@ on:
       - main
     paths:
       - README.md
-      - CMakePresets.json.md
       - config/run.json.md
       - config/samples/README.md
       - docs/**

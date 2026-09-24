@@ -23,9 +23,9 @@ Archived files remain untouched. Reference binaries are not installed and tests 
 ## 3. Reproduction
 
 ```bash
-cmake --preset debug
-cmake --build --preset debug --parallel 4
-ctest --preset debug
+cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+cmake --build build/debug --parallel 4
+ctest --test-dir build/debug --output-on-failure
 ```
 
 For a focused audit:
