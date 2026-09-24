@@ -7,9 +7,9 @@
  * @brief LUND serialization and completed-run manifests.
  *
  * Purpose:
- *   Implement the common output boundary for uniform and physical LUND creation: legacy-compatible
- *   monitoring text, guarded run-directory replacement, split-file serialization, exact bookkeeping,
- *   resolved-configuration provenance, and completion publication.
+ *   Implement the common output boundary for uniform and physical LUND creation: topic-grouped run
+ *   reporting, guarded directory replacement, split-file serialization, exact bookkeeping, resolved-
+ *   configuration provenance, and completion publication.
  *
  * Workflow:
  *   Print resolved setup -> validate and claim the exact run directory -> lazily open/rotate LUND files
@@ -50,17 +50,17 @@ namespace samples {
 
 #pragma region /* LundWriter::printWorkflowSummary */
 /**
- * @brief Print the legacy-style setup and completion summary for a LUND run.
+ * @brief Print the resolved setup or completion summary for a LUND run.
  *
  * Purpose:
- *   Preserve the recognizable monitoring printouts from both archived repositories while adding the
- *   shared resolved settings needed to diagnose a maintained run from terminal or batch logs.
+ *   Make terminal and batch logs directly auditable by grouping maintained settings by topic, printing
+ *   one resolved value per line, and omitting stale constants or settings unused by the selected source.
  *
  * Workflow:
- *   1. Derive display-only subdirectory paths from the resolved run directory.
- *   2. Print the uniform CodeRun-style block or physical converter-style input block.
- *   3. Print shared output, beam, target, capacity, and serialization settings.
- *   4. For a final report, print scanned/written counters and derive the split-file count.
+ *   1. Print one banner identifying a setup or completion report.
+ *   2. For setup, group common run limits, beam/target settings, source-specific settings and real output
+ *      paths; select only the uniform fields used by the configured channel.
+ *   3. For completion, print only scanned/written/file counters and the success status.
  *
  * @param config Borrowed resolved workflow configuration used only for display.
  * @param workflow Source label. `uniform` selects uniform text; the maintained caller passes `physical`
@@ -68,129 +68,122 @@ namespace samples {
  * @param scanned Number of source entries examined. Uniform generation supplies its generated/written
  *                count; physical conversion also includes rejected interaction types.
  * @param written Number of events successfully serialized into LUND output.
- * @param final Print completion counters when true; print setup fields only when false.
+ * @param final Print only completion counters when true; print only resolved setup fields when false.
  *
  * @return Nothing. Text is written to standard output with ANSI color sequences.
  *
  * @note Presentation only: this function creates no paths. LundWriter construction creates `lundfiles/`
- *       for both sources and the archived downstream/plot directory layout for uniform runs.
- *
- * @note The historical uniform `nParticles: 2` line is retained as legacy monitoring text even though
- *       the 1e channel writes one particle. Event serialization always uses Event::particles.size().
+ *       for both sources and the downstream/plot directory layout only for uniform runs.
  */
 void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned, std::uint64_t written, bool final) {
-    // These are display paths below the already resolved final run directory. Constructing path values
-    // has no filesystem side effects.
-    // Maintained callers use exactly `uniform` or `physical`; only the former selects the uniform block.
+    // Maintained callers use exactly `uniform` or `physical`; only the former selects uniform settings
+    // and paths. Constructing the display-only paths below has no filesystem side effects.
     const bool uniform = workflow == "uniform";
     const auto output = std::filesystem::path(config.get("output"));
     const auto lund_dir = output / "lundfiles";
-    const auto mchipo_dir = output / "mchipo";
-    const auto recon_dir = output / "reconhipo";
     const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
-    const auto monitoring_dir = diagnostics / "MonitoringPlotsPath";
 
-    // Keep the archived yellow separator style so long interactive and Slurm logs expose run boundaries.
+    // Centralize the one-value-per-line presentation contract. The label includes its separator, while
+    // value preserves the stream representation of strings, numbers and filesystem paths.
+    const auto print_value = [](const std::string& label, const auto& value) { std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << " " << value << "\n"; };
+
+    // Keep a prominent colored boundary so setup and completion remain visible in long batch logs.
     std::cout << env::SYSTEM_COLOR << "\n=============================================================\n"
-              << "= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << " summary\n"
+              << "= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << (final ? " completion\n" : " setup\n")
               << "=============================================================\n"
               << env::RESET_COLOR;
 
-    // ============================================================
-    // Run configuration
-    // ============================================================
-
-    std::cout << env::SYSTEM_COLOR << "\n- Run configuration -----------------------------------------\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "Beam energy [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << "\n";
-    std::cout << env::SYSTEM_COLOR << "Requested events:" << env::RESET_COLOR << " " << config.get("events") << "\n";
-    std::cout << env::SYSTEM_COLOR << "Events per file:" << env::RESET_COLOR << " " << config.get("events-per-file") << "\n\n";
-
-    std::cout << env::SYSTEM_COLOR << "Target:" << env::RESET_COLOR << " " << config.get("target") << "\n";
-    std::cout << env::SYSTEM_COLOR << "A:" << env::RESET_COLOR << " " << config.get("A") << "\n";
-    std::cout << env::SYSTEM_COLOR << "Z:" << env::RESET_COLOR << " " << config.get("Z") << "\n\n";
-
-    std::cout << env::SYSTEM_COLOR << "Output prefix:" << env::RESET_COLOR << " " << config.get("prefix") << "\n";
-
-    // ============================================================
-    // Generation / input configuration
-    // ============================================================
-
-    std::cout << env::SYSTEM_COLOR << "\n- " << (uniform ? "Generation configuration" : "Input generator configuration") << " ------------------------------\n" << env::RESET_COLOR;
-
-    if (uniform) {
-        // Reproduce CodeRun-style labels and constants alongside the resolved channel/mode.
-        std::cout << env::SYSTEM_COLOR << "GenerateLundFiles:" << env::RESET_COLOR << " true\n";
-        std::cout << env::SYSTEM_COLOR << "Channel:" << env::RESET_COLOR << " " << config.get("channel") << "\n";
-        std::cout << env::SYSTEM_COLOR << "Electron momentum:" << env::RESET_COLOR << " " << config.get("electron-momentum") << "\n";
-        std::cout << env::SYSTEM_COLOR << "Hadron momentum:" << env::RESET_COLOR << " " << config.get("hadron-momentum") << "\n";
-        std::cout << env::SYSTEM_COLOR << "Kinematic seed:" << env::RESET_COLOR << " " << config.get("seed");
-        if (config.get("seed") == "0") { std::cout << "  (0 requests ROOT automatic, nonrepeatable seeding)"; }
-        std::cout << "\n";
-        std::cout << env::SYSTEM_COLOR << "Vertex seed:" << env::RESET_COLOR << " " << config.get("vertex-seed");
-        if (config.get("vertex-seed") == "0") { std::cout << "  (0 requests ROOT automatic, nonrepeatable seeding)"; }
-        std::cout << "\n";
-    } else {
-        // Physical setup identifies the input generator and source provenance.
-        std::cout << env::SYSTEM_COLOR << "Event generator:" << env::RESET_COLOR << " " << config.get("event-generator") << "\n";
-        std::cout << env::SYSTEM_COLOR << "Event generator version:" << env::RESET_COLOR << " " << config.get("event-generator-version") << "\n";
-        std::cout << env::SYSTEM_COLOR << "Input files:" << env::RESET_COLOR << " " << config.get("input") << "\n";
-    }
-
-    // ============================================================
-    // LUND configuration
-    // ============================================================
-
-    std::cout << env::SYSTEM_COLOR << "\n- LUND configuration ----------------------------------------\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "LUND format:" << env::RESET_COLOR << " fixed project format\n";
-    std::cout << env::SYSTEM_COLOR << "Mass handling:" << env::RESET_COLOR << " protected targets.h values; photon massless\n";
-
-    if (uniform) {
-        std::cout << env::SYSTEM_COLOR << "Number of particles:" << env::RESET_COLOR << " 2\n";
-        std::cout << env::SYSTEM_COLOR << "Electron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::electron_pdg) << "\n";
-        std::cout << env::SYSTEM_COLOR << "Proton mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::proton_pdg) << "\n";
-        std::cout << env::SYSTEM_COLOR << "Neutron mass [GeV/c²]:" << env::RESET_COLOR << " " << particleMass(constants::neutron_pdg) << "\n";
-        std::cout << env::SYSTEM_COLOR << "Target polarization:" << env::RESET_COLOR << " 0\n";
-        std::cout << env::SYSTEM_COLOR << "Beam polarization:" << env::RESET_COLOR << " 0\n";
-        std::cout << env::SYSTEM_COLOR << "Interaction number:" << env::RESET_COLOR << " 1\n";
-        std::cout << env::SYSTEM_COLOR << "Beam type:" << env::RESET_COLOR << " " << constants::electron_pdg << "\n";
-        std::cout << env::SYSTEM_COLOR << "Beam energy in LUND files [GeV]:" << env::RESET_COLOR << " " << config.get("beam-energy") << "\n";
-        std::cout << env::SYSTEM_COLOR << "Event weight:" << env::RESET_COLOR << " 1\n";
-    }
-
-    // ============================================================
-    // Output paths
-    // ============================================================
-
-    std::cout << env::SYSTEM_COLOR << "\n- Output paths ----------------------------------------------\n" << env::RESET_COLOR;
-    std::cout << env::SYSTEM_COLOR << "Output directory:" << env::RESET_COLOR << " " << output << "\n";
-    std::cout << env::SYSTEM_COLOR << "LUND directory:" << env::RESET_COLOR << " " << lund_dir << "\n";
-    std::cout << env::SYSTEM_COLOR << "MC HIPO directory:" << env::RESET_COLOR << " " << mchipo_dir << "\n";
-    std::cout << env::SYSTEM_COLOR << "Reconstructed HIPO directory:" << env::RESET_COLOR << " " << recon_dir << "\n";
-    std::cout << env::SYSTEM_COLOR << "Monitoring directory:" << env::RESET_COLOR << " " << monitoring_dir << "\n";
-    if (uniform) { std::cout << env::SYSTEM_COLOR << "Monitoring plot file:" << env::RESET_COLOR << " " << diagnostics / (config.get("prefix") + "_monitoring_plots.root") << "\n"; }
-
-    // ============================================================
-    // Setup status
-    // ============================================================
-
-    if (uniform) {
-        std::cout << env::SYSTEM_COLOR << "\n- Setup -----------------------------------------------------\n" << env::RESET_COLOR;
-        std::cout << env::SYSTEM_COLOR << "Creating plot directories..." << env::RESET_COLOR << "\n";
-    }
-
-    // ============================================================
-    // Completion summary
-    // ============================================================
-
+    // Completion reports deliberately do not repeat setup values already printed before output creation.
     if (final) {
-        std::cout << env::SYSTEM_COLOR << "\n- Completion summary ----------------------------------------\n" << env::RESET_COLOR;
-        std::cout << env::SYSTEM_COLOR << "Total entries scanned:" << env::RESET_COLOR << " " << scanned << "\n";
-        std::cout << env::SYSTEM_COLOR << "Events written:" << env::RESET_COLOR << " " << written << "\n";
-
         const auto events_per_file = config.integer("events-per-file");
         const auto output_files = (written + events_per_file - 1) / events_per_file;
-        std::cout << env::SYSTEM_COLOR << "Output files written:" << env::RESET_COLOR << " " << output_files << "\n";
-        std::cout << env::SYSTEM_COLOR << "\nOperation finished!" << env::RESET_COLOR << "\n";
+
+        std::cout << env::SYSTEM_COLOR << "\n- Event counts ----------------------------------------------\n" << env::RESET_COLOR;
+        print_value(uniform ? "Events generated" : "Input entries scanned", scanned);
+        print_value("Events written", written);
+        print_value("LUND files written", output_files);
+        print_value("Status", "complete");
+        std::cout << "\n";
+
+        return;
+    }
+
+    // Run limits apply to both sources and directly control writer capacity and file rotation.
+    std::cout << env::SYSTEM_COLOR << "\n- Run limits ------------------------------------------------\n" << env::RESET_COLOR;
+    print_value("Requested events", config.get("events"));
+    print_value("Events per file", config.get("events-per-file"));
+
+    // Beam and target settings control event headers and vertex sampling. RG-M identity also supplies
+    // resolved defaults, while geometry and A/Z retain their distinct spatial/metadata responsibilities.
+    std::cout << env::SYSTEM_COLOR << "\n- Beam and target -------------------------------------------\n" << env::RESET_COLOR;
+    print_value("Beam energy [GeV]", config.get("beam-energy"));
+    print_value("RG-M target", config.get("rgm-target"));
+    print_value("Target geometry", config.get("target"));
+    print_value("Target A", config.get("A"));
+    print_value("Target Z", config.get("Z"));
+    print_value("Vertex seed", config.get("vertex-seed") + (config.get("vertex-seed") == "0" ? " (ROOT automatic; nonrepeatable)" : ""));
+
+    if (uniform) {
+        const auto channel = config.get("channel");
+        const bool electron_hadron = channel == "eh";
+        const bool electron_tester = channel == "electron-tester";
+
+        // Print only kinematic settings consumed by the selected uniform branch. Values configured for a
+        // different branch are intentionally absent even though RunConfig retains them for validation.
+        std::cout << env::SYSTEM_COLOR << "\n- Uniform event content -------------------------------------\n" << env::RESET_COLOR;
+        print_value("Channel", channel);
+        print_value("Kinematic seed", config.get("seed") + (config.get("seed") == "0" ? " (ROOT automatic; nonrepeatable)" : ""));
+
+        if (electron_hadron) {
+            print_value("Hadron", config.get("hadron"));
+            print_value("Hadron region", config.get("hadron-region"));
+            print_value("Hadron momentum mode", config.get("hadron-momentum"));
+            print_value("Hadron theta minimum [deg]", config.get("hadron-theta-min"));
+            print_value("Hadron theta maximum [deg]", config.get("hadron-theta-max"));
+
+            if (config.get("hadron-momentum") == "fixed") {
+                print_value("Hadron momentum [GeV/c]", config.get("hadron-p"));
+            } else {
+                print_value("Hadron momentum minimum [GeV/c]", config.get("hadron-p-min"));
+                print_value("Hadron momentum maximum [GeV/c]", config.get("beam-energy"));
+            }
+
+            print_value("Trigger-electron theta [deg]", config.get("trigger-theta"));
+            print_value("Trigger-electron phi offset [deg]", config.get("trigger-phi-offset"));
+        } else {
+            print_value("Electron momentum mode", config.get("electron-momentum"));
+            print_value("Electron theta minimum [deg]", config.get("electron-theta-min"));
+            print_value("Electron theta maximum [deg]", config.get("electron-theta-max"));
+
+            if (!electron_tester) {
+                print_value("Electron momentum minimum [GeV/c]", config.get("electron-p-min"));
+                print_value("Electron momentum maximum [GeV/c]", config.get("electron-p-max"));
+            }
+        }
+    } else {
+        // Physical settings identify the input adapter and the provenance used by naming and manifests.
+        std::cout << env::SYSTEM_COLOR << "\n- Physical input --------------------------------------------\n" << env::RESET_COLOR;
+        print_value("Event generator", config.get("event-generator"));
+        print_value("Event generator version", config.get("event-generator-version"));
+        print_value("Input files", config.get("input"));
+        print_value("Generator tune", config.get("tune"));
+        print_value("Q2-cut label", config.get("q2-cut"));
+        print_value("GEMC version", config.get("gemc-version"));
+        print_value("GEMC target variation", config.get("gemc-target-variation"));
+    }
+
+    // Print only paths that the selected workflow actually creates or consumes.
+    std::cout << env::SYSTEM_COLOR << "\n- Output ----------------------------------------------------\n" << env::RESET_COLOR;
+    print_value("Output prefix", config.get("prefix"));
+    print_value("Run directory", output);
+    print_value("LUND directory", lund_dir);
+    print_value("Completion manifest", diagnostics / "lund-gen-log.json");
+
+    if (uniform) {
+        print_value("MC HIPO directory", output / "mchipo");
+        print_value("Reconstructed HIPO directory", output / "reconhipo");
+        print_value("Monitoring ROOT file", diagnostics / (config.get("prefix") + "_monitoring_plots.root"));
+        print_value("Monitoring plot directory", diagnostics / "MonitoringPlotsPath");
     }
 
     std::cout << "\n";

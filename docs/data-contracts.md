@@ -11,8 +11,8 @@ These types are defined in [Event.h](../src/lund-generation/core/lund/Event.h). 
 | Field | Uniform value | GENIE conversion value |
 | --- | --- | --- |
 | 1 | Number of written particles | Number of retained particles including electron |
-| 2 | Configured A (bare CLI default 1) | Configured A |
-| 3 | Configured Z (bare CLI default 1) | Configured Z |
+| 2 | Configured A (default `Ar40` target resolves to 40) | Configured A |
+| 3 | Configured Z (default `Ar40` target resolves to 18) | Configured Z |
 | 4 | 0 | GST `resid` (historical resonance metadata use) |
 | 5 | 0 | 0 |
 | 6 | 11 (electron beam) | 11 |
@@ -67,6 +67,8 @@ Uniform generation writes exactly the requested `events` count. GENIE conversion
 Submission resolves manifest/config/CLI inputs into shell settings: `NUM_OF_JOBS` selects numbered LUND files and `JOB_NEVENTS` supplies the shared per-task event limit to GEMC and reconstruction. Physical conversion uses its `events-per-file` value as the input-tail cutoff block so generation and the intended per-task limit share one scale. The cutoff prevents a known-short raw-input tail from starting a follow-up file without interrupting an exact final block; unsupported reactions can still yield fewer written events than raw entries. The completed manifest supplies actual per-file counts automatically; explicit configuration supports inputs without a manifest.
 
 The writer warns, removes and recreates an existing run directory before generation. It writes `lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp` only after LUND output and any required uniform monitoring finish, then renames it to `lundfiles/lund-gen-monitoring/lund-gen-log.json`. Physical conversion has no monitoring stage. Failure leaves partial output for inspection without publishing a completed manifest; rerunning the same resolved output replaces those partial results.
+
+Before output creation, the writer prints a setup report grouped into run limits, beam/target values, active source settings, and resolved output paths. It omits fixed serialization constants and settings unused by the selected channel. After the manifest is published, the completion report contains only generated/scanned events, written events, LUND file count, and completion status.
 
 For an input shorter than `events-per-file`, the first file is allowed to consume the available input. For longer input, the rule is evaluated only when an accepted event would start a follow-up file. Exact-multiple blocks are completed. See [validation](validation.md).
 

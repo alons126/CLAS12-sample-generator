@@ -21,7 +21,7 @@ The maintained definitions preserve the archived plot organization:
 - Electron and FD polar-angle display range 0–50 degrees.
 - CD hadron polar-angle display range 0–150 degrees, covering the configured CD generation ranges.
 - Azimuth range −180–180 degrees; paired electron-hadron azimuth correlations retain −200–200 degrees.
-- Vertex ranges −5–5 cm.
+- Vertex x/y ranges −5–5 cm and vertex z range −7.5–5 cm. The wider z display covers every checked-in target geometry, including the Ar volume at approximately −5.75 to −5.25 cm.
 - One-dimensional y-axis title `Number of events`.
 - Centered axis titles, title size 0.06 and label size 0.0425.
 - A 1000×750 grid canvas with bottom/left/right margins 0.14/0.16/0.12.

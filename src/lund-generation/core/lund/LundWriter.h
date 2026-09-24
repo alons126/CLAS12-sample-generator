@@ -13,14 +13,14 @@
  *
  * Workflow:
  *   Construct from a validated RunConfig -> guard and replace the exact resolved run directory -> create
- *   the common layout plus archived uniform directories when applicable -> write nonempty Event records
+ *   the common layout plus uniform downstream directories when applicable -> write nonempty Event records
  *   into configured-size LUND files -> let the workflow save diagnostics -> close output and atomically
  *   publish lundfiles/lund-gen-monitoring/lund-gen-log.json through finish().
  *
  * Data contract:
  *   Particle momentum is in GeV/c, mass is in GeV/c², derived energy and beam energy are in GeV, and
  *   vertices are in cm. Header metadata and particle ordering are supplied by the event source; this
- *   component preserves them while applying the project's single legacy-compatible text format.
+ *   component preserves them while applying the project's single fixed text format.
  */
 
 #pragma once
@@ -96,7 +96,7 @@ class LundWriter {
      * @throws std::exception If capacity is exhausted, the event is empty or non-finite, or file output
      *         fails. Counters advance only after serialization succeeds.
      * @note Opens the first file lazily and rotates after RunConfig::events-per-file events. Uniform
-     *       legacy formatting may display per-file event IDs; count() remains run-global.
+     *       records display per-file event IDs; count() remains run-global.
      */
     void write(const Event& event);
 
@@ -116,13 +116,14 @@ class LundWriter {
     std::uint64_t count() const { return count_; }
 
     /**
-     * @brief Print the source-appropriate legacy-style run summary.
-     * @param config Borrowed resolved settings used for displayed metadata.
-     * @param workflow `uniform` or `physical`, selecting the matching summary fields.
-     * @param scanned Physical input entries examined; ignored by the initial summary.
-     * @param written Successfully serialized output events; used by the final summary.
-     * @param final Print completion counters when true or configuration/input details when false.
+     * @brief Print a topic-grouped setup or completion report with one resolved value per line.
+     * @param config Borrowed resolved settings used for selected-source fields and display paths.
+     * @param workflow `uniform` or `physical`, selecting only settings and paths consumed by that source.
+     * @param scanned Source entries examined; ignored by setup and printed by completion.
+     * @param written Successfully serialized output events; ignored by setup and printed by completion.
+     * @param final Print only completion counters when true or only resolved setup fields when false.
      * @note Presentation only: this function creates no output files and does not determine run status.
+     *       Fixed serialization constants and inactive source/channel settings are intentionally omitted.
      */
     static void printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned = 0, std::uint64_t written = 0, bool final = false);
 

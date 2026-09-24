@@ -44,14 +44,10 @@
 #include <TTreeReaderArray.h>
 #include <TTreeReaderValue.h>
 
-#include <iostream>
 #include <stdexcept>
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
-#include "core/support/environment.h"
-
-namespace env = environment;
 
 namespace samples {
 
@@ -235,11 +231,10 @@ void convertGenie(const RunConfig& c) {
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
 
     // finish() closes and verifies the last LUND stream, records scanned/written counts and split-file
-    // metadata, then atomically publishes lund-gen-log.json. The following calls report the same final
-    // counters for operators; they do not modify the generated content.
+    // metadata, then atomically publishes lund-gen-log.json. The summary reports those final counters for
+    // operators without modifying generated content.
     writer.finish(scanned);
     LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);
-    std::cout << env::SYSTEM_COLOR << "Scanned " << scanned << ", wrote " << writer.count() << " events to " << env::RESET_COLOR << c.get("output") << '\n';
 
 #pragma endregion
 }

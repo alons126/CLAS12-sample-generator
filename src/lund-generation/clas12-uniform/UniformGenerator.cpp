@@ -32,15 +32,11 @@
 #include <TMath.h>
 
 #include <cmath>
-#include <iostream>
 
 #include "clas12-uniform/UniformConfig.h"
 #include "clas12-uniform/UniformMonitoring.h"
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
-#include "core/support/environment.h"
-
-namespace env = environment;
 
 namespace samples {
 
@@ -303,9 +299,9 @@ void generateUniform(const RunConfig& c) {
     // completion count supplied to the manifest. finish() closes files before publishing readiness.
     writer.finish(writer.count());
 
-    // Print the legacy-compatible final summary only after successful manifest publication.
-    LundWriter::printWorkflowSummary(c, "uniform", 0, writer.count(), true);
-    std::cout << env::SYSTEM_COLOR << "Wrote " << writer.count() << " events to " << env::RESET_COLOR << c.get("output") << '\n';
+    // Print the generated/written counters only after successful manifest publication. Uniform creation
+    // examines exactly one generated event for every successful write, so both counters use count().
+    LundWriter::printWorkflowSummary(c, "uniform", writer.count(), writer.count(), true);
 #pragma endregion
 }
 #pragma endregion

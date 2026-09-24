@@ -130,7 +130,7 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
         if (!tester) {
             one("Vx_e_1e", "V_{e,x} of e in (e,e') sample;V_{e,x} [cm]", -5, 5, "Vx", constants::electron_pdg);
             one("Vy_e_1e", "V_{e,y} of e in (e,e') sample;V_{e,y} [cm]", -5, 5, "Vy", constants::electron_pdg);
-            one("Vz_e_1e", "V_{e,z} of e in (e,e') sample;V_{e,z} [cm]", -5, 5, "Vz", constants::electron_pdg);
+            one("Vz_e_1e", "V_{e,z} of e in (e,e') sample;V_{e,z} [cm]", -7.5, 5, "Vz", constants::electron_pdg);
         }
         two("Theta_e_VS_Phi_e_" + suffix, "#theta_{e} vs. #phi_{e} in " + context + ";#phi_{e} [#circ];#theta_{e} [#circ]", -180, 180, 0, 50, "Phi", constants::electron_pdg, "Theta",
             constants::electron_pdg);
@@ -158,7 +158,7 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
     electron_one("P", "P", 0, beam * 1.1, "[GeV]");
     one("Vx_e_" + channel, "V_{e,x} of e in " + context + ";V_{e,x} [cm]", -5, 5, "Vx", constants::electron_pdg);
     one("Vy_e_" + channel, "V_{e,y} of e in " + context + ";V_{e,y} [cm]", -5, 5, "Vy", constants::electron_pdg);
-    one("Vz_e_" + channel, "V_{e,z} of e in " + context + ";V_{e,z} [cm]", -5, 5, "Vz", constants::electron_pdg);
+    one("Vz_e_" + channel, "V_{e,z} of e in " + context + ";V_{e,z} [cm]", -7.5, 5, "Vz", constants::electron_pdg);
     two("Theta_e_VS_Phi_e_" + channel, "#theta_{e} vs. #phi_{e} in " + context + ";#phi_{e} [#circ];#theta_{e} [#circ]", -180, 180, 0, 50, "Phi", constants::electron_pdg, "Theta",
         constants::electron_pdg);
     two("Theta_e_VS_P_e_" + channel, "#theta_{e} vs. P_{e} in " + context + ";P_{e} [GeV];#theta_{e} [#circ]", 0, beam * 1.1, 0, 50, "P", constants::electron_pdg, "Theta",
@@ -173,7 +173,7 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
     one("P_" + h + "_" + channel, "P_{" + ht + "} in " + context + ";P_{" + ht + "} [GeV]", 0, beam * 1.1, "P", hadron_pid);
     one("Vx_" + h + "_" + channel, "V_{" + ht + ",x} of " + ht + " in " + context + ";V_{" + ht + ",x} [cm]", -5, 5, "Vx", hadron_pid);
     one("Vy_" + h + "_" + channel, "V_{" + ht + ",y} of " + ht + " in " + context + ";V_{" + ht + ",y} [cm]", -5, 5, "Vy", hadron_pid);
-    one("Vz_" + h + "_" + channel, "V_{" + ht + ",z} of " + ht + " in " + context + ";V_{" + ht + ",z} [cm]", -5, 5, "Vz", hadron_pid);
+    one("Vz_" + h + "_" + channel, "V_{" + ht + ",z} of " + ht + " in " + context + ";V_{" + ht + ",z} [cm]", -7.5, 5, "Vz", hadron_pid);
     two("Theta_" + h + "_VS_Phi_" + h + "_" + channel, "#theta_{" + ht + "} vs. #phi_{" + ht + "} in " + context + ";#phi_{" + ht + "} [#circ];#theta_{" + ht + "} [#circ]", -180, 180, 0,
         theta_high, "Phi", hadron_pid, "Theta", hadron_pid);
     two("Theta_" + h + "_VS_P_" + h + "_" + channel, "#theta_{" + ht + "} vs. P_{" + ht + "} in " + context + ";P_{" + ht + "} [GeV];#theta_{" + ht + "} [#circ]", 0, beam * 1.1, 0,

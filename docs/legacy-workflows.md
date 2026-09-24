@@ -98,10 +98,10 @@ The Q² labels were `Q2_0_02`, `Q2_0_25` and `Q2_0_40` at the three energies. Th
 build/debug/apps/clas12-generator-to-lund --event-generator genie \
   --config config/samples/legacy-genie-wrapper.conf \
   --input '/shared/truth/C12/GEM21_11a_00_000/2070MeV_Q2_0_02/master-routine_validation_01-eScattering/*.root' \
-  --files 1 --output runs/legacy-genie-smoke
+  --events 10000 --output runs/legacy-genie-smoke
 ```
 
-The new CLI takes the input explicitly and checks the GST schema. It does not infer physical metadata from filenames. The archived converter reference used by tests keeps the original event loop; an adapter only redirects includes/output paths, captures its histogram and replaces directory shell calls with checked filesystem operations.
+The archived wrapper limited the number of input ROOT files. The maintained converter instead takes the complete input file or glob explicitly and limits accepted output with `--events`; it has no `--files` option. It checks the GST schema and does not infer physical metadata from filenames. The archived converter reference used by tests keeps the original event loop; an adapter only redirects includes/output paths, captures its histogram and replaces directory shell calls with checked filesystem operations.
 
 ## 3. Shared detector-job submission
 

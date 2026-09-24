@@ -57,5 +57,6 @@ GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d
 
 # Personal stuff list ---------------------------------------------------------
 output/
+legacy/GENIE-GST-test-samples/test-runs
 tutorials/uniform-samples/uniform-lund-generation copy.txt
 tutorials/uniform-samples/uniform-slurm-submission copy.txt
