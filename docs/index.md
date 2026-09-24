@@ -25,6 +25,7 @@ Existing GENIE GST --> conversion --+
 5. [Simulation and Slurm](gemc-reconstruction-batch-submission.md): configure the sourced setup and submit one array per sample.
 6. [Workflow command examples](../tutorials/README.md): matched uniform LUND-generation and small-array submission commands.
 7. [Migration](migration.md): old-to-new entry points and deliberate behavioral changes.
+8. [Public GitHub Wiki](wiki.md): generated publication, automation, and local preview.
 
 For the scientific and implementation reference, start at the [technical-note outline](technical-note.md). It links the sampling equations, data contracts, source inventory, legacy launch-chain mapping, and validation evidence.
 

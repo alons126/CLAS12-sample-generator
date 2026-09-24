@@ -57,6 +57,7 @@ Maintained source is grouped first by workflow under `src/lund-generation/` and 
 - [Technical note and complete reference](docs/technical-note.md)
 - [Legacy parity and validation](docs/validation.md)
 - [Migration from the imported repositories](docs/migration.md)
+- [Public GitHub Wiki publishing](docs/wiki.md)
 
 The original source trees are retained in `legacy/` for comparison. `legacy/Uniform-sample-generator` is pinned as a submodule to its independent upstream repository; its selected kernels are compiled only by parity tests. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
 
