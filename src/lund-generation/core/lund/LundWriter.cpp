@@ -49,32 +49,6 @@ namespace samples {
 // LundWriter::printWorkflowSummary --------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::printWorkflowSummary */
-/**
- * @brief Print the resolved setup or completion summary for a LUND run.
- *
- * Purpose:
- *   Make terminal and batch logs directly auditable by grouping maintained settings by topic, printing
- *   one resolved value per line, and omitting stale constants or settings unused by the selected source.
- *
- * Workflow:
- *   1. Print one banner identifying a setup or completion report.
- *   2. For setup, group common run limits, beam/target settings, source-specific settings and real output
- *      paths; select only the uniform fields used by the configured channel.
- *   3. For completion, print only scanned/written/file counters and the success status.
- *
- * @param config Borrowed resolved workflow configuration used only for display.
- * @param workflow Source label. `uniform` selects uniform text; the maintained caller passes `physical`
- *                 for conversion text.
- * @param scanned Number of source entries examined. Uniform generation supplies its generated/written
- *                count; physical conversion also includes rejected interaction types.
- * @param written Number of events successfully serialized into LUND output.
- * @param final Print only completion counters when true; print only resolved setup fields when false.
- *
- * @return Nothing. Text is written to standard output with ANSI color sequences.
- *
- * @note Presentation only: this function creates no paths. LundWriter construction creates `lundfiles/`
- *       for both sources and the downstream/plot directory layout only for uniform runs.
- */
 void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned, std::uint64_t written, bool final) {
     // Maintained callers use exactly `uniform` or `physical`; only the former selects uniform settings
     // and paths. Constructing the display-only paths below has no filesystem side effects.
@@ -193,28 +167,6 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 // LundWriter::LundWriter ------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::LundWriter */
-/**
- * @brief Prepare the run directory and cache output limits.
- *
- * Purpose:
- *   Claim one fully resolved run directory before any event work begins, preserving intentional legacy
- *   replacement while preventing broad or ambiguous recursive deletion targets.
- *
- * Workflow:
- *   1. Borrow the configuration; own the workflow label, output path, capacity, split limit, and format.
- *   2. Convert the final output path to an absolute lexically normalized path.
- *   3. Reject root, home, current-directory, checkout/checkout-ancestor, and otherwise incomplete paths.
- *   4. Create the parent, warn and remove an existing exact run directory, then create `lundfiles/`.
- *
- * @param c Borrowed validated configuration; the stored reference requires it to outlive this writer.
- * @param workflow Source label copied into summaries and manifest provenance (`uniform` or `physical`).
- *
- * @throws std::exception If configuration conversion fails, the path is unsafe, or filesystem creation,
- *         inspection, replacement, or removal fails.
- *
- * @note Replacement is recursive and intentional. RunConfig::parse() has already appended the complete
- *       source-specific run name; this constructor reports and removes only that exact resolved path.
- */
 LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     : config_(c), workflow_(std::move(workflow)), directory_(c.get("output")), events_per_file_(c.integer("events-per-file")), capacity_(c.integer("events")) {
     // Re-normalize defensively at the destructive-operation boundary even though RunConfig::parse()
@@ -265,50 +217,12 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
 // LundWriter::full ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::full */
-/**
- * @brief Test whether the configured event capacity has been reached.
- *
- * Purpose:
- *   Give uniform generation and physical conversion the same stopping condition based on successfully
- *   serialized events rather than generated attempts or scanned input entries.
- *
- * @return True when count_ is greater than or equal to the requested capacity_. The greater-than case
- *         is defensive; write() prevents normal operation from advancing beyond capacity.
- *
- * @note Read-only and side-effect free. Physical conversion may scan/reject additional input before
- *       reaching this written-event capacity.
- */
 bool LundWriter::full() const { return count_ >= capacity_; }
 #pragma endregion
 
 // LundWriter::write -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::write */
-/**
- * @brief Serialize one event and advance file and run counts.
- *
- * Purpose:
- *   Keep both generation workflows on one LUND serialization and file-splitting contract.
- *
- * Workflow:
- *   1. Reject capacity overflow and empty events.
- *   2. Lazily open the first numbered file or rotate after exactly events_per_file_ records.
- *   3. Serialize a ten-field event header using the legacy-compatible formatting contract.
- *   4. Derive each particle's on-shell energy and serialize its fourteen-field record in stable order.
- *   5. Increment per-file and run-global counts only after every record has been written.
- *
- * @param e Borrowed event containing beam energy in GeV, particle momentum in GeV/c, mass in GeV/c²,
- *          vertices in cm, explicit A/Z header metadata, and source-defined particle ordering.
- *
- * @return Nothing. Normal return means one complete event was serialized and both counters advanced.
- *
- * @throws std::runtime_error If capacity is exhausted, the particle list is empty, or derived energy/
- *         vertex data is non-finite. The configured stream also throws on open/write/close failures.
- *
- * @note A failure after header output can leave a partial final event in the active file, but counters
- *       do not advance and finish() is not reached by maintained callers, so no completion manifest is
- *       published for consumers.
- */
 void LundWriter::write(const Event& e) {
     // Enforce capacity internally even when a caller forgets to check full(). LUND events must contain
     // at least one particle because the header multiplicity and following records form one unit.
@@ -365,35 +279,6 @@ void LundWriter::write(const Event& e) {
 // LundWriter::finish ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* LundWriter::finish */
-/**
- * @brief Publish the completed-run manifest.
- *
- * Purpose:
- *   Mark a run consumable only after its LUND stream and caller-owned diagnostics have completed, while
- *   recording enough software, configuration, target-source, counter, and file provenance to audit or
- *   reproduce the output.
- *
- * Workflow:
- *   1. Close and flush the active LUND stream.
- *   2. Open `lundfiles/lund-gen-monitoring/lund-gen-log.json.tmp` with exceptions enabled.
- *   3. Write schema/software/ROOT/target provenance plus scanned and written counters.
- *   4. Serialize every resolved RunConfig entry and ordered split-file record as strict JSON.
- *   5. Close the temporary file and rename it to `lund-gen-log.json` in the monitoring directory.
- *
- * @param scanned Number of source events examined. Uniform generation supplies count(); physical
- *                conversion includes rejected input entries, so scanned may exceed written_events.
- *
- * @return Nothing. Normal return means the final completion manifest is visible to consumers.
- *
- * @throws std::exception If LUND closure, manifest open/write/close, JSON-related allocation, or the
- *         final filesystem rename fails.
- *
- * @pre Required diagnostic files have already been saved successfully. Calling finish() is the final
- *      publication step and maintained workflows call it once.
- *
- * @note A failure can leave `lund-gen-log.json.tmp` and partial run data for inspection. Consumers
- *       must require `lund-gen-log.json`; the temporary name never declares completion.
- */
 void LundWriter::finish(std::uint64_t scanned) {
     // Close first so every numbered LUND file is flushed and no further event can be appended through
     // the active stream while its counts are being published.

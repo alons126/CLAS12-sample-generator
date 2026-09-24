@@ -52,26 +52,6 @@ namespace samples {
 // convertGenie ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* convertGenie */
-/**
- * @brief Convert supported events from an existing GENIE GST chain.
- *
- * Purpose:
- *   Prepare existing physical events for detector simulation while preserving their supported momenta.
- *
- * Algorithm:
- *   1. Validate required branches and construct typed readers.
- *   2. Scan entries and select QE/MEC/RES/DIS events.
- *   3. Assign a common target vertex and retain supported detector-stable final-state species in input order.
- *   4. Before starting a follow-up output file, require at least one configured submission-sized block of
- *      input entries to remain; otherwise continue through accepted-event capacity and publish the log.
- *
- * @param c Resolved input, beam, metadata, target and output settings.
- *
- * @note The configured target selects only the vertex distribution; A and Z are copied independently
- *       into each LUND header. One sampled vertex is shared by every particle in an accepted event.
- * @note No value is returned. Schema, read and output failures throw. The submission cutoff is evaluated
- *       only before a follow-up file starts, so it never interrupts a file that is already being written.
- */
 void convertGenie(const RunConfig& c) {
     c.validate(false);
     LundWriter::printWorkflowSummary(c, "physical");

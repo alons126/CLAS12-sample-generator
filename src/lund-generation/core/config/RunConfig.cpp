@@ -181,36 +181,6 @@ std::string uniformSampleLabel(const RunConfig& config) {
 // RunConfig::parse ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::parse */
-/**
- * @brief Resolve one complete sample configuration.
- *
- * Purpose:
- *   Make both executables use the same precedence, automatic-resolution, naming, and validation
- *   contract before any workflow creates outputs.
- *
- * Workflow:
- *   1. Install shared defaults plus exactly one source-specific key set.
- *   2. Parse strict `--key value` CLI pairs, retaining them as final-precedence overrides.
- *   3. Read one optional `key = value` profile over the defaults.
- *   4. Apply CLI overrides and resolve target-, channel-, and beam-dependent `auto` values.
- *   5. Validate the complete scientific and output contract before filesystem mutation is possible.
- *   6. Build the source-specific run-directory name and normalize input/output paths.
- *
- * @param argc Number of argv entries, including the executable name.
- * @param argv Borrowed CLI tokens read during this call; their storage is neither retained nor changed.
- * @param uniform Select uniform sampling when true or physical event conversion when false. This
- *                choice defines the accepted keys, defaults, automatic values, and validation branch.
- *
- * @return Owning, fully resolved configuration. Local paths are absolute and lexically normalized;
- *         the output value names the final source-specific run directory beneath the requested parent.
- *
- * @throws std::exception For malformed or repeated input, unknown keys, unreadable profiles, invalid
- *         target/source metadata, invalid numeric or physical bounds, and path conversion failures.
- *
- * @note This function reads arguments and an optional profile, then computes paths and names. It does
- *       not inspect physical event input or mutate the output filesystem. Downstream workflows report
- *       and safely replace the resolved output directory immediately before writing a run.
- */
 RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */
     // Store all settings as text so the exact resolved values used by generation can also be written
@@ -438,19 +408,6 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 // RunConfig::get --------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::get */
-/**
- * @brief Read a resolved setting as text.
- *
- * Purpose:
- *   Give generators and provenance writers a read-only copy of one value without exposing mutable
- *   access to the configuration map.
- *
- * @param k Known shared or selected-source configuration key.
- *
- * @return Copy of the stored resolved string, preserving its manifest representation.
- *
- * @throws std::out_of_range If the key does not exist in this configuration's source-specific map.
- */
 std::string RunConfig::get(const std::string& k) const {
     const auto value = values_.find(k);
     if (value == values_.end()) { throw std::out_of_range("Missing configuration key: " + k); }
@@ -461,25 +418,6 @@ std::string RunConfig::get(const std::string& k) const {
 // RunConfig::number -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::number */
-/**
- * @brief Read a finite floating-point setting.
- *
- * Purpose:
- *   Convert a resolved numeric setting at the point of use while retaining its original string for
- *   provenance. The key's contract supplies the unit, such as GeV/c, GeV, degrees, or cm.
- *
- * Algorithm:
- *   Use std::stod while recording the consumed character count, then require the entire string to be
- *   consumed and the result to be finite.
- *
- * @param k Key whose resolved value must represent one floating-point number.
- *
- * @return Finite double in the unit documented for the selected key.
- *
- * @throws std::out_of_range If the key is absent or the number exceeds double range.
- * @throws std::invalid_argument If std::stod cannot begin a conversion.
- * @throws std::runtime_error If trailing text remains or the converted value is non-finite.
- */
 double RunConfig::number(const std::string& k) const {
     // `used` distinguishes a complete value such as "5.98636" from a numeric prefix such as "5 GeV".
     std::size_t used = 0;
@@ -496,24 +434,6 @@ double RunConfig::number(const std::string& k) const {
 // RunConfig::integer ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::integer */
-/**
- * @brief Read an unsigned integer setting.
- *
- * Purpose:
- *   Parse counts, seeds, and nuclear metadata without accepting signs, whitespace, fractional text,
- *   or implementation-dependent integer prefixes.
- *
- * Algorithm:
- *   Copy the resolved string, require at least one ASCII decimal digit and no other character, then
- *   convert it with std::stoull's range checking.
- *
- * @param k Key whose resolved value must contain unsigned decimal digits only.
- *
- * @return Parsed 64-bit unsigned integer. Per-key limits are enforced separately by validate().
- *
- * @throws std::out_of_range If the key is absent or the digits exceed std::uint64_t range.
- * @throws std::runtime_error If the stored value is empty or contains a non-digit.
- */
 std::uint64_t RunConfig::integer(const std::string& k) const {
     // Validate spelling before conversion so signs and surrounding whitespace cannot be accepted by
     // stoull even when they would otherwise produce a numeric result.
@@ -529,32 +449,6 @@ std::uint64_t RunConfig::integer(const std::string& k) const {
 // RunConfig::validate ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* RunConfig::validate */
-/**
- * @brief Reject incompatible or invalid run settings before output creation.
- *
- * Purpose:
- *   Establish the complete configuration invariant relied upon by event sources, target-vertex
- *   sampling, LUND serialization, monitoring, naming, and provenance. Validation is deliberately
- *   read-only and runs before a generator may replace or create the resolved output directory.
- *
- * Workflow:
- *   1. Check required shared values, beam energy, counts/seeds, nuclear metadata, and filename prefix.
- *   2. Validate the external target-geometry key used by every event.
- *   3. For physical conversion, require current GENIE GST input and complete naming provenance.
- *   4. For uniform generation, validate the channel, angular acceptance, momentum modes,
- *      momentum bounds, and trigger-electron angles.
- *
- * @param uniform Select uniform-generation constraints when true or physical-conversion constraints
- *                when false. It must match the source mode used by parse().
- *
- * @return Nothing. Normal return means every applicable check succeeded.
- *
- * @throws std::exception If a key is missing, a stored numeric value cannot be converted, a target
- *         geometry is unknown, or any shared/source-specific constraint fails.
- *
- * @note Numeric units follow the configuration contract: beam energy is GeV, momentum is GeV/c, angles
- *       are degrees, and sampled target coordinates are cm.
- */
 void RunConfig::validate(bool uniform) const {
 #pragma region /* Shared run and output contract */
     // Output is still the caller-selected parent at this stage; parse() appends the final run name only
@@ -657,29 +551,6 @@ void RunConfig::validate(bool uniform) const {
 // jsonString ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* jsonString */
-/**
- * @brief Encode a string as a JSON string literal.
- *
- * Purpose:
- *   Serialize resolved configuration and provenance text into manifests without allowing quotes,
- *   backslashes, or control bytes to break the surrounding strict JSON document.
- *
- * Algorithm:
- *   1. Write an opening double quote.
- *   2. Prefix `"` and `\` bytes with a backslash.
- *   3. Encode bytes below U+0020 as four-digit `\u00XX` escapes.
- *   4. Copy other bytes unchanged and write the closing quote.
- *
- * @param s Borrowed, unescaped configuration or provenance text; it is not modified or retained.
- *
- * @return Complete JSON string literal including its surrounding double quotes.
- *
- * @note Bytes at or above 0x20 are preserved. Callers therefore retain UTF-8 text byte-for-byte and
- *       are responsible for supplying valid text encoding when the manifest will contain Unicode.
- *
- * @note This helper returns encoded text only; it does not write a file or validate a complete JSON
- *       object. The manifest writer owns document structure and output I/O.
- */
 std::string jsonString(const std::string& s) {
     // Build an independent result so the caller's source string remains available in RunConfig.
     std::ostringstream out;
@@ -712,25 +583,6 @@ std::string jsonString(const std::string& s) {
 // help ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* help */
-/**
- * @brief Describe CLI options for the selected application.
- *
- * Purpose:
- *   Keep command-line guidance adjacent to the parser contract so the uniform generator and physical
- *   converter describe the same shared configuration grammar, units, and output-replacement behavior.
- *
- * Workflow:
- *   Start with the selected executable's usage line, append options shared by both LUND sources, add
- *   the matching source-specific controls, and finish with target identifiers from the maintained
- *   RG-M target table.
- *
- * @param uniform Select `uniform-lund-generator` help when true or `event-generator-to-lund-converter` help when false.
- *
- * @return Newly owned multiline usage text. The caller decides where to print it.
- *
- * @note This function performs no parsing, file access, generation, conversion, or submission. Target
- *       names come from rgmTargetNames(), keeping help synchronized with the accepted identity table.
- */
 std::string help(bool uniform) {
     // The physical example quotes its input glob so an interactive shell passes the pattern to the
     // converter instead of expanding it before the adapter receives it.

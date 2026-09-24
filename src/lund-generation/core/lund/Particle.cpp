@@ -31,24 +31,7 @@ namespace samples {
 
 #pragma region /* particleMass */
 
-/**
- * @brief Return the centralized output mass.
- *
- * Purpose:
- *   Translate one supported PDG identity into the rest mass stored in the
- *   corresponding Particle and ultimately written to its LUND record.
- *
- * Algorithm:
- *   Ask TargetGeometry for the mass that matches the PDG code. This keeps access to external targets.h
- *   in one source file.
- *
- * @param pid Particle PDG identifier selected by the event-source adapter.
- * @return Rest mass in GeV/c².
- * @throws std::runtime_error If pid is not an electron, proton, neutron,
- *                            charged pion, or photon.
- * @note This function validates identity support only. It does not decide which
- *       particles an adapter retains and does not calculate total energy.
- */
+// Keep the external target source as the single source of nonzero particle masses.
 double particleMass(int pid) { return TargetGeometry::mass(pid); }
 
 #pragma endregion

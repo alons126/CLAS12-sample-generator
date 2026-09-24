@@ -157,38 +157,6 @@ double triggerPhi(double phi, double offset) {
 // generateUniform -------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* generateUniform */
-/**
- * @brief Generate one completed uniform acceptance-sample run.
- *
- * Purpose:
- *   Produce a fixed-size acceptance probe with configured 1e or electron–hadron content while preserving the
- *   legacy channel prescriptions, deterministic random-stream separation, shared writer contract, and
- *   one generalized legacy-style monitoring view.
- *
- * Workflow:
- *   1. Revalidate settings, print the resolved run, cache typed values, and initialize output objects.
- *   2. Create independent seeded RNG streams for particle kinematics and target vertices.
- *   3. Build one Event per iteration with configured A/Z and beam metadata plus one shared vertex.
- *   4. Sample the electron-only or artificial trigger-electron+hadron channel in stable draw order.
- *   5. Serialize the event before adding it to the diagnostic set.
- *   6. Stop at the writer's configured event capacity, save the single monitoring ROOT file,
- *      finalize LUND output, publish the manifest, and print the completion summary.
- *
- * @param c Borrowed configuration returned by RunConfig::parse(..., true). It supplies channel, beam
- *          energy in GeV, momenta in GeV/c, angles in degrees, vertices in cm, target/header metadata,
- *          RNG seeds, output formatting, monitoring, and the final run directory.
- *
- * @return Nothing. Normal return means all requested events and diagnostics were written and the
- *         completion manifest was published.
- *
- * @throws std::exception If validation, target sampling, guarded output replacement, serialization,
- *         monitoring, or manifest publication fails. No success manifest is published before all
- *         required output stages complete.
- *
- * @note This is an acceptance sampler, not a physical interaction model. electron–hadron trigger electrons are
- *       artificial. Production 1e and ep alternate uniform-p with uniform-1/p by run event ID, while
- *       production en samples p uniformly; explicit compatibility/study modes may override each rule.
- */
 void generateUniform(const RunConfig& c) {
 #pragma region /* Run preparation */
     // Recheck the public contract at the workflow boundary even when the caller used RunConfig::parse.

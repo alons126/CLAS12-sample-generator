@@ -85,13 +85,6 @@ namespace samples {
 // TargetGeometry::mass --------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* TargetGeometry::mass */
-/**
- * @brief Map a supported PDG identity to the mass owned by external targets.h.
- *
- * @param pid Supported particle identity from Event.h.
- * @return Mass in GeV/c², or exact zero for a photon.
- * @throws std::runtime_error If the identity is not supported by maintained LUND output.
- */
 double TargetGeometry::mass(int pid) {
     switch (pid) {
         case constants::electron_pdg:
@@ -114,25 +107,6 @@ double TargetGeometry::mass(int pid) {
 // TargetGeometry::validate ----------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* TargetGeometry::validate */
-/**
- * @brief Validate a target name without sampling.
- *
- * Purpose:
- *   Fail before output-directory replacement when a configured geometry cannot produce vertices.
- *
- * Algorithm:
- *   Perform an exact, case-sensitive lookup in the external target map and require its geometry-element
- *   collection to be nonempty.
- *
- * @param name Borrowed targets.h map key.
- *
- * @return Nothing. Normal return means construction may store the key.
- *
- * @throws std::runtime_error If the name is absent or its external geometry entry contains no elements.
- *
- * @note This read-only check consumes no random draws and does not infer geometry from RG-M identity,
- *       A/Z metadata, or GEMC variation.
- */
 void TargetGeometry::validate(const std::string& name) {
     // Use find rather than operator[] so validation cannot insert a missing key into external state.
     const auto found = external_targets::targets.find(name);
@@ -143,29 +117,6 @@ void TargetGeometry::validate(const std::string& name) {
 // TargetGeometry::sample ------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* TargetGeometry::sample */
-/**
- * @brief Sample one vertex using the caller-owned random stream.
- *
- * Purpose:
- *   Use the external geometry algorithm without coupling otherwise independent run RNG streams.
- *
- * Workflow:
- *   1. Hold the process-wide mutex across the complete external RNG transaction.
- *   2. Copy the caller's complete RNG state into external `ran` and call randomVertex(name_).
- *   3. Copy the advanced external state back to the caller and verify the sampled vertex is finite.
- *
- * @param random Borrowed run-owned vertex RNG. A physical target advances it by exactly the draws made
- *               inside targets.h.
- *
- * @return Sampled vertex in cm.
- *
- * @throws std::runtime_error If the external sampler returns a non-finite/overflowed squared magnitude.
- *         Exceptions thrown inside the external sampler propagate after the mutex unlocks.
- *
- * @note If randomVertex() returns a non-finite vertex, its completed RNG draws are still copied back
- *       before validation fails. If randomVertex() itself throws, copy-back is not reached and the caller
- *       retains its prior state; the next call overwrites external `ran` from its own caller state.
- */
 TVector3 TargetGeometry::sample(TRandom3& random) const {
     // Upstream randomVertex uses a global TRandom3 named ran. Transfer full state rather than reseeding,
     // so streams remain reproducible and independent when geometry instances are interleaved.

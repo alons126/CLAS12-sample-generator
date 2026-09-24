@@ -71,6 +71,14 @@ struct HadronLabel {
     std::string title;  ///< `pFD`, `nCD`, `#pi^{+}FD`, or `#pi^{-}CD`.
 };
 
+/**
+ * @brief Build the ROOT-name and TLatex-title tokens for one supported regional hadron.
+ *
+ * @param pid Supported hadron PDG identifier.
+ * @param region Detector-region suffix, normally `FD` or `CD`.
+ * @return The plain histogram-name token and formatted title token.
+ * @throws std::runtime_error If pid does not identify a supported uniform-sample hadron.
+ */
 HadronLabel hadronLabel(int pid, const std::string& region) {
     switch (pid) {
         case constants::proton_pdg:
@@ -86,6 +94,15 @@ HadronLabel hadronLabel(int pid, const std::string& region) {
     }
 }
 
+/**
+ * @brief Read one monitored scalar from the first particle with the requested identity.
+ *
+ * @param event Borrowed event whose particle order and values are not changed.
+ * @param pid PDG identifier of the particle to inspect.
+ * @param metric Supported quantity name: `P`, `Theta`, `Phi`, `Vx`, `Vy`, or `Vz`.
+ * @return Momentum in GeV/c, angle in degrees, or vertex coordinate in cm, as selected by metric.
+ * @throws std::runtime_error If the particle is absent or the metric is unsupported.
+ */
 double quantity(const Event& event, int pid, const std::string& metric) {
     for (const auto& particle : event.particles) {
         if (particle.pid != pid) { continue; }

@@ -46,33 +46,6 @@ namespace samples {
 
 #pragma region /* convertPhysical */
 
-/**
- * @brief Dispatch one physical conversion run to its concrete adapter.
- *
- * Purpose:
- *   Translate the resolved public generator name into one concrete adapter call while preserving a
- *   generator-neutral interface for the application entry point.
- *
- * Workflow:
- *   Compare `event-generator` with each implemented identifier, call the first exact match, return after
- *   successful completion, and throw when no branch matches.
- *
- * Inputs:
- *   config is a caller-owned physical-source RunConfig. It is borrowed as const, forwarded unchanged to
- *   the selected adapter and never retained beyond this synchronous call.
- *
- * Outputs:
- *   No C++ value or dispatcher-owned artifact is produced. A successful return means the selected adapter
- *   completed its own conversion and output-publication contract.
- *
- * Failure:
- *   Throws std::runtime_error for an unsupported generator. Any validation, input, target or output
- *   exception from the selected adapter propagates unchanged; this function does not mask partial runs.
- *
- * @param config Resolved and validated physical-source configuration borrowed for this call.
- *
- * @throws std::runtime_error If event-generator does not name an implemented adapter.
- */
 void convertPhysical(const RunConfig& config) {
     // Keep dispatch as a direct exact-name comparison. The adapter receives the same immutable RunConfig
     // used by the surrounding workflow and owns all GENIE-GST-specific validation, reading and conversion.

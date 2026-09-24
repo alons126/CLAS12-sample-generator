@@ -30,24 +30,6 @@ namespace samples {
 // RG-M catalog ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Catalog */
-/**
- * @brief Return the immutable catalog of supported RG-M target identities.
- *
- * Purpose:
- *   Keep automatic target defaults in one source-controlled table instead of scattering A/Z, external
- *   geometry keys, and GEMC variation labels across profiles and workflow code.
- *
- * Construction:
- *   C++ initializes the function-local static vector once on first use. Aggregate fields follow the
- *   RgmTarget order: identifier, description, A, Z, geometry, and gemc_variation.
- *
- * @return Const reference to process-lifetime catalog storage in maintained display order.
- *
- * @note Shared geometry keys are deliberate. For example, isotopes may use the same spatial assembly
- *       while retaining different nuclear metadata, and several identities may use one foil shape with
- *       distinct GEMC variations. RunConfig installs the record as one default set before applying any
- *       explicitly configured field overrides.
- */
 const std::vector<RgmTarget>& rgmTargets() {
     // Catalog order controls help/error presentation only; lookup is by exact identifier. Records are
     // immutable after this thread-safe first initialization.
@@ -76,19 +58,6 @@ const std::vector<RgmTarget>& rgmTargets() {
 // Exact target lookup ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Exact target lookup */
-/**
- * @brief Resolve one case-sensitive RG-M identifier to its catalog record.
- *
- * Algorithm:
- *   Scan the small maintained table in order and return the first exact identifier match. If no record
- *   matches, build one diagnostic containing the supplied value and every supported identifier.
- *
- * @param identifier User/profile value of `rgm-target`; no trimming or case conversion occurs here.
- *
- * @return Const reference into the process-lifetime vector returned by rgmTargets().
- *
- * @throws std::runtime_error If identifier is unknown. No fallback target is selected silently.
- */
 const RgmTarget& findRgmTarget(const std::string& identifier) {
     // Linear lookup keeps the catalog representation direct and readable; its fixed small size does not
     // justify a second index whose contents or ordering could diverge.
@@ -103,18 +72,6 @@ const RgmTarget& findRgmTarget(const std::string& identifier) {
 // Target-name presentation ----------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Target-name presentation */
-/**
- * @brief Join catalog identifiers for CLI help and lookup failures.
- *
- * Algorithm:
- *   Traverse rgmTargets() in maintained order, write a separator before every item except the first,
- *   and return the accumulated text.
- *
- * @return Newly owned comma-and-space-separated list with no leading or trailing separator.
- *
- * @note Presentation only; this function neither validates a selection nor exposes descriptions and
- *       geometry metadata.
- */
 std::string rgmTargetNames() {
     std::ostringstream out;
     bool first = true;
