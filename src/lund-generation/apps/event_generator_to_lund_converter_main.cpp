@@ -3,14 +3,14 @@
 //
 
 /**
- * @file event_generator_to_lund_main.cpp
+ * @file event_generator_to_lund_converter_main.cpp
  * @brief Generator-independent physical conversion command-line entry point.
  *
  * Purpose:
  *   Select the configured physical event-generator adapter and return its process status.
  *
  * Workflow:
- *   Help returns immediately; otherwise parse -> convertGenie -> report success or caught failure.
+ *   Help returns immediately; otherwise parse -> convertPhysical -> report success or caught failure.
  *
  * CLI options:
  *   --config FILE                     Read `key = value` settings; CLI values take precedence.
@@ -50,10 +50,15 @@ namespace env = environment;
 
 #pragma region /* main */
 /**
- * @brief GENIE-converter command-line entry point.
+ * @brief Event-generator-to-LUND converter command-line entry point.
  *
- * Algorithm:
- *   Translate CLI settings into one conversion call and a process exit status.
+ * Purpose:
+ *   Keep process-level concerns at the application boundary while the selected format adapter owns
+ *   physical-event decoding.
+ *
+ * Workflow:
+ *   Parse and validate physical-conversion settings, dispatch the configured adapter, and translate
+ *   standard exceptions into a stable process failure status.
  *
  * @param argc Number of executable arguments.
  * @param argv Paths and options supplied by the caller.

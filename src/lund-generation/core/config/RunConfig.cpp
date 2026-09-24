@@ -724,7 +724,7 @@ std::string jsonString(const std::string& s) {
  *   the matching source-specific controls, and finish with target identifiers from the maintained
  *   RG-M target table.
  *
- * @param uniform Select `clas12-uniform` help when true or `clas12-generator-to-lund` help when false.
+ * @param uniform Select `uniform-lund-generator` help when true or `event-generator-to-lund-converter` help when false.
  *
  * @return Newly owned multiline usage text. The caller decides where to print it.
  *
@@ -734,8 +734,8 @@ std::string jsonString(const std::string& s) {
 std::string help(bool uniform) {
     // The physical example quotes its input glob so an interactive shell passes the pattern to the
     // converter instead of expanding it before the adapter receives it.
-    std::string result = uniform ? "clas12-uniform --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
-                                 : "clas12-generator-to-lund --event-generator genie-gst --input 'gst*.root' --output PARENT_DIRECTORY\n";
+    std::string result = uniform ? "uniform-lund-generator --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
+                                 : "event-generator-to-lund-converter --event-generator genie-gst --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
     // Shared settings control beam/target metadata, event and RNG counts, and automatic naming.
     result +=

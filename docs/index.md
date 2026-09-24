@@ -8,8 +8,8 @@ flowchart LR
     P[Existing physical generator truth] --> C
     C --> L[Split LUND files and completion manifest]
     L --> S[Submit ifarm Slurm array]
-    S --> G[GEMC detector simulation]
-    G --> R[CLAS12 reconstruction]
+    S --> G[CLAS12 simulation (GEMC)]
+    G --> R[CLAS12 reconstruction (COATJAVA)]
     R --> H[Reconstructed HIPO]
 ```
 

@@ -1,7 +1,7 @@
 # Physical event-generator input to LUND
 
 ```bash
-build/debug/apps/clas12-generator-to-lund \
+build/debug/apps/event-generator-to-lund-converter \
   --event-generator genie-gst \
   --config config/samples/genie-gst.conf \
   --input '/path/to/truth/gst*.root' \

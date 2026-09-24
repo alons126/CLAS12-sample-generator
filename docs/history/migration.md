@@ -6,9 +6,9 @@ The imported sources are retained under `legacy/`. Use the root build and suppor
 
 | Previous | Supported replacement |
 | --- | --- |
-| Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `clas12-uniform --config FILE --channel ... --output NEW_DIR` |
+| Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `uniform-lund-generator --config FILE --channel ... --output NEW_DIR` |
 | `Uniform_sample_generator_e_tester.C` | `electron-tester-{2070,4029,5986}MeV.conf` |
-| `GENIE_to_LUND_converter.csh` → ROOT macro | `clas12-generator-to-lund --event-generator genie-gst --input ... --config ... --output ...` |
+| `GENIE_to_LUND_converter.csh` → ROOT macro | `event-generator-to-lund-converter --event-generator genie-gst --input ... --config ... --output ...` |
 | Sourced `setup_and_submit_jobs.csh` → selected setup script | `source run.csh --workflow submit` → small sourced bridge → Python setup → one Slurm array per sample |
 | Per-energy detector resources | `config/detector/Generation_files_*` |
 | Current-directory-dependent output rewrites | Explicit output path |

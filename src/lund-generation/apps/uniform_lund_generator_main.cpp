@@ -3,8 +3,8 @@
 //
 
 /**
- * @file uniform_main.cpp
- * @brief Uniform-generator command-line entry point.
+ * @file uniform_lund_generator_main.cpp
+ * @brief Uniform LUND generator command-line entry point.
  *
  * Purpose:
  *   Translate CLI settings into one generation call and a process exit status.
@@ -46,7 +46,7 @@
 #include <string>
 
 #include "core/support/environment.h"
-#include "uniform-to-lund-converter/UniformGenerator.h"
+#include "uniform-lund-generator/UniformGenerator.h"
 
 namespace env = environment;
 

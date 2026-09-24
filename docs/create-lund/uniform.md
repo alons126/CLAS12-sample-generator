@@ -3,7 +3,7 @@
 ## Generate a sample
 
 ```bash
-build/debug/apps/clas12-uniform \
+build/debug/apps/uniform-lund-generator \
   --config config/samples/uniform-1e-5986MeV.conf \
   --events 100 --output runs
 ```
@@ -13,7 +13,7 @@ Uniform generation uses `--channel 1e` for one sampled electron, `--channel elec
 For example, a central-detector pi+ sample is:
 
 ```bash
-build/debug/apps/clas12-uniform \
+build/debug/apps/uniform-lund-generator \
   --channel eh --hadron pip --hadron-region CD \
   --events 100 --output runs
 ```
@@ -61,7 +61,7 @@ The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a
 ## Electron tester
 
 ```bash
-build/debug/apps/clas12-uniform \
+build/debug/apps/uniform-lund-generator \
   --config config/samples/electron-tester-5986MeV.conf \
   --output runs
 ```

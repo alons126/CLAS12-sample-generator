@@ -11,7 +11,7 @@ Purpose:
 
 Workflow:
     Parse launcher flags -> load config/run.json -> configure/build -> optional CTest ->
-    run clas12-uniform or clas12-generator-to-lund with the original sample arguments.
+    run uniform-lund-generator or event-generator-to-lund-converter with the original sample arguments.
 
 Inputs:
     Explicit create-lund source, strict build JSON, optional color environment and forwarded
@@ -41,8 +41,8 @@ CLI options (owned by this launcher):
     --help                       Print launcher options without updating, building, or running.
 
 Forwarded options:
-    Unrecognized arguments are preserved and passed to clas12-uniform or
-    clas12-generator-to-lund. Use -- --help after the launcher selections to print that
+    Unrecognized arguments are preserved and passed to uniform-lund-generator or
+    event-generator-to-lund-converter. Use -- --help after the launcher selections to print that
     executable's authoritative sample options.
 """
 
@@ -560,7 +560,7 @@ def main():
             # Uniform samples use the random-kinematics application. Physical inputs use the generic
             # event-generator converter, whose `--event-generator` option currently defaults to the
             # GENIE GST adapter rather than claiming every format emitted by GENIE.
-            app = 'clas12-uniform' if source == 'uniform' else 'clas12-generator-to-lund'
+            app = 'uniform-lund-generator' if source == 'uniform' else 'event-generator-to-lund-converter'
 
             # Compute padding from uncolored text because terminal escape sequences occupy no columns.
             message = f"Creating LUND files from '{COLOR_END}{source}{COLOR_START}' input"

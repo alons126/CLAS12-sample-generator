@@ -16,7 +16,7 @@
 #   BUILD_UNIFORM and BUILD_GENIE, plus the libraries defined in src/.
 # 
 # Outputs:
-#   clas12-uniform and/or clas12-generator-to-lund in the build apps/ directory.
+#   uniform-lund-generator and/or event-generator-to-lund-converter in the build apps/ directory.
 # 
 # Notes:
 #   Defining or building a target does not generate samples or submit detector jobs.
@@ -27,10 +27,10 @@
 # Purpose:
 #     Link the uniform entry point to the implementation library and install its executable.
 if(BUILD_UNIFORM)
-    add_executable(clas12-uniform uniform_main.cpp)
-    target_link_libraries(clas12-uniform PRIVATE UniformGeneration)
-    set_target_properties(clas12-uniform PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
-    install(TARGETS clas12-uniform RUNTIME DESTINATION bin)
+    add_executable(uniform-lund-generator uniform_lund_generator_main.cpp)
+    target_link_libraries(uniform-lund-generator PRIVATE UniformGeneration)
+    set_target_properties(uniform-lund-generator PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
+    install(TARGETS uniform-lund-generator RUNTIME DESTINATION bin)
 endif()
 # endregion
 
@@ -40,9 +40,9 @@ endif()
 # Purpose:
 #     Link the selected event-generator adapter and install its generator-independent executable.
 if(BUILD_GENIE)
-    add_executable(clas12-generator-to-lund event_generator_to_lund_main.cpp)
-    target_link_libraries(clas12-generator-to-lund PRIVATE PhysicalConversion)
-    set_target_properties(clas12-generator-to-lund PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
-    install(TARGETS clas12-generator-to-lund RUNTIME DESTINATION bin)
+    add_executable(event-generator-to-lund-converter event_generator_to_lund_converter_main.cpp)
+    target_link_libraries(event-generator-to-lund-converter PRIVATE PhysicalConversion)
+    set_target_properties(event-generator-to-lund-converter PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
+    install(TARGETS event-generator-to-lund-converter RUNTIME DESTINATION bin)
 endif()
 # endregion

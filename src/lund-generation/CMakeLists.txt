@@ -43,9 +43,9 @@ target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::
 
 # region Uniform generation
 # Purpose:
-#     Build the implementation behind the clas12-uniform executable as UniformGeneration.
+#     Build the implementation behind the uniform-lund-generator executable as UniformGeneration.
 if(BUILD_UNIFORM)
-    add_library(UniformGeneration STATIC uniform-to-lund-converter/UniformGenerator.cpp uniform-to-lund-converter/UniformMonitoring.cpp)
+    add_library(UniformGeneration STATIC uniform-lund-generator/UniformGenerator.cpp uniform-lund-generator/UniformMonitoring.cpp)
     target_link_libraries(UniformGeneration PUBLIC LundCore PRIVATE ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
 endif()
 # endregion
@@ -54,7 +54,7 @@ endif()
 
 # region Physical-event conversion
 # Purpose:
-#     Build the clas12-generator-to-lund dispatcher and keep ROOT GST dependencies on its nested GENIE GST adapter.
+#     Build the event-generator-to-lund-converter dispatcher and keep ROOT GST dependencies on its nested GENIE GST adapter.
 if(BUILD_GENIE)
     add_library(GenieGstConversion STATIC event-generator-to-lund-converter/genie-gst/GenieConverter.cpp)
     target_link_libraries(GenieGstConversion PUBLIC LundCore PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)

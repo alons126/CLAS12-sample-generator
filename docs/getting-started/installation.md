@@ -26,7 +26,7 @@ cmake --build build/debug --parallel 4
 ctest --test-dir build/debug --output-on-failure
 ```
 
-Executables are `build/debug/apps/clas12-uniform` and `build/debug/apps/clas12-generator-to-lund`. Both support `--help` and return nonzero on failure.
+Executables are `build/debug/apps/uniform-lund-generator` and `build/debug/apps/event-generator-to-lund-converter`. Both support `--help` and return nonzero on failure.
 
 For production:
 

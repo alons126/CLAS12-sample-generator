@@ -31,7 +31,7 @@ cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_T
 cmake --build build/debug --parallel 4
 ctest --test-dir build/debug --output-on-failure
 
-build/debug/apps/clas12-uniform \
+build/debug/apps/uniform-lund-generator \
   --config config/samples/uniform-1e-5986MeV.conf \
   --events 100 \
   --output runs/first-electron

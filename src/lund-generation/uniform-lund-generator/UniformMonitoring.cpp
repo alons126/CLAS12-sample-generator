@@ -16,7 +16,7 @@
  *   The caller saves monitoring before publishing the completed LUND-generation log.
  */
 
-#include "uniform-to-lund-converter/UniformMonitoring.h"
+#include "uniform-lund-generator/UniformMonitoring.h"
 
 #include <TCanvas.h>
 #include <TFile.h>

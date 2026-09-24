@@ -68,7 +68,7 @@ Keep the project centered on exactly two user-facing workflows:
 
 Keep these workflows separate: creating LUND files does not automatically submit simulation, and submission consumes already completed LUND output. Avoid extra workflow modes, abstraction layers, or orchestration features unless they directly support one of these two responsibilities.
 
-At the user interface, uniform generation and physical-event conversion are `--source uniform` and `--source physical` modes of the single `create-lund` workflow, not separate top-level workflows. The physical executable is named `clas12-generator-to-lund`; it accepts `--event-generator`, defaulting to the format-specific `genie-gst` adapter. Do not expose `--source genie`, `--source genie-gst`, or the retired `clas12-genie-to-lund` name. Likewise, the per-array-task GEMC/reconstruction runner is an internal worker of ifarm submission, not a third user-facing workflow. Maintained executables and scripts may remain separate internally when that keeps dependencies and code simple.
+At the user interface, uniform generation and physical-event conversion are `--source uniform` and `--source physical` modes of the single `create-lund` workflow, not separate top-level workflows. The installed executables are named `uniform-lund-generator` and `event-generator-to-lund-converter`. The physical executable accepts `--event-generator`, defaulting to the format-specific `genie-gst` adapter. Do not expose `--source genie`, `--source genie-gst`, or the retired `clas12-genie-to-lund` name. Likewise, the per-array-task GEMC/reconstruction runner is an internal worker of ifarm submission, not a third user-facing workflow. Maintained executables and scripts may remain separate internally when that keeps dependencies and code simple.
 
 # Legacy design sources
 
@@ -81,7 +81,7 @@ When unifying behavior, compare both implementations rather than assuming one ar
 
 ## LUND workflow invariants and differences
 
-Unify the mechanics of LUND creation without erasing the semantics of each source workflow. The common layer may own configuration validation, LUND record serialization, output-directory layout, file lifecycle, provenance, and summaries. Uniform monitoring remains inside `src/lund-generation/uniform-to-lund-converter/`; physical adapters create no monitoring plots. Each sample adapter must still define how events are obtained, which events and particles are retained, how header fields are populated, and how vertices and kinematics are produced.
+Unify the mechanics of LUND creation without erasing the semantics of each source workflow. The common layer may own configuration validation, LUND record serialization, output-directory layout, file lifecycle, provenance, and summaries. Uniform monitoring remains inside `src/lund-generation/uniform-lund-generator/`; physical adapters create no monitoring plots. Each sample adapter must still define how events are obtained, which events and particles are retained, how header fields are populated, and how vertices and kinematics are produced.
 
 Target geometry and target identity are related but distinct inputs. Use the protected external `targets.h` geometry implementation as the authoritative vertex source. A target-geometry key selects the spatial distribution, while nuclear `A` and `Z` are LUND header metadata; never infer one silently from the other. Sample exactly one interaction vertex for each written event and give that same vertex to every particle in the event.
 
@@ -123,6 +123,8 @@ The intended detector chain is: truth-level particles in LUND -> GEMC/Geant4 det
 Prefer a direct, newcomer-readable call chain over generic orchestration. Each user-facing workflow should have one obvious entry point, one documented configuration path, and one clear output contract. Do not duplicate detector commands between Python and shell or create several wrappers with indistinguishable roles. If a protected legacy-derived payload owns GEMC and reconstruction commands, maintained code should validate inputs and submit that payload rather than reimplementing its command body.
 
 Documentation must begin with the two workflows and show the exact call chain before implementation details. Explain which steps run locally and which run on ifarm, what each input controls, where outputs are written, and which files a newcomer normally edits. Embedded explanations and external documentation must agree with actual behavior.
+
+Use `docs/references.bib` as the maintained bibliography for citations in project documentation. Add or reuse stable BibTeX keys there when a documented scientific or technical claim needs a formal reference, and keep citation text traceable to those keys rather than maintaining disconnected reference lists.
 
 # Local-to-ifarm synchronization
 

@@ -1,10 +1,10 @@
 # Adding another event-generator-to-LUND adapter
 
-Add a generator as a small adapter behind the existing `clas12-generator-to-lund` executable. Do not create a new top-level workflow or duplicate target sampling, LUND formatting, output naming, manifests, or completion behavior.
+Add a generator as a small adapter behind the existing `event-generator-to-lund-converter` executable. Do not create a new top-level workflow or duplicate target sampling, LUND formatting, output naming, manifests, or completion behavior.
 
 ```mermaid
 flowchart LR
-    CLI[clas12-generator-to-lund] --> RC[RunConfig physical settings]
+    CLI[event-generator-to-lund-converter] --> RC[RunConfig physical settings]
     RC --> D[convertPhysical dispatcher]
     D --> G[GENIE adapter]
     D --> N[New generator adapter]
@@ -41,7 +41,7 @@ void convertMyGenerator(const RunConfig& config);
 }  // namespace samples
 ```
 
-Document the input schema, accepted processes and particles, ordering, metadata mapping, units, assumptions, ownership, and failure behavior. Use an adapter identifier that distinguishes formats when one generator can emit several, as `genie-gst` does. The public executable remains `clas12-generator-to-lund --event-generator mygenerator-myformat`.
+Document the input schema, accepted processes and particles, ordering, metadata mapping, units, assumptions, ownership, and failure behavior. Use an adapter identifier that distinguishes formats when one generator can emit several, as `genie-gst` does. The public executable remains `event-generator-to-lund-converter --event-generator mygenerator-myformat`.
 
 ## 2. Validate before accessing records
 

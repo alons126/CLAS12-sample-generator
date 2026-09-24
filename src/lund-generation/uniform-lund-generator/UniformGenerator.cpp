@@ -27,7 +27,7 @@
  *   reproducibility contract, so target-geometry sampling cannot consume kinematic random numbers.
  */
 
-#include "uniform-to-lund-converter/UniformGenerator.h"
+#include "uniform-lund-generator/UniformGenerator.h"
 
 #include <TMath.h>
 
@@ -35,8 +35,8 @@
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
-#include "uniform-to-lund-converter/UniformConfig.h"
-#include "uniform-to-lund-converter/UniformMonitoring.h"
+#include "uniform-lund-generator/UniformConfig.h"
+#include "uniform-lund-generator/UniformMonitoring.h"
 
 namespace samples {
 

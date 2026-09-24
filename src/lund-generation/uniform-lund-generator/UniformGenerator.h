@@ -4,7 +4,7 @@
 
 /**
  * @file UniformGenerator.h
- * @brief Uniform-to-LUND generation entry-point contract.
+ * @brief Uniform LUND generation entry-point contract.
  *
  * Purpose:
  *   Expose deliberately unphysical CLAS12 acceptance-sample production through one small maintained
