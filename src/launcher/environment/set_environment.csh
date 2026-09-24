@@ -23,18 +23,18 @@
 # ------------------------------------------------------------------------------------------
 
 # Print header banner
-# COLOR_START and COLOR_END may not yet exist, so plain output is used first.
+# SYSTEM_COLOR and RESET_COLOR may not yet exist, so plain output is used first.
 
-echo "${COLOR_START}====================================================================================================${COLOR_END}"
-echo "${COLOR_START}= Updating environment                                                                             =${COLOR_END}"
-echo "${COLOR_START}====================================================================================================${COLOR_END}"
+echo "${SYSTEM_COLOR}====================================================================================================${RESET_COLOR}"
+echo "${SYSTEM_COLOR}= Updating environment                                                                             =${RESET_COLOR}"
+echo "${SYSTEM_COLOR}====================================================================================================${RESET_COLOR}"
 echo ""
 
 source ./src/launcher/environment/set_colors.csh
 
 # Section header
 
-echo "${COLOR_START}- Updating environment -----------------------------------------------------------------------------${COLOR_END}"
+echo "${SYSTEM_COLOR}- Updating environment -----------------------------------------------------------------------------${RESET_COLOR}"
 echo ""
 
 # ------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ unsetenv DIR_CLAS12_SAMPLE_GENERATOR_CODE
 setenv DIR_CLAS12_SAMPLE_GENERATOR_CODE `pwd`
 
 # Print value for verification
-echo "${COLOR_START}DIR_CLAS12_SAMPLE_GENERATOR_CODE:${COLOR_END} ${DIR_CLAS12_SAMPLE_GENERATOR_CODE}"
+echo "${SYSTEM_COLOR}DIR_CLAS12_SAMPLE_GENERATOR_CODE:${RESET_COLOR} ${DIR_CLAS12_SAMPLE_GENERATOR_CODE}"
 echo ""
 
 # ------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ unsetenv ANALYSIS_HOSTNAME
 setenv ANALYSIS_HOSTNAME `hostname`
 
 # Print hostname for debugging / logging
-echo "${COLOR_START}ANALYSIS_HOSTNAME:${COLOR_END} ${ANALYSIS_HOSTNAME}"
+echo "${SYSTEM_COLOR}ANALYSIS_HOSTNAME:${RESET_COLOR} ${ANALYSIS_HOSTNAME}"
 echo ""
 
 # ------------------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ unsetenv JLAB_TESTER
 # Any hostname containing this substring will be treated as a JLab machine
 setenv JLAB_TESTER "jlab.org"
 
-echo "${COLOR_START}JLAB_TESTER:${COLOR_END} ${JLAB_TESTER}"
+echo "${SYSTEM_COLOR}JLAB_TESTER:${RESET_COLOR} ${JLAB_TESTER}"
 
 # ------------------------------------------------------------------------------------------
 # Determine whether we are running on ifarm
@@ -92,14 +92,14 @@ unsetenv IFARM_RUN
 
 if ( "$ANALYSIS_HOSTNAME" =~ *"$JLAB_TESTER"* ) then
 
-    echo "${COLOR_START}The hostname contains '$JLAB_TESTER'. Running the commands for this case.${COLOR_END}"
+    echo "${SYSTEM_COLOR}The hostname contains '$JLAB_TESTER'. Running the commands for this case.${RESET_COLOR}"
 
     # Flag indicating execution on JLab infrastructure
     setenv IFARM_RUN 1
 
 else
 
-    echo "${COLOR_START}The hostname does not contain '$JLAB_TESTER'. Running the alternate commands.${COLOR_END}"
+    echo "${SYSTEM_COLOR}The hostname does not contain '$JLAB_TESTER'. Running the alternate commands.${RESET_COLOR}"
 
     # Local or non‑JLab machine
     setenv IFARM_RUN 0
@@ -108,5 +108,5 @@ endif
 
 # Print final result
 
-echo "${COLOR_START}IFARM_RUN:${COLOR_END} ${IFARM_RUN}"
+echo "${SYSTEM_COLOR}IFARM_RUN:${RESET_COLOR} ${IFARM_RUN}"
 echo ""

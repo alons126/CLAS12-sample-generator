@@ -21,7 +21,7 @@
 #   Invoke from the repository root through workflow.py's banner helper.
 # 
 # Inputs:
-#   The sourced color helper exports COLOR_COMPLETION and COLOR_END.
+#   The sourced color helper exports COMPLETION_COLOR and RESET_COLOR.
 # 
 # Outputs:
 #   Writes only to standard output and does not modify workflow state or generated artifacts.
@@ -41,7 +41,7 @@ source ./src/launcher/environment/set_colors.csh
 
 # region Banner rendering
 # Begin green completion output without adding an extra line before the artwork.
-printf "$COLOR_COMPLETION"
+printf "$COMPLETION_COLOR"
 
 # Keep the wide artwork readable as a heredoc. The filter supports the shared convention in which
 # @ represents a literal dollar sign without triggering shell expansion in banner text.
@@ -67,6 +67,6 @@ cat << EOF | sed 's/@/\$/g'
 EOF
 
 # Restore default terminal formatting, then finish on a clean line for the caller's next prompt.
-printf "$COLOR_END"
+printf "$RESET_COLOR"
 echo ""
 # endregion

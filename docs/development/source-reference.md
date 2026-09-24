@@ -40,7 +40,7 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### Support (`src/lund-generation/core/support/`)
 
-[environment.h](../../src/lund-generation/core/support/environment.h) is the only maintained C++ source of ANSI color definitions. It exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. Shell and Python launchers retain their separate environment-variable palette because they cannot include a C++ header.
+[set_colors.csh](../../src/launcher/environment/set_colors.csh) owns the shared ANSI palette and exports it through `*_COLOR` environment variables. [environment.h](../../src/lund-generation/core/support/environment.h) decodes those inherited values once for C++ and exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. A C++ executable launched without the shared environment uses empty color strings, so its output remains readable without introducing a second fallback palette.
 
 [Version.h.in](../../src/lund-generation/core/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 

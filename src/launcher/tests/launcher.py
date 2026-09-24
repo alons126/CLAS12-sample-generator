@@ -71,9 +71,9 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     root=Path(tmp).resolve()
     # Reproduce the tcsh failure mode where local variables shadow exported values. The shared
     # loader must clear both namespaces and restore the canonical palette in a sourced shell.
-    color_program = ('set COLOR_START = "\\033[35m"; setenv COLOR_START "\\033[31m"; '
-                     'source "$argv[1]"; set | grep "^COLOR_START" >& /dev/null; '
-                     'if ($status == 0) exit 1; test "$COLOR_START" = "\\033[33m"')
+    color_program = ('set SYSTEM_COLOR = "\\033[35m"; setenv SYSTEM_COLOR "\\033[31m"; '
+                     'source "$argv[1]"; set | grep "^SYSTEM_COLOR" >& /dev/null; '
+                     'if ($status == 0) exit 1; test "$SYSTEM_COLOR" = "\\033[33m"')
 
     subprocess.run([shell, '-f', '-c', color_program,
                     str(project/'src/launcher/environment/set_colors.csh')], check=True)

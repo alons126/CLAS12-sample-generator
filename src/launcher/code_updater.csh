@@ -34,7 +34,7 @@
 
 if ( -f ./src/launcher/environment/set_banners.csh ) then
     source ./src/launcher/environment/set_banners.csh
-    # printf "${COLOR_START}-->${COLOR_END} %b\n" "${COLOR_COMPLETION}Color environment loaded.${COLOR_END}"
+    # printf "${SYSTEM_COLOR}-->${RESET_COLOR} %b\n" "${COMPLETION_COLOR}Color environment loaded.${RESET_COLOR}"
     echo
 else
     echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/environment/set_banners.csh\n"
@@ -42,7 +42,7 @@ else
 endif
 
 set banner_title = "Running update script"
-set banner_color = "$COLOR_START"
+set banner_color = "$SYSTEM_COLOR"
 code_banner
 echo ""
 
@@ -50,7 +50,7 @@ echo ""
 # Clean working tree
 # -------------------------------------------------------------------------------------------------
 
-echo "${COLOR_START}- Cleaning excessive files -------------------------------------------------------------------------${COLOR_END}"
+echo "${SYSTEM_COLOR}- Cleaning excessive files -------------------------------------------------------------------------${RESET_COLOR}"
 echo ""
 
 git rev-parse --show-toplevel
@@ -73,7 +73,7 @@ git pull
 if ( $status != 0 ) then
     echo ""
     set banner_title = "git pull failed. Aborting update script."
-    set banner_color = "$COLOR_ERR"
+    set banner_color = "$ERROR_COLOR"
     code_banner
     echo ""
     exit 1
@@ -86,7 +86,7 @@ git submodule update --init --recursive
 if ( $status != 0 ) then
     echo ""
     set banner_title = "git submodule update failed. Aborting update script."
-    set banner_color = "$COLOR_ERR"
+    set banner_color = "$ERROR_COLOR"
     code_banner
     echo ""
     exit 1
@@ -94,12 +94,12 @@ endif
 
 echo ""
 
-echo "${COLOR_START}HEAD:${COLOR_END}"
+echo "${SYSTEM_COLOR}HEAD:${RESET_COLOR}"
 git log -1 --oneline
 
 echo ""
 
-echo "${COLOR_START}Branch:${COLOR_END}"
+echo "${SYSTEM_COLOR}Branch:${RESET_COLOR}"
 git branch --show-current
 
 echo ""

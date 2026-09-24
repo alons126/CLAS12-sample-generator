@@ -93,18 +93,18 @@ SOURCES = ('uniform', 'physical')
 # prefixes as the printable sequence `\033`; replacing that prefix here produces the actual control
 # character expected by Python's terminal output. Missing variables become empty strings, keeping
 # logs readable in noninteractive environments and when workflow.py is invoked without run.csh.
-COLOR_START = os.environ.get("COLOR_START", "").replace(r"\033", "\033")
-COLOR_ERR = os.environ.get("COLOR_ERR", "").replace(r"\033", "\033")
-COLOR_COMPLETION = os.environ.get("COLOR_COMPLETION", "").replace(r"\033", "\033")
-COLOR_INFO = os.environ.get("COLOR_INFO", "").replace(r"\033", "\033")
-COLOR_WARNING = os.environ.get("COLOR_WARNING", "").replace(r"\033", "\033")
-COLOR_END = os.environ.get("COLOR_END", "").replace(r"\033", "\033")
+ERROR_COLOR = os.environ.get("ERROR_COLOR", "").replace(r"\033", "\033")
+COMPLETION_COLOR = os.environ.get("COMPLETION_COLOR", "").replace(r"\033", "\033")
+SYSTEM_COLOR = os.environ.get("SYSTEM_COLOR", "").replace(r"\033", "\033")
+INFO_COLOR = os.environ.get("INFO_COLOR", "").replace(r"\033", "\033")
+WARNING_COLOR = os.environ.get("WARNING_COLOR", "").replace(r"\033", "\033")
+RESET_COLOR = os.environ.get("RESET_COLOR", "").replace(r"\033", "\033")
 # endregion
 
 # Error presentation ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Error presentation
-ERROR_PREFIX = f'{COLOR_ERR}Error:{COLOR_END}'
+ERROR_PREFIX = f'{ERROR_COLOR}Error:{RESET_COLOR}'
 
 WORKFLOW_GUIDANCE = """Choose one of these forms:
   source run.csh --workflow create-lund --source uniform \\
@@ -135,7 +135,7 @@ def print_error(message):
         message: Human-readable diagnostic, with or without an existing ``Error:`` prefix.
 
     Outputs:
-        Prints ``Error:`` using COLOR_ERR, restores COLOR_END, and then prints the message in the
+        Prints ``Error:`` using ERROR_COLOR, restores RESET_COLOR, and then prints the message in the
         terminal's normal color. Missing color environment variables naturally produce plain text.
     """
 
@@ -399,7 +399,7 @@ def execute(command):
     formatted_command = " \\\n    ".join(lines)
 
     # Flush before starting the child so buffered parent output cannot appear after child monitoring.
-    print(f"{COLOR_INFO}Executing command:{COLOR_END}\n{formatted_command}", flush=True)
+    print(f"{INFO_COLOR}Executing command:{RESET_COLOR}\n{formatted_command}", flush=True)
     print()
 
     # Anchor relative child paths to the verified checkout and turn any nonzero result into a checked
@@ -519,9 +519,9 @@ def main():
     # Compile both sample applications before selecting which workflow to execute.
     if config['build']:
         # Stage banners use visible-width padding independent of ANSI color sequences.
-        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
-        print(f"{COLOR_START}= Compiling applications                                                                           ={COLOR_END}")
-        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+        print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
+        print(f"{SYSTEM_COLOR}= Compiling applications                                                                           ={RESET_COLOR}")
+        print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
         print()
 
         # Always re-run CMake configuration so dependency checks see local external-file replacements,
@@ -537,9 +537,9 @@ def main():
 
     # Tests must succeed before the selected workflow can run.
     if config['test']:
-        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
-        print(f"{COLOR_START}= Running tests                                                                                    ={COLOR_END}")
-        print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+        print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
+        print(f"{SYSTEM_COLOR}= Running tests                                                                                    ={RESET_COLOR}")
+        print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
         print()
 
         # This guard matters when `--test true` reuses a tree with `--build false`: CTest cannot be
@@ -563,13 +563,13 @@ def main():
             app = 'uniform-lund-generator' if source == 'uniform' else 'event-generator-to-lund-converter'
 
             # Compute padding from uncolored text because terminal escape sequences occupy no columns.
-            message = f"Creating LUND files from '{COLOR_END}{source}{COLOR_START}' input"
+            message = f"Creating LUND files from '{RESET_COLOR}{source}{SYSTEM_COLOR}' input"
             visible_length = len(f"Creating LUND files from '{source}' input")
             padding = 96 - visible_length
 
-            print(f"{COLOR_START}===================================================================================================={COLOR_END}")
-            print(f"{COLOR_START}= {message}{' ' * padding} ={COLOR_END}")
-            print(f"{COLOR_START}===================================================================================================={COLOR_END}")
+            print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
+            print(f"{SYSTEM_COLOR}= {message}{' ' * padding} ={RESET_COLOR}")
+            print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
             print()
 
             executable = build / 'apps' / app

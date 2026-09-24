@@ -24,7 +24,7 @@ Workflow:
 Inputs:
     Completed LUND files and manifests, optional config/CLI overrides, GCARD and YAML files,
     and the ifarm shell environment containing the module command, Slurm, reconstruction tools,
-    and the shared COLOR_* palette. Standard GEMC selections also require the matching shared
+    and the shared ``*_COLOR`` palette. Standard GEMC selections also require the matching shared
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
 
 Outputs:
@@ -79,7 +79,7 @@ from resolve_inputs import parser, path_value, resolve_samples
 
 # region Reporting
 class Report:
-    """Render the existing shell transcript using the inherited COLOR_* palette.
+    """Render the existing shell transcript using the inherited ``*_COLOR`` palette.
 
     Purpose:
         Give preview and execution the same status, path-check, and failure messages without
@@ -95,7 +95,7 @@ class Report:
         Banners retain the shared shell renderer's 100-column borders and asymmetric title
         padding. Summary values end one column before that border. Safety checks instead print
         ``NAME: path`` without banner alignment, followed by their check and result lines.
-        Markers such as {START} are expanded only while printing, so escape sequences never
+        Markers such as {SYSTEM} are expanded only while printing, so escape sequences never
         affect width calculations.
 
     Failure:
@@ -110,7 +110,7 @@ class Report:
         """Copy and decode the palette supplied by the sourced launcher.
 
         Args:
-            environment: Invocation environment containing every required COLOR_* value.
+            environment: Invocation environment containing every required ``*_COLOR`` value.
 
         Failure:
             Missing colors raise ValueError before any report is printed.
@@ -118,12 +118,12 @@ class Report:
 
         # These semantic names match set_colors.csh. Python decodes the exported literal
         # backslash-033 prefix once, then every printing method reuses the same values.
-        names = ('START', 'ERR', 'COMPLETION', 'INFO', 'WARNING', 'END')
+        names = ('ERROR', 'COMPLETION', 'SYSTEM', 'INFO', 'WARNING', 'RESET')
 
-        if any('COLOR_' + name not in environment for name in names):
+        if any(name + '_COLOR' not in environment for name in names):
             raise ValueError('printout colors are unavailable; source the submission workflow through run.csh.')
 
-        self.colors = {name: environment['COLOR_' + name].replace(r'\033', '\033') for name in names}
+        self.colors = {name: environment[name + '_COLOR'].replace(r'\033', '\033') for name in names}
 
     def text(self, text=''):
         """Print one line after substituting known semantic color markers.
@@ -162,11 +162,11 @@ class Report:
         right = max(0, padding - padding // 2)
         border, opening, closing = ('/', '//', '//') if main else ('=', '= ', ' =')
 
-        self.text('{START}' + border * self.BANNER_WIDTH + '{END}')
-        self.text('{START}' + opening + ' ' * left + '{END}' + title + '{START}' + ' ' * right + closing + '{END}')
-        self.text('{START}' + border * self.BANNER_WIDTH + '{END}')
+        self.text('{SYSTEM}' + border * self.BANNER_WIDTH + '{RESET}')
+        self.text('{SYSTEM}' + opening + ' ' * left + '{RESET}' + title + '{SYSTEM}' + ' ' * right + closing + '{RESET}')
+        self.text('{SYSTEM}' + border * self.BANNER_WIDTH + '{RESET}')
 
-    def value(self, name, value, color='START', value_color='END'):
+    def value(self, name, value, color='SYSTEM', value_color='RESET'):
         """Print a label and value, aligning the value's end to banner column 99.
 
         Args:
@@ -184,7 +184,7 @@ class Report:
         value = str(value)
         spaces = max(1, self.BANNER_WIDTH - 1 - len(name) - 1 - len(value)) if value else 0
 
-        self.text('{' + color + '}' + name + ':{END}' + ' ' * spaces + '{' + value_color + '}' + value + '{END}')
+        self.text('{' + color + '}' + name + ':{RESET}' + ' ' * spaces + '{' + value_color + '}' + value + '{RESET}')
 
     def check(self, name, path, directory=False):
         """Check a required file or directory while preserving the shell transcript.
@@ -211,15 +211,15 @@ class Report:
 
         # Safety-check paths use compact left-aligned output so they remain easy to read even
         # when the path is long. The message precedes the check so failures retain context.
-        self.text('{START}' + name + ':{END} ' + str(path))
-        self.text('{START}--> Checking if {END}' + name + '{START} is a ' + kind + '...{END}')
+        self.text('{SYSTEM}' + name + ':{RESET} ' + str(path))
+        self.text('{SYSTEM}--> Checking if {RESET}' + name + '{SYSTEM} is a ' + kind + '...{RESET}')
 
         if not (Path(path).is_dir() if directory else Path(path).is_file()):
-            self.text('{START}-->{END} {ERR}Error:{END} the following ' + kind + ' does not exist: ' + path)
+            self.text('{SYSTEM}-->{RESET} {ERROR}Error:{RESET} the following ' + kind + ' does not exist: ' + path)
 
             raise RuntimeError()  # The precise failure has already been printed.
 
-        self.text('{START}-->{END} {COMPLETION}' + name + ' exists.{END}')
+        self.text('{SYSTEM}-->{RESET} {COMPLETION}' + name + ' exists.{RESET}')
 
         if directory:
             self.text()
@@ -303,7 +303,7 @@ def load_gemc(version, environment, report):
 
     # Announce the requested transition before any lookup or subprocess can fail, so the operator
     # can associate subsequent module diagnostics with the exact resolved version.
-    report.text('{START}Switching GEMC version to {END}{INFO}' + version + '{END}{START}...{END}')
+    report.text('{SYSTEM}Switching GEMC version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}...{RESET}')
 
     # Resolve the external Environment Modules backend through the private invocation PATH. The
     # interactive ``module`` command is a shell function and therefore cannot be invoked directly.
@@ -540,7 +540,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     # The preview notice precedes the same input report and validation used by execution.
     if not execute:
-        report.text('{INFO}PREVIEW:{END}\nNo sbatch, output replacement or farm_out cleanup; add --execute to submit.')
+        report.text('{INFO}PREVIEW:{RESET}\nNo sbatch, output replacement or farm_out cleanup; add --execute to submit.')
         report.text()
 
     report.banner('Slurm submission workflow parameters')
@@ -658,7 +658,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # new array. Preview prints that intention and leaves existing products untouched.
     # Neither branch removes or rewrites run/lundfiles.
     if execute:
-        report.text('{INFO}Removing old directory structure for MC simulation here...{END}')
+        report.text('{INFO}Removing old directory structure for MC simulation here...{RESET}')
 
         for path in output_dirs:
             if path.is_dir():
@@ -666,17 +666,17 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
             elif path.exists():
                 path.unlink()
 
-        report.text('{INFO}Setting up directory structure for MC simulation here...{END}')
+        report.text('{INFO}Setting up directory structure for MC simulation here...{RESET}')
 
         for path in output_dirs:
             path.mkdir()
 
         report.text()
     else:
-        report.text('{INFO}PREVIEW:{END} would replace mchipo reconhipo under ' + str(run) + '; existing outputs are preserved.')
+        report.text('{INFO}PREVIEW:{RESET} would replace mchipo reconhipo under ' + str(run) + '; existing outputs are preserved.')
 
     report.value('OUTPATH', str(run))
-    report.text('{START}Number of files in target directory (OUTPATH):{END}')
+    report.text('{SYSTEM}Number of files in target directory (OUTPATH):{RESET}')
 
     # Retain the shell inventory convention: visible lundfiles entries minus the one
     # monitoring directory. This is a report count, not the selected Slurm array size.
@@ -725,8 +725,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     report.banner('Submitting sbatch job for ' + ('uniform' if uniform else values['SAMPLE_GENERATOR']) + ' sample')
 
     # Show the exact command in both modes; only the execution branch calls it.
-    report.text('{START}Submitted job with command:{END}' if execute else '{INFO}Preview command (not submitted):{END}')
-    report.text('{START}sbatch --job-name={END}' + values['SLURM_JOB_NAME'] + '{START} --array={END}' + environment['ARRAY'] + ' ' + payload)
+    report.text('{SYSTEM}Submitted job with command:{RESET}' if execute else '{INFO}Preview command (not submitted):{RESET}')
+    report.text('{SYSTEM}sbatch --job-name={RESET}' + values['SLURM_JOB_NAME'] + '{SYSTEM} --array={RESET}' + environment['ARRAY'] + ' ' + payload)
 
     if execute:
         # Flush the report before handing stdout to sbatch, including redirected logs.
@@ -822,7 +822,7 @@ def main():
         # RuntimeError with no message means Report.check() already printed the path error.
         if str(error):
             if report:
-                report.text('{ERR}Error:{END} ' + str(error))
+                report.text('{ERROR}Error:{RESET} ' + str(error))
             else:
                 print(f'Error: {error}', file=sys.stderr)
 
