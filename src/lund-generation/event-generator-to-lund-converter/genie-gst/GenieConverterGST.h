@@ -3,7 +3,7 @@
 //
 
 /**
- * @file GenieConverter.h
+ * @file GenieConverterGST.h
  * @brief Declares conversion from GENIE GST input to LUND.
  *
  * Purpose:
@@ -11,7 +11,7 @@
  *   writes and splits LUND files, and records the run settings.
  *
  * Workflow:
- *   convertPhysical selects `genie-gst` -> convertGenie validates and scans the GST chain -> accepted
+ *   convertPhysical selects `genie-gst` -> convertGenieGST validates and scans the GST chain -> accepted
  *   QE/MEC/RES/DIS entries become LUND events -> LundWriter publishes the completed run manifest.
  *
  * Inputs:
@@ -23,7 +23,7 @@
  *   event-generator execution, detector simulation or physical-conversion monitoring file is produced.
  *
  * Ownership and lifetime:
- *   The caller owns RunConfig. convertGenie() reads it during the call and returns after output is closed
+ *   The caller owns RunConfig. convertGenieGST() reads it during the call and returns after output is closed
  *   or an error stops conversion.
  *
  * Invariants:
@@ -78,7 +78,7 @@ namespace samples {
  *
  * @param config Final input, output, target, event-limit, and metadata settings read during this call.
  */
-void convertGenie(const RunConfig& config);
+void convertGenieGST(const RunConfig& config);
 #pragma endregion
 
 }  // namespace samples

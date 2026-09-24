@@ -3,7 +3,7 @@
 //
 
 /**
- * @file GenieConverter.cpp
+ * @file GenieConverterGST.cpp
  * @brief Converts existing GENIE GST events to LUND records.
  *
  * Purpose:
@@ -34,7 +34,7 @@
  *   ROOT read failures and output failures terminate conversion with an exception.
  */
 
-#include "event-generator-to-lund-converter/genie-gst/GenieConverter.h"
+#include "event-generator-to-lund-converter/genie-gst/GenieConverterGST.h"
 
 #include <TChain.h>
 #include <TTreeReader.h>
@@ -48,10 +48,10 @@
 
 namespace samples {
 
-// convertGenie ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// convertGenieGST -------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* convertGenie */
-void convertGenie(const RunConfig& c) {
+#pragma region /* convertGenieGST */
+void convertGenieGST(const RunConfig& c) {
     c.validate(false);
     LundWriter::printWorkflowSummary(c, "physical");
 

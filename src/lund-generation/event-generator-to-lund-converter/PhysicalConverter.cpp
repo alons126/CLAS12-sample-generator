@@ -35,7 +35,7 @@
 
 #include <stdexcept>
 
-#include "event-generator-to-lund-converter/genie-gst/GenieConverter.h"
+#include "event-generator-to-lund-converter/genie-gst/GenieConverterGST.h"
 
 namespace samples {
 
@@ -46,7 +46,7 @@ namespace samples {
 void convertPhysical(const RunConfig& config) {
     // Use an exact name match and pass the same unchanged settings to the GENIE converter.
     if (config.get("event-generator") == "genie-gst") {
-        convertGenie(config);
+        convertGenieGST(config);
 
         // Stop after the selected converter completes.
         return;

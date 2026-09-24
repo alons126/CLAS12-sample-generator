@@ -56,7 +56,7 @@ endif()
 # Purpose:
 #     Build the event-generator-to-lund-converter dispatcher and keep ROOT GST dependencies on its nested GENIE GST adapter.
 if(BUILD_GENIE)
-    add_library(GenieGstConversion STATIC event-generator-to-lund-converter/genie-gst/GenieConverter.cpp)
+    add_library(GenieGstConversion STATIC event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp)
     target_link_libraries(GenieGstConversion PUBLIC LundCore PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)
     add_library(PhysicalConversion STATIC event-generator-to-lund-converter/PhysicalConverter.cpp)
     target_link_libraries(PhysicalConversion PUBLIC LundCore PRIVATE GenieGstConversion)
