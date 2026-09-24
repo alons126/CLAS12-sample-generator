@@ -57,7 +57,7 @@ set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 # Compiled provenance ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiled provenance
-# Purpose: Read the Git revision and target-header hash; configure a maintained header template. Protected inputs are never modified.
+# Purpose: Read the Git revision and target-header hash; configure a maintained header template. External inputs are never modified.
 execute_process(COMMAND git describe --always --dirty
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE SAMPLE_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)

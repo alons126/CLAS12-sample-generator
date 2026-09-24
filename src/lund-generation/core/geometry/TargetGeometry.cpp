@@ -4,10 +4,10 @@
 
 /**
  * @file TargetGeometry.cpp
- * @brief Adapter around the protected external target source.
+ * @brief Adapter around the external target source.
  *
  * Purpose:
- *   Use replaceable protected targets.h as the authoritative spatial sampler while isolating its
+ *   Use replaceable external targets.h as the authoritative spatial sampler while isolating its
  *   definitions and global RNG behind a maintained, validated, thread-safe interface.
  *
  * Workflow:
@@ -19,9 +19,9 @@
  *   Callers own and seed vertex RNG streams independently from kinematic RNGs. Copying complete TRandom3
  *   state preserves draw order across interleaved geometry objects. Returned coordinates are cm.
  *
- * Protected-source rule:
+ * External-source rule:
  *   The included external header is consumed as-is. Geometry updates occur by explicitly replacing that
- *   protected file, while this adapter remains stable unless its external interface changes.
+ *   external file, while this adapter remains stable unless its interface changes.
  */
 
 #include "core/geometry/TargetGeometry.h"
@@ -54,7 +54,7 @@ namespace {
 #pragma region /* External targets namespace */
 /**
  * @namespace external_targets
- * @brief Private namespace containing the unmodified symbols defined by protected targets.h.
+ * @brief Private namespace containing the unmodified symbols defined by external targets.h.
  *
  * The using-declarations supply standard-library names expected unqualified by the imported header.
  * They remain confined to this private namespace and do not change maintained application APIs.
@@ -86,7 +86,7 @@ namespace samples {
 
 #pragma region /* TargetGeometry::mass */
 /**
- * @brief Map a supported PDG identity to the mass owned by protected targets.h.
+ * @brief Map a supported PDG identity to the mass owned by external targets.h.
  *
  * @param pid Supported particle identity from Event.h.
  * @return Mass in GeV/c², or exact zero for a photon.

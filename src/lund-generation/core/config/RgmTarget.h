@@ -7,7 +7,7 @@
  * @brief Maintained RG-M target identity and default-metadata catalog.
  *
  * Purpose:
- *   Map one user-facing RG-M target identifier to the nuclear header metadata, protected targets.h
+ *   Map one user-facing RG-M target identifier to the nuclear header metadata, external targets.h
  *   geometry key, and GEMC target-variation label normally used together for that target.
  *
  * Workflow:
@@ -17,7 +17,7 @@
  *
  * Scope:
  *   This catalog describes target identity and defaults; it does not implement vertex shapes, modify
- *   protected targets.h, load a GCARD, or make A/Z determine geometry implicitly.
+ *   external targets.h, load a GCARD, or make A/Z determine geometry implicitly.
  */
 
 #pragma once
@@ -47,7 +47,7 @@ namespace samples {
  *
  * Invariants and consumers:
  *   identifier is unique and used for exact lookup/help. A and Z satisfy the nuclear header contract.
- *   geometry is a key understood by the protected external targets.h adapter and is validated separately.
+ *   geometry is a key understood by the external targets.h adapter and is validated separately.
  *   gemc_variation is provenance/naming metadata for the matching detector target variation; this record
  *   does not open detector resources or require these four fields to remain coupled after CLI overrides.
  */

@@ -17,11 +17,6 @@
  *   size -> fill unified legacy-style diagnostics -> save one monitoring ROOT file and rendered views ->
  *   finalize LUND files and publish the manifest.
  *
- * Units and conventions:
- *   Momentum uses GeV/c and mass uses GeV/c², polar and azimuthal angles enter the sampler in degrees, and vertices
- *   use cm. Particle vectors follow ROOT's TVector3 spherical convention. Each event places its
- *   electron and optional hadron at one shared interaction vertex.
- *
  * Reproducibility:
  *   Kinematics and target vertices use separate configured TRandom3 streams. Draw order is part of the
  *   reproducibility contract, so target-geometry sampling cannot consume kinematic random numbers.

@@ -15,11 +15,11 @@ The imported sources are retained under `legacy/` and recorded by the public [`l
 
 ## Legacy-compatible settings
 
-The writer always uses the established whitespace, precision, and uniform per-file IDs. Particle masses now come directly from the protected target source, including its nonzero electron and six-decimal proton values. Production sampling uses the documented electron/charged-hadron p/1-p mixtures and uniform neutron momentum; `hadron-momentum=fixed` preserves the optional neutron-only 1 GeV/c study. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
+The writer always uses the established whitespace, precision, and uniform per-file IDs. Particle masses now come directly from the external target source, including its nonzero electron and six-decimal proton values. Production sampling uses the documented electron/charged-hadron p/1-p mixtures and uniform neutron momentum; `hadron-momentum=fixed` preserves the optional neutron-only 1 GeV/c study. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
 
 `legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture active reference launch settings. Their counts are production-sized; override `--events` for local tests. The maintained uniform default remains 25,000 events per file, while the pinned upstream uniform generator and physical conversion currently use 10,000; the compatibility profile selects the upstream value explicitly.
 
-The unified protected worker has one output-naming contract: `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo`. There is no maintained `--output-naming` mode.
+The unified external worker has one output-naming contract: `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo`. There is no maintained `--output-naming` mode.
 
 ## New requested sampling
 

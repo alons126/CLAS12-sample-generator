@@ -20,7 +20,7 @@ Production sources compile once into conventional targets. References to archive
 
 ## 2. Shared maintained layers
 
-The shared LUND pipeline is organized by responsibility inside `src/lund-generation/`. These directories compile into the single `LundCore` target because they are small and always used together. Protected target geometry is isolated under `src/lund-generation/external/`; the protected simulation payload belongs separately to `src/slurm-submission/external/`.
+The shared LUND pipeline is organized by responsibility inside `src/lund-generation/`. These directories compile into the single `LundCore` target because they are small and always used together. External target geometry is isolated under `src/lund-generation/external/`; the external simulation payload belongs separately to `src/slurm-submission/external/`.
 
 ### Configuration (`src/lund-generation/core/config/`)
 
@@ -30,13 +30,13 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### LUND records and serialization (`src/lund-generation/core/lund/`)
 
-[Event.h](../../src/lund-generation/core/lund/Event.h) declares supported PDG identifiers, `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../../src/lund-generation/core/lund/Particle.cpp) delegates mass lookup to the target-source adapter. [TargetGeometry.cpp](../../src/lund-generation/core/geometry/TargetGeometry.cpp) is the only maintained translation unit that includes protected [`targets.h`](../../src/lund-generation/external/targets.h); it returns that source's electron, proton, neutron, and charged-pion masses, returns zero for photons, and rejects unsupported species.
+[Event.h](../../src/lund-generation/core/lund/Event.h) declares supported PDG identifiers, `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../../src/lund-generation/core/lund/Particle.cpp) delegates mass lookup to the target-source adapter. [TargetGeometry.cpp](../../src/lund-generation/core/geometry/TargetGeometry.cpp) is the only maintained translation unit that includes external [`targets.h`](../../src/lund-generation/external/targets.h); it returns that source's electron, proton, neutron, and charged-pion masses, returns zero for photons, and rejects unsupported species.
 
 [LundWriter.h](../../src/lund-generation/core/lund/LundWriter.h) / [LundWriter.cpp](../../src/lund-generation/core/lund/LundWriter.cpp): constructor validates and recreates the resolved run directory; `LundWriter::full()` checks event capacity; `LundWriter::write()` serializes an event and rotates files at the resolved `events-per-file` threshold; `LundWriter::finish(scanned)` publishes the manifest. Setup reporting groups run limits, beam/target values, active source settings, and real output paths with one resolved value per line; completion reporting contains only counters and status. Fixed serialization constants and inactive channel settings are omitted. Uniform construction also prepares its downstream/output directories. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
 ### Geometry (`src/lund-generation/core/geometry/`)
 
-[RgmTarget.h](../../src/lund-generation/core/config/RgmTarget.h) / [RgmTarget.cpp](../../src/lund-generation/core/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, protected geometry keys, and GEMC variations. [TargetGeometry.h](../../src/lund-generation/core/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../../src/lund-generation/core/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock and expose the same protected source's particle masses through a read-only lookup. Every maintained mode, including the electron tester, samples its selected geometry. The adapter is the only maintained translation unit that includes `src/lund-generation/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained code.
+[RgmTarget.h](../../src/lund-generation/core/config/RgmTarget.h) / [RgmTarget.cpp](../../src/lund-generation/core/config/RgmTarget.cpp) map RG-M material/assembly identifiers to A/Z, external geometry keys, and GEMC variations. [TargetGeometry.h](../../src/lund-generation/core/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../../src/lund-generation/core/geometry/TargetGeometry.cpp) validate and sample the external geometry under an isolated RNG lock and expose the same external source's particle masses through a read-only lookup. Every maintained mode, including the electron tester, samples its selected geometry. The adapter is the only maintained translation unit that includes `src/lund-generation/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained code.
 
 ### Support (`src/lund-generation/core/support/`)
 
@@ -71,7 +71,7 @@ The reader arrays have no maintained fixed-size particle buffer. ROOT reports ea
 | `src/slurm-submission/resolve_inputs.py` | Manifest/config/CLI precedence, truth validation, portable file inventory and in-memory resolved settings |
 | `src/slurm-submission/setup_and_submit.csh` | Small sourced bridge: shared palette, quoted arguments and Python exit status |
 | `src/slurm-submission/submit.py` | Preloaded environment, established report/checks, guarded output reset and one array per sample |
-| `src/slurm-submission/external/submit_GEMC_sample.sh` | Protected Slurm task payload; GEMC followed by reconstruction |
+| `src/slurm-submission/external/submit_GEMC_sample.sh` | External Slurm task payload; GEMC followed by reconstruction |
 
 The resolver obtains the prefix and task count from the completed manifest or explicit input, then the setup script consumes the validated LUND files. It exports a shared event limit for the array, defaulting to the largest selected manifest file count. The payload retains its original scheduler defaults. See the [submission guide](../submit-simulation/guide.md).
 
@@ -114,10 +114,10 @@ The archived root [`genie_job_submission_script.csh`](../../legacy/genie_job_sub
 
 ## 9. SSH checkout orchestration
 
-[SSH workflow](../submit-simulation/ifarm-environment.md) documents the disposable ifarm checkout refresh and `config/run.json`. `src/launcher/workflow.py` reads build/test defaults, requires an explicit workflow and LUND source, builds/tests, and dispatches LUND creation. Submission is sourced directly by `run.csh`; the protected Bash payload is the array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
+[SSH workflow](../submit-simulation/ifarm-environment.md) documents the disposable ifarm checkout refresh and `config/run.json`. `src/launcher/workflow.py` reads build/test defaults, requires an explicit workflow and LUND source, builds/tests, and dispatches LUND creation. Submission is sourced directly by `run.csh`; the external Bash payload is the array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
 
 `src/launcher/tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `src/lund-generation/tests/prepare_replacement_geometry.py` creates a changed target header; `src/lund-generation/tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
 
-See [source documentation conventions](documentation-style.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded and protected from edits.
+See [source documentation conventions](documentation-style.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded from edits.
 
 The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.

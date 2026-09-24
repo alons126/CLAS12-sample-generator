@@ -4,11 +4,11 @@
 # Created by Alon Sportes on 21/09/2026.
 #
 
-"""Preview or submit existing LUND samples through the protected ifarm payload.
+"""Preview or submit existing LUND samples through the external ifarm payload.
 
 Purpose:
     Coordinate detector-job submission for already completed uniform or physical LUND runs.
-    resolve_inputs.py owns setting validation; the protected shell payload owns GEMC and
+    resolve_inputs.py owns setting validation; the external shell payload owns GEMC and
     reconstruction commands. This coordinator owns the boundary between those layers: it turns
     validated settings into one checked process environment and passes that environment to Slurm.
 
@@ -412,7 +412,7 @@ def verify_gemc(version, expected_data, environment, report):
         raise ValueError(f'loading GEMC {version} selected mismatched GEMC_DATA_DIR: {loaded_data}')
 
     # Resolve GEMC from the newly loaded PATH rather than trusting the executable inherited before
-    # the transition. This is the same lookup behavior later used by the protected Slurm payload.
+    # the transition. This is the same lookup behavior later used by the external Slurm payload.
     executable_text = shutil.which('gemc', path=environment.get('PATH'))
 
     if executable_text is None:
@@ -498,7 +498,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     """Validate, report, and optionally submit one completed LUND sample.
 
     Purpose:
-        Bridge a resolver-approved sample to the protected GEMC/reconstruction Slurm payload.
+        Bridge a resolver-approved sample to the external GEMC/reconstruction Slurm payload.
 
     Workflow:
         1. Merge resolver-approved worker values and fixed checkout-owned exports.
@@ -507,14 +507,14 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output replacement.
         6. Preserve outputs in preview or recreate only mchipo/reconhipo during execution.
-        7. Report the array contract and call the protected payload through sbatch only in execute.
+        7. Report the array contract and call the external payload through sbatch only in execute.
 
     Args:
         values: One validated sample dictionary returned by resolve_samples().
         environment: Invocation-owned copy of os.environ. Sample exports and the selected GEMC
             module override inherited values. It is intentionally carried between samples so each
             subsequent module transition starts from the preceding private environment.
-        root: Checkout directory containing the protected worker payload.
+        root: Checkout directory containing the external worker payload.
         execute: False for read-only preview; true for cleanup and Slurm submission.
         report: Shared renderer for the legacy-style transcript.
         farm_cleared: Invocation-wide farm_out cleanup state.
@@ -530,7 +530,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     """
 
     # Copy only worker-facing sample values into this invocation's environment. source and
-    # farm_out control Python branches, while RUNNING_DIR and the protected payload path
+    # farm_out control Python branches, while RUNNING_DIR and the external payload path
     # are fixed to the checked-out project.
     environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
     environment.update(RUNNING_DIR=str(root), SLURM_EXPORT_ENV='ALL', SBATCH_EXPORT='ALL',
@@ -758,14 +758,14 @@ def main():
     Workflow:
         Copy the inherited environment and initialize reporting; parse the CLI; resolve and
         validate every requested sample before processing the first; verify the checkout and
-        protected payload boundary; process distinct samples in caller order while carrying the
+        external payload boundary; process distinct samples in caller order while carrying the
         private module environment and farm-cleanup state; convert known operational failures into
         one nonzero status.
 
     Inputs:
         Process arguments and the ifarm environment, including the shared color palette and
         module/reconstruction paths. The current working directory must be the verified checkout
-        root because maintained resource paths and the protected payload are checkout-relative.
+        root because maintained resource paths and the external payload are checkout-relative.
 
     Outputs:
         A complete preview or execution transcript on standard output. Execution may create fresh
@@ -801,7 +801,7 @@ def main():
         root = Path(__file__).resolve().parents[2]
         samples = resolve_samples(args, root)
 
-        # The protected worker must have a path safe for its argument contract, must exist
+        # The external worker must have a path safe for its argument contract, must exist
         # in this checkout, and must be launched from the expected repository directory.
         path_value(root / 'src/slurm-submission/external/submit_GEMC_sample.sh', 'SUBMIT_SCRIPT_FILE')
 

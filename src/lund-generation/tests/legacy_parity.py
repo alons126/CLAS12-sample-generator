@@ -11,7 +11,7 @@ Workflow:
     CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
 
 Notes:
-    Test fixtures are isolated; protected external and legacy sources are read-only.
+    Test fixtures are isolated; external and legacy sources are read-only.
 """
 
 import json
@@ -50,16 +50,16 @@ def run(*args):
 
 # compare --------------------------------------------------------------------
 # region compare
-def comparable_lines(path, drop_pi0=False):
-    """Return tokenized LUND lines with an optional legacy-pi0 normalization.
+def comparable_lines(path, drop_legacy_unsupported=False):
+    """Return tokenized LUND lines with optional legacy-species normalization.
 
     Algorithm:
-        Parse complete events, remove legacy PDG 111 particle records when requested, and update the
-        corresponding header multiplicity to match the maintained upstream-decay contract.
+        Parse complete events, remove the legacy unsupported record when requested, and update the
+        corresponding header multiplicity to match the maintained supported-species contract.
 
     Args:
         path: LUND file to read.
-        drop_pi0: Whether to remove archived neutral-pion output records.
+        drop_legacy_unsupported: Whether to remove the archived unsupported output record.
 
     Returns:
         Token lists in original event and retained-particle order.
@@ -67,7 +67,7 @@ def comparable_lines(path, drop_pi0=False):
 
     source = [line.split() for line in path.read_text().splitlines()]
 
-    if not drop_pi0:
+    if not drop_legacy_unsupported:
         return source
 
     result = []
@@ -88,20 +88,18 @@ def comparable_lines(path, drop_pi0=False):
 
     return result
 
-def compare(actual, expected, ignore_vertex=False, drop_legacy_pi0=False, compare_mass_energy=False):
+def compare(actual, expected, ignore_vertex=False, drop_legacy_unsupported=False, compare_mass_energy=False):
     """Compare archived and maintained LUND records under selected normalization rules.
 
     Algorithm:
         Compare headers and selected particle fields, optionally including energy/mass or omitting
-        tester vertices.
-        Physical parity may also remove archived neutral pions, which the maintained converter requires
-        GENIE to decay upstream into photons.
+        tester vertices. Physical parity may also remove an archived unsupported output record.
 
     Args:
         actual: New output path.
         expected: Archived-reference output path.
         ignore_vertex: Whether to omit vertex columns from the comparison.
-        drop_legacy_pi0: Whether to normalize away archived PDG 111 records and renumber particles.
+        drop_legacy_unsupported: Whether to remove the archived unsupported record and renumber particles.
         compare_mass_energy: Whether energy and mass must also match exactly.
 
     Returns:
@@ -109,7 +107,7 @@ def compare(actual, expected, ignore_vertex=False, drop_legacy_pi0=False, compar
     """
 
     al = comparable_lines(actual)
-    el = comparable_lines(expected, drop_legacy_pi0)
+    el = comparable_lines(expected, drop_legacy_unsupported)
     assert len(al) == len(el), f'{actual}: new {len(al)} lines vs legacy {len(el)} lines'
     remaining = 0
 
@@ -205,7 +203,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             assert not list((new/'lundfiles/lund-gen-monitoring').glob('*.root'))
             old=list((original/'lundfiles').glob('*.txt'))
             assert len(old)==1 and m['written_events']==10000
-            compare(new/m['files'][0]['path'],old[0],drop_legacy_pi0=True,compare_mass_energy=True)
+            compare(new/m['files'][0]['path'],old[0],drop_legacy_unsupported=True,compare_mass_energy=True)
 
         # Demonstrate the corrected short-input behavior alongside the archived early-termination defect.
         gst=root/'C12_GEM21_11a_00_000_2070MeV_short.root'

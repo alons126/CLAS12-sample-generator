@@ -99,7 +99,7 @@ void convertMyGenerator(const RunConfig& config) {
 }
 ```
 
-The example is architectural, not a copy-ready reader. `supportedParticles` must preserve the documented source order, and every particle in one event must receive the same single sampled vertex. Use `particleMass()` so supported masses continue to come from the protected target source. Physical adapters create no uniform monitoring histograms.
+The example is architectural, not a copy-ready reader. `supportedParticles` must preserve the documented source order, and every particle in one event must receive the same single sampled vertex. Use `particleMass()` so supported masses continue to come from the external target source. Physical adapters create no uniform monitoring histograms.
 
 ## 4. Decide source-specific header semantics
 

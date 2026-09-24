@@ -66,7 +66,7 @@ Use `-DBUILD_TESTING=OFF` to omit tests and their Python dependency. Build setti
 cmake --install build/release --prefix /path/to/install
 ```
 
-The LUND executables and protected `submit_GEMC_sample.sh` payload are installed under `bin/`; example settings and detector resources are under `share/clas12-samples/config/`. ROOT must remain available for LUND generation. Submission uses the checkout’s sourced setup script; its payload and inputs must be visible on worker nodes.
+The LUND executables and external `submit_GEMC_sample.sh` payload are installed under `bin/`; example settings and detector resources are under `share/clas12-samples/config/`. ROOT must remain available for LUND generation. Submission uses the checkout’s sourced setup script; its payload and inputs must be visible on worker nodes.
 
 ## What tests establish
 

@@ -8,8 +8,7 @@
  *
  * Purpose:
  *   Serve as the nested GENIE adapter: read supported processes and detector-stable final-state
- *   species, retain their momenta, and assign a target vertex. Neutral pions must be decayed by the
- *   upstream GENIE production into photons and are not copied into detector-simulation input.
+ *   species, retain their momenta, and assign a target vertex.
  *
  * Workflow:
  *   Resolve one or more GST ROOT files into a TChain -> validate the required scalar and variable-
@@ -28,9 +27,8 @@
  *   directory. This physical adapter creates no monitoring histograms.
  *
  * Assumptions:
- *   GST final-state arrays use nf as their per-entry leaf count. Neutral pions have already been decayed
- *   upstream, so their photons—not PDG 111 records—must be present in detector-simulation input. Only QE,
- *   MEC, RES and DIS reactions are supported; adding another reaction requires updating this adapter.
+ *   GST final-state arrays use nf as their per-entry leaf count. Only QE, MEC, RES and DIS reactions
+ *   are supported; adding another reaction requires updating this adapter.
  *
  * Failure:
  *   Empty input, missing or mistyped branches, inconsistent per-entry arrays, unsupported-only input,
@@ -63,8 +61,7 @@ namespace samples {
  * Algorithm:
  *   1. Validate required branches and construct typed readers.
  *   2. Scan entries and select QE/MEC/RES/DIS events.
- *   3. Assign a common target vertex and retain detector-stable final-state species, skipping any
- *      residual neutral pion because its two-photon decay must already be present in the GST truth.
+ *   3. Assign a common target vertex and retain supported detector-stable final-state species in input order.
  *   4. Before starting a follow-up output file, require at least one configured submission-sized block of
  *      input entries to remain; otherwise continue through accepted-event capacity and publish the log.
  *
@@ -198,11 +195,9 @@ void convertGenie(const RunConfig& c) {
         auto vertex = geometry.sample(random);
         event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg), {*pxl, *pyl, *pzl}, vertex});
 
-        // Copy only detector-stable supported species while preserving input order and momenta. A
-        // residual PDG 111 is deliberately skipped: this converter cannot reconstruct the missing
-        // two-photon decay kinematics, so GENIE production must decay pi0 before writing the GST tree.
-        // Other unsupported PDG identities are also omitted; none are substituted or given invented
-        // kinematics. particleMass obtains the maintained targets.h value for every retained identity.
+        // Copy only detector-stable supported species while preserving input order and momenta.
+        // Unsupported identities are omitted; none are substituted or given invented kinematics.
+        // particleMass obtains the maintained targets.h value for every retained identity.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
             if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::photon_pdg) {

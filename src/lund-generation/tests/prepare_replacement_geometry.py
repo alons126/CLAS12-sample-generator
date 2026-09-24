@@ -5,13 +5,13 @@
 """Prepare an isolated replacement-geometry test fixture.
 
 Purpose:
-    Read the protected target header and write a modified copy only in the test build directory.
+    Read the external target header and write a modified copy only in the test build directory.
 
 Workflow:
     CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
 
 Notes:
-    Test fixtures are isolated; protected external and legacy sources are read-only.
+    Test fixtures are isolated; external and legacy sources are read-only.
 """
 
 from pathlib import Path

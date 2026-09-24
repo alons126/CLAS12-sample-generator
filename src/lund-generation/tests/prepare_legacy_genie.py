@@ -5,13 +5,13 @@
 """Generate a maintained test adapter around the archived converter.
 
 Purpose:
-    Read the protected archive and write a separate build-tree reference with redirected output setup.
+    Read the external archive and write a separate build-tree reference with redirected output setup.
 
 Workflow:
     CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
 
 Notes:
-    Test fixtures are isolated; protected external and legacy sources are read-only.
+    Test fixtures are isolated; external and legacy sources are read-only.
 """
 
 from pathlib import Path

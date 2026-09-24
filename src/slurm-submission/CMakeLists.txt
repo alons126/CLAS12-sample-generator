@@ -4,7 +4,7 @@
 
 # Ifarm submission -------------------------------------------------------------------------------------------------------------------------------------------------------
 # Purpose:
-#     register tests for the sourced setup and protected detector payload.
+#     register tests for the sourced setup and external detector payload.
 #
 # Workflow:
 #     run.csh -> setup_and_submit.csh -> submit.py -> sbatch array -> external payload.

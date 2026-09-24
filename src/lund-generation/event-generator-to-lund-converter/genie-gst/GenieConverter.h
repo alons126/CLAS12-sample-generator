@@ -29,8 +29,8 @@
  *
  * Invariants:
  *   GST particle momenta and ordering are preserved for supported identities; one sampled vertex is
- *   shared by all particles in a written event. Neutral-pion decay photons must already exist upstream.
- *   Only QE, MEC, RES and DIS reactions are supported; another reaction requires an adapter update.
+ *   shared by all particles in a written event. Only QE, MEC, RES and DIS reactions are supported;
+ *   another reaction requires an adapter update.
  *
  * Failure:
  *   Invalid configuration, unusable GST schema or data, absence of supported interactions, unsafe output
@@ -68,9 +68,9 @@ namespace samples {
  *   resolved output tree; scanned and written counts are also reported to standard output.
  *
  * Assumptions:
- *   Final-state PDG and momentum arrays are parallel variable-length GST branches counted by nf. PDG 111
- *   is not serialized because neutral pions must be decayed into photons before GST production. Reaction
- *   selection supports only QE, MEC, RES and DIS; adding another process requires changing this adapter.
+ *   Final-state PDG and momentum arrays are parallel variable-length GST branches counted by nf.
+ *   Reaction selection supports only QE, MEC, RES and DIS; adding another process requires changing
+ *   this adapter.
  *
  * Failure:
  *   Throws on invalid configuration, empty or incompatible input, inconsistent final-state array lengths,

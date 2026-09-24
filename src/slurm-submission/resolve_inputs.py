@@ -101,7 +101,7 @@ OPTIONS = {
 PATH_KEYS = {'lund-dir', 'gcard', 'yaml', 'clas12tags-dir', 'farm-out'}
 
 # Tokens become filename/job-name components. Worker paths remain more restrictive because the
-# protected GEMC payload retains unquoted detector arguments; path_value() enforces SAFE_PATH.
+# external GEMC payload retains unquoted detector arguments; path_value() enforces SAFE_PATH.
 SAFE_TOKEN = re.compile(r'[A-Za-z0-9_][A-Za-z0-9_.-]*\Z')
 SAFE_PATH = re.compile(r'/[A-Za-z0-9_./-]+\Z')
 
@@ -270,7 +270,7 @@ def token(value, name):
         Empty values and shell or path metacharacters raise ValueError.
     """
 
-    # Metadata later enters filenames, job names, and the protected worker environment.
+    # Metadata later enters filenames, job names, and the external worker environment.
     # A full-string match prevents separators or shell syntax from being appended to a label.
     if not SAFE_TOKEN.fullmatch(str(value)):
         raise ValueError(f'{name} must be a nonempty filename-safe label')
@@ -278,7 +278,7 @@ def token(value, name):
     return str(value)
 
 def path_value(value, name):
-    """Canonicalize a path for the protected GEMC worker.
+    """Canonicalize a path for the external GEMC worker.
 
     Args:
         value: User or manifest path to resolve; the target need not exist yet.
@@ -609,7 +609,7 @@ def resolve(lund_directory, explicit, root):
     default_job = f'Uniform_{channel}_sample_{beam}' if source == 'uniform' else f'{target}_{generator}_{tune}_{beam}_{q2}{fc}_GEMC{version}'
     job = token(values.get('job-name', default_job), 'job-name')
 
-    # These names are the explicit contract consumed by submit.py and exported to the protected
+    # These names are the explicit contract consumed by submit.py and exported to the external
     # Slurm payload. OUTPATH always comes from the validated local run directory, not a manifest
     # path from the machine that originally produced the LUND files.
     return dict(source=source, NUM_OF_JOBS=str(jobs), JOB_NEVENTS=str(limit), BEAM_ENERGY_LABEL=beam,

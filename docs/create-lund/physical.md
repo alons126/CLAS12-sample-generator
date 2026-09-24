@@ -40,7 +40,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 
-Field 10 is a process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers are declared with the particle record. Electron, proton, neutron, and charged-pion masses come from protected `src/lund-generation/external/targets.h`; the photon mass is zero. See the [data contract](../concepts/lund-data-contract.md).
+Field 10 is a process tag, **not a generator cross-section weight**. Do not interpret it as one downstream. Momentum is in GeV/c, mass in GeV/c², energy is in GeV, and vertex position is in cm. Supported PDG identifiers are declared with the particle record. Electron, proton, neutron, and charged-pion masses come from external `src/lund-generation/external/targets.h`; the photon mass is zero. See the [data contract](../concepts/lund-data-contract.md).
 
 This neutral-pion contract follows the CLAS12 forward electromagnetic-calorimeter design: neutral
 mesons are reconstructed from their two-photon decays, and the detector resolves the resulting photon

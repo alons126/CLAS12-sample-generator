@@ -8,7 +8,7 @@ Descriptions follow each component's actual responsibilities. Small accessors ne
 
 The shared palette values are defined only in `src/launcher/environment/set_colors.csh`. `src/lund-generation/core/support/environment.h` is the only maintained C++ color source: it maps the inherited `*_COLOR` values onto semantic constants. Other C++ files select those constants and must not contain literal ANSI escape definitions or fallback palettes.
 
-External and archived files are excluded and protected from edits: `legacy/`, `src/lund-generation/external/targets.h`, `src/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Maintained test adapters can explain how they read the protected sources and create isolated reference fixtures. Repository instructions are recorded in `AGENTS.md`.
+External and archived files are excluded from edits: `legacy/`, `src/lund-generation/external/targets.h`, `src/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Maintained test adapters can explain how they read external sources and create isolated reference fixtures. Repository instructions are recorded in `AGENTS.md`.
 
 ## Build and JSON configuration
 
@@ -30,4 +30,4 @@ The same layers apply to structs, classes, enums, private implementation records
 
 Every file under `config/detector/` is classified as external and read-only for the assistant, recursively and regardless of extension. This includes current and future files, not only recognized gcard/YAML resources.
 
-The unified `src/slurm-submission/external/submit_GEMC_sample.sh` and its two archived source payloads are protected external code, including their monitoring modifications. Skip them in routine source-documentation passes; their interface is described in [the GEMC payload guide](../submit-simulation/worker-reference.md).
+The unified `src/slurm-submission/external/submit_GEMC_sample.sh` and its two archived source payloads are external code, including their monitoring modifications, and are excluded from routine edits. Skip them in routine source-documentation passes; their interface is described in [the GEMC payload guide](../submit-simulation/worker-reference.md).

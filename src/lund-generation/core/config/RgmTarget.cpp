@@ -8,7 +8,7 @@
  *
  * Purpose:
  *   Maintain the small, reviewable mapping from RG-M target identity to the default A/Z header values,
- *   protected targets.h geometry key, and GEMC target-variation provenance used by RunConfig.
+ *   external targets.h geometry key, and GEMC target-variation provenance used by RunConfig.
  *
  * Workflow:
  *   Lazily initialize immutable catalog storage -> expose it by const reference -> perform exact
@@ -16,7 +16,7 @@
  *   and invalid-target diagnostics.
  *
  * Separation of responsibilities:
- *   This file owns target-identity metadata only. TargetGeometry and protected targets.h own spatial
+ *   This file owns target-identity metadata only. TargetGeometry and external targets.h own spatial
  *   vertex distributions; detector GCARD resources own GEMC geometry implementation.
  */
 

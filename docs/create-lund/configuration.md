@@ -19,7 +19,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
 | `rgm-target` | `Ar40` | Catalog identity that first supplies geometry, A/Z, and GEMC-variation defaults |
-| `target` | `auto` | Optional override of the protected [`targets.h`](../../src/lund-generation/external/targets.h) geometry selected by `rgm-target` |
+| `target` | `auto` | Optional override of the external [`targets.h`](../../src/lund-generation/external/targets.h) geometry selected by `rgm-target` |
 | `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
 | `gemc-target-variation` | `auto` | Optional GCARD target-variation override applied after the catalog default |
 | `events` | Required | Total number of accepted events to write |
@@ -74,7 +74,7 @@ Unknown geometries fail instead of writing sentinel coordinates. Geometry does n
 
 ## RG-M target catalog
 
-The maintained catalog centralizes the same kind of selection that the legacy submission script performed with target/beam conditionals. Each identity supplies the protected geometry key, nuclear metadata, and official default GEMC variation. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
+The maintained catalog centralizes the same kind of selection that the legacy submission script performed with target/beam conditionals. Each identity supplies the external geometry key, nuclear metadata, and official default GEMC variation. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
 
 | Identifier | A/Z | Vertex geometry | GEMC target variation |
 | --- | --- | --- | --- |
@@ -98,4 +98,4 @@ It is a completion record and pipeline input, not a content-addressed archive: r
 
 ## Detector and submission settings
 
-Supply `--lund-dir RUN/lundfiles` to infer settings from its manifest, with optional `--config` and CLI overrides. GEMC falls back to 5.14. It selects GCARD/YAML resources explicitly and uses the protected payload’s scheduler defaults. There are no site JSON files. See the [submission guide](../submit-simulation/guide.md).
+Supply `--lund-dir RUN/lundfiles` to infer settings from its manifest, with optional `--config` and CLI overrides. GEMC falls back to 5.14. It selects GCARD/YAML resources explicitly and uses the external payload’s scheduler defaults. There are no site JSON files. See the [submission guide](../submit-simulation/guide.md).

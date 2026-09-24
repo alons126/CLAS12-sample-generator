@@ -8,7 +8,7 @@ Workflow:
     isolated checkout fixtures -> sourced bridge -> inert sbatch capture. Golden
     reports were captured from the working C-shell coordinator before its Python migration.
     Cover both source types, beam/channel variations, preview, failures and array environments.
-    Protected payload execution uses only fake gemc/recon-util commands in temporary directories.
+    External payload execution uses only fake gemc/recon-util commands in temporary directories.
 """
 
 import difflib
@@ -403,7 +403,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
             expected = (PROJECT / f'src/slurm-submission/tests/fixtures/{source}-{mode}.txt').read_text()
             assert actual == expected, ''.join(difflib.unified_diff(expected.splitlines(True), actual.splitlines(True)))
 
-    # Execute only the protected worker with inert commands, checking the unchanged detector interface.
+    # Execute only the external worker with inert commands, checking the unchanged detector interface.
     command_log = root / 'detector-commands.jsonl'
     stub = '#!' + sys.executable + '\nimport json,os,sys\nwith open(os.environ["COMMAND_LOG"],"a") as f: f.write(json.dumps([os.path.basename(sys.argv[0]),*sys.argv[1:]])+"\\n")\n'
 
@@ -429,5 +429,5 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         ['recon-util', '-y', values['YAML_FILE'], '-n', '3', '-i', mc,
          '-o', f'{out}/reconhipo/recon_{prefix}_2_torus0.5.hipo']]
 
-print('Submission reports, array exports, preview, failure guards and protected worker contract passed.')
+print('Submission reports, array exports, preview, failure guards and external worker contract passed.')
 # endregion Tests

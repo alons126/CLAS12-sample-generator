@@ -12,11 +12,11 @@ source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
      -> submit.py
         -> resolve_inputs.py: manifest + configuration + CLI -> validated settings
         -> preloaded GEMC checks, setup report, output preparation
-        -> sbatch --job-name=NAME --array=1-N <protected payload>
+        -> sbatch --job-name=NAME --array=1-N <external payload>
   -> Slurm task: GEMC -> recon-util
 ```
 
-Creation may run locally or on the server. Submission runs in a Python child of the server login shell; detector execution runs only in Slurm jobs. The small sourced shell bridge initializes the shared colors and returns the Python status. `submit.py` owns reports, checks, output replacement and submission; `resolve_inputs.py` only resolves inputs. The protected payload is unchanged.
+Creation may run locally or on the server. Submission runs in a Python child of the server login shell; detector execution runs only in Slurm jobs. The small sourced shell bridge initializes the shared colors and returns the Python status. `submit.py` owns reports, checks, output replacement and submission; `resolve_inputs.py` only resolves inputs. The external payload is unchanged.
 
 ## Submit workflow-1 output
 
@@ -95,7 +95,7 @@ Without a manifest, source, beam energy in GeV, target identity and prefix are r
 
 Use a csh/tcsh login shell with the ifarm module command and reconstruction available. When `CLAS12TAGS_DIR` is empty, submission derives the shared clas12Tags parent from the inherited `GEMC_DATA_DIR` (or uses `/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags` when none is inherited), checks the parent and requested-version directory, and only then loads `gemc/<version>` in the Python child environment. Informational output produced by both module operations streams directly to the terminal, preserving the module system's original colors; only its generated Python environment code stays internal. The workflow verifies that the resulting `GEMC_DATA_DIR` is the requested version and that the resolved `gemc` executable is inside that directory. The report prints `SLURM_GEMC_EXECUTABLE`, which is the executable inherited by `sbatch`.
 
-For a custom GEMC detector implementation, such as testing target geometry, clone or fork [gemc/clas12Tags](https://github.com/gemc/clas12Tags) on shared storage and pass its checkout with `--clas12tags-dir DIRECTORY`. The selected GEMC module and executable are still loaded and verified, while the standard shared-version directory precheck is skipped. The setup validates `CLAS12TAGS_DIR` and then exports `GEMC_DATA_DIR=$CLAS12TAGS_DIR` before submission. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the selected directory in every Slurm task. Scheduler/log defaults remain in the protected payload's `#SBATCH` directives.
+For a custom GEMC detector implementation, such as testing target geometry, clone or fork [gemc/clas12Tags](https://github.com/gemc/clas12Tags) on shared storage and pass its checkout with `--clas12tags-dir DIRECTORY`. The selected GEMC module and executable are still loaded and verified, while the standard shared-version directory precheck is skipped. The setup validates `CLAS12TAGS_DIR` and then exports `GEMC_DATA_DIR=$CLAS12TAGS_DIR` before submission. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the selected directory in every Slurm task. Scheduler/log defaults remain in the external payload's `#SBATCH` directives.
 
 Python copies the inherited environment, loads the selected GEMC module in that copy, then overwrites its sample settings with the resolved values before calling `sbatch`. Stale shell locals cannot shadow these values. Unlike the former shell coordinator, Python does not leave module or per-sample exports in the interactive shell; the verified environment is passed to Slurm and its workers. Consequently, `which gemc` at the prompt after submission may still show the login shell's earlier version. Use the reported `SLURM_GEMC_EXECUTABLE` to identify what preview or execution will pass to Slurm.
 
@@ -103,7 +103,7 @@ Python copies the inherited environment, loads the selected GEMC module in that 
 
 **With `--execute`, submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo` for both uniform and physical samples.** LUND inputs are preserved. Uniform monitoring is produced during LUND generation and does not use a simulation `rootfiles` directory. Checks reject unsafe output paths and symlinks before replacement. Optional farm-output cleanup deletes only files directly in the configured farm-output directory, once per invocation.
 
-One array is submitted per sample. Failure stops later samples and returns a nonzero `$status` without closing the sourced shell; already submitted jobs remain submitted. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-`, because the protected payload retains its legacy unquoted command arguments. There is no local detector-execution workflow.
+One array is submitted per sample. Failure stops later samples and returns a nonzero `$status` without closing the sourced shell; already submitted jobs remain submitted. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-`, because the external payload retains its legacy unquoted command arguments. There is no local detector-execution workflow.
 
 ## Post-submission verification
 
@@ -123,7 +123,7 @@ The dump must open successfully and display CLAS12 data banks. Treat this as a m
 
 ## Validation
 
-`submission-legacy-parity` checks captured working C-shell report fixtures for both sources in preview/execute modes, array arguments and exported settings using temporary configs and fake tools. It also exercises manifest-driven submission, multiple samples, cleanup, failures and the protected detector-command contract. The migration comparison preserved report text and ANSI colors, normalizing platform-specific `wc` padding. Physical reporting retains the resolved generator/tune instead of unsetting them before use, and farm cleanup uses the intended banner color; these correct two failures in the former shell implementation. `submission-input-resolution` checks defaults (including GEMC 5.14), precedence, moved manifests, partial final files, manual input, truth conflicts and malformed inputs; when built, it also consumes actual uniform-generator output. Tests never submit real jobs. Server detector behavior requires a small ifarm validation run.
+`submission-legacy-parity` checks captured working C-shell report fixtures for both sources in preview/execute modes, array arguments and exported settings using temporary configs and fake tools. It also exercises manifest-driven submission, multiple samples, cleanup, failures and the external detector-command contract. The migration comparison preserved report text and ANSI colors, normalizing platform-specific `wc` padding. Physical reporting retains the resolved generator/tune instead of unsetting them before use, and farm cleanup uses the intended banner color; these correct two failures in the former shell implementation. `submission-input-resolution` checks defaults (including GEMC 5.14), precedence, moved manifests, partial final files, manual input, truth conflicts and malformed inputs; when built, it also consumes actual uniform-generator output. Tests never submit real jobs. Server detector behavior requires a small ifarm validation run.
 
 Run the submission and launcher checks with the shared palette initialized (the existing launcher preflight uses it):
 

@@ -19,7 +19,7 @@
 #   Test executables, generated fixtures in the build tree and named CTest cases.
 #
 # Notes:
-#   Protected legacy and external sources are read-only. Reference adapters write separate build-tree files; no real server jobs are submitted.
+#   Legacy and external sources are read-only. Reference adapters write separate build-tree files; no real server jobs are submitted.
 
 # Test tools and GST fixture ---------------------------------------------------------------------------------------------------------------------------------------------
 # region Test tools and GST fixture
@@ -76,7 +76,7 @@ endif()
 # Isolated geometry fixture ----------------------------------------------------------------------------------------------------------------------------------------------
 # region Isolated geometry fixture
 # Purpose:
-#     Read the protected header into a separate test fixture; compile the actual adapter against that fixture.
+#     Read the external header into a separate test fixture; compile the actual adapter against that fixture.
 # Prove that replacing the external header alone changes the production adapter.
 set(REPLACEMENT_TARGETS ${CMAKE_CURRENT_BINARY_DIR}/replacement/external/targets.h)
 add_custom_command(OUTPUT ${REPLACEMENT_TARGETS}

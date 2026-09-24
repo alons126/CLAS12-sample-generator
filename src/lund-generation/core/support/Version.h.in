@@ -7,7 +7,7 @@
  * @brief CMake template for compiled run provenance.
  *
  * Purpose:
- *   Embed the source revision, project version, checkout location, and protected
+ *   Embed the source revision, project version, checkout location, and external
  *   target-geometry hash in the binaries that create completed run manifests.
  *
  * Workflow:
@@ -34,7 +34,7 @@
 /** @brief Absolute source checkout used when the build was configured. */
 #define SAMPLE_SOURCE_DIR "@PROJECT_SOURCE_DIR@"
 
-/** @brief SHA-256 digest of the protected target-geometry header. */
+/** @brief SHA-256 digest of the external target-geometry header. */
 #define SAMPLE_TARGETS_SHA256 "@SAMPLE_TARGETS_SHA256@"
 
 #pragma endregion

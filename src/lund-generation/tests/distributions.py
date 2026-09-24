@@ -11,7 +11,7 @@ Workflow:
     CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
 
 Notes:
-    Test fixtures are isolated; protected external and legacy sources are read-only.
+    Test fixtures are isolated; external and legacy sources are read-only.
 """
 
 import json

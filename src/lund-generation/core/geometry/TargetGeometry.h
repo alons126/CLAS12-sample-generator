@@ -4,10 +4,10 @@
 
 /**
  * @file TargetGeometry.h
- * @brief Read-only adapter for protected target geometry and particle masses.
+ * @brief Read-only adapter for external target geometry and particle masses.
  *
  * Purpose:
- *   Expose the protected targets.h geometry catalog and particle masses through a small maintained API
+ *   Expose the external targets.h geometry catalog and particle masses through a small maintained API
  *   while hiding its global symbols and allowing each run to own an explicit, reproducible vertex-
  *   random stream.
  *
@@ -40,7 +40,7 @@ namespace samples {
 #pragma region /* TargetGeometry object */
 /**
  * @class TargetGeometry
- * @brief Bridge between a run-owned vertex stream and protected targets.h.
+ * @brief Bridge between a run-owned vertex stream and external targets.h.
  *
  * Purpose:
  *   Preserve the external geometry implementation as the authoritative vertex source without exposing
@@ -51,7 +51,7 @@ namespace samples {
  *   is then read-only and reusable; each sample() call borrows and advances a caller-owned vertex RNG.
  *
  * Geometry modes:
- *   Names address nonempty entries in protected targets.h; no fixed-point mode exists.
+ *   Names address nonempty entries in external targets.h; no fixed-point mode exists.
  *
  * RNG ownership and concurrency:
  *   targets.h samples through its own global `ran`. The implementation serializes access, copies the
@@ -87,7 +87,7 @@ class TargetGeometry {
     static void validate(const std::string& name);
 
     /**
-     * @brief Return one supported particle mass from the protected target source.
+     * @brief Return one supported particle mass from the external target source.
      *
      * @param pid PDG identifier for electron, proton, neutron, charged pion, or photon.
      *
@@ -108,7 +108,7 @@ class TargetGeometry {
      *
      * @return Vertex in cm.
      *
-     * @throws std::runtime_error If the protected external sampler returns non-finite coordinates.
+     * @throws std::runtime_error If the external sampler returns non-finite coordinates.
      *         Exceptions from the external implementation may also propagate.
      */
     TVector3 sample(TRandom3& random) const;

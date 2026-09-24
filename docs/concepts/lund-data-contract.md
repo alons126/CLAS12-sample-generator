@@ -6,7 +6,13 @@
 
 These types are defined in [Event.h](../../src/lund-generation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../../src/lund-generation/core/lund/LundWriter.cpp).
 
-## 2. LUND header: ten fields
+## 2. Units and conventions
+
+Particle momenta are in GeV/c, masses are in GeV/c², beam and particle energies are in GeV, vertex coordinates are in centimeters, and configured sampling angles are in degrees. The writer uses natural units with c=1 and calculates particle energy as `sqrt(p²+m²)`. Uniform sampling uses ROOT's `TVector3` spherical-coordinate convention, and every particle in an event receives the same sampled interaction vertex. Written particles are active; reserved status, parent, and daughter fields are zero except for the fixed active-particle field described below.
+
+Electron, proton, neutron, and charged-pion masses come from the external target source through the maintained adapter; the photon mass is exactly zero. Physical inputs must provide upstream-generated neutral-pion decay photons because the converter skips residual PDG 111 entries rather than inventing missing decay kinematics.
+
+## 3. LUND header: ten fields
 
 | Field | Uniform value | GENIE conversion value |
 | --- | --- | --- |
@@ -23,7 +29,7 @@ These types are defined in [Event.h](../../src/lund-generation/core/lund/Event.h
 
 The GENIE process tag and resonance metadata are historical application conventions, not a claim that field 10 is a physical cross-section weight. We produce LUND files following the format in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
 
-## 3. Particle record: fourteen fields
+## 4. Particle record: fourteen fields
 
 | Fields | Contents |
 | --- | --- |
@@ -39,15 +45,15 @@ The GENIE process tag and resonance metadata are historical application conventi
 
 The writer rejects empty events and non-finite particle energy/vertex data. GENIE `El` and `Ef` are not used to override the mass-shell energy calculation.
 
-## 4. Output precision and compatibility
+## 5. Output precision and compatibility
 
 The single maintained format uses established whitespace, five decimal places for particle momenta, energy, mass, and vertices, and per-file uniform numbering. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
 
 Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`. `--prefix` remains an explicit override for a downstream naming requirement. Output directories are explicit and never inferred from the current machine.
 
-## 5. Mass convention
+## 6. Mass convention
 
-Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/lund-generation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes protected [`targets.h`](../../src/lund-generation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
+Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/lund-generation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes external [`targets.h`](../../src/lund-generation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
 
 | Species (PDG) | LUND mass (GeV/c²) |
 | --- | ---: |
@@ -60,7 +66,7 @@ Supported PDG identifiers are declared with the particle record in [`Event.h`](.
 The table shows five-decimal serialized values. Internally, [`targets.h`](../../src/lund-generation/external/targets.h) supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
 Neutral-pion mass is deliberately absent from the maintained table because PDG 111 is not a supported LUND output species. CLAS12 reconstructs neutral pions from their two-photon decays, so physical GST input must already contain the daughter photons generated upstream.
 
-## 6. File splitting and completion
+## 7. File splitting and completion
 
 Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that accepted-event capacity, with an additional submission cutoff tied to `events-per-file`. Before an accepted event would start a follow-up LUND file, conversion compares the inclusive GST input-entry count beginning with that entry against `events-per-file`; it stops without creating the file when the count is smaller. The first file is always allowed, and the cutoff is never reevaluated inside a file that has started. Because this is an input-entry test rather than an accepted-event test, unsupported reactions inside an allowed block can still make its LUND file short. `events-per-file` defaults to 10,000 for physical conversion and also controls normal rollover. Uniform generation defaults to 25,000 events per file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and uniform event IDs restart from zero in each file.
 
@@ -72,7 +78,7 @@ Before output creation, the writer prints a setup report grouped into run limits
 
 For an input shorter than `events-per-file`, the first file is allowed to consume the available input. For longer input, the rule is evaluated only when an accepted event would start a follow-up file. Exact-multiple blocks are completed. See [validation](../development/validation.md).
 
-## 7. Manifest schema version 1
+## 8. Manifest schema version 1
 
 | Member | Type | Meaning |
 | --- | --- | --- |

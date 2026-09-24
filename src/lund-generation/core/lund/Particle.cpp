@@ -7,7 +7,7 @@
  * @brief Implements the supported LUND particle-mass lookup.
  *
  * Purpose:
- *   Expose the particle masses owned by the protected target source without duplicating them in
+ *   Expose the particle masses owned by the external target source without duplicating them in
  *   maintained code. Event producers select particle identities and momenta; this module supplies only
  *   the corresponding rest mass and does not alter event kinematics.
  *
@@ -16,11 +16,6 @@
  *   2. The adapter requests the corresponding targets.h mass.
  *   3. The returned mass is stored in Particle.
  *   4. LundWriter combines that mass with momentum to calculate on-shell energy.
- *
- * Units and conventions:
- *   All returned masses are in GeV/c². Electron, proton, neutron, and charged-pion values come directly
- *   from the protected targets.h source. The photon is exactly massless. Neutral pions are not supported
- *   output particles; physical inputs must provide their upstream-generated decay photons.
  *
  * Failure behavior:
  *   A PDG code outside the supported LUND particle set raises std::runtime_error
@@ -44,7 +39,7 @@ namespace samples {
  *   corresponding Particle and ultimately written to its LUND record.
  *
  * Algorithm:
- *   Delegate the exact PDG lookup to the target-source adapter so protected values remain hidden and
+ *   Delegate the exact PDG lookup to the target-source adapter so external values remain isolated and
  *   are included in one translation unit only.
  *
  * @param pid Particle PDG identifier selected by the event-source adapter.

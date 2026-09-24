@@ -6,7 +6,7 @@ The authoritative target source is [`src/lund-generation/external/targets.h`](..
 
 The target header, unified GEMC submission payload, and detector cards/YAML under `config/detector/` are external snapshots. They are kept in the repository so workflows remain reproducible, while only minimal compatibility changes are applied around them. The maintained code consumes their interfaces without reformatting or rewriting the external content, so reviewed upstream replacements can be adopted with a small, explicit reference update.
 
-Both uniform generation and physical conversion call this header's `randomVertex()` through `TargetGeometry`. The maintained RG-M catalog selects valid map keys and supplies nucleus/GEMC metadata without changing the protected header. The adapter transfers the caller's full vertex RNG state into and out of its `ran` generator under a mutex, preserving independent seeded streams and legacy draw order. Its particle formatter and mass globals are retained but unused. Every maintained mode, including the electron tester, samples its selected target geometry.
+Both uniform generation and physical conversion call this header's `randomVertex()` through `TargetGeometry`. The maintained RG-M catalog selects valid map keys and supplies nucleus/GEMC metadata without changing the external header. The adapter transfers the caller's full vertex RNG state into and out of its `ran` generator under a mutex, preserving independent seeded streams and legacy draw order. Its particle formatter and mass globals are retained but unused. Every maintained mode, including the electron tester, samples its selected target geometry.
 
 To update geometry:
 
@@ -48,6 +48,6 @@ For 4 and 6 GeV:
 <option name="SCALE_FIELD" value="binary_solenoid, -1"/>
 ```
 
-The checked-in gcards contain these scales. The sourced submission settings select torus `0.5` at 2 GeV and `-1.0` at 4/6 GeV; the protected payload applies the chosen torus scale and fixed solenoid `-1.0` on the GEMC command line. Review these explicit settings together with the selected card, YAML and GEMC module. No detector settings are inferred from a LUND filename.
+The checked-in gcards contain these scales. The sourced submission settings select torus `0.5` at 2 GeV and `-1.0` at 4/6 GeV; the external payload applies the chosen torus scale and fixed solenoid `-1.0` on the GEMC command line. Review these explicit settings together with the selected card, YAML and GEMC module. No detector settings are inferred from a LUND filename.
 
 The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.

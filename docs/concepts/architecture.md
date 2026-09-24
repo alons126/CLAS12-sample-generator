@@ -7,17 +7,17 @@ Maintained code is grouped first by the two user-facing workflows. `src/lund-gen
 | Directory | Responsibility |
 | --- | --- |
 | `src/lund-generation/` | Both uniform and physical LUND creation, their entry points, external geometry, and tests |
-| `src/slurm-submission/` | Sourced setup/submission script, protected GEMC payload, and parity tests |
+| `src/slurm-submission/` | Sourced setup/submission script, external GEMC payload, and parity tests |
 | `src/launcher/` | Shared Python dispatcher and sourced-shell support used by `run.csh` |
 | `src/lund-generation/core/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
 | `src/lund-generation/core/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
-| `src/lund-generation/core/geometry/` | Adapt the protected target definitions to one sampled interaction vertex per event |
+| `src/lund-generation/core/geometry/` | Adapt the external target definitions to one sampled interaction vertex per event |
 | `src/lund-generation/core/support/` | Terminal presentation and the generated-version template |
 | `src/lund-generation/uniform-lund-generator/` | Produce deliberately unphysical acceptance-map events and their monitoring |
 | `src/lund-generation/event-generator-to-lund-converter/` | Dispatch a physical input source to its event-generator/format adapter |
 | `src/lund-generation/event-generator-to-lund-converter/genie-gst/` | Read GENIE GST as the currently implemented physical adapter |
-| `src/lund-generation/external/` | Protected imported target geometry |
-| `src/slurm-submission/external/` | Protected GEMC/reconstruction worker payload |
+| `src/lund-generation/external/` | External imported target geometry |
+| `src/slurm-submission/external/` | External GEMC/reconstruction worker payload |
 
 The two implementation directories intentionally match their installed executable names, so source ownership and runtime diagnostics use the same vocabulary. The GENIE reader is nested under `event-generator-to-lund-converter` as `genie-gst` because the adapter accepts one particular GENIE output format rather than every format GENIE can produce. A future adapter belongs beside it and should identify both generator and input format where necessary. Cross-layer includes state dependencies directly, for example `core/config/RunConfig.h`, `core/lund/Event.h`, and `core/geometry/TargetGeometry.h`.
 
@@ -56,12 +56,12 @@ flowchart TB
     PY --> X{"--execute?"}
     X -->|No| V["Validated preview report"]
     X -->|Yes| A["Replace simulation outputs<br/>Submit sbatch array"]
-    A --> J["Protected GEMC and reconstruction worker"]
+    A --> J["External GEMC and reconstruction worker"]
 ```
 
 Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src/launcher/workflow.py), [`uniform_lund_generator_main.cpp`](../../src/lund-generation/apps/uniform_lund_generator_main.cpp), `generateUniform()`, [`event_generator_to_lund_converter_main.cpp`](../../src/lund-generation/apps/event_generator_to_lund_converter_main.cpp), `convertPhysical()`, [`setup_and_submit.csh`](../../src/slurm-submission/setup_and_submit.csh), [`submit.py`](../../src/slurm-submission/submit.py), [`resolve_inputs.py`](../../src/slurm-submission/resolve_inputs.py), and [`submit_GEMC_sample.sh`](../../src/slurm-submission/external/submit_GEMC_sample.sh).
 
-The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](../submit-simulation/guide.md) for the full call chain and editable settings.
+The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the external payload. Creation never submits jobs automatically. See the [submission guide](../submit-simulation/guide.md) for the full call chain and editable settings.
 
 ## Sample configuration boundary
 
@@ -100,7 +100,7 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 
 ## Simulation boundary
 
-`src/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python checks the requested shared GEMC version, loads it in an invocation-owned environment, verifies the resulting data directory and executable, checks remaining inputs, resets simulation output directories only with `--execute`, and submits one array per sample. The protected payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
+`src/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python checks the requested shared GEMC version, loads it in an invocation-owned environment, verifies the resulting data directory and executable, checks remaining inputs, resets simulation output directories only with `--execute`, and submits one array per sample. The external payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
 
 ## Adding functionality
 
@@ -108,7 +108,7 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 - Add another physical adapter under `src/lund-generation/event-generator-to-lund-converter/<generator-format>/` and register it behind `convertPhysical()`; keep the public executable and manifest contract unchanged.
 - Replace or extend `src/lund-generation/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
-- Resolve submission inputs from the completed manifest, explicit config and CLI; use the protected payload’s scheduler defaults.
+- Resolve submission inputs from the completed manifest, explicit config and CLI; use the external payload’s scheduler defaults.
 
 Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 

@@ -40,7 +40,7 @@
 #
 # Workflow:
 #     initialize colors -> submit.py -> resolve_inputs.py -> load selected GEMC module ->
-#     sbatch -> protected payload.
+#     sbatch -> external payload.
 #
 # Inputs:
 #     quoted CLI arguments and the ifarm module/reconstruction environment.

@@ -216,7 +216,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // Store all settings as text so the exact resolved values used by generation can also be written
     // to provenance. Shared defaults preserve the established RG-M beam/Ar setup, separate vertex and
     // kinematic seeds and the single supported LUND text contract. Particle masses are owned by the
-    // protected target source and are not configurable here.
+    // external target source and are not configurable here.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
                  {"rgm-target", "Ar40"},

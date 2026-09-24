@@ -38,8 +38,8 @@ int main(int argc, char** argv) {
     TTree tree("gst", "Synthetic conversion fixture");
     Bool_t qel = true, mec = false, res = false, dis = false;
     const std::string mode = argc > 2 ? argv[2] : "normal";
-    // Include one residual pi0 and one unrelated kaon to verify that the converter skips both while
-    // retaining the upstream-provided photon. Large mode repeats zero-initialized unsupported entries.
+    // Include two unsupported identities to verify filtering while retaining the supported photon.
+    // Large mode repeats zero-initialized unsupported entries.
     Int_t resid = 7, nf = mode == "large" ? 300 : 7, coordinate_count = mode == "mismatched-arrays" ? 6 : nf;
     Int_t pdgf[320] = {2212, 2112, 211, -211, 111, 22, 321};
     Double_t pxf[320] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7};

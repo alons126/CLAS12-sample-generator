@@ -19,7 +19,7 @@
  *
  * Format contract:
  *   The LUND format uses fixed whitespace, precision, and uniform per-file IDs. Particle masses come
- *   from the protected target source through particleMass(). Records use momentum in GeV/c, mass in
+ *   from the external target source through particleMass(). Records use momentum in GeV/c, mass in
  *   GeV/c², energy in GeV, and vertices in cm.
  *
  * Failure behavior:
@@ -410,7 +410,7 @@ void LundWriter::finish(std::uint64_t scanned) {
     manifest.open(temporary_log);
 
     // Fixed top-level provenance identifies the manifest schema, this project build/revision, the ROOT
-    // runtime, and the exact protected targets.h content compiled into the application. count_ records
+    // runtime, and the exact external targets.h content compiled into the application. count_ records
     // successful serialization independently of how many source events were examined.
     manifest << "{\n  \"schema_version\": 1,\n  \"workflow\": " << jsonString(workflow_) << ",\n  \"version\": " << jsonString(SAMPLE_VERSION)
              << ",\n  \"revision\": " << jsonString(SAMPLE_REVISION) << ",\n  \"root_version\": " << jsonString(gROOT->GetVersion())
