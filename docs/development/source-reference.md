@@ -8,12 +8,12 @@ This chapter inventories the supported code and the archived support code so a f
 | --- | --- |
 | `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds libraries/apps/tests and installation |
 | `src/CMakeLists.txt` | Adds the LUND-generation, Slurm-submission, and shared-launcher source trees |
-| `src/lund-generation/CMakeLists.txt` | Defines `LundCore`, `UniformGeneration`, `GenieConversion`, and `PhysicalConversion` |
+| `src/lund-generation/CMakeLists.txt` | Defines `LundCore`, `UniformGeneration`, `GenieGstConversion`, and `PhysicalConversion` |
 | `src/slurm-submission/CMakeLists.txt` | Installs submission programs and registers submission tests |
 | `src/launcher/CMakeLists.txt` | Registers the sourced-launcher integration test |
 | `src/lund-generation/apps/CMakeLists.txt` | Defines and installs the two application targets |
 | `src/lund-generation/apps/uniform_main.cpp` | Handles `--help`, parses uniform settings, invokes generation; returns 1 on caught exceptions |
-| `src/lund-generation/apps/genie_to_lund_main.cpp` | Generator-independent physical entry point and error reporting |
+| `src/lund-generation/apps/event_generator_to_lund_main.cpp` | Generator-independent physical entry point and error reporting |
 | `.vscode/c_cpp_properties.json` | Uses Debug compile_commands.json for editor compiler/include settings |
 
 Production sources compile once into conventional targets. References to archived implementation files appear only in test adapters. Test executables are not installed.
@@ -44,21 +44,21 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 [Version.h.in](../../src/lund-generation/core/support/Version.h.in) embeds project version, target-header SHA-256, and the configure-time Git revision into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 
-## 3. `clas12-uniform` implementation
+## 3. Uniform-to-LUND implementation
 
-[UniformConfig.h](../../src/lund-generation/clas12-uniform/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
+[UniformConfig.h](../../src/lund-generation/uniform-to-lund-converter/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
 
-[UniformGenerator.h](../../src/lund-generation/clas12-uniform/UniformGenerator.h) / [UniformGenerator.cpp](../../src/lund-generation/clas12-uniform/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, one `UniformMonitoring` object and a writer. Internal `momentum` constructs Cartesian vectors; `triggerPhi` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves one ROOT product, the required rendered plots, and the generation log.
+[UniformGenerator.h](../../src/lund-generation/uniform-to-lund-converter/UniformGenerator.h) / [UniformGenerator.cpp](../../src/lund-generation/uniform-to-lund-converter/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, one `UniformMonitoring` object and a writer. Internal `momentum` constructs Cartesian vectors; `triggerPhi` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves one ROOT product, the required rendered plots, and the generation log.
 
-[UniformMonitoring.h](../../src/lund-generation/clas12-uniform/UniformMonitoring.h) / [UniformMonitoring.cpp](../../src/lund-generation/clas12-uniform/UniformMonitoring.cpp) own the complete uniform-only monitoring contract. The implementation preserves the legacy organization, titles, correlations, axis text settings and canvas layout, widens every vertex-z axis to −7.5–5 cm for the maintained target catalog, and generalizes hadron tokens to `pFD`, `pCD`, `nFD`, `nCD`, `pipFD`, `pipCD`, `pimFD`, and `pimCD`. `save` writes all histograms once to `<prefix>_monitoring_plots.root` and always renders those same objects into `MonitoringPlotsPath`.
+[UniformMonitoring.h](../../src/lund-generation/uniform-to-lund-converter/UniformMonitoring.h) / [UniformMonitoring.cpp](../../src/lund-generation/uniform-to-lund-converter/UniformMonitoring.cpp) own the complete uniform-only monitoring contract. The implementation preserves the legacy organization, titles, correlations, axis text settings and canvas layout, widens every vertex-z axis to −7.5–5 cm for the maintained target catalog, and generalizes hadron tokens to `pFD`, `pCD`, `nFD`, `nCD`, `pipFD`, `pipCD`, `pimFD`, and `pimCD`. `save` writes all histograms once to `<prefix>_monitoring_plots.root` and always renders those same objects into `MonitoringPlotsPath`.
 
 The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p components using the run-global index. Neutrons use uniform momentum unless their optional fixed mode is selected. Hadron species and FD/CD region resolve the documented angular and threshold defaults. Mathematical definitions are in [sampling models](../concepts/sampling-models.md).
 
-## 4. `clas12-generator-to-lund` implementation
+## 4. Event-generator-to-LUND implementation
 
-[PhysicalConverter.h](../../src/lund-generation/clas12-generator-to-lund/PhysicalConverter.h) / [PhysicalConverter.cpp](../../src/lund-generation/clas12-generator-to-lund/PhysicalConverter.cpp) provide the stable physical-source dispatch. `event-generator=genie` selects the current adapter; future adapters join here without changing the public executable.
+[PhysicalConverter.h](../../src/lund-generation/event-generator-to-lund-converter/PhysicalConverter.h) / [PhysicalConverter.cpp](../../src/lund-generation/event-generator-to-lund-converter/PhysicalConverter.cpp) provide the stable physical-source dispatch. `event-generator=genie-gst` selects the current format-specific adapter; future adapters join here without changing the public executable.
 
-[GenieConverter.h](../../src/lund-generation/clas12-generator-to-lund/genie/GenieConverter.h) / [GenieConverter.cpp](../../src/lund-generation/clas12-generator-to-lund/genie/GenieConverter.cpp) are nested below the physical dispatcher because GENIE is one adapter of the `clas12-generator-to-lund` executable. They expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, selects process/species, and writes an `Event`. Physical conversion creates no monitoring histograms.
+[GenieConverter.h](../../src/lund-generation/event-generator-to-lund-converter/genie-gst/GenieConverter.h) / [GenieConverter.cpp](../../src/lund-generation/event-generator-to-lund-converter/genie-gst/GenieConverter.cpp) are nested below the physical dispatcher because GENIE GST is one adapter of the `clas12-generator-to-lund` executable. They expose `convertGenie(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, selects process/species, and writes an `Event`. Physical conversion creates no monitoring histograms.
 
 The reader arrays have no maintained fixed-size particle buffer. ROOT reports each current-entry length through `TTreeReaderArray::GetSize()` from the branch's leaf-count metadata. Conversion requires every reported length to equal nonnegative `nf` before accessing index zero, and a 300-supported-particle fixture verifies traversal through the final element. Protons, neutrons, charged pions and photons are copied in input order. Residual neutral pions are skipped because their two-photon decay must be generated upstream. Only QE, MEC, RES, and DIS reactions are supported; adding another reaction requires updating the adapter. Input errors, unsupported-only input and output failures do not publish a manifest. Before a follow-up file starts, the physical-input cutoff requires at least `events-per-file` inclusive input entries; it never interrupts a file already in progress. Capacity still counts accepted events. Schema and process conventions are in the [GENIE guide](../create-lund/physical.md).
 
@@ -79,7 +79,7 @@ The resolver obtains the prefix and task count from the completed manifest or ex
 
 - `config/samples/uniform-<label>-{2070,4029,5986}MeV.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each established beam energy; pion and CD files are explicitly marked unvalidated for production.
 - `electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and target-sampled vertices.
-- `genie.conf`: an explicit Ar conversion example.
+- `genie-gst.conf`: an explicit Ar conversion example.
 - `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
 - `config/detector/Generation_files_*`: unchanged 2/4/6 GeV cards and reconstruction YAML for the archived versions. They are resources, not generated models. Matching detector/data dependencies are external.
 

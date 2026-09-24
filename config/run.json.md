@@ -19,7 +19,7 @@ Convert physical generator output by naming the physical source, profile, input 
 
 ```tcsh
 source run.csh --workflow create-lund --source physical \
-  --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+  --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 ```
 
 Select completed LUND output using `--lund-dir`, then submit:

@@ -200,7 +200,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
             run(current,'--input',gst,'--beam-energy',beam,'--target',target,'--A',A,'--Z',Z,'--events',10000,'--output',new_root)
 
             q2={'2.07052':'Q2_0_02','4.02962':'Q2_0_25','5.98636':'Q2_0_40'}[beam]
-            new=new_root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{label}_GEMC-unknown'
+            new=new_root/f'rgm_fall2021_Ar__genie-gst-unknown__unknown__{q2}__{label}_GEMC-unknown'
             m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
             assert not list((new/'lundfiles/lund-gen-monitoring').glob('*.root'))
             old=list((original/'lundfiles').glob('*.txt'))
@@ -217,7 +217,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
         run(legacy,gst,original,1,'1-foil-small',12,6)
         run(current,'--input',gst,'--beam-energy',2.07052,'--target','1-foil-small','--A',12,'--Z',6,'--events',10000,'--output',new_root)
 
-        new=new_root/'rgm_fall2021_Ar__genie-unknown__unknown__Q2_0_02__2070MeV_GEMC-unknown'
+        new=new_root/'rgm_fall2021_Ar__genie-gst-unknown__unknown__Q2_0_02__2070MeV_GEMC-unknown'
         old_path=next((original/'lundfiles').glob('*.txt'))
         m=json.loads((new/'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
         assert len(old_path.read_text().splitlines())==8 and m['scanned_events']==7 and m['written_events']==6

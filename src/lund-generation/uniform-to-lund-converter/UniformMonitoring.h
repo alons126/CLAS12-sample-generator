@@ -4,7 +4,7 @@
 
 /**
  * @file UniformMonitoring.h
- * @brief Declares the single uniform-sample monitoring implementation.
+ * @brief Declares monitoring owned by the uniform-to-LUND converter.
  *
  * Purpose:
  *   Keep every uniform monitoring histogram in one ROOT file while preserving the archived histogram

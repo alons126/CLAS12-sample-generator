@@ -2,15 +2,15 @@
 
 ```bash
 build/debug/apps/clas12-generator-to-lund \
-  --event-generator genie \
-  --config config/samples/genie.conf \
+  --event-generator genie-gst \
+  --config config/samples/genie-gst.conf \
   --input '/path/to/truth/gst*.root' \
-  --output runs/genie-example
+  --output runs/genie-gst-example
 ```
 
-`event-generator` defaults to `genie`; other values are rejected until their adapter is implemented. Quote globs so ROOT receives the pattern. GENIE inputs must contain a tree named `gst`. Select `--rgm-target` to resolve target geometry, nuclear A/Z, and the GEMC target variation together; explicit overrides remain available. The converter never guesses scientific metadata from input filenames.
+`event-generator` defaults to `genie-gst`; the name identifies GENIE as the producer and GST ROOT as the input format. Other values are rejected until their adapter is implemented. Quote globs so ROOT receives the pattern. GENIE GST inputs must contain a tree named `gst`. Select `--rgm-target` to resolve target geometry, nuclear A/Z, and the GEMC target variation together; explicit overrides remain available. The converter never guesses scientific metadata from input filenames.
 
-Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>_GEMC-<version>` below the supplied output parent. For example, `C12-small`, GENIE 3.2.2, tune `GEM21_11a_00_000`, and GEMC 5.14 produce `rgm_fall2021_C_S__genie-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14`. Every component is also stored separately in the manifest.
+Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>_GEMC-<version>` below the supplied output parent. For example, `C12-small`, GENIE GST 3.2.2, tune `GEM21_11a_00_000`, and GEMC 5.14 produce `rgm_fall2021_C_S__genie-gst-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14`. Every component is also stored separately in the manifest.
 
 ## Required schema
 

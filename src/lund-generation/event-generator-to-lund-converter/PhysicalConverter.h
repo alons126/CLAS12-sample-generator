@@ -9,7 +9,8 @@
  * Purpose:
  *   Keep the user-facing physical workflow and shared LUND infrastructure independent of concrete
  *   event-generator files, schemas and particle records. Each supported generator is implemented by a
- *   small adapter beneath this directory and is reached only through this dispatch boundary.
+ *   small adapter beneath the event-generator-to-LUND converter and is reached only through this
+ *   dispatch boundary.
  *
  * Workflow:
  *   The create-lund entry point resolves and validates RunConfig -> convertPhysical reads the resolved
@@ -60,7 +61,8 @@ namespace samples {
  *
  * Inputs:
  *   config is a caller-owned, immutable physical-source configuration. The current implementation accepts
- *   `genie`; configuration resolution supplies that value as the default when no override is provided.
+ *   `genie-gst`; configuration resolution supplies that format-specific value as the default when no
+ *   override is provided.
  *
  * Outputs:
  *   No C++ value is returned and the dispatcher itself owns no output state. A successful adapter call

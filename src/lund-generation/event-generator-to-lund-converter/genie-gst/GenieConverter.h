@@ -12,7 +12,7 @@
  *   components remain responsible for target sampling, LUND serialization, splitting and provenance.
  *
  * Workflow:
- *   convertPhysical selects GENIE -> convertGenie validates and scans the GST chain -> accepted
+ *   convertPhysical selects `genie-gst` -> convertGenie validates and scans the GST chain -> accepted
  *   QE/MEC/RES/DIS entries become LUND events -> LundWriter publishes the completed run manifest.
  *
  * Inputs:

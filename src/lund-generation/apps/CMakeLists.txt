@@ -40,7 +40,7 @@ endif()
 # Purpose:
 #     Link the selected event-generator adapter and install its generator-independent executable.
 if(BUILD_GENIE)
-    add_executable(clas12-generator-to-lund genie_to_lund_main.cpp)
+    add_executable(clas12-generator-to-lund event_generator_to_lund_main.cpp)
     target_link_libraries(clas12-generator-to-lund PRIVATE PhysicalConversion)
     set_target_properties(clas12-generator-to-lund PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
     install(TARGETS clas12-generator-to-lund RUNTIME DESTINATION bin)

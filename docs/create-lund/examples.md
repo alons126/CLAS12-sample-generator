@@ -86,7 +86,7 @@ The tester remains at beam momentum and scans 5–40° with full azimuth while s
 source run.csh \
   --workflow create-lund \
   --source physical \
-  --event-generator genie \
+  --event-generator genie-gst \
   --event-generator-version 3.2.2 \
   --tune GEM21_11a_00_000 \
   --q2-cut Q2_0_40 \

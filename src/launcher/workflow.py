@@ -110,7 +110,7 @@ WORKFLOW_GUIDANCE = """Choose one of these forms:
   source run.csh --workflow create-lund --source uniform \\
     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
   source run.csh --workflow create-lund --source physical \\
-    --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+    --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
   source run.csh --workflow submit --lund-dir RUN/lundfiles
   source run.csh --workflow create-lund --source uniform --build true --test true --run false
 Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
@@ -558,7 +558,8 @@ def main():
     if config['run']:
         if workflow == 'create-lund':
             # Uniform samples use the random-kinematics application. Physical inputs use the generic
-            # event-generator converter, whose `--event-generator` option currently defaults to GENIE.
+            # event-generator converter, whose `--event-generator` option currently defaults to the
+            # GENIE GST adapter rather than claiming every format emitted by GENIE.
             app = 'clas12-uniform' if source == 'uniform' else 'clas12-generator-to-lund'
 
             # Compute padding from uncolored text because terminal escape sequences occupy no columns.

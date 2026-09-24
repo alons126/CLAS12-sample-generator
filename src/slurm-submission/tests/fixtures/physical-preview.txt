@@ -11,7 +11,7 @@ No sbatch, output replacement or farm_out cleanup; add --execute to submit.
 RUNNING_DIR: {CHECKOUT}
 CLEAR_FAR_OUT:                                                                                false
 GEMC_VERSION:                                                                                  5.14
-Sample type:                                                                       physical (genie)
+Sample type:                                                                   physical (genie-gst)
 
 Switching GEMC version to 5.14...
 Unloading gemc
@@ -93,7 +93,7 @@ SUBMIT_SCRIPT_FILE: {CHECKOUT}/src/slurm-submission/external/submit_GEMC_sample.
 --> SUBMIT_SCRIPT_FILE exists.
 
 ====================================================================================================
-=                              Submitting sbatch job for genie sample                              =
+=                            Submitting sbatch job for genie-gst sample                            =
 ====================================================================================================
 Preview command (not submitted):
 sbatch --job-name=C12_GEM21_11a_00_000_2070MeV_Q2_0_02_GEMC5.14 --array=1-2 {CHECKOUT}/src/slurm-submission/external/submit_GEMC_sample.sh

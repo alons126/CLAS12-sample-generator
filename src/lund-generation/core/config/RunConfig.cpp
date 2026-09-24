@@ -254,7 +254,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     } else {
         // Physical mode describes existing event-generator truth and its output provenance. It does
         // not run GENIE; the current adapter reads GENIE GST input selected below by event-generator.
-        c.values_.insert({{"input", ""}, {"event-generator", "genie"}, {"event-generator-version", "unknown"}, {"tune", "unknown"}, {"q2-cut", "auto"}, {"gemc-version", "unknown"}});
+        c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "unknown"}, {"q2-cut", "auto"}, {"gemc-version", "unknown"}});
     }
 
     // Centralize assignment so profiles and CLI overrides share the same strict known-key policy.
@@ -597,7 +597,7 @@ void RunConfig::validate(bool uniform) const {
         // Physical mode currently has one adapter: GENIE GST ROOT input. A nonempty path/glob is
         // required here; adapter opening and tree/schema checks occur when conversion begins.
         if (get("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
-        if (get("event-generator") != "genie") { throw std::runtime_error("Only --event-generator genie is currently implemented"); }
+        if (get("event-generator") != "genie-gst") { throw std::runtime_error("Only --event-generator genie-gst is currently implemented"); }
 
         // These fields form the physical output-directory contract and manifest provenance. Tokens
         // such as `unknown` or `none` remain explicit valid values; omission is not allowed.
@@ -735,7 +735,7 @@ std::string help(bool uniform) {
     // The physical example quotes its input glob so an interactive shell passes the pattern to the
     // converter instead of expanding it before the adapter receives it.
     std::string result = uniform ? "clas12-uniform --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
-                                 : "clas12-generator-to-lund --event-generator genie --input 'gst*.root' --output PARENT_DIRECTORY\n";
+                                 : "clas12-generator-to-lund --event-generator genie-gst --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
     // Shared settings control beam/target metadata, event and RNG counts, and automatic naming.
     result +=
@@ -756,10 +756,10 @@ std::string help(bool uniform) {
             "Hadron theta and phi are always sampled uniformly inside their configured ranges.\n"
             "Sampled hadron momentum extends to the beam energy. Uniform monitoring is always written and rendered.\n";
     } else {
-        // Physical-only settings identify the current GENIE adapter and preserve generator, tune,
+        // Physical-only settings identify the current GENIE GST adapter and preserve generator, tune,
         // selection, detector, and target-variation provenance in the output contract.
         result +=
-            "Physical: --event-generator genie (default), --event-generator-version VERSION, --tune NAME,\n"
+            "Physical: --event-generator genie-gst (default), --event-generator-version VERSION, --tune NAME,\n"
             "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n"
             "For physical input, --events-per-file also sets the minimum inclusive input block required before a follow-up file starts, aligned with JOB_NEVENTS.\n";
     }

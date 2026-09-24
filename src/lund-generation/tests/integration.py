@@ -105,7 +105,7 @@ def physical_output(root, beam='5.98636'):
     q2 = {'2.07052':'Q2_0_02', '4.02962':'Q2_0_25', '5.98636':'Q2_0_40'}.get(str(beam), 'none')
     mev = int(float(beam) * 1000 + 0.5)
 
-    return root/f'rgm_fall2021_Ar__genie-unknown__unknown__{q2}__{mev}MeV_GEMC-unknown'
+    return root/f'rgm_fall2021_Ar__genie-gst-unknown__unknown__{q2}__{mev}MeV_GEMC-unknown'
 
 # angles --------------------------------------------------------------------
 # region angles
@@ -345,7 +345,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable, '--input', gst, '--output', output_root, '--events', '6', '--events-per-file', '1', '--A','40','--Z','18')
 
         m,events=read_run(output)
-        assert m['workflow']=='physical' and m['config']['event-generator']=='genie'
+        assert m['workflow']=='physical' and m['config']['event-generator']=='genie-gst'
         assert m['scanned_events']==7 and m['written_events']==6
         assert [f['events'] for f in m['files']]==[1]*6
         assert [int(float(h[9])) for h,p in events]==[1,2,3,4,1,1]
@@ -382,7 +382,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
         run(executable,'--input',gst,'--output',named_root,'--events','1','--rgm-target','C12-small',
             '--event-generator-version','3.2.2','--tune','GEM21_11a_00_000','--q2-cut','Q2_0_40','--gemc-version','5.14')
 
-        named=named_root/'rgm_fall2021_C_S__genie-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14'
+        named=named_root/'rgm_fall2021_C_S__genie-gst-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14'
         nm,_=read_run(named)
         assert nm['config']['A']=='12' and nm['config']['Z']=='6' and nm['config']['target']=='1-foil-small'
         limited_root=root/'limited'

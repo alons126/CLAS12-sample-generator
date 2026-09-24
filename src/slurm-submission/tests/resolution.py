@@ -165,11 +165,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     for key in ('channel', 'hadron', 'hadron-region'):
         physical['config'].pop(key)
 
-    physical['config'].update({'event-generator': 'genie', 'tune': 'GEM21_11a_00_000', 'q2-cut': 'Q2_0_02'})
+    physical['config'].update({'event-generator': 'genie-gst', 'tune': 'GEM21_11a_00_000', 'q2-cut': 'Q2_0_02'})
     save(physical)
 
     result = resolve(lund, {}, project)
-    assert result['source'] == 'physical' and result['SAMPLE_GENERATOR'] == 'genie'
+    assert result['source'] == 'physical' and result['SAMPLE_GENERATOR'] == 'genie-gst'
     assert result['UNIFORM_SAMPLE_CHANNEL'] == 'none' and result['JOB_NEVENTS'] == '3'
 
     # Check actual output schema and relative paths from workflow 1, when the executable is available.

@@ -38,7 +38,7 @@ CLI options:
     --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy channel label.
     --hadron NAME                 Set proton, neutron, pip, or pim for an eh channel.
     --hadron-region FD|CD         Select the eh hadron detector region.
-    --event-generator NAME        Set physical generator; default: genie without a manifest.
+    --event-generator NAME        Set physical input adapter; default: genie-gst without a manifest.
     --tune NAME                   Set physical tune; default: unknown without a manifest.
     --q2-cut NAME                 Record physical input Q2 label; no cut is applied here.
     --prefix NAME                 Set LUND filename prefix; required without a manifest.
@@ -78,7 +78,7 @@ OPTIONS = {
     'channel': 'Uniform 1e, eh, electron-tester, or an explicit legacy/regional label',
     'hadron': 'proton, neutron, pip or pim when channel=eh',
     'hadron-region': 'FD or CD when channel=eh',
-    'event-generator': 'Physical generator label (default: genie for physical input)',
+    'event-generator': 'Physical input adapter label (default: genie-gst for physical input)',
     'tune': 'Physical tune label (default: unknown for physical, none for uniform)',
     'q2-cut': 'Physical input Q2 label, not a cut applied here',
     'prefix': 'Filename prefix before _INDEX.txt; required without a manifest',
@@ -601,7 +601,7 @@ def resolve(lund_directory, explicit, root):
     # Form readable labels and a default Slurm name from validated metadata, then hand the
     # coordinator only the environment fields that its simulation payload consumes.
     target = token(values['rgm-target'], 'rgm-target')
-    generator = token(values.get('event-generator', 'genie') if source == 'physical' else 'uniform', 'event-generator')
+    generator = token(values.get('event-generator', 'genie-gst') if source == 'physical' else 'uniform', 'event-generator')
     tune = token(values.get('tune', 'unknown' if source == 'physical' else 'none'), 'tune')
     q2 = token(values.get('q2-cut', 'unknown' if source == 'physical' else 'none'), 'q2-cut')
     beam = f'{mev}MeV'

@@ -89,7 +89,7 @@ source run.csh --workflow submit --lund-dir /shared/archive/lundfiles \
   --gemc-target-variation rgm_fall2021_Ar
 ```
 
-Without a manifest, source, beam energy in GeV, target identity and prefix are required. Uniform input also needs its channel (`1e`, `eh`, `electron-tester`, or an explicit legacy/regional label). `eh` requires hadron and region. Physical input accepts `--event-generator` (default genie), `--tune` and `--q2-cut` (default unknown). Supply a detector target variation or explicit GCARD. The file inventory must be contiguous `PREFIX_1.txt` through `PREFIX_N.txt`. The resolver discovers the job count, but requires `events-per-job` because it does not scan whole LUND files to count events.
+Without a manifest, source, beam energy in GeV, target identity and prefix are required. Uniform input also needs its channel (`1e`, `eh`, `electron-tester`, or an explicit legacy/regional label). `eh` requires hadron and region. Physical input accepts `--event-generator` (default `genie-gst`), `--tune` and `--q2-cut` (default unknown). Supply a detector target variation or explicit GCARD. The file inventory must be contiguous `PREFIX_1.txt` through `PREFIX_N.txt`. The resolver discovers the job count, but requires `events-per-job` because it does not scan whole LUND files to count events.
 
 ## Server execution and output replacement
 

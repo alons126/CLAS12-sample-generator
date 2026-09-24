@@ -28,7 +28,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `vertex-seed` | `12345` | Vertex RNG seed; zero requests ROOT automatic, nonrepeatable seeding |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
-| `event-generator` | `genie` | Physical adapter name; GENIE is currently implemented |
+| `event-generator` | `genie-gst` | Physical adapter name; generator and input format are explicit |
 | `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |
 | `tune`, `q2-cut` | `unknown` / energy-based | Generator provenance and naming components |
 | `gemc-version` | `unknown` | Planned detector-simulation version and naming component |

@@ -43,7 +43,7 @@ CLI options (parsed by resolve_inputs.py):
     --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy label.
     --hadron NAME                 Set proton, neutron, pip, or pim for eh.
     --hadron-region FD|CD         Select the eh hadron detector region.
-    --event-generator NAME        Set physical generator; default: genie without a manifest.
+    --event-generator NAME        Set physical input adapter; default: genie-gst without a manifest.
     --tune NAME                   Set physical tune; default: unknown without a manifest.
     --q2-cut NAME                 Record physical input Q2 label; no cut is applied here.
     --prefix NAME                 Set LUND filename prefix; required without a manifest.

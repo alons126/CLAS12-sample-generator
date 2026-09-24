@@ -21,7 +21,7 @@
 #     --channel NAME                Uniform 1e, eh, electron-tester, or a legacy label.
 #     --hadron NAME                 Proton, neutron, pip, or pim for eh.
 #     --hadron-region FD|CD         Eh hadron detector region.
-#     --event-generator NAME        Physical generator; default: genie without a manifest.
+#     --event-generator NAME        Physical input adapter; default: genie-gst without a manifest.
 #     --tune NAME                   Physical tune; default: unknown without a manifest.
 #     --q2-cut NAME                 Physical input Q2 label; no cut is applied here.
 #     --prefix NAME                 LUND filename prefix; required without a manifest.

@@ -34,11 +34,11 @@
  *   report and nonzero exit status.
  */
 
-#include "clas12-generator-to-lund/PhysicalConverter.h"
+#include "event-generator-to-lund-converter/PhysicalConverter.h"
 
 #include <stdexcept>
 
-#include "clas12-generator-to-lund/genie/GenieConverter.h"
+#include "event-generator-to-lund-converter/genie-gst/GenieConverter.h"
 
 namespace samples {
 
@@ -75,8 +75,8 @@ namespace samples {
  */
 void convertPhysical(const RunConfig& config) {
     // Keep dispatch as a direct exact-name comparison. The adapter receives the same immutable RunConfig
-    // used by the surrounding workflow and owns all GENIE-specific validation, reading and conversion.
-    if (config.get("event-generator") == "genie") {
+    // used by the surrounding workflow and owns all GENIE-GST-specific validation, reading and conversion.
+    if (config.get("event-generator") == "genie-gst") {
         convertGenie(config);
 
         // A completed adapter call satisfies this dispatch request; return explicitly so later adapter

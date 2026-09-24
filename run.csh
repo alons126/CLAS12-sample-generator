@@ -49,7 +49,7 @@
 #   --channel NAME                 Set uniform channel; normally read from the manifest.
 #   --hadron NAME                  Set uniform hadron when channel=eh.
 #   --hadron-region FD|CD          Set uniform hadron region when channel=eh.
-#   --event-generator NAME         Set physical generator; default: genie without a manifest.
+#   --event-generator NAME         Set physical input adapter; default: genie-gst without a manifest.
 #   --tune NAME                    Set physical tune; default: unknown without a manifest.
 #   --q2-cut NAME                  Set physical Q2 label; no cut is applied here.
 #   --prefix NAME                  Set LUND filename prefix; required without a manifest.
@@ -69,7 +69,7 @@
 #   source run.csh --workflow create-lund --source uniform \
 #     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 #   source run.csh --workflow create-lund --source physical \
-#     --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+#     --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 #   source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
 # 
 # Forwarded options:
@@ -153,7 +153,7 @@ if ($#argv == 0) then
     echo ""
     echo "Convert physical generator output:"
     echo '  source run.csh --workflow create-lund --source physical \'
-    echo "    --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
+    echo "    --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
     echo ""
     echo "Submit completed LUND files:"
     echo "  source run.csh --workflow submit --lund-dir RUN/lundfiles"

@@ -15,7 +15,7 @@ The server checkout is intentionally disposable. Before building, `run.csh` veri
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform --config config/samples/uniform-enFD-5986MeV.conf --output runs/en-001
-source run.csh --workflow create-lund --source physical --config config/samples/genie.conf \
+source run.csh --workflow create-lund --source physical --config config/samples/genie-gst.conf \
   --input '/data/genie/*.root' --output runs/physical
 source run.csh --workflow create-lund --source uniform --build true --test true --run false
 ```

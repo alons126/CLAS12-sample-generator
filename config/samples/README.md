@@ -9,7 +9,7 @@ source run.csh --workflow create-lund --source uniform \
 
 ```tcsh
 source run.csh --workflow create-lund --source physical \
-  --config config/samples/genie.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+  --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 ```
 
 The executable installs built-in defaults, reads the named profile, then applies explicit `--key value` overrides. Unknown and repeated keys fail. Blank lines and lines beginning with `#` are ignored; inline comments, sections, quoting, and environment expansion are unsupported. Every checked-in profile groups its values under comment-only explanation sections covering their purpose, consumers, units, derived behavior, output contract, and relevant validation limits.
@@ -43,7 +43,7 @@ The electron tester profiles sample the selected target geometry and scan electr
 
 | Profile | Purpose |
 | --- | --- |
-| `genie.conf` | Physical GENIE GST conversion example |
+| `genie-gst.conf` | Physical GENIE GST conversion example |
 | `legacy-coderun.conf` | Archived uniform `CodeRun.cpp` compatibility settings |
 | `legacy-genie-wrapper.conf` | Archived GENIE wrapper compatibility settings |
 
@@ -57,7 +57,7 @@ Uniform profiles may set `channel`, `hadron`, `hadron-region`, `electron-theta-m
 
 ## Available physical options
 
-Physical profiles may set `input`, `event-generator`, `event-generator-version`, `tune`, `q2-cut`, and `gemc-version` in addition to the common options. `input` and `output` are normally supplied at runtime. The implemented physical adapter is `genie`.
+Physical profiles may set `input`, `event-generator`, `event-generator-version`, `tune`, `q2-cut`, and `gemc-version` in addition to the common options. `input` and `output` are normally supplied at runtime. The implemented physical adapter is `genie-gst`, identifying both the generator and its GST input format.
 
 The full types, units, allowed values, automatic resolutions, RG-M target catalog, and failure behavior are documented in [configuration.md](../../docs/create-lund/configuration.md). The selected executable also prints its current interface:
 

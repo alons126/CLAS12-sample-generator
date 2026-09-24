@@ -37,7 +37,7 @@
  *   ROOT read failures and output failures terminate conversion with an exception.
  */
 
-#include "clas12-generator-to-lund/genie/GenieConverter.h"
+#include "event-generator-to-lund-converter/genie-gst/GenieConverter.h"
 
 #include <TChain.h>
 #include <TTreeReader.h>

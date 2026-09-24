@@ -68,7 +68,7 @@ Keep the project centered on exactly two user-facing workflows:
 
 Keep these workflows separate: creating LUND files does not automatically submit simulation, and submission consumes already completed LUND output. Avoid extra workflow modes, abstraction layers, or orchestration features unless they directly support one of these two responsibilities.
 
-At the user interface, uniform generation and physical-event conversion are `--source uniform` and `--source physical` modes of the single `create-lund` workflow, not separate top-level workflows. The physical executable is named `clas12-generator-to-lund`; it accepts `--event-generator`, defaulting to `genie`. Do not expose `--source genie` or the retired `clas12-genie-to-lund` name. Likewise, the per-array-task GEMC/reconstruction runner is an internal worker of ifarm submission, not a third user-facing workflow. Maintained executables and scripts may remain separate internally when that keeps dependencies and code simple.
+At the user interface, uniform generation and physical-event conversion are `--source uniform` and `--source physical` modes of the single `create-lund` workflow, not separate top-level workflows. The physical executable is named `clas12-generator-to-lund`; it accepts `--event-generator`, defaulting to the format-specific `genie-gst` adapter. Do not expose `--source genie`, `--source genie-gst`, or the retired `clas12-genie-to-lund` name. Likewise, the per-array-task GEMC/reconstruction runner is an internal worker of ifarm submission, not a third user-facing workflow. Maintained executables and scripts may remain separate internally when that keeps dependencies and code simple.
 
 # Legacy design sources
 
@@ -81,7 +81,7 @@ When unifying behavior, compare both implementations rather than assuming one ar
 
 ## LUND workflow invariants and differences
 
-Unify the mechanics of LUND creation without erasing the semantics of each source workflow. The common layer may own configuration validation, LUND record serialization, output-directory layout, file lifecycle, provenance, and summaries. Uniform monitoring remains inside `src/lund-generation/clas12-uniform/`; physical adapters create no monitoring plots. Each sample adapter must still define how events are obtained, which events and particles are retained, how header fields are populated, and how vertices and kinematics are produced.
+Unify the mechanics of LUND creation without erasing the semantics of each source workflow. The common layer may own configuration validation, LUND record serialization, output-directory layout, file lifecycle, provenance, and summaries. Uniform monitoring remains inside `src/lund-generation/uniform-to-lund-converter/`; physical adapters create no monitoring plots. Each sample adapter must still define how events are obtained, which events and particles are retained, how header fields are populated, and how vertices and kinematics are produced.
 
 Target geometry and target identity are related but distinct inputs. Use the protected external `targets.h` geometry implementation as the authoritative vertex source. A target-geometry key selects the spatial distribution, while nuclear `A` and `Z` are LUND header metadata; never infer one silently from the other. Sample exactly one interaction vertex for each written event and give that same vertex to every particle in the event.
 

@@ -46,7 +46,7 @@ if(BUILD_UNIFORM)
     add_test(NAME uniform-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py uniform $<TARGET_FILE:clas12-uniform> $<TARGET_FILE:check-monitoring>)
 endif()
 if(BUILD_GENIE)
-    add_test(NAME genie-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py genie $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:make-gst-fixture>)
+    add_test(NAME genie-gst-integration COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/integration.py genie-gst $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:make-gst-fixture>)
 endif()
 # endregion
 
@@ -69,7 +69,7 @@ if(BUILD_GENIE)
         DEPENDS ${LEGACY_CONVERTER} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_legacy_genie.py VERBATIM)
     add_executable(legacy-genie-reference ${CMAKE_CURRENT_BINARY_DIR}/legacy_genie_reference.cpp)
     target_link_libraries(legacy-genie-reference PRIVATE ROOT::Core ROOT::Physics ROOT::Tree ROOT::Hist ROOT::RIO ROOT::Gpad ROOT::Graf)
-    add_test(NAME genie-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/legacy_parity.py genie $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:legacy-genie-reference> $<TARGET_FILE:make-gst-fixture>)
+    add_test(NAME genie-gst-legacy-parity COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/legacy_parity.py genie-gst $<TARGET_FILE:clas12-generator-to-lund> $<TARGET_FILE:legacy-genie-reference> $<TARGET_FILE:make-gst-fixture>)
 endif()
 # endregion
 

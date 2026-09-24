@@ -17,11 +17,11 @@ flowchart LR
 
 ## 1. Define the adapter boundary
 
-Create a directory beneath `src/lund-generation/clas12-generator-to-lund/`, for example:
+Create a format-specific directory beneath `src/lund-generation/event-generator-to-lund-converter/`, for example:
 
 ```text
-src/lund-generation/clas12-generator-to-lund/
-└── mygenerator/
+src/lund-generation/event-generator-to-lund-converter/
+└── mygenerator-myformat/
     ├── MyGeneratorConverter.h
     └── MyGeneratorConverter.cpp
 ```
@@ -41,7 +41,7 @@ void convertMyGenerator(const RunConfig& config);
 }  // namespace samples
 ```
 
-Document the input schema, accepted processes and particles, ordering, metadata mapping, units, assumptions, ownership, and failure behavior. The public executable remains `clas12-generator-to-lund --event-generator mygenerator`.
+Document the input schema, accepted processes and particles, ordering, metadata mapping, units, assumptions, ownership, and failure behavior. Use an adapter identifier that distinguishes formats when one generator can emit several, as `genie-gst` does. The public executable remains `clas12-generator-to-lund --event-generator mygenerator-myformat`.
 
 ## 2. Validate before accessing records
 
@@ -116,12 +116,12 @@ Do not copy GENIE's `resid` or QE/MEC/RES/DIS mapping unless the new source has 
 
 ## 5. Register configuration and dispatch
 
-Update the physical branch of `RunConfig` so `event-generator=mygenerator` is accepted. Add only genuinely required generator-specific settings; keep shared input, target, output, capacity, splitting, and provenance keys common. Update the command-line help and a checked-in sample profile with explicit metadata.
+Update the physical branch of `RunConfig` so `event-generator=mygenerator-myformat` is accepted. Add only genuinely required generator-specific settings; keep shared input, target, output, capacity, splitting, and provenance keys common. Update the command-line help and a checked-in sample profile with explicit metadata.
 
 Include the adapter in `PhysicalConverter.cpp` and add one direct branch:
 
 ```cpp
-if (config.get("event-generator") == "mygenerator") {
+if (config.get("event-generator") == "mygenerator-myformat") {
     convertMyGenerator(config);
     return;
 }

@@ -95,7 +95,7 @@ BASE_TL_SAMPLE_DIR/NUCLEUS/TUNE/ENERGY_Q2LABEL/
 The Q² labels were `Q2_0_02`, `Q2_0_25` and `Q2_0_40` at the three energies. These describe the selected upstream dataset/path; the converter does not apply those cuts.
 
 ```bash
-build/debug/apps/clas12-generator-to-lund --event-generator genie \
+build/debug/apps/clas12-generator-to-lund --event-generator genie-gst \
   --config config/samples/legacy-genie-wrapper.conf \
   --input '/shared/truth/C12/GEM21_11a_00_000/2070MeV_Q2_0_02/master-routine_validation_01-eScattering/*.root' \
   --events 10000 --output runs/legacy-genie-smoke

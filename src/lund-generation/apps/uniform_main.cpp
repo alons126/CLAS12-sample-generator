@@ -45,8 +45,8 @@
 #include <iostream>
 #include <string>
 
-#include "clas12-uniform/UniformGenerator.h"
 #include "core/support/environment.h"
+#include "uniform-to-lund-converter/UniformGenerator.h"
 
 namespace env = environment;
 

@@ -16,11 +16,12 @@
 #   Root workflow options, imported ROOT/Threads targets and the generated provenance include directory.
 #
 # Outputs:
-#   LundCore, optional UniformGeneration, and optional GenieConversion/PhysicalConversion static libraries.
+#   LundCore, optional UniformGeneration, and optional GenieGstConversion/PhysicalConversion static libraries.
 #
 # Notes:
-#   Source-specific directories match their executable names. Physical event-generator adapters are nested below
-#   clas12-generator-to-lund; LundCore remains one target because its shared layers form one small pipeline.
+#   Converter directories describe their implementation responsibility rather than executable names. Physical
+#   event-generator format adapters are nested below event-generator-to-lund-converter; LundCore remains one target
+#   because its shared layers form one small pipeline.
 
 # Shared LUND pipeline ---------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -44,7 +45,7 @@ target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::
 # Purpose:
 #     Build the implementation behind the clas12-uniform executable as UniformGeneration.
 if(BUILD_UNIFORM)
-    add_library(UniformGeneration STATIC clas12-uniform/UniformGenerator.cpp clas12-uniform/UniformMonitoring.cpp)
+    add_library(UniformGeneration STATIC uniform-to-lund-converter/UniformGenerator.cpp uniform-to-lund-converter/UniformMonitoring.cpp)
     target_link_libraries(UniformGeneration PUBLIC LundCore PRIVATE ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
 endif()
 # endregion
@@ -53,12 +54,12 @@ endif()
 
 # region Physical-event conversion
 # Purpose:
-#     Build the clas12-generator-to-lund dispatcher and keep GST dependencies on its nested GENIE adapter.
+#     Build the clas12-generator-to-lund dispatcher and keep ROOT GST dependencies on its nested GENIE GST adapter.
 if(BUILD_GENIE)
-    add_library(GenieConversion STATIC clas12-generator-to-lund/genie/GenieConverter.cpp)
-    target_link_libraries(GenieConversion PUBLIC LundCore PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)
-    add_library(PhysicalConversion STATIC clas12-generator-to-lund/PhysicalConverter.cpp)
-    target_link_libraries(PhysicalConversion PUBLIC LundCore PRIVATE GenieConversion)
+    add_library(GenieGstConversion STATIC event-generator-to-lund-converter/genie-gst/GenieConverter.cpp)
+    target_link_libraries(GenieGstConversion PUBLIC LundCore PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)
+    add_library(PhysicalConversion STATIC event-generator-to-lund-converter/PhysicalConverter.cpp)
+    target_link_libraries(PhysicalConversion PUBLIC LundCore PRIVATE GenieGstConversion)
 endif()
 # endregion
 

@@ -113,7 +113,7 @@ def fixture(root, source, energy, channel='en', fc=0):
 
     values = dict(NUM_OF_JOBS='2', JOB_NEVENTS='3', BEAM_ENERGY_LABEL=energy,
                   UNIFORM_SAMPLE_CHANNEL=channel if source == 'uniform' else 'none', TARGET_VARIATION=target,
-                  SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie',
+                  SAMPLE_TARGET_NUCLEUS='C12', SAMPLE_GENERATOR='uniform' if source == 'uniform' else 'genie-gst',
                   GENERATOR_TUNE=tune, Q2_CUT=q2, OUTPATH=str(run),
                   SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job, DETECTOR_ENERGY_GROUP=rounded,
                   TORUS_FIELD=torus, REQUIREMENTS_DIR=str(root / 'requirements'), GCARD_FILE=str(card),
@@ -250,7 +250,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         if source == 'uniform':
             metadata.update(channel='eh', hadron='neutron', **{'hadron-region': 'FD'})
         else:
-            metadata['event-generator'] = 'genie'
+            metadata['event-generator'] = 'genie-gst'
 
         manifest = {'schema_version': 1, 'workflow': source, 'config': metadata, 'written_events': 4,
                     'files': [{'path': f'lundfiles/{values["SAMPLE_FILE_PREFIX"]}_{index}.txt', 'events': count}

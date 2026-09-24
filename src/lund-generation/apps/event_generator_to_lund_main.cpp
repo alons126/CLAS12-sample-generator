@@ -3,8 +3,8 @@
 //
 
 /**
- * @file genie_to_lund_main.cpp
- * @brief Physical event-generator conversion command-line entry point.
+ * @file event_generator_to_lund_main.cpp
+ * @brief Generator-independent physical conversion command-line entry point.
  *
  * Purpose:
  *   Select the configured physical event-generator adapter and return its process status.
@@ -14,7 +14,7 @@
  *
  * CLI options:
  *   --config FILE                     Read `key = value` settings; CLI values take precedence.
- *   --event-generator genie           Select the physical adapter (default/currently supported: genie).
+ *   --event-generator genie-gst       Select the GENIE GST adapter (default/currently supported: genie-gst).
  *   --input GST_GLOB                  Required GENIE GST ROOT input file or glob.
  *   --beam-energy GeV                 Set beam energy metadata (default: 5.98636 GeV).
  *   --rgm-target ID                   Select nuclear metadata and automatic geometry (default: Ar40).
@@ -41,8 +41,8 @@
 #include <iostream>
 #include <string>
 
-#include "clas12-generator-to-lund/PhysicalConverter.h"
 #include "core/support/environment.h"
+#include "event-generator-to-lund-converter/PhysicalConverter.h"
 
 namespace env = environment;
 

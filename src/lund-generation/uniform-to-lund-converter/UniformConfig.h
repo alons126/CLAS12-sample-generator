@@ -4,7 +4,7 @@
 
 /**
  * @file UniformConfig.h
- * @brief Typed uniform sampling configuration.
+ * @brief Typed configuration for the uniform-to-LUND converter.
  *
  * Purpose:
  *   Translate the already resolved string values needed on every uniform event into a small immutable-
