@@ -7,19 +7,15 @@
  * @brief Implements the supported LUND particle-mass lookup.
  *
  * Purpose:
- *   Expose the particle masses owned by the external target source (targets.h) without duplicating them in
- *   maintained code. Event producers select particle identities and momenta; this module supplies only
- *   the corresponding rest mass and does not alter event kinematics.
+ *   Return particle masses from the external targets.h file without copying those values into maintained
+ *   code. This file does not choose particles or change their momenta.
  *
  * Workflow:
- *   1. A uniform or physical event adapter chooses a supported PDG code.
- *   2. The adapter requests the corresponding targets.h mass.
- *   3. The returned mass is stored in Particle.
- *   4. LundWriter combines that mass with momentum to calculate on-shell energy.
+ *   A generator or converter chooses a supported PDG number -> particleMass() asks TargetGeometry for
+ *   its mass -> the caller stores that mass in Particle -> LundWriter uses it to calculate energy.
  *
  * Failure behavior:
- *   A PDG code outside the supported LUND particle set raises std::runtime_error
- *   instead of silently assigning an unknown or zero mass.
+ *   An unsupported PDG number throws std::runtime_error instead of returning a guessed mass.
  */
 
 #include "core/geometry/TargetGeometry.h"
@@ -31,7 +27,7 @@ namespace samples {
 
 #pragma region /* particleMass */
 
-// Keep the external target source as the single source of nonzero particle masses.
+// Forward the lookup so targets.h remains the only source of nonzero particle masses.
 double particleMass(int pid) { return TargetGeometry::mass(pid); }
 
 #pragma endregion

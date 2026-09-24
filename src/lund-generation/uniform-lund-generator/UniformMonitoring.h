@@ -52,6 +52,8 @@ class UniformMonitoring {
      * @param sample_label Resolved label such as `1e`, `electron-tester`, `epFD`, or `epipCD`.
      * @param hadron_pid Configured hadron PDG code; ignored for electron-only channels.
      * @param beam Beam energy in GeV, used for momentum-axis limits.
+     * @throws std::runtime_error If an electron-hadron label is paired with an unsupported hadron PDG
+     *         code. Allocation failures also propagate.
      */
     UniformMonitoring(std::string sample_label, int hadron_pid, double beam);
 
@@ -70,7 +72,8 @@ class UniformMonitoring {
      * @param path Destination `<prefix>_monitoring_plots.root` file.
      * @param plot_directory Destination directory for rendered files.
      * @param pdf_name Multipage PDF filename inside plot_directory.
-     * @throws std::runtime_error If ROOT cannot create or write an output.
+     * @throws std::runtime_error If ROOT cannot create or write an output. Filesystem errors while
+     *         creating the plot directory also propagate.
      */
     void save(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name);
 

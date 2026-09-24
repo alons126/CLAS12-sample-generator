@@ -4,22 +4,20 @@
 
 /**
  * @file TargetGeometry.h
- * @brief Read-only adapter for external target geometry and particle masses.
+ * @brief Public access to target vertices and particle masses from targets.h.
  *
  * Purpose:
- *   Expose the external targets.h geometry catalog and particle masses through a small maintained API
- *   while hiding its global symbols and allowing each run to own an explicit, reproducible vertex-
- *   random stream.
+ *   Let maintained code use the external targets.h file without exposing its global variables. Each run
+ *   supplies its own random-number generator for vertex sampling.
  *
  * Workflow:
- *   RunConfig resolves and validates a geometry key -> construct one TargetGeometry without consuming
- *   random numbers -> pass the run-owned vertex TRandom3 to sample() exactly once per written/retained
- *   event -> assign the returned cm vertex to every particle in that event. The LUND particle adapter
- *   requests supported masses through mass() without exposing or duplicating target-source values.
+ *   RunConfig chooses a geometry name -> TargetGeometry checks the name without sampling -> sample()
+ *   uses the run's TRandom3 once per event -> every particle in that event receives the returned vertex.
+ *   The mass() function reads supported particle masses from the same external file.
  *
  * Scope:
- *   This adapter selects spatial distributions only. RG-M target identity, nuclear A/Z header metadata,
- *   and GEMC target variation remain independent configuration inputs.
+ *   The geometry name controls only where vertices are sampled. RG-M target identity, A and Z header
+ *   values, and the GEMC target variation are separate settings.
  */
 
 #pragma once
@@ -40,56 +38,51 @@ namespace samples {
 #pragma region /* TargetGeometry object */
 /**
  * @class TargetGeometry
- * @brief Bridge between a run-owned vertex stream and external targets.h.
+ * @brief Uses targets.h with a random-number stream owned by the caller.
  *
  * Purpose:
- *   Preserve the external geometry implementation as the authoritative vertex source without exposing
- *   its map or global TRandom3 to generators and converters.
+ *   Provide checked vertex sampling and mass lookup while keeping the targets.h map and global TRandom3
+ *   out of the rest of the maintained code.
  *
  * Creation and lifecycle:
- *   When created, the object stores the geometry name and checks that it is valid without generating a
- *   vertex. The name does not change afterward. Each sample() call uses and advances the RNG supplied by
- *   the caller.
+ *   The constructor stores and checks the geometry name without drawing a random value. Each sample()
+ *   call uses and advances the TRandom3 supplied by the caller.
  *
  * Geometry modes:
- *   The name must match a target with at least one position in external targets.h. There is no option
- *   to use a fixed vertex.
+ *   The name must match a nonempty geometry in external targets.h. This class has no fixed-vertex mode.
  *
  * RNG ownership and concurrency:
- *   targets.h uses a shared global RNG named `ran`. The implementation locks access, copies the caller's
- *   RNG state into `ran`, samples a vertex, and copies the updated state back. TargetGeometry does not
- *   own an RNG, so each caller keeps its own independent random sequence.
+ *   targets.h uses one global RNG named `ran`. The implementation locks it, copies in the caller's RNG
+ *   state, samples the vertex, and copies the new state back. The class does not own an RNG.
  *
  * Invariants:
- *   name_ is a validated nonempty external map key. Returned vertices use cm and must be
- *   finite. The generator/converter, rather than this object, enforces one sample per event and a shared
- *   vertex for all particles.
+ *   name_ is a valid, nonempty geometry key. Returned coordinates are finite and measured in cm. The
+ *   generator or converter is responsible for sampling once and sharing that vertex across the event.
  */
 class TargetGeometry {
    public:
     /**
-     * @brief Store and validate one target-geometry mode without consuming random numbers.
+     * @brief Store and check one geometry name without drawing a random value.
      *
-     * @param name External targets.h map key. The string is moved into
-     *             owned state after the parameter is copied/moved by the caller.
+     * @param name Geometry key from external targets.h. The object stores its own string.
      *
-     * @throws std::runtime_error If name is not a nonempty external geometry entry.
+     * @throws std::runtime_error If name is missing or its geometry has no entries.
      */
     explicit TargetGeometry(std::string name) : name_(std::move(name)) { validate(name_); }
 
     /**
-     * @brief Check whether a geometry mode can be constructed, without sampling or changing RNG state.
+     * @brief Check a geometry name without sampling or changing random state.
      *
      * @param name External targets.h key.
      *
-     * @throws std::runtime_error If the key is absent or its external geometry record is empty.
+     * @throws std::runtime_error If the key is missing or its geometry has no entries.
      *
-     * @note Validation does not infer a geometry from A, Z, or an RG-M identifier.
+     * @note A, Z, and the RG-M target name do not choose the geometry here.
      */
     static void validate(const std::string& name);
 
     /**
-     * @brief Return one supported particle mass from the external target source.
+     * @brief Return the targets.h mass for one supported particle.
      *
      * @param pid PDG identifier for electron, proton, neutron, charged pion, or photon.
      *
@@ -98,26 +91,25 @@ class TargetGeometry {
      *
      * @throws std::runtime_error If pid is not part of the maintained LUND particle contract.
      *
-     * @note Read-only; consumes no random numbers and owns no duplicate maintained mass table.
+     * @note This function does not draw random numbers or keep a second mass table.
      */
     static double mass(int pid);
 
     /**
-     * @brief Produce one finite interaction vertex from the selected geometry.
+     * @brief Sample one finite interaction vertex from the selected geometry.
      *
-     * @param random Borrowed run-owned vertex TRandom3. Physical target sampling advances its complete
-     *               state.
+     * @param random Random-number generator owned by the caller. Sampling advances its state.
      *
      * @return Vertex in cm.
      *
-     * @throws std::runtime_error If the external sampler returns non-finite coordinates.
-     *         Exceptions from the external implementation may also propagate.
+     * @throws std::runtime_error If targets.h returns non-finite coordinates. Other exceptions from
+     *         targets.h are passed to the caller.
      */
     TVector3 sample(TRandom3& random) const;
 
     // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
    private:
-    /** @brief Validated external map key, owned for object lifetime. */
+    /** @brief Checked targets.h geometry key stored for the life of this object. */
     std::string name_;
 };
 #pragma endregion

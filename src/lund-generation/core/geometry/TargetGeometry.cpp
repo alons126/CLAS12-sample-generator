@@ -4,24 +4,24 @@
 
 /**
  * @file TargetGeometry.cpp
- * @brief Adapter around the external target source.
+ * @brief Implements checked access to the external targets.h file.
  *
  * Purpose:
- *   Use replaceable external targets.h as the authoritative spatial sampler while isolating its
- *   definitions and global RNG behind a maintained, validated, thread-safe interface.
+ *   Use targets.h for vertex sampling and particle masses while keeping its global variables inside
+ *   this source file. A mutex makes use of its global random-number generator safe between threads.
  *
  * Workflow:
- *   Isolate the external header in one private namespace/translation unit -> validate a nonempty map
- *   entry -> lock global sampling state -> copy in the caller-owned TRandom3 -> invoke randomVertex()
- *   -> copy the advanced state back -> reject non-finite vertices.
+ *   Include targets.h inside a private namespace -> check that a geometry exists -> lock its global RNG
+ *   -> copy in the caller's TRandom3 state -> call randomVertex() -> copy the new state back -> reject a
+ *   vertex with non-finite coordinates.
  *
  * Reproducibility and units:
- *   Callers own and seed vertex RNG streams independently from kinematic RNGs. Copying complete TRandom3
- *   state preserves draw order across interleaved geometry objects. Returned coordinates are cm.
+ *   The caller owns and seeds the vertex RNG separately from the kinematic RNG. Copying the complete
+ *   TRandom3 state keeps each caller's random sequence independent. Vertex coordinates are in cm.
  *
  * External-source rule:
- *   The included external header is consumed as-is. Geometry updates occur by explicitly replacing that
- *   external file, while this adapter remains stable unless its interface changes.
+ *   This file reads the external header without changing it. Updating target definitions means replacing
+ *   that external file; this maintained adapter changes only if the external interface changes.
  */
 
 #include "core/geometry/TargetGeometry.h"
@@ -41,11 +41,10 @@
 
 #pragma region /* External geometry bridge */
 /**
- * @brief Translation-unit-private ownership boundary for external symbols and synchronization state.
+ * @brief Keeps targets.h names and their mutex private to this source file.
  *
- * targets.h defines data and functions rather than declarations alone, including a global TRandom3.
- * Keeping its inclusion and the matching mutex here prevents those names from entering the maintained
- * samples namespace and prevents multiple-definition problems in other translation units.
+ * targets.h defines global data and functions, including a TRandom3. Including it only here keeps those
+ * names out of the public samples namespace and avoids defining them in more than one source file.
  */
 namespace {
 
@@ -54,10 +53,10 @@ namespace {
 #pragma region /* External targets namespace */
 /**
  * @namespace external_targets
- * @brief Private namespace containing the unmodified symbols defined by external targets.h.
+ * @brief Holds the unchanged names defined by external targets.h.
  *
- * The using-declarations supply standard-library names expected unqualified by the imported header.
- * They remain confined to this private namespace and do not change maintained application APIs.
+ * The using declarations provide standard-library names that targets.h expects. They stay inside this
+ * private namespace and do not become part of the maintained API.
  */
 namespace external_targets {
 using std::cout;
@@ -70,11 +69,11 @@ using std::string;
 #pragma endregion
 
 /**
- * @brief Process-lifetime lock protecting the external global RNG transaction.
+ * @brief Lock used whenever code samples with the global RNG in targets.h.
  *
- * Every sample holds this mutex from caller-state installation through external sampling and
- * state retrieval, so concurrent geometry calls cannot mix streams. The immutable target map needs no
- * mutation lock during validation.
+ * A sample holds this mutex while it copies in the caller's state, draws a vertex, and copies the state
+ * back. This prevents two threads from mixing their random sequences. Validation only reads the target
+ * map and does not need this lock.
  */
 std::mutex geometry_mutex;
 }  // namespace
@@ -108,7 +107,7 @@ double TargetGeometry::mass(int pid) {
 
 #pragma region /* TargetGeometry::validate */
 void TargetGeometry::validate(const std::string& name) {
-    // Use find rather than operator[] so validation cannot insert a missing key into external state.
+    // find() checks the map without adding a missing name.
     const auto found = external_targets::targets.find(name);
     if (found == external_targets::targets.end() || found->second.empty()) { throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name); }
 }
@@ -118,14 +117,14 @@ void TargetGeometry::validate(const std::string& name) {
 
 #pragma region /* TargetGeometry::sample */
 TVector3 TargetGeometry::sample(TRandom3& random) const {
-    // Upstream randomVertex uses a global TRandom3 named ran. Transfer full state rather than reseeding,
-    // so streams remain reproducible and independent when geometry instances are interleaved.
+    // randomVertex() uses the global RNG named ran. Copy the full state instead of only setting a seed,
+    // so each caller continues its own random sequence.
     std::lock_guard<std::mutex> guard(geometry_mutex);
     external_targets::ran = random;
     const auto vertex = external_targets::randomVertex(name_);
     random = external_targets::ran;
 
-    // Mag2 covers all three coordinates in one check; non-finite inputs or overflow are invalid output.
+    // Mag2() checks all three coordinates at once. A non-finite result is not a valid vertex.
     if (!std::isfinite(vertex.Mag2())) { throw std::runtime_error("Non-finite vertex from targets.h"); }
     return vertex;
 }

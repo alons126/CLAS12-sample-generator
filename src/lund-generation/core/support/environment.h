@@ -4,20 +4,19 @@
 
 /**
  * @file environment.h
- * @brief C++ access to the launcher-owned terminal-presentation palette.
+ * @brief Reads the terminal colors set by the launcher.
  *
  * Purpose:
- *   Give generators, converters, writers, and application entry points semantic color names while
- *   keeping the actual palette centralized in the sourced set_colors.csh launcher helper.
+ *   Give C++ output clear color names while keeping the actual color values in set_colors.csh.
  *
  * Workflow:
- *   set_colors.csh exports literal `\033` `*_COLOR` values -> the launcher starts a C++ application ->
- *   this header reads and decodes those inherited values once -> output code uses the semantic names.
+ *   set_colors.csh exports `*_COLOR` variables -> this header reads them when the program starts ->
+ *   inheritedColor() changes each written `\033` marker into an escape byte -> output code uses the
+ *   named color strings below.
  *
  * Failure behavior:
- *   A missing `*_COLOR` variable resolves to an empty string, leaving output uncolored when an executable
- *   is invoked outside the maintained launcher. No independent fallback palette can drift from the
- *   shell-owned definitions.
+ *   If a color variable is missing, its value is an empty string and the output stays uncolored. This
+ *   header does not define a second set of fallback colors.
  */
 
 #pragma once
@@ -31,19 +30,19 @@
 
 /**
  * @namespace environment
- * @brief Semantic colors inherited from the launcher environment by maintained C++ output.
+ * @brief Color strings used by maintained C++ terminal output.
  *
  * Lifetime and ownership:
- *   Every inline const string owns its decoded value for program lifetime. The process environment is
- *   read once during initialization; later environment changes do not alter an application's palette.
+ *   Each inline string stores its value for the life of the program. The variables are read during
+ *   program startup, so changing the environment later does not change these strings.
  *
  * Invariants:
- *   Names map directly to the `*_COLOR` contract exported by set_colors.csh. RESET_COLOR must follow
- *   colored content so later terminal output is unaffected.
+ *   Each C++ name reads the matching `*_COLOR` variable from set_colors.csh. Output must use RESET_COLOR
+ *   after colored text so the following terminal text returns to its normal style.
  *
  * Assumptions:
- *   The shell palette stores escape bytes as a literal `\033` prefix so tcsh can export it reliably.
- *   Already-decoded environment content is preserved, and redirected output retains any control bytes.
+ *   The shell writes the escape code as the four characters `\033`. Text that already contains a real
+ *   escape byte is left unchanged.
  */
 namespace environment {
 
@@ -51,11 +50,10 @@ namespace environment {
 
 #pragma region /* Environment decoding */
 /**
- * @brief Read and decode one color exported by set_colors.csh.
- * @param variable `*_COLOR` environment-variable name owned by the shell palette.
- * @return Owned terminal sequence, or an empty string when the variable is unavailable.
- * @note Every literal `\033` token is replaced with one escape byte, matching the Python launcher's
- *       interpretation of the same inherited values. Other content is retained verbatim.
+ * @brief Read one launcher color and make it ready for terminal output.
+ * @param variable Name of the `*_COLOR` environment variable to read.
+ * @return The decoded color string, or an empty string when the variable is missing.
+ * @note Replaces every written `\033` marker with one escape byte. All other characters stay unchanged.
  */
 inline std::string inheritedColor(const char* variable) {
     const char* inherited = std::getenv(variable);

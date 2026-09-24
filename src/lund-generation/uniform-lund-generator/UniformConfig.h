@@ -57,8 +57,20 @@ enum class UniformChannel {
 // HadronSpecies object --------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* HadronSpecies object */
-/** @enum HadronSpecies @brief Typed identity selected by `--hadron` for the eh channel. */
-enum class HadronSpecies { Proton, Neutron, PiPlus, PiMinus };
+/**
+ * @enum HadronSpecies
+ * @brief Hadron selected by `--hadron` for an electron-hadron sample.
+ *
+ * Creation and use:
+ *   UniformConfig converts the validated `--hadron` text to one value. The generator uses that value
+ *   with hadron_pid to choose the particle written after the trigger electron.
+ */
+enum class HadronSpecies {
+    Proton,   ///< Proton selected by `--hadron proton`.
+    Neutron,  ///< Neutron selected by `--hadron neutron`.
+    PiPlus,   ///< Positive pion selected by `--hadron pip`.
+    PiMinus,  ///< Negative pion selected by `--hadron pim`.
+};
 #pragma endregion
 
 // Resolve string settings once, outside the production event loop.

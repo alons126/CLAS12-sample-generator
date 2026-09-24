@@ -63,7 +63,11 @@ namespace env = environment;
  * @param argc Number of executable arguments.
  * @param argv Paths and options supplied by the caller.
  *
- * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ * @return `0` after help or successful conversion; `1` when parsing or conversion throws a
+ *         `std::exception`.
+ *
+ * @throws Nothing for standard parser/converter failures because they are caught here. Non-standard
+ *         exceptions are outside this boundary.
  */
 int main(int argc, char** argv) {
     constexpr bool uniform = false;

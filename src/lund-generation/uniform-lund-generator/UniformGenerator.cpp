@@ -47,12 +47,21 @@ namespace samples {
  */
 namespace {
 
+// sampleLabel -----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* sampleLabel */
+/**
+ * @brief Build the monitoring label for one configured uniform sample.
+ * @param config Resolved uniform configuration containing channel, hadron, and detector region.
+ * @return `1e`, `electron-tester`, or the electron-hadron label with its FD/CD suffix.
+ */
 std::string sampleLabel(const RunConfig& c) {
     if (c.get("channel") == "1e") { return "1e"; }
     if (c.get("channel") == "electron-tester") { return "electron-tester"; }
     const std::string token = c.get("hadron") == "proton" ? "p" : c.get("hadron") == "neutron" ? "n" : c.get("hadron");
     return "e" + token + c.get("hadron-region");
 }
+#pragma endregion
 
 // legacyBeamLabel -------------------------------------------------------------------------------------------------------------------------------------------------------
 

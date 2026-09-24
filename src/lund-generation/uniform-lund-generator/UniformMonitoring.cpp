@@ -11,6 +11,10 @@
  *   sizes, label sizes, and drawing modes while extending hadron notation to FD/CD protons, neutrons,
  *   positive pions, and negative pions. All histograms are stored once in one ROOT file.
  *
+ * Workflow:
+ *   Create the histograms for one uniform channel -> fill them after each event is written -> apply the
+ *   saved axis style -> write one ROOT file -> render the same plots as PDF and PNG files.
+ *
  * Failure behavior:
  *   Missing particles, unsupported labels, ROOT I/O failures, and rendering filesystem failures throw.
  *   The caller saves monitoring before publishing the completed LUND-generation log.

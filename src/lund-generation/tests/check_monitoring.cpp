@@ -8,6 +8,10 @@
  *
  * Purpose:
  *   Make regional hadron notation and persisted ROOT presentation settings part of integration testing.
+ *
+ * Workflow:
+ *   Open the requested ROOT file -> find one named histogram -> compare its title, axis text, style, and
+ *   the file's object count with the expected command-line values -> return success or print the failure.
  */
 
 #include <TFile.h>

@@ -7,14 +7,12 @@
  * @brief Shared event and particle records.
  *
  * Purpose:
- *   Define the common Event and Particle data passed from uniform generation or physical conversion
- *   to the LUND writer and monitoring code. These records store event content only: source adapters
- *   still own input reading and particle-generation choices, while LundWriter owns text formatting.
+ *   Define the Event and Particle values shared by uniform generation, physical conversion, the LUND
+ *   writer, and monitoring. These records hold event data but do not read input or write files.
  *
  * Workflow:
- *   A uniform sampler or physical adapter constructs one Event -> assigns header metadata -> appends
- *   particles in required output order with one shared interaction vertex -> LundWriter serializes it
- *   -> source-appropriate monitoring reads the successfully written event.
+ *   A generator or converter creates an Event -> fills its header values -> adds particles in output
+ *   order with one shared vertex -> LundWriter writes it -> monitoring may read the written event.
  */
 
 #pragma once
@@ -29,7 +27,7 @@ namespace samples {
 
 #pragma region /* Public interface */
 
-// Supported particle identities ----------------------------------------------------------------------------------------------------------------------------------------
+// Supported particle identities -----------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* Supported particle identities */
 /**
@@ -37,9 +35,8 @@ namespace samples {
  * @brief PDG identifiers supported by maintained LUND event producers.
  *
  * Purpose:
- *   Give generation, conversion, serialization, and monitoring one particle-identity vocabulary
- *   without coupling identity to a duplicate mass table. particleMass() obtains nonzero masses from
- *   the external target source.
+ *   Keep the supported particle numbers in one place. particleMass() gets nonzero masses from the
+ *   external target file, so these constants do not create another mass table.
  */
 namespace constants {
 constexpr int electron_pdg = 11;    ///< Electron identifier used for the beam and scattered electron.
@@ -56,21 +53,21 @@ constexpr int proton_pdg = 2212;    ///< Proton identifier.
 #pragma region /* Particle object */
 /**
  * @struct Particle
- * @brief One output particle, owned by its event.
+ * @brief Data for one particle that will be written to LUND.
  *
  * Purpose:
- *   Carry the truth-level identity, selected mass convention, three-momentum, and interaction position
- *   required by both LUND serialization and diagnostic filling.
+ *   Store the particle number, mass, momentum, and interaction position needed by the writer and
+ *   monitoring code.
  *
  * Creation and use:
- *   Event sources aggregate-initialize every member and append the value to Event::particles. The Event
- *   owns that copy; LundWriter and monitoring borrow it while processing the parent event.
+ *   A generator or converter fills every member and adds the Particle to Event::particles. The Event
+ *   owns the stored copy. The writer and monitoring code only read it.
  */
 struct Particle {
-    int pid;            ///< Supported PDG identity used verbatim in LUND and for monitoring groups.
-    double mass;        ///< LUND mass in GeV/c²; particleMass() normally supplies it from the target source.
-    TVector3 momentum;  ///< Truth/generated Cartesian momentum in GeV/c; never resampled by the writer.
-    TVector3 vertex;    ///< Interaction position in cm; producer invariant requires one value per event.
+    int pid;            ///< Supported PDG particle number written to LUND and used by monitoring.
+    double mass;        ///< Rest mass in GeV/c², normally returned by particleMass().
+    TVector3 momentum;  ///< Generated or input Cartesian momentum in GeV/c; the writer does not change it.
+    TVector3 vertex;    ///< Interaction position in cm; every particle in one event uses the same value.
 };
 #pragma endregion
 
@@ -79,35 +76,34 @@ struct Particle {
 #pragma region /* Event object */
 /**
  * @struct Event
- * @brief Shared record passed from generation to output and diagnostics.
+ * @brief Data for one event passed to the writer and monitoring code.
  *
  * Purpose:
- *   Store the particles and LUND header values for one event. Other components format the LUND text,
- *   split output files, track the manifest, and save monitoring data.
+ *   Store the particles and LUND header values for one event. Other components write the text files,
+ *   split them, record the manifest, and save monitoring data.
  *
  * Creation and workflow:
- *   A fresh value is created for each generated or retained input event, populated completely, passed
- *   by const reference to LundWriter, and then passed to monitoring only after successful serialization.
+ *   The generator or converter creates and fills a new Event. LundWriter reads it without changing it.
+ *   Uniform monitoring reads it only after the writer has successfully written it.
  *
  * Header semantics:
- *   A and Z describe the target nucleus but do not choose the vertex shape. GENIE stores GST `resid`
- *   in the old target-polarization field; uniform events store zero there. Uniform events use weight 1,
- *   while GENIE uses that field for the QE/MEC/RES/DIS code 1/2/3/4, not a cross-section weight.
- *   LundWriter also writes zero beam polarization, electron beam PID 11, and one interaction.
+ *   A and Z describe the target nucleus but do not choose the vertex shape. Physical conversion stores
+ *   GST `resid` in the old target-polarization field; uniform events store zero there. Uniform events
+ *   use weight 1. Physical conversion uses that field for process codes 1 through 4, not as a physics
+ *   weight. LundWriter also writes zero beam polarization, electron beam PID 11, and one interaction.
  *
  * Ordering and invariants:
- *   particles must be nonempty and finite. The scattered/generated electron is first; uniform electron–hadron generation
- *   places its selected hadron second, while physical conversion preserves supported final-state input order.
+ *   particles must not be empty and all stored numbers must be finite. The electron comes first. A
+ *   uniform hadron comes second, while physical conversion keeps supported final-state input order.
  */
 struct Event {
-    std::uint64_t id = 0;             ///< Run-global uniform index or scanned GST entry index. Legacy uniform text
-                                      ///< may serialize a per-file index without changing this stored identity.
-    int A = 1;                        ///< LUND target mass number; production profiles override the historical default.
-    int Z = 1;                        ///< LUND target charge number; independently configured from target geometry.
-    double beam_energy = 0;           ///< Configured incident-electron energy in GeV.
-    double resonance_id = 0;          ///< Legacy target-polarization field; GST `resid` for physical events.
-    double weight = 1;                ///< Uniform constant 1 or physical interaction tag; not a cross-section weight.
-    std::vector<Particle> particles;  ///< Output order is preserved; the writer rejects an empty list.
+    std::uint64_t id = 0;             ///< Uniform event index or scanned GST entry index. Uniform LUND text may use a per-file index instead.
+    int A = 1;                        ///< Target mass number written in the LUND header.
+    int Z = 1;                        ///< Target charge number, configured separately from the vertex geometry.
+    double beam_energy = 0;           ///< Incident-electron energy in GeV.
+    double resonance_id = 0;          ///< Old target-polarization field; stores GST `resid` for physical events.
+    double weight = 1;                ///< Uniform value 1 or physical process code; not a cross-section weight.
+    std::vector<Particle> particles;  ///< Particles in output order; the writer rejects an empty list.
 };
 #pragma endregion
 
@@ -115,13 +111,13 @@ struct Event {
 
 #pragma region /* particleMass */
 /**
- * @brief Return the configured mass convention for one supported output species.
+ * @brief Return the mass used for one supported output particle.
  * @param pid PDG code for electron, proton, neutron, charged pion, or photon. Neutral pions are not
  *            output particles; physical inputs must contain their upstream-generated decay photons.
  * @return Particle mass in GeV/c².
- * @throws std::runtime_error If pid is not part of the supported LUND particle contract.
- * @note Nonzero values come from external targets.h. This lookup does not validate event-generator
- *       status or particle selection; adapters decide which truth particles are retained first.
+ * @throws std::runtime_error If pid is not supported by the LUND workflow.
+ * @note Nonzero masses come from external targets.h. The generator or converter decides which particles
+ *       belong in an event before calling this function.
  */
 double particleMass(int pid);
 #pragma endregion
