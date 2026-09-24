@@ -126,6 +126,8 @@ Documentation must begin with the two workflows and show the exact call chain be
 
 Use `docs/references.bib` as the maintained bibliography for citations in project documentation. Add or reuse stable BibTeX keys there when a documented scientific or technical claim needs a formal reference, and keep citation text traceable to those keys rather than maintaining disconnected reference lists.
 
+Format repository file references in documentation as Markdown links or inline code so wiki publication can link them to the publishing branch. Prefer repository-relative paths when a basename is ambiguous. Format function references as inline code and use a qualified name when needed to identify one definition; the generated wiki must link each resolvable function reference to its current source line. Keep fenced commands and code examples unchanged and directly copyable.
+
 # Local-to-ifarm synchronization
 
 The user's operational model has two clones with different roles. Development and commits happen in the local VS Code/GitHub checkout. The ifarm checkout is a disposable execution mirror: sourcing `run.csh` intentionally updates it to the remote revision, discards server-side tracked changes, and removes untracked/generated files according to the documented exclusions before building, creating LUND files, or submitting jobs. Do not reinterpret this synchronization as accidental data loss or replace it with a clean-working-tree refusal.

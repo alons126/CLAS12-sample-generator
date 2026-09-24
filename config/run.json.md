@@ -1,4 +1,4 @@
-# run.json - build and execution defaults
+# Launcher build and execution defaults
 
 ## Purpose
 
@@ -49,7 +49,7 @@ workflow.py built-in build defaults
     -> explicit launcher options
 ```
 
-For `--workflow submit`, run.csh directly sources the shell setup script. Build/run/test settings do not apply to submission.
+For `--workflow submit`, [`run.csh`](../run.csh) directly sources the shell setup script. Build/run/test settings do not apply to submission.
 
 Use `--run-settings FILE` to select a different strict JSON build profile explicitly. There is no automatic `config/run.local.json`: normal ifarm synchronization removes untracked files, so an implicit local profile would be unreliable.
 

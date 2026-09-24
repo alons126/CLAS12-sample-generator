@@ -57,7 +57,7 @@ Supported PDG identifiers are declared with the particle record in [`Event.h`](.
 | pip/pim (±211) | 0.13957 |
 | photon (22) | 0 |
 
-The table shows five-decimal serialized values. Internally, `targets.h` supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
+The table shows five-decimal serialized values. Internally, [`targets.h`](../../src/lund-generation/external/targets.h) supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
 Neutral-pion mass is deliberately absent from the maintained table because PDG 111 is not a supported LUND output species. CLAS12 reconstructs neutral pions from their two-photon decays, so physical GST input must already contain the daughter photons generated upstream.
 
 ## 6. File splitting and completion
@@ -79,7 +79,7 @@ For an input shorter than `events-per-file`, the first file is allowed to consum
 | `schema_version` | integer | Currently 1 |
 | `workflow` | string | `uniform` or `physical`; physical generator identity is in `config.event-generator` |
 | `version`, `revision`, `root_version` | strings | Project version, configure-time Git revision/dirty marker, ROOT version |
-| `targets_sha256` | string | SHA-256 of the external targets.h used at compilation |
+| `targets_sha256` | string | SHA-256 of the external [`targets.h`](../../src/lund-generation/external/targets.h) used at compilation |
 | `scanned_events`, `written_events` | integers | Input scan count and output count |
 | `config` | object of strings | Fully merged/resolved settings, including RNG/output/mass/sampling modes |
 | `files` | array | Each element has relative `path` and integer `events` |

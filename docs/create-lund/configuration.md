@@ -19,7 +19,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
 | `rgm-target` | `Ar40` | Catalog identity that first supplies geometry, A/Z, and GEMC-variation defaults |
-| `target` | `auto` | Optional override of the protected `targets.h` geometry selected by `rgm-target` |
+| `target` | `auto` | Optional override of the protected [`targets.h`](../../src/lund-generation/external/targets.h) geometry selected by `rgm-target` |
 | `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
 | `gemc-target-variation` | `auto` | Optional GCARD target-variation override applied after the catalog default |
 | `events` | Required | Total number of accepted events to write |
