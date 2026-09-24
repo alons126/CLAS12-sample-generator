@@ -12,7 +12,7 @@ flowchart TB
     end
 
     subgraph SIMULATE["2. Submit and simulate"]
-        direction RL
+        direction LR
         S["Submit ifarm<br/>Slurm array"] --> G["CLAS12 simulation<br/>(GEMC)"]
         G --> R["CLAS12 reconstruction<br/>(COATJAVA)"]
         R --> H["Reconstructed HIPO"]
