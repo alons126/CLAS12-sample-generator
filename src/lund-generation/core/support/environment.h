@@ -52,10 +52,8 @@ namespace environment {
 #pragma region /* Environment decoding */
 /**
  * @brief Read and decode one color exported by set_colors.csh.
- *
  * @param variable `*_COLOR` environment-variable name owned by the shell palette.
  * @return Owned terminal sequence, or an empty string when the variable is unavailable.
- *
  * @note Every literal `\033` token is replaced with one escape byte, matching the Python launcher's
  *       interpretation of the same inherited values. Other content is retained verbatim.
  */
@@ -79,7 +77,7 @@ inline std::string inheritedColor(const char* variable) {
 
 // Semantic palette ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Semantic palette */
+#pragma region                                                                   /* Semantic palette */
 inline const std::string ERROR_COLOR = inheritedColor("ERROR_COLOR");            ///< Error/failure text.
 inline const std::string COMPLETION_COLOR = inheritedColor("COMPLETION_COLOR");  ///< Successful-completion text.
 inline const std::string SYSTEM_COLOR = inheritedColor("SYSTEM_COLOR");          ///< Workflow/system text.

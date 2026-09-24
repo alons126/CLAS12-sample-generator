@@ -44,10 +44,8 @@ namespace samples {
  *
  * @param pid Particle PDG identifier selected by the event-source adapter.
  * @return Rest mass in GeV/c².
- *
  * @throws std::runtime_error If pid is not an electron, proton, neutron,
  *                            charged pion, or photon.
- *
  * @note This function validates identity support only. It does not decide which
  *       particles an adapter retains and does not calculate total energy.
  */

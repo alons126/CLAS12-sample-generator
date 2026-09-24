@@ -116,13 +116,10 @@ struct Event {
 #pragma region /* particleMass */
 /**
  * @brief Return the configured mass convention for one supported output species.
- *
  * @param pid PDG code for electron, proton, neutron, charged pion, or photon. Neutral pions are not
  *            output particles; physical inputs must contain their upstream-generated decay photons.
  * @return Particle mass in GeV/c².
- *
  * @throws std::runtime_error If pid is not part of the supported LUND particle contract.
- *
  * @note Nonzero values come from external targets.h. This lookup does not validate event-generator
  *       status or particle selection; adapters decide which truth particles are retained first.
  */

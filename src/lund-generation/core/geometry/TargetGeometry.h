@@ -47,16 +47,18 @@ namespace samples {
  *   its map or global TRandom3 to generators and converters.
  *
  * Creation and lifecycle:
- *   Construction takes ownership of a geometry-key string and validates it without drawing. The object
- *   is then read-only and reusable; each sample() call borrows and advances a caller-owned vertex RNG.
+ *   When created, the object stores the geometry name and checks that it is valid without generating a
+ *   vertex. The name does not change afterward. Each sample() call uses and advances the RNG supplied by
+ *   the caller.
  *
  * Geometry modes:
- *   Names address nonempty entries in external targets.h; no fixed-point mode exists.
+ *   The name must match a target with at least one position in external targets.h. There is no option
+ *   to use a fixed vertex.
  *
  * RNG ownership and concurrency:
- *   targets.h samples through its own global `ran`. The implementation serializes access, copies the
- *   caller's complete state into that global, invokes the external sampler, and copies the advanced
- *   state back. The adapter owns no RNG and keeps vertex streams independent across runs/callers.
+ *   targets.h uses a shared global RNG named `ran`. The implementation locks access, copies the caller's
+ *   RNG state into `ran`, samples a vertex, and copies the updated state back. TargetGeometry does not
+ *   own an RNG, so each caller keeps its own independent random sequence.
  *
  * Invariants:
  *   name_ is a validated nonempty external map key. Returned vertices use cm and must be
