@@ -3,18 +3,33 @@
 This workflow consumes completed LUND output and submits one ifarm Slurm array. It does not create LUND files and it is not a local detector-simulation workflow.
 
 ```mermaid
-flowchart TD
-    L[Completed RUN/lundfiles] --> M[Read completion manifest]
-    C[Optional config and CLI overrides] --> R[Resolve and validate submission]
-    M --> R
-    R --> E[Check ifarm GEMC and recon-util environment]
-    E --> P{Preview or --execute?}
-    P -->|preview| V[Print resolved report and sbatch command]
-    P -->|execute| O[Replace mchipo and reconhipo; preserve lundfiles]
-    O --> A[Submit Slurm array]
-    A --> G[GEMC per LUND file]
-    G --> H[recon-util per simulated HIPO]
+flowchart TB
+    subgraph PREPARE["1. Prepare and validate"]
+        direction LR
+        INPUTS["Completed LUND files<br/>Manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["run.csh --workflow submit<br/>Validate arguments and refresh the disposable ifarm checkout"]
+        ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate the ifarm environment"]
+    end
+
+    EXECUTE{"--execute?"}
+    PREVIEW["Preview, by default<br/>Report the plan and stop"]
+
+    subgraph SIMULATE["2. Submit and simulate"]
+        direction RL
+        SUBMIT["Replace mchipo and reconhipo<br/>Preserve lundfiles and submit the sbatch array"] --> GEMC["GEMC<br/>Detector simulation"]
+        GEMC --> RECON["recon-util<br/>Reconstructed HIPO"]
+    end
+
+    PREPARE --> EXECUTE
+    EXECUTE -->|No| PREVIEW
+    EXECUTE -->|Yes| SIMULATE
+
+    classDef decision fill:#183247,color:#ffffff,stroke:#183247,stroke-width:2px;
+    classDef stage fill:#e8f1ef,color:#183247,stroke:#0f8492,stroke-width:2px;
+    class EXECUTE decision;
+    class INPUTS,ENTRY,VALIDATE,PREVIEW,SUBMIT,GEMC,RECON stage;
 ```
+
+Code shown in the diagram: [`run.csh`](../../run.csh), [`setup_and_submit.csh`](../../src/slurm-submission/setup_and_submit.csh), [`submit.py`](../../src/slurm-submission/submit.py), and [`resolve_inputs.py`](../../src/slurm-submission/resolve_inputs.py).
 
 ## Normal path
 

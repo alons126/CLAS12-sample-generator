@@ -4,18 +4,31 @@ The `create-lund` workflow has one common output contract and two event sources.
 
 ```mermaid
 flowchart TD
-    CLI[run.csh --workflow create-lund] --> SRC{--source}
-    SRC -->|uniform| U[Sample configured kinematics]
-    SRC -->|physical| P[Read existing generator truth]
-    U --> E[Common Event and Particle records]
-    P --> E
-    E --> V[Sample one shared target vertex per event]
-    V --> W[LundWriter serialization and splitting]
-    W --> M[Completion manifest]
-    W --> D{Source diagnostics}
-    D -->|uniform| ROOT[ROOT plus rendered plots]
-    D -->|physical| TEXT[Text summaries only]
+    BUILD["run.csh --workflow create-lund<br/>workflow.py builds the application<br/>RunConfig validates profile and CLI"]
+    U["--source uniform<br/>uniform-lund-generator<br/>Sample configured acceptance kinematics"]
+    P["--source physical<br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
+    SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex per event, serialize, and split"]
+    DONE["Completed LUND files and manifest"]
+    MONITORING["Uniform only<br/>ROOT, PDF, and PNG monitoring plots"]
+    LOCAL["Creation can run locally<br/>It does not submit simulation jobs"]
+
+    BUILD --> U
+    BUILD --> P
+    U --> SHARED
+    P --> SHARED
+    SHARED --> DONE
+    U -.-> MONITORING
+    SHARED -.-> LOCAL
+
+    classDef endpoint fill:#183247,color:#ffffff,stroke:#183247,stroke-width:2px;
+    classDef stage fill:#e8f1ef,color:#183247,stroke:#0f8492,stroke-width:2px;
+    classDef note fill:#ffffff,color:#536879,stroke:#a6b4bd,stroke-dasharray:5 5;
+    class BUILD,DONE endpoint;
+    class U,P,SHARED stage;
+    class MONITORING,LOCAL note;
 ```
+
+Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src/launcher/workflow.py), [`RunConfig.h`](../../src/lund-generation/core/config/RunConfig.h), and [`LundWriter.h`](../../src/lund-generation/core/lund/LundWriter.h).
 
 ## Choose a source
 

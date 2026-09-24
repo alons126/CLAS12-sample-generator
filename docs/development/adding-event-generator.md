@@ -4,16 +4,18 @@ Add a generator as a small adapter behind the existing `event-generator-to-lund-
 
 ```mermaid
 flowchart LR
-    CLI[event-generator-to-lund-converter] --> RC[RunConfig physical settings]
-    RC --> D[convertPhysical dispatcher]
-    D --> G[GENIE adapter]
-    D --> N[New generator adapter]
-    G --> E[Common Event records]
-    N --> E
-    E --> T[TargetGeometry]
-    E --> W[LundWriter]
-    W --> F[LUND files and manifest]
+    CLI["event-generator-to-lund-converter"] --> RC["RunConfig physical settings"]
+    RC --> D["convertPhysical dispatcher"]
+    D --> G["GENIE GST adapter"]
+    D --> N["New generator-format adapter"]
+    G --> T["TargetGeometry<br/>One vertex per written event"]
+    N --> T
+    T --> E["Common Event and Particle records"]
+    E --> W["LundWriter<br/>Serialization, splitting, and provenance"]
+    W --> F["LUND files and completion manifest"]
 ```
+
+Code shown in the diagram: [`event_generator_to_lund_converter_main.cpp`](../../src/lund-generation/apps/event_generator_to_lund_converter_main.cpp), [`RunConfig.h`](../../src/lund-generation/core/config/RunConfig.h), `convertPhysical()`, [`TargetGeometry.h`](../../src/lund-generation/core/geometry/TargetGeometry.h), and [`LundWriter.h`](../../src/lund-generation/core/lund/LundWriter.h).
 
 ## 1. Define the adapter boundary
 

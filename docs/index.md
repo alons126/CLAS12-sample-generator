@@ -2,24 +2,70 @@
 
 This project has exactly two user-facing workflows. First create completed LUND files from uniform acceptance sampling or existing physical event-generator truth. Later, and only as a separate action, submit those LUND files to ifarm Slurm for GEMC detector simulation followed by CLAS12 reconstruction.
 
+## 1. Create LUND files
+
+```mermaid
+flowchart TD
+    BUILD["run.csh --workflow create-lund<br/>workflow.py builds the application<br/>RunConfig validates profile and CLI"]
+    U["--source uniform<br/>uniform-lund-generator<br/>Sample configured acceptance kinematics"]
+    P["--source physical<br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
+    SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex per event, serialize, and split"]
+    DONE["Completed LUND files and manifest"]
+    MONITORING["Uniform only<br/>ROOT, PDF, and PNG monitoring plots"]
+    LOCAL["Creation can run locally<br/>It does not submit simulation jobs"]
+
+    BUILD --> U
+    BUILD --> P
+    U --> SHARED
+    P --> SHARED
+    SHARED --> DONE
+    U -.-> MONITORING
+    SHARED -.-> LOCAL
+
+    classDef endpoint fill:#183247,color:#ffffff,stroke:#183247,stroke-width:2px;
+    classDef stage fill:#e8f1ef,color:#183247,stroke:#0f8492,stroke-width:2px;
+    classDef note fill:#ffffff,color:#536879,stroke:#a6b4bd,stroke-dasharray:5 5;
+    class BUILD,DONE endpoint;
+    class U,P,SHARED stage;
+    class MONITORING,LOCAL note;
+```
+
+Code shown in the diagram: [`run.csh`](../run.csh), [`workflow.py`](../src/launcher/workflow.py), [`RunConfig.h`](../src/lund-generation/core/config/RunConfig.h), and [`LundWriter.h`](../src/lund-generation/core/lund/LundWriter.h).
+
+See [Create LUND files](create-lund/index.md) for configuration, source-specific behavior, examples, and output contracts.
+
+## 2. Submit and simulate
+
 ```mermaid
 flowchart TB
-    subgraph CREATE["1. Create LUND files"]
+    subgraph PREPARE["1. Prepare and validate"]
         direction LR
-        U["Uniform acceptance<br/>sampling"] --> C["Create LUND files"]
-        P["Existing physical<br/>generator truth"] --> C
-        C --> L["Split LUND files and<br/>completion manifest"]
+        INPUTS["Completed LUND files<br/>Manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["run.csh --workflow submit<br/>Validate arguments and refresh the disposable ifarm checkout"]
+        ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate the ifarm environment"]
     end
+
+    EXECUTE{"--execute?"}
+    PREVIEW["Preview, by default<br/>Report the plan and stop"]
 
     subgraph SIMULATE["2. Submit and simulate"]
-        direction LR
-        S["Submit ifarm<br/>Slurm array"] --> G["CLAS12 simulation<br/>(GEMC)"]
-        G --> R["CLAS12 reconstruction<br/>(COATJAVA)"]
-        R --> H["Reconstructed HIPO"]
+        direction RL
+        SUBMIT["Replace mchipo and reconhipo<br/>Preserve lundfiles and submit the sbatch array"] --> GEMC["GEMC<br/>Detector simulation"]
+        GEMC --> RECON["recon-util<br/>Reconstructed HIPO"]
     end
 
-    CREATE --> SIMULATE
+    PREPARE --> EXECUTE
+    EXECUTE -->|No| PREVIEW
+    EXECUTE -->|Yes| SIMULATE
+
+    classDef decision fill:#183247,color:#ffffff,stroke:#183247,stroke-width:2px;
+    classDef stage fill:#e8f1ef,color:#183247,stroke:#0f8492,stroke-width:2px;
+    class EXECUTE decision;
+    class INPUTS,ENTRY,VALIDATE,PREVIEW,SUBMIT,GEMC,RECON stage;
 ```
+
+Code shown in the diagram: [`run.csh`](../run.csh), [`setup_and_submit.csh`](../src/slurm-submission/setup_and_submit.csh), [`submit.py`](../src/slurm-submission/submit.py), and [`resolve_inputs.py`](../src/slurm-submission/resolve_inputs.py).
+
+See [Submit simulation](submit-simulation/index.md) for preview, execution, environment, and worker details.
 
 The project does not run a physical event generator, derive acceptance maps, or perform physics analysis.
 

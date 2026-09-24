@@ -122,9 +122,11 @@ set _clas12_root = `cd "$_clas12_root" && pwd`
 
 # Require both a Git worktree marker and this project's maintained Python driver. Checking `.git`
 # alone could accept an unrelated repository; checking only `workflow.py` could permit destructive
-# cleanup in a copied source directory that is not the intended disposable clone.
+# cleanup in a copied source directory that is not the intended disposable clone. Preflight errors
+# remain plain text because the shared color palette is intentionally loaded only after the checkout
+# has been verified and entered.
 if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
-    echo "${COLOR_ERR}Error:${COLOR_END} Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
+    echo "Error: Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
 
     # Record failure and jump to the shared status-return block. Avoid `exit` because run.csh is
     # normally sourced and must not terminate the user's interactive SSH shell.
@@ -145,7 +147,7 @@ if ($#argv == 1) then
 endif
 
 if ($#argv == 0) then
-    echo "${COLOR_ERR}Error:${COLOR_END} source run.csh requires an explicit workflow."
+    echo "Error: source run.csh requires an explicit workflow."
     echo ""
     echo "Create a uniform LUND sample:"
     echo '  source run.csh --workflow create-lund --source uniform \'

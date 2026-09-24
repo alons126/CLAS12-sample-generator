@@ -39,17 +39,27 @@ The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt`
 The two workflows start at `run.csh`, after the guarded disposable-server refresh:
 
 ```mermaid
-flowchart TD
-    R[run.csh] --> W{--workflow}
-    W -->|create-lund| L[launcher/workflow.py]
-    L --> S{--source}
-    S -->|uniform| U[uniform-lund-generator]
-    S -->|physical| P[event-generator-to-lund-converter]
-    W -->|submit| C[setup_and_submit.csh]
-    C --> PY[submit.py and resolve_inputs.py]
-    PY --> A[sbatch array]
-    A --> X[protected GEMC and reconstruction worker]
+flowchart TB
+    R["run.csh"] --> G["Guard and refresh the disposable ifarm checkout"]
+    G --> W{"--workflow"}
+
+    W -->|create-lund| L["workflow.py<br/>Optionally configure, build, and test"]
+    L --> S{"--source"}
+    S -->|uniform| U["uniform-lund-generator<br/>RunConfig::parse then generateUniform"]
+    S -->|physical| P["event-generator-to-lund-converter<br/>RunConfig::parse then convertPhysical"]
+    U --> LW["Shared event model, target geometry, and LundWriter"]
+    P --> LW
+    LW --> F["Completed LUND files and manifest"]
+
+    W -->|submit| C["setup_and_submit.csh"]
+    C --> PY["submit.py<br/>resolve_inputs.py resolves every sample"]
+    PY --> X{"--execute?"}
+    X -->|No| V["Validated preview report"]
+    X -->|Yes| A["Replace simulation outputs<br/>Submit sbatch array"]
+    A --> J["Protected GEMC and reconstruction worker"]
 ```
+
+Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src/launcher/workflow.py), [`uniform_lund_generator_main.cpp`](../../src/lund-generation/apps/uniform_lund_generator_main.cpp), `generateUniform()`, [`event_generator_to_lund_converter_main.cpp`](../../src/lund-generation/apps/event_generator_to_lund_converter_main.cpp), `convertPhysical()`, [`setup_and_submit.csh`](../../src/slurm-submission/setup_and_submit.csh), [`submit.py`](../../src/slurm-submission/submit.py), [`resolve_inputs.py`](../../src/slurm-submission/resolve_inputs.py), and [`submit_GEMC_sample.sh`](../../src/slurm-submission/external/submit_GEMC_sample.sh).
 
 The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](../submit-simulation/guide.md) for the full call chain and editable settings.
 
