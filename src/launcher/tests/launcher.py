@@ -78,6 +78,20 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     subprocess.run([shell, '-f', '-c', color_program,
                     str(project/'src/launcher/environment/set_colors.csh')], check=True)
 
+    # Model an in-place update whose parent shell still contains the retired palette names. The
+    # newly pulled environment helper must load its current palette before printing its first banner.
+    upgrade_env = dict(os.environ, COLOR_START=r'\033[33m', COLOR_END=r'\033[0m')
+
+    for name in ('ERROR_COLOR', 'COMPLETION_COLOR', 'SYSTEM_COLOR', 'INFO_COLOR', 'WARNING_COLOR', 'RESET_COLOR'):
+        upgrade_env.pop(name, None)
+
+    upgrade_program = ('source "$argv[1]" >& /dev/null; '
+                       'test "$SYSTEM_COLOR" = "\\033[33m" && test "$RESET_COLOR" = "\\033[0m"')
+
+    subprocess.run([shell, '-f', '-c', upgrade_program,
+                    str(project/'src/launcher/environment/set_environment.csh')], cwd=project,
+                   env=upgrade_env, check=True)
+
     # Empty/help invocations are resolved before destructive server synchronization.
     missing=sourced([],success=False)
     assert 'requires an explicit workflow' in missing.stdout

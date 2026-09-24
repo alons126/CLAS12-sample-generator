@@ -22,15 +22,17 @@
 # 5. Export IFARM_RUN so downstream scripts can adapt their behaviour.
 # ------------------------------------------------------------------------------------------
 
-# Print header banner
-# SYSTEM_COLOR and RESET_COLOR may not yet exist, so plain output is used first.
+# Load the synchronized palette before its first use. This is deliberately repeated even when
+# run.csh already loaded colors: a Git update may have changed the palette contract while the parent
+# shell was still executing the previously sourced launcher revision.
+source ./src/launcher/environment/set_colors.csh
+
+# Print header banner.
 
 echo "${SYSTEM_COLOR}====================================================================================================${RESET_COLOR}"
 echo "${SYSTEM_COLOR}= Updating environment                                                                             =${RESET_COLOR}"
 echo "${SYSTEM_COLOR}====================================================================================================${RESET_COLOR}"
 echo ""
-
-source ./src/launcher/environment/set_colors.csh
 
 # Section header
 

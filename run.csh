@@ -243,6 +243,19 @@ else
     set CLAS12_SAMPLE_STATUS = $status
 endif
 
+# The updater may replace the palette and its variable names while this already-sourced run.csh is
+# still executing. Reload the synchronized helper before any newly pulled launcher file can consume
+# those variables. This also clears obsolete same-named tcsh locals through set_colors.csh itself.
+if ($CLAS12_SAMPLE_STATUS == 0) then
+    if (-f src/launcher/environment/set_colors.csh) then
+        source src/launcher/environment/set_colors.csh
+        set CLAS12_SAMPLE_STATUS = $status
+    else
+        echo "Error: the synchronized checkout is missing src/launcher/environment/set_colors.csh."
+        set CLAS12_SAMPLE_STATUS = 1
+    endif
+endif
+
 # Responsibility 3: load the server environment into this sourced shell.
 #
 # Source the environment only from the successfully updated checkout. Sourcing is required here so
