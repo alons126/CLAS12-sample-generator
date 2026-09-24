@@ -42,7 +42,7 @@ import urllib.parse
 # Repository inputs -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Repository inputs
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 SPECIAL_PAGES = {
     Path("README.md"): "Repository-Overview.md",

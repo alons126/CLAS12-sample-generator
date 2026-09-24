@@ -4,7 +4,7 @@ The repository is public on GitHub. Its GitHub Wiki is a generated reading view 
 
 ## Publication workflow
 
-[`scripts/build_wiki.py`](../../scripts/build_wiki.py) collects `README.md`, every `docs/**/*.md` page, the tutorial index, the sample-profile reference, and the launcher/build reference pages. It creates collision-free page names in GitHub Wiki's flat namespace, maps `docs/index.md` to `Home.md`, groups links by subject in `_Sidebar.md`, generates `_Footer.md`, rewrites documentation links to wiki pages, and rewrites links to code or configuration as public GitHub source URLs.
+[`dev-tools/wiki/build_wiki.py`](../../dev-tools/wiki/build_wiki.py) collects `README.md`, every `docs/**/*.md` page, the tutorial index, the sample-profile reference, and the launcher/build reference pages. It creates collision-free page names in GitHub Wiki's flat namespace, maps `docs/index.md` to `Home.md`, groups links by subject in `_Sidebar.md`, generates `_Footer.md`, rewrites documentation links to wiki pages, and rewrites links to code or configuration as public GitHub source URLs.
 
 The [Publish documentation wiki](../../.github/workflows/publish-wiki.yml) action runs after matching documentation changes reach `dev` or `main`. It builds into a temporary directory, checks out the separate `<repository>.wiki.git` repository, synchronizes the generated tree, and pushes only when content changed. Generated source links point to the branch that triggered publication, so the public wiki can follow active development before the project is ready to merge into `main`.
 
@@ -24,7 +24,7 @@ From the repository root:
 
 ```bash
 wiki_preview="$(mktemp -d)"
-python3 scripts/build_wiki.py \
+python3 dev-tools/wiki/build_wiki.py \
   --output "$wiki_preview" \
   --repository alons126/CLAS12-sample-generator \
   --branch main

@@ -11,7 +11,7 @@ on:
       - config/samples/README.md
       - docs/**
       - tutorials/**
-      - scripts/build_wiki.py
+      - dev-tools/wiki/build_wiki.py
       - .github/workflows/publish-wiki.yml
   workflow_dispatch:
 
@@ -33,7 +33,7 @@ jobs:
 
       - name: Build wiki pages
         run: >-
-          python3 scripts/build_wiki.py
+          python3 dev-tools/wiki/build_wiki.py
           --output "${RUNNER_TEMP}/generated-wiki"
           --repository "${GITHUB_REPOSITORY}"
           --branch "${GITHUB_REF_NAME}"
