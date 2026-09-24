@@ -35,7 +35,7 @@ Every supported uniform mode has one complete profile for each established RG-M 
 
 The 1e profiles use the updated 0.7 GeV/c minimum and 50/50 uniform-p/uniform-1/p mixture. Their electron theta is flat from 5° to 40°, except that the 2.07052 GeV outbending profile extends the minimum to 2°. The epFD profiles use a beam-momentum 25° trigger electron and a proton mixture from 0.3 GeV/c to the beam momentum. The enFD profiles use the same trigger prescription and uniform neutron momentum from zero to the beam momentum. All retain full phi coverage. The beam-specific trigger offsets are written explicitly as 16°, 7°, and 5°.
 
-FD pion and all CD profiles are marked experimental inside the files. They encode the documented updated conventions but have not yet been tested as production samples; see [uniform generation](../../docs/uniform-samples.md) and [validation](../../docs/validation.md).
+FD pion and all CD profiles are marked experimental inside the files. They encode the documented updated conventions but have not yet been tested as production samples; see [uniform generation](../../docs/create-lund/uniform.md) and [validation](../../docs/development/validation.md).
 
 The electron tester profiles sample the selected target geometry and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
 
@@ -59,7 +59,7 @@ Uniform profiles may set `channel`, `hadron`, `hadron-region`, `electron-theta-m
 
 Physical profiles may set `input`, `event-generator`, `event-generator-version`, `tune`, `q2-cut`, and `gemc-version` in addition to the common options. `input` and `output` are normally supplied at runtime. The implemented physical adapter is `genie`.
 
-The full types, units, allowed values, automatic resolutions, RG-M target catalog, and failure behavior are documented in [configuration.md](../../docs/configuration.md). The selected executable also prints its current interface:
+The full types, units, allowed values, automatic resolutions, RG-M target catalog, and failure behavior are documented in [configuration.md](../../docs/create-lund/configuration.md). The selected executable also prints its current interface:
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform --build false -- --help

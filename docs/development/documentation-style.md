@@ -18,8 +18,8 @@ Strict JSON does not support comments. CMake presets use their supported `displa
 
 | Configuration | Explanation |
 | --- | --- |
-| `CMakePresets.json` | [Preset commands and fields](../CMakePresets.json.md), plus descriptions inside the presets |
-| `config/run.json` | [Launcher build/test defaults and precedence](../config/run.json.md) |
+| `CMakePresets.json` | [Preset commands and fields](../../CMakePresets.json.md), plus descriptions inside the presets |
+| `config/run.json` | [Launcher build/test defaults and precedence](../../config/run.json.md) |
 | `.vscode/c_cpp_properties.json` | Inline comments explain compile-command-based editor configuration |
 | `.vscode/settings.json` | Inline comments explain language associations, formatting, folding and highlighting |
 
@@ -31,4 +31,4 @@ The same layers apply to structs, classes, enums, private implementation records
 
 Every file under `config/detector/` is classified as external and read-only for the assistant, recursively and regardless of extension. This includes current and future files, not only recognized gcard/YAML resources.
 
-The unified `src/slurm-submission/external/submit_GEMC_sample.sh` and its two archived source payloads are protected external code, including their monitoring modifications. Skip them in routine source-documentation passes; their interface is described in [the GEMC payload guide](gemc-payload.md).
+The unified `src/slurm-submission/external/submit_GEMC_sample.sh` and its two archived source payloads are protected external code, including their monitoring modifications. Skip them in routine source-documentation passes; their interface is described in [the GEMC payload guide](../submit-simulation/worker-reference.md).

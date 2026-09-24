@@ -4,7 +4,7 @@
 
 `Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one selected hadron. Converted events contain the scattered electron followed by retained GST particles in their input order. Retained physical species are protons, neutrons, charged pions and photons. Neutral pions must be decayed upstream into photons before GST production; residual PDG 111 entries are skipped rather than copied or decayed by the converter.
 
-These types are defined in [Event.h](../src/lund-generation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../src/lund-generation/core/lund/LundWriter.cpp).
+These types are defined in [Event.h](../../src/lund-generation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../../src/lund-generation/core/lund/LundWriter.cpp).
 
 ## 2. LUND header: ten fields
 
@@ -47,7 +47,7 @@ Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`.
 
 ## 5. Mass convention
 
-Supported PDG identifiers are declared with the particle record in [`Event.h`](../src/lund-generation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes protected [`targets.h`](../src/lund-generation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
+Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/lund-generation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes protected [`targets.h`](../../src/lund-generation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
 
 | Species (PDG) | LUND mass (GeV/c²) |
 | --- | ---: |
@@ -70,7 +70,7 @@ The writer warns, removes and recreates an existing run directory before generat
 
 Before output creation, the writer prints a setup report grouped into run limits, beam/target values, active source settings, and resolved output paths. It omits fixed serialization constants and settings unused by the selected channel. After the manifest is published, the completion report contains only generated/scanned events, written events, LUND file count, and completion status.
 
-For an input shorter than `events-per-file`, the first file is allowed to consume the available input. For longer input, the rule is evaluated only when an accepted event would start a follow-up file. Exact-multiple blocks are completed. See [validation](validation.md).
+For an input shorter than `events-per-file`, the first file is allowed to consume the available input. For longer input, the rule is evaluated only when an accepted event would start a follow-up file. Exact-multiple blocks are completed. See [validation](../development/validation.md).
 
 ## 7. Manifest schema version 1
 

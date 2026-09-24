@@ -10,7 +10,7 @@ run.csh --workflow create-lund -> Python build driver -> LUND application -> com
 run.csh --workflow submit      -> setup_and_submit.csh -> submit.py -> sbatch array -> GEMC -> recon-util
 ```
 
-On ifarm, use `source run.csh --workflow submit --lund-dir RUN/lundfiles`. The completed manifest supplies sample settings; optional CLI flags or `--config config/submission.conf` override simulation defaults. GEMC falls back to 5.14; submission checks the shared version directory, loads that module in its child environment, and verifies the exact `gemc` executable passed to Slurm. The default is preview; add `--execute` to submit and replace the selected simulation output directories while preserving LUND inputs. See the [setup and submission guide](docs/gemc-reconstruction-batch-submission.md).
+On ifarm, use `source run.csh --workflow submit --lund-dir RUN/lundfiles`. The completed manifest supplies sample settings; optional CLI flags or `--config config/submission.conf` override simulation defaults. GEMC falls back to 5.14; submission checks the shared version directory, loads that module in its child environment, and verifies the exact `gemc` executable passed to Slurm. The default is preview; add `--execute` to submit and replace the selected simulation output directories while preserving LUND inputs. See the [setup and submission guide](docs/submit-simulation/guide.md).
 
 This repository does not run the physical event generator or calculate final acceptance maps.
 
@@ -43,22 +43,23 @@ LUND output always preserves the established text conventions. Electron, proton,
 
 Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-gen-monitoring/lund-gen-log.json` to see the resolved settings and output counts. LUND text is under `lundfiles/`; uniform diagnostics are stored once in `lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root`. Physical conversion does not create monitoring histograms.
 
-## Where to start
+## Documentation
 
-Read the [newcomer guide](docs/index.md), then [build instructions](docs/building.md) and the [architecture walkthrough](docs/architecture.md).
+Start at the [documentation home](docs/index.md). It presents the two workflows first and routes readers by task instead of exposing the complete reference at once.
 
-Maintained source is grouped first by workflow under `src/lund-generation/` and `src/slurm-submission/`; the shared dispatcher is under `src/launcher/`. The LUND workflow then separates configuration, geometry, serialization, uniform generation, and physical adapters by responsibility. Protected imported files live with the workflow that consumes them. The architecture walkthrough maps these directories to the build targets and runtime call chain.
+| Subject | Use it for |
+| --- | --- |
+| [Getting started](docs/getting-started/index.md) | Install, build, run a small sample, and understand outputs |
+| [Create LUND files](docs/create-lund/index.md) | Uniform generation, physical conversion, configuration, examples, and monitoring |
+| [Submit simulation](docs/submit-simulation/index.md) | Preview and submit ifarm GEMC/reconstruction jobs |
+| [Concepts and contracts](docs/concepts/index.md) | Architecture, sampling, LUND records, provenance, and scientific scope |
+| [Development](docs/development/index.md) | Source reference, tests, documentation, wiki publishing, and [adding an event-generator adapter](docs/development/adding-event-generator.md) |
+| [History and migration](docs/history/index.md) | Archived behavior, parity, and migration context |
 
-- [Uniform generation](docs/uniform-samples.md)
-- [Physical event-generator conversion](docs/genie-to-lund-conversion.md)
-- [GEMC, reconstruction and Slurm](docs/gemc-reconstruction-batch-submission.md)
-- [Workflow command examples](tutorials/README.md)
-- [Configuration reference](docs/configuration.md)
-- [Technical note and complete reference](docs/technical-note.md)
-- [Legacy parity and validation](docs/validation.md)
-- [Migration from the imported repositories](docs/migration.md)
-- [Public GitHub Wiki publishing](docs/wiki.md)
+Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) remain available for the established production matrix.
+
+Maintained source is grouped first by workflow under `src/lund-generation/` and `src/slurm-submission/`; the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
 
 The original source trees are retained in `legacy/` for comparison. `legacy/Uniform-sample-generator` is pinned as a submodule to its independent upstream repository; its selected kernels are compiled only by parity tests. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
 
-For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/ssh-workflow.md). When sourcing from outside the checkout, the user may set the optional `CLAS12_SAMPLES_DIR` environment variable to its absolute path; the project does not define it automatically. Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/external-inputs.md).
+For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/submit-simulation/ifarm-environment.md). When sourcing from outside the checkout, the user may set the optional `CLAS12_SAMPLES_DIR` environment variable to its absolute path; the project does not define it automatically. Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/concepts/external-inputs.md).

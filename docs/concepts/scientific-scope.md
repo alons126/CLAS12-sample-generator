@@ -10,16 +10,16 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 
 | Section | Material | Purpose |
 | --- | --- | --- |
-| 1. Scope and terminology | [Newcomer guide](index.md) | Physical samples, acceptance samples, GST, LUND, HIPO |
-| 2. Provenance and legacy workflows | [Launch-chain reference](legacy-workflows.md) | Exact old entry points, selections, configuration mappings |
-| 3. Software architecture | [Architecture](architecture.md), [source reference](code-reference.md) | Modules, data flow, APIs, ownership, build dependencies |
-| 4. Generation methods | [Sampling models](sampling-models.md), [uniform guide](uniform-samples.md) | Equations, support, RNG streams, trigger electron |
-| 5. Physical-event conversion | [GENIE guide](genie-to-lund-conversion.md) | GST schema, process/species selection, splitting |
-| 6. Geometry and configuration | [Configuration reference](configuration.md), [external inputs](external-inputs.md) | Target positions, beam/metadata choices, validation |
-| 7. Data products and provenance | [Data contracts](data-contracts.md), [diagnostics](diagnostics.md) | Field definitions, mass conventions, histograms, manifests |
-| 8. Detector processing | [Simulation and Slurm](gemc-reconstruction-batch-submission.md) | Runtime environment, filenames, arguments, failure handling |
-| 9. Verification and limitations | [Validation matrix](validation.md) | Byte/bin/command comparisons, distribution checks, known differences |
-| Appendices | [Build guide](building.md), [SSH workflow](ssh-workflow.md), [migration](migration.md) | Reproducible build/run recipes and compatibility options |
+| 1. Scope and terminology | [Newcomer guide](../index.md) | Physical samples, acceptance samples, GST, LUND, HIPO |
+| 2. Provenance and legacy workflows | [Launch-chain reference](../history/legacy-workflows.md) | Exact old entry points, selections, configuration mappings |
+| 3. Software architecture | [Architecture](architecture.md), [source reference](../development/source-reference.md) | Modules, data flow, APIs, ownership, build dependencies |
+| 4. Generation methods | [Sampling models](sampling-models.md), [uniform guide](../create-lund/uniform.md) | Equations, support, RNG streams, trigger electron |
+| 5. Physical-event conversion | [GENIE guide](../create-lund/physical.md) | GST schema, process/species selection, splitting |
+| 6. Geometry and configuration | [Configuration reference](../create-lund/configuration.md), [external inputs](external-inputs.md) | Target positions, beam/metadata choices, validation |
+| 7. Data products and provenance | [Data contracts](lund-data-contract.md), [diagnostics](../create-lund/monitoring.md) | Field definitions, mass conventions, histograms, manifests |
+| 8. Detector processing | [Simulation and Slurm](../submit-simulation/guide.md) | Runtime environment, filenames, arguments, failure handling |
+| 9. Verification and limitations | [Validation matrix](../development/validation.md) | Byte/bin/command comparisons, distribution checks, known differences |
+| Appendices | [Build guide](../getting-started/installation.md), [SSH workflow](../submit-simulation/ifarm-environment.md), [migration](../history/migration.md) | Reproducible build/run recipes and compatibility options |
 
 ## Boundaries and assumptions
 
@@ -34,4 +34,4 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 
 Record the production source revision, ROOT/compiler/GEMC/reconstruction versions, loaded modules, detector-card and reconstruction-YAML hashes, geometry databases, simulation RNG settings, campaign manifest and input dataset provenance. Add reconstructed acceptance plots and statistical comparisons from the intended server environment. The local tests in this repository do not supply those detector results.
 
-The [diagnostics chapter](diagnostics.md) describes available plots and their quantities. For exported publication figures, choose axis ranges and labels appropriate to the campaign and retain the underlying ROOT histograms.
+The [diagnostics chapter](../create-lund/monitoring.md) describes available plots and their quantities. For exported publication figures, choose axis ranges and labels appropriate to the campaign and retain the underlying ROOT histograms.

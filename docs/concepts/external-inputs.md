@@ -2,7 +2,7 @@
 
 ## Target source and replacement
 
-The authoritative target source is [`src/lund-generation/external/targets.h`](../src/lund-generation/external/targets.h), initially copied byte-for-byte from `legacy/GEMC-samples/include/targets.h`. Its external origin is [awild7/rgm](https://github.com/awild7/rgm/tree/main). This is the imported snapshot, not a claim that it matches today's upstream branch; the original upstream commit was not recorded.
+The authoritative target source is [`src/lund-generation/external/targets.h`](../../src/lund-generation/external/targets.h), initially copied byte-for-byte from `legacy/GEMC-samples/include/targets.h`. Its external origin is [awild7/rgm](https://github.com/awild7/rgm/tree/main). This is the imported snapshot, not a claim that it matches today's upstream branch; the original upstream commit was not recorded.
 
 The target header, unified GEMC submission payload, and detector cards/YAML under `config/detector/` are external snapshots. They are kept in the repository so workflows remain reproducible, while only minimal compatibility changes are applied around them. The maintained code consumes their interfaces without reformatting or rewriting the external content, so reviewed upstream replacements can be adopted with a small, explicit reference update.
 
@@ -20,7 +20,7 @@ The replacement-geometry test compiles the production adapter with a modified he
 
 ## LUND format
 
-We produce LUND files following the [GEMC LUND format documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html): an event header followed by fourteen-field particle records, with momentum in GeV/c, energy in GeV, mass in GeV/c², and vertices in cm. The [data contract](data-contracts.md) specifies the exact columns and the historical application meanings used in user-defined header fields. In particular, the GENIE process tag is not a physical cross-section weight. The maintained writer always uses the established precision, whitespace, and numbering conventions.
+We produce LUND files following the [GEMC LUND format documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html): an event header followed by fourteen-field particle records, with momentum in GeV/c, energy in GeV, mass in GeV/c², and vertices in cm. The [data contract](lund-data-contract.md) specifies the exact columns and the historical application meanings used in user-defined header fields. In particular, the GENIE process tag is not a physical cross-section weight. The maintained writer always uses the established precision, whitespace, and numbering conventions.
 
 ## Gcard provenance and field settings
 
@@ -50,4 +50,4 @@ For 4 and 6 GeV:
 
 The checked-in gcards contain these scales. The sourced submission settings select torus `0.5` at 2 GeV and `-1.0` at 4/6 GeV; the protected payload applies the chosen torus scale and fixed solenoid `-1.0` on the GEMC command line. Review these explicit settings together with the selected card, YAML and GEMC module. No detector settings are inferred from a LUND filename.
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.
+The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.

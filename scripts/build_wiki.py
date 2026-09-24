@@ -15,7 +15,7 @@ Workflow:
     generated pages -> create the sidebar and footer -> remove stale generated Markdown pages.
 
 Inputs:
-    The repository README, docs/*.md, tutorial index, sample-profile reference, and build/launcher
+    The repository README, docs/**/*.md, tutorial index, sample-profile reference, and build/launcher
     references. The repository slug and default branch are explicit so source links are stable.
 
 Outputs:
@@ -53,16 +53,13 @@ SPECIAL_PAGES = {
     Path("CMakePresets.json.md"): "CMake-Presets.md",
 }
 
-PINNED_SIDEBAR = (
-    "Home.md",
-    "Repository-Overview.md",
-    "uniform-samples.md",
-    "genie-to-lund-conversion.md",
-    "gemc-reconstruction-batch-submission.md",
-    "Workflow-Examples.md",
-    "configuration.md",
-    "building.md",
-    "architecture.md",
+SIDEBAR_SECTIONS = (
+    ("START HERE", "getting-started"),
+    ("CREATE LUND FILES", "create-lund"),
+    ("SUBMIT SIMULATION", "submit-simulation"),
+    ("CONCEPTS", "concepts"),
+    ("DEVELOPMENT", "development"),
+    ("HISTORY", "history"),
 )
 
 LINK = re.compile(r"(?P<prefix>!?\[[^\]]*\]\()(?P<target><[^>]+>|[^)\s]+)(?P<suffix>[^)]*\))")
@@ -76,8 +73,8 @@ def source_pages():
     """Return the maintained Markdown-to-wiki filename mapping.
 
     Workflow:
-        Add the explicitly renamed overview/reference pages, then add every docs/*.md file except the
-        newcomer index already mapped to Home.md.
+        Add the explicitly renamed overview/reference pages, then add every docs/**/*.md file except the
+        documentation home already mapped to Home.md. Nested source paths become unique flat wiki names.
 
     Returns:
         Dictionary keyed by absolute source paths with flat wiki filenames as values.
@@ -97,11 +94,17 @@ def source_pages():
 
         pages[source.resolve()] = wiki_name
 
-    for source in sorted((ROOT / "docs").glob("*.md")):
+    for source in sorted((ROOT / "docs").rglob("*.md")):
         resolved = source.resolve()
 
         if resolved not in pages:
-            pages[resolved] = source.name
+            relative = source.relative_to(ROOT / "docs")
+            parts = list(relative.with_suffix("").parts)
+
+            if parts[-1] == "index":
+                parts[-1] = "overview"
+
+            pages[resolved] = "-".join(parts) + ".md"
 
     lowered = [name.lower() for name in pages.values()]
 
@@ -242,10 +245,34 @@ def build(output, repository, branch):
         converted = rewrite_links(original, source, pages, repository, branch)
         (output / wiki_name).write_text(generated_notice(repository, branch, source) + converted, encoding="utf-8")
 
-    ordered = [name for name in PINNED_SIDEBAR if name in titles]
-    ordered.extend(sorted((name for name in titles if name not in ordered), key=lambda name: titles[name].casefold()))
     sidebar = ["# CLAS12 Sample Generator", ""]
-    sidebar.extend(f"- [{titles[name]}]({Path(name).stem})" for name in ordered)
+    sidebar.extend((f"- [{titles['Home.md']}](Home)", f"- [{titles['Repository-Overview.md']}](Repository-Overview)"))
+
+    for heading, directory in SIDEBAR_SECTIONS:
+        members = []
+
+        for source, wiki_name in pages.items():
+            relative = source.relative_to(ROOT)
+
+            if len(relative.parts) >= 3 and relative.parts[:2] == ("docs", directory):
+                members.append(wiki_name)
+
+        members.sort(key=lambda name: (not name.endswith("-overview.md"), titles[name].casefold()))
+        sidebar.extend(("", f"## {heading}", ""))
+        sidebar.extend(f"- [{titles[name]}]({Path(name).stem})" for name in members)
+
+        if directory == "create-lund":
+            sidebar.append(f"- [{titles['Sample-Profiles.md']}](Sample-Profiles)")
+
+        if directory == "development":
+            sidebar.extend(
+                (
+                    f"- [{titles['Launcher-Settings.md']}](Launcher-Settings)",
+                    f"- [{titles['CMake-Presets.md']}](CMake-Presets)",
+                )
+            )
+
+    sidebar.extend(("", "## EXAMPLES", "", f"- [{titles['Workflow-Examples.md']}](Workflow-Examples)"))
     sidebar.append("")
     (output / "_Sidebar.md").write_text("\n".join(sidebar), encoding="utf-8")
 

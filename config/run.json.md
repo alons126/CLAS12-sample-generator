@@ -57,7 +57,7 @@ Use `--run-settings FILE` to select a different strict JSON build profile explic
 
 The file keeps stable operational defaults out of scientific sample profiles and avoids repeating build controls in every command. It does not hide the action being performed. A reader can determine the selected workflow, source, sample definition, input and output directly from the command line.
 
-Sample physics and generation settings belong in [samples](samples/). Submission settings come from the completed manifest plus optional key=value configuration and CLI overrides; scheduler defaults remain in the protected payload. Protected GCARD and reconstruction resources belong in [detector](detector/).
+Sample physics and generation settings belong in [samples](samples). Submission settings come from the completed manifest plus optional key=value configuration and CLI overrides; scheduler defaults remain in the protected payload. Protected GCARD and reconstruction resources belong in [detector](detector).
 
 ## Failure behavior
 

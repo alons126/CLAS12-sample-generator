@@ -10,7 +10,7 @@ Three different contracts are checked independently:
 
 The maintained production electron/proton mixtures and zero-to-beam uniform neutron mode intentionally differ from the pinned upstream submodule's older momentum bounds and modes. The production modes have their own analytical distribution tests; fixed 1 GeV/c remains a neutron-only option.
 
-Uniform FD pion modes and every uniform CD mode currently have structural integration coverage only. They have not yet been tested as production samples through full distribution and detector-workflow validation; see the explicit status note in [uniform samples](uniform-samples.md).
+Uniform FD pion modes and every uniform CD mode currently have structural integration coverage only. They have not yet been tested as production samples through full distribution and detector-workflow validation; see the explicit status note in [uniform samples](../create-lund/uniform.md).
 
 ## 2. Independent references
 
@@ -50,7 +50,7 @@ The full suite currently registers nine tests when both workflows are enabled an
 
 Uniform reference seeds are kinematic 67890 and vertex 12345. Target checks cover Ar plus liquid, 4-foil, 1-foil, 1-foil-small, 1-foil-large and Ca; maintained tester events use the configured target geometry. Photon, charged pions, nucleons, one residual neutral pion and an unrelated kaon are included in the GENIE fixture. The maintained converter must retain the supported detector-stable particles and photon, while skipping both PDG 111 and the unrelated species. The comparison removes the reference pi0 record, adjusts multiplicity and particle indices, and then requires every retained field, including mass and energy, to match.
 
-CDF tests independently evaluate the formulas in [sampling models](sampling-models.md). The ep test checks the uniform-p subsequence, uniform-1/p subsequence and the combined mixture; the en test checks flat theta, phi and p. A fixed numerical threshold is used as a regression criterion, not as a formal significance claim across arbitrary seeds.
+CDF tests independently evaluate the formulas in [sampling models](../concepts/sampling-models.md). The ep test checks the uniform-p subsequence, uniform-1/p subsequence and the combined mixture; the en test checks flat theta, phi and p. A fixed numerical threshold is used as a regression criterion, not as a formal significance claim across arbitrary seeds.
 
 The `replacement-geometry` test verifies header-only geometry updates, new target names and RNG independence. The `ssh-launcher` test verifies sourced-shell survival/status, argument quoting, settings, build invocation and safe updates against a local Git fixture. Neither requires a remote server.
 

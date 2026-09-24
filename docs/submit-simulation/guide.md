@@ -62,7 +62,7 @@ source run.csh --workflow submit --lund-dir /shared/sample/lundfiles \
   --gcard /shared/cards/custom.gcard --yaml /shared/reconstruction/custom.yaml
 ```
 
-[config/submission.conf](../config/submission.conf) is a commented example to adapt, not an automatically loaded site profile. Use `source run.csh --workflow submit --help` for every option. Help and malformed CLI arguments return before server synchronization.
+[config/submission.conf](../../config/submission.conf) is a commented example to adapt, not an automatically loaded site profile. Use `source run.csh --workflow submit --help` for every option. Help and malformed CLI arguments return before server synchronization.
 
 | Options | Meaning |
 | --- | --- |
@@ -99,7 +99,7 @@ For a custom GEMC detector implementation, such as testing target geometry, clon
 
 Python copies the inherited environment, loads the selected GEMC module in that copy, then overwrites its sample settings with the resolved values before calling `sbatch`. Stale shell locals cannot shadow these values. Unlike the former shell coordinator, Python does not leave module or per-sample exports in the interactive shell; the verified environment is passed to Slurm and its workers. Consequently, `which gemc` at the prompt after submission may still show the login shell's earlier version. Use the reported `SLURM_GEMC_EXECUTABLE` to identify what preview or execution will pass to Slurm.
 
-`run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ssh-workflow.md).
+`run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ifarm-environment.md).
 
 **With `--execute`, submission removes and recreates `OUTPATH/mchipo` and `OUTPATH/reconhipo` for both uniform and physical samples.** LUND inputs are preserved. Uniform monitoring is produced during LUND generation and does not use a simulation `rootfiles` directory. Checks reject unsafe output paths and symlinks before replacement. Optional farm-output cleanup deletes only files directly in the configured farm-output directory, once per invocation.
 

@@ -8,7 +8,7 @@ Target resolution has one deliberate order. `rgm-target` first selects the catal
 
 `RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `lundfiles/lund-gen-monitoring/lund-gen-log.json`.
 
-The launcher does not select a sample profile implicitly. Pass `--config config/samples/NAME.conf` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build/test defaults only.
+The launcher does not select a sample profile implicitly. Pass `--config config/samples/NAME.conf` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build/test defaults only.
 
 Relative paths are interpreted from the caller's working directory. The output path and local GENIE input pattern are resolved to absolute paths in the manifest. ROOT-supported remote URLs remain unchanged.
 
@@ -56,7 +56,7 @@ Every event samples exactly one vertex from the selected target geometry and sha
 
 ## Target geometry
 
-The authoritative source is the replaceable [`src/lund-generation/external/targets.h`](../src/lund-generation/external/targets.h); see [external inputs](external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
+The authoritative source is the replaceable [`src/lund-generation/external/targets.h`](../../src/lund-generation/external/targets.h); see [external inputs](../concepts/external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
 
 All positions below are in cm in the imported GEMC coordinate convention. Target-sampled x and y are independent Gaussians with mean 0 and sigma 0.04 cm.
 
@@ -94,8 +94,8 @@ The maintained catalog centralizes the same kind of selection that the legacy su
 
 Schema version 1 contains `workflow`, project `version`, configure-time Git `revision` (including a dirty marker when applicable), `root_version`, the compiled header hash `targets_sha256`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
 
-It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Rounded masses and all LUND fields/precision are defined in the [data contract](data-contracts.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
+It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Rounded masses and all LUND fields/precision are defined in the [data contract](../concepts/lund-data-contract.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
 
 ## Detector and submission settings
 
-Supply `--lund-dir RUN/lundfiles` to infer settings from its manifest, with optional `--config` and CLI overrides. GEMC falls back to 5.14. It selects GCARD/YAML resources explicitly and uses the protected payload’s scheduler defaults. There are no site JSON files. See the [submission guide](gemc-reconstruction-batch-submission.md).
+Supply `--lund-dir RUN/lundfiles` to infer settings from its manifest, with optional `--config` and CLI overrides. GEMC falls back to 5.14. It selects GCARD/YAML resources explicitly and uses the protected payload’s scheduler defaults. There are no site JSON files. See the [submission guide](../submit-simulation/guide.md).

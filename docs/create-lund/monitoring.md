@@ -10,7 +10,7 @@ Each uniform run stores every monitoring histogram exactly once in:
 lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root
 ```
 
-`UniformMonitoring` is implemented beside the generator in [`src/lund-generation/clas12-uniform/`](../src/lund-generation/clas12-uniform/). There is no separate shared monitoring layer because physical conversion does not consume it.
+`UniformMonitoring` is implemented beside the generator in [`src/lund-generation/clas12-uniform/`](../../src/lund-generation/clas12-uniform). There is no separate shared monitoring layer because physical conversion does not consume it.
 
 ## 2. Legacy plot contract
 

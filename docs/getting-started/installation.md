@@ -69,10 +69,10 @@ The LUND executables and protected `submit_GEMC_sample.sh` payload are installed
 
 CTest generates small temporary samples and checks LUND header/particle counts, mass-shell energies, target vertices, channel prescriptions, deterministic seeds, configuration rejection, overwrite protection, and GENIE process selection/file splitting. A synthetic GST fixture exercises all retained species and a skipped process. Simulation tests use executable stubs to verify argument handling, exact per-file counts, dry runs, and stopping after GEMC failure.
 
-Independent adapters also execute external reference kernels/conversion. They compare LUND bytes and original histogram bins with explicitly matched settings and compare legacy job-command arguments. Distribution tests separately compare the maintained 1e and charged-hadron mixtures, uniform neutron momentum, and flat-theta angles to their analytic CDFs. See the [validation matrix](validation.md).
+Independent adapters also execute external reference kernels/conversion. They compare LUND bytes and original histogram bins with explicitly matched settings and compare legacy job-command arguments. Distribution tests separately compare the maintained 1e and charged-hadron mixtures, uniform neutron momentum, and flat-theta angles to their analytic CDFs. See the [validation matrix](../development/validation.md).
 
 These are local software checks. They do not establish detector-card suitability or replace running GEMC/reconstruction and validating acceptance maps at JLab.
 
-The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](ssh-workflow.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](external-inputs.md).
+The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](../submit-simulation/ifarm-environment.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](../concepts/external-inputs.md).
 
-The [unified external GEMC payload](gemc-payload.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.
+The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.

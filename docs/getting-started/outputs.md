@@ -1,0 +1,23 @@
+# Outputs and completion
+
+Both LUND sources use the same completed-run boundary:
+
+```text
+RUN/
+├── lundfiles/
+│   ├── PREFIX_1.txt
+│   ├── PREFIX_2.txt
+│   └── lund-gen-monitoring/
+│       ├── lund-gen-log.json
+│       ├── PREFIX_monitoring_plots.root   # uniform only
+│       └── MonitoringPlotsPath/           # uniform only
+├── mchipo/                                # prepared by uniform creation or submission
+└── reconhipo/                             # prepared by uniform creation or submission
+    └── simulation/                        # task records and detector-input hashes
+```
+
+`lund-gen-log.json` is published last and marks a consumable run. A failed creation may leave partial files for inspection but no completion manifest. Submission reads the manifest's exact file list and event counts rather than guessing from directory names.
+
+Uniform creation also produces ROOT monitoring and rendered PDF/PNG plots. Physical conversion produces summaries and provenance but no monitoring histograms. GEMC and reconstruction outputs appear only after the separate submission workflow executes.
+
+For field-level LUND and manifest definitions, see the [LUND data contract](../concepts/lund-data-contract.md). For replacement and recovery behavior, see the [creation configuration](../create-lund/configuration.md) and [submission guide](../submit-simulation/guide.md).

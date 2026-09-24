@@ -38,14 +38,20 @@ The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt`
 
 The two workflows start at `run.csh`, after the guarded disposable-server refresh:
 
-```text
-run.csh
-  --workflow create-lund -> launcher/workflow.py -> selected LUND application
-  --workflow submit      -> source slurm-submission/setup_and_submit.csh
-                            -> submit.py (imports resolve_inputs.py) -> sbatch array -> protected GEMC/reconstruction payload
+```mermaid
+flowchart TD
+    R[run.csh] --> W{--workflow}
+    W -->|create-lund| L[launcher/workflow.py]
+    L --> S{--source}
+    S -->|uniform| U[clas12-uniform]
+    S -->|physical| P[clas12-generator-to-lund]
+    W -->|submit| C[setup_and_submit.csh]
+    C --> PY[submit.py and resolve_inputs.py]
+    PY --> A[sbatch array]
+    A --> X[protected GEMC and reconstruction worker]
 ```
 
-The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](gemc-reconstruction-batch-submission.md) for the full call chain and editable settings.
+The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the protected payload. Creation never submits jobs automatically. See the [submission guide](../submit-simulation/guide.md) for the full call chain and editable settings.
 
 ## Sample configuration boundary
 
@@ -96,4 +102,4 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 
 Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 
-The complete [source/API inventory](code-reference.md) also covers tests, examples, error paths, and archived supporting utilities.
+The complete [source/API inventory](../development/source-reference.md) also covers tests, examples, error paths, and archived supporting utilities.

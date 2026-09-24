@@ -33,4 +33,4 @@ For Release, use the `release` configure/build presets and `ctest --test-dir bui
 
 ROOT and the compiler must be available in the calling environment. Configuration generates build files and `compile_commands.json`; building produces libraries, executables and optional test helpers. Missing dependencies or incompatible ROOT settings fail configuration. A disabled test cache must be re-enabled with `cmake --preset debug -DBUILD_TESTING=ON` before relying on CTest.
 
-`source run.csh` uses its JSON launcher settings and explicit CMake commands, rather than invoking these presets. See [SSH workflow](docs/ssh-workflow.md).
+`source run.csh` uses its JSON launcher settings and explicit CMake commands, rather than invoking these presets. See [SSH workflow](docs/submit-simulation/ifarm-environment.md).
