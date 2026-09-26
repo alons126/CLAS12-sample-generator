@@ -42,7 +42,7 @@ The manifest normally supplies truth metadata, prefix, file inventory, event cou
 
 ## Verify jobs after submission
 
-The maintained coordinator stops accounting for a job after `sbatch` accepts its array. It does not poll later task states, detect or retry failed array tasks, or validate the HIPO files produced by GEMC and reconstruction. An accepted submission therefore does not guarantee that every task completed successfully.
+After `sbatch` accepts an array, the coordinator prints its numeric `SLURM_JOB_ID` and saves that value in `reconhipo/slurm-submission-log.json`. It then stops accounting for the job: it does not poll later task states, detect or retry failed array tasks, or validate the HIPO files produced by GEMC and reconstruction. An accepted submission therefore does not guarantee that every task completed successfully. The complete workflow invocation uses the same shared success and stop artwork as LUND creation.
 
 After the array finishes, inspect its Slurm state and job logs, confirm the expected output inventory, and dump at least one reconstructed file:
 

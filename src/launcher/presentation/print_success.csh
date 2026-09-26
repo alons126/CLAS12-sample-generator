@@ -17,7 +17,8 @@
 #   3. Restore the normal terminal color.
 # 
 # Usage:
-#   Invoke from the repository root through workflow.py's banner helper.
+#   Invoke through the current workflow coordinator after every requested sample or stage succeeds.
+#   Current and future workflows use this same boundary and shared printer.
 # 
 # Inputs:
 #   The sourced color helper exports COMPLETION_COLOR and RESET_COLOR.

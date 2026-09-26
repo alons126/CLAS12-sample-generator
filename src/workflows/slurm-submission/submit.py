@@ -11,7 +11,7 @@ Purpose:
 
 Workflow:
     Resolve inputs -> check and load GEMC -> check worker inputs -> prepare output only with --execute
-    -> write the submission log -> submit one array per sample.
+    -> submit one array per sample -> record each accepted Slurm job ID in its submission log.
     Python changes a private copy of the shell environment, so the user's interactive module setup
     stays unchanged. Detector commands remain in the external worker.
 
@@ -23,7 +23,7 @@ Inputs:
 
 Outputs:
     Preview prints checks and commands without changing output. --execute replaces simulation output,
-    writes the submission log, and calls Slurm while preserving lundfiles.
+    calls Slurm, reports its accepted job ID, and writes the submission log while preserving lundfiles.
 
 CLI options (parsed by resolve_inputs.py):
     --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
@@ -63,6 +63,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -145,8 +146,8 @@ def file_sha256(path):
 
     return digest.hexdigest()
 
-def write_submission_log(values, environment, root, executables, command):
-    """Write the exact submission settings before calling Slurm.
+def write_submission_log(values, environment, root, executables, command, job_id):
+    """Write the exact submission settings for an accepted Slurm array.
 
     Args:
         values: Fully resolved sample and detector settings returned by the resolver.
@@ -154,12 +155,14 @@ def write_submission_log(values, environment, root, executables, command):
         root: Verified checkout containing the submitted payload.
         executables: Verified absolute paths for GEMC, reconstruction, and sbatch.
         command: Exact argument list passed to ``subprocess.run``.
+        job_id: Numeric identifier read from Slurm's successful submission response.
 
     Returns:
         Path to the completed JSON log in ``OUTPATH/reconhipo``.
 
     Failure:
-        Hashing or final file replacement errors stop submission before Slurm is called.
+        Hashing or final file replacement errors stop later samples. The accepted array remains
+        submitted if log publication fails after the scheduler handoff.
     """
 
     parameters = dict(values)
@@ -173,9 +176,10 @@ def write_submission_log(values, environment, root, executables, command):
         'worker_payload': {'path': str(payload), 'sha256': file_sha256(payload)},
     }
     data = {
-        'schema_version': 1,
+        'schema_version': 2,
         'workflow': 'slurm-submission',
         'created_datetime': datetime.now().astimezone().isoformat(timespec='seconds'),
+        'slurm_job_id': job_id,
         'parameters': dict(sorted(parameters.items())),
         'command': command,
         'git': git_information(root),
@@ -189,6 +193,35 @@ def write_submission_log(values, environment, root, executables, command):
 
     return completed
 # endregion Provenance
+
+# Status presentation --------------------------------------------------------
+
+# region Status presentation
+def status_banner(name, root):
+    """Print one shared workflow status banner without changing the result.
+
+    Args:
+        name: Trusted printer suffix, either ``success`` or ``stop``.
+        root: Verified checkout containing the shared presentation scripts.
+
+    Outputs:
+        Prints the shared artwork, or a plain-text fallback when tcsh cannot start.
+
+    Failure:
+        A printer error is ignored so presentation cannot replace the workflow status.
+    """
+
+    printer = root / 'src/launcher/presentation' / f'print_{name}.csh'
+
+    # Keep artwork after all earlier buffered report text, including in captured logs.
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    try:
+        subprocess.run(['tcsh', '-f', str(printer)], cwd=root, check=False)
+    except OSError:
+        print(f'CLAS12 samples: {name}', flush=True)
+# endregion Status presentation
 
 # Reporting ------------------------------------------------------------------
 
@@ -570,6 +603,47 @@ def clear_farm(values, root, execute, report, cleared):
 
     return cleared
 
+def submit_array(command, environment, root):
+    """Submit one Slurm array and return its numeric job identifier.
+
+    Workflow:
+        Capture the scheduler response -> reproduce its standard output and error -> require a
+        successful status -> extract the ID from ``Submitted batch job NUMBER``.
+
+    Args:
+        command: Exact checked sbatch argument list.
+        environment: Final private environment exported to the scheduler.
+        root: Verified checkout used as the child working directory.
+
+    Returns:
+        The numeric Slurm job identifier as text, preserving its value exactly for reporting and
+        JSON provenance.
+
+    Failure:
+        A rejected command or successful response without the standard numeric notice raises and
+        stops later samples. A scheduler response that cannot be parsed may still represent an
+        accepted array, so the error states that operators must inspect Slurm before retrying.
+    """
+
+    result = subprocess.run(command, env=environment, cwd=root, capture_output=True, text=True)
+
+    # Preserve the scheduler's own notice and diagnostics in the workflow transcript.
+    if result.stdout:
+        print(result.stdout, end='' if result.stdout.endswith('\n') else '\n')
+
+    if result.stderr:
+        print(result.stderr, end='' if result.stderr.endswith('\n') else '\n', file=sys.stderr)
+
+    if result.returncode:
+        raise ValueError('sbatch failed; no subsequent sample was submitted.')
+
+    match = re.search(r'(?m)^Submitted batch job\s+([0-9]+)\s*$', result.stdout)
+
+    if match is None:
+        raise ValueError('sbatch returned success without a numeric job ID; inspect Slurm before retrying.')
+
+    return match.group(1)
+
 def submit_sample(values, environment, root, execute, report, farm_cleared):
     """Check, report, and optionally submit one completed LUND sample.
 
@@ -583,8 +657,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output replacement.
         6. Preserve outputs in preview or recreate only mchipo/reconhipo during execution.
-        7. Report the array contract, publish its provenance log, and call the external payload
-            through sbatch only in execute.
+        7. Report the array contract and call the external payload through sbatch only in execute.
+        8. Read and report the accepted job ID, then publish it with the submission provenance.
 
     Args:
         values: One validated sample dictionary returned by resolve_samples().
@@ -603,8 +677,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     Failure:
         Missing inputs, unsafe output children, absent commands, or sbatch failure raise and
         stop later samples. All read-only preflight checks occur before mchipo/reconhipo replacement.
-        Provenance publication occurs after replacement and before sbatch. Already accepted Slurm
-        arrays are not canceled when a later sample fails.
+        Provenance publication occurs after Slurm accepts the array. Already accepted Slurm arrays
+        are not canceled when log publication or a later sample fails.
     """
 
     # Copy worker values into the private environment and add fixed checkout paths.
@@ -799,16 +873,14 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     report.text('{SYSTEM}sbatch --job-name={RESET}' + values['SLURM_JOB_NAME'] + '{SYSTEM} --array={RESET}' + environment['ARRAY'] + ' ' + payload)
 
     if execute:
-        # Flush report text before sbatch writes output.
+        # Flush report text before the captured scheduler response is reproduced.
         sys.stdout.flush()
 
-        # Pass arguments directly. A rejected submission stops later samples.
+        # Pass arguments directly, report the accepted ID, and bind it to the provenance log.
         command = ['sbatch', '--job-name=' + values['SLURM_JOB_NAME'], '--array=' + environment['ARRAY'], payload]
-        write_submission_log(values, environment, root, executables, command)
-        sys.stdout.flush()
-
-        if subprocess.run(command, env=environment, cwd=root).returncode:
-            raise ValueError('sbatch failed; no subsequent sample was submitted.')
+        job_id = submit_array(command, environment, root)
+        report.value('SLURM_JOB_ID', job_id, value_color='INFO')
+        write_submission_log(values, environment, root, executables, command, job_id)
 
     report.text()
 
@@ -830,8 +902,8 @@ def main():
         Copy the inherited environment and initialize reporting; parse the CLI; resolve and
         validate every requested sample before processing the first; verify the checkout and
         external payload boundary; process distinct samples in caller order while carrying the
-        private module environment and farm-cleanup state; convert known operational failures into
-        one nonzero status.
+        private module environment and farm-cleanup state; print the shared success banner after
+        all samples finish; print the shared stop banner before a final failure diagnostic.
 
     Inputs:
         Process arguments and the ifarm environment, including the shared color palette and
@@ -840,8 +912,9 @@ def main():
 
     Outputs:
         A complete preview or execution transcript on standard output. Execution creates fresh
-        mchipo/reconhipo directories, publishes a submission-provenance log, and submits arrays;
-        preview performs the same validation without those mutations. Neither mode exports its
+        mchipo/reconhipo directories, submits arrays, and publishes each accepted job ID in its
+        submission-provenance log; preview performs the same validation without those mutations.
+        Both modes print the same final-status artwork as LUND creation. Neither mode exports its
         private environment back to the caller's shell.
 
     Returns:
@@ -850,9 +923,13 @@ def main():
 
     Failure:
         A failed sample stops later samples. Slurm arrays accepted earlier in the same
-        invocation remain submitted. Errors are printed through Report when available; failures
-        before palette construction use a plain standard-error fallback.
+        invocation remain submitted. The shared stop banner precedes the diagnostic. Errors are
+        printed through Report when available; failures before palette construction use a plain
+        standard-error fallback.
     """
+
+    # The source location is stable even when configuration fails before checkout validation.
+    root = Path(__file__).resolve().parents[3]
 
     # Use plain text if failure happens before terminal colors are available.
     report = None
@@ -867,7 +944,6 @@ def main():
 
         # Check every sample before the first one can change output.
         args = parser().parse_args()
-        root = Path(__file__).resolve().parents[3]
         samples = resolve_samples(args, root)
 
         # Require the external worker at its expected safe checkout path.
@@ -882,10 +958,23 @@ def main():
         for values in samples:
             farm_cleared = submit_sample(values, environment, root, args.execute, report, farm_cleared)
 
+        status_banner('success', root)
+
         return 0
 
+    except KeyboardInterrupt:
+        status_banner('stop', root)
+
+        if report:
+            report.text('{ERROR}Error:{RESET} Interrupted.')
+        else:
+            print('Error: Interrupted.', file=sys.stderr)
+
+        return 130
     except (OSError, ValueError, TypeError, KeyError, RuntimeError) as error:
         # Convert expected errors to one shell-visible failure status.
+        status_banner('stop', root)
+
         if str(error):
             if report:
                 report.text('{ERROR}Error:{RESET} ' + str(error))

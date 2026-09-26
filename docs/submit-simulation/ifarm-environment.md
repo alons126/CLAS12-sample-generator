@@ -94,7 +94,7 @@ First create the LUND files. Pass the completed LUND directory; use optional con
 source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
 ```
 
-This previews setup and the Slurm command. Add `--execute` to submit the selected arrays and replace simulation output directories, preserving LUND input. Preview still performs the documented server-checkout refresh and environment loading, but preserves sample outputs and farm logs. The setup checks inputs and prints the legacy report before calling `sbatch`. See the [submission guide](guide.md) for settings and failure behavior.
+This previews setup and the Slurm command. Add `--execute` to submit the selected arrays and replace simulation output directories, preserving LUND input. Preview still performs the documented server-checkout refresh and environment loading, but preserves sample outputs and farm logs. The setup checks inputs and prints the legacy report before calling `sbatch`; execution then reports the accepted `SLURM_JOB_ID` and records it in the sample's submission log. Preview and execution finish with the same shared success/stop artwork used by LUND creation. See the [submission guide](guide.md) for settings and failure behavior.
 
 ## Supporting shell files
 

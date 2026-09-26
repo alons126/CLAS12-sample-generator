@@ -43,15 +43,16 @@
 #
 # Workflow:
 #     initialize colors -> submit.py -> resolve_inputs.py -> load selected GEMC module ->
-#     sbatch -> external payload.
+#     sbatch -> capture the accepted job ID -> write provenance -> print the shared final status.
 #
 # Inputs:
 #     quoted CLI arguments and the ifarm module/reconstruction environment.
 #
 # Outputs:
-#     the same report and Slurm arrays; preview is default, --execute replaces only
-#     mchipo/reconhipo and submits. Python owns resolved exports for its sbatch children;
-#     it does not change the calling shell's sample variables or module environment.
+#     the same report, final-status artwork, and Slurm arrays; preview is default, --execute
+#     replaces only mchipo/reconhipo, submits, reports the job ID, and records it in provenance.
+#     Python owns resolved exports for its sbatch children; it does not change the calling shell's
+#     sample variables or module environment.
 #
 # Failure:
 #     preserve Python's exit status without exiting the user's sourced shell.
