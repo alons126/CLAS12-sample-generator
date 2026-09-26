@@ -24,11 +24,16 @@
 #include <TMath.h>
 
 #include <cmath>
+#include <filesystem>
+#include <iostream>
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
+#include "support/environment.h"
 #include "uniform-lund-creator/UniformConfig.h"
 #include "uniform-lund-creator/UniformMonitoring.h"
+
+namespace env = environment;
 
 namespace samples {
 
@@ -156,7 +161,7 @@ double triggerPhi(double phi, double offset) {
 void generateUniform(const RunConfig& c) {
 #pragma region /* Run preparation */
     std::cout << "\n" << env::SYSTEM_COLOR << "Initializing..." << env::RESET_COLOR << "\n";
-    
+
     // Check and print the settings before the writer replaces an existing run.
     c.validate(true);
     LundWriter::printWorkflowSummary(c, "uniform");
@@ -182,7 +187,7 @@ void generateUniform(const RunConfig& c) {
 
 #pragma region /* Event generation */
     std::cout << "\n" << env::SYSTEM_COLOR << "Creating samples..." << env::RESET_COLOR << "\n";
-    
+
     // Create one event per loop. writer.count() changes only after a successful write.
     while (!writer.full()) {
         Event event;
@@ -239,7 +244,7 @@ void generateUniform(const RunConfig& c) {
 
 #pragma region /* Run completion */
     std::cout << "\n" << env::SYSTEM_COLOR << "Finishing..." << env::RESET_COLOR << "\n";
-    
+
     // Save the ROOT, PDF, and PNG plots before writing the completed run log.
     const auto output = std::filesystem::path(c.get("output"));
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
