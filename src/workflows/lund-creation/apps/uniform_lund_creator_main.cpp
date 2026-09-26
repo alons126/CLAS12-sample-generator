@@ -40,6 +40,7 @@
  *
  * Output:
  *   A replaced run directory containing split LUND files, a settings record, and monitoring output.
+ *   Event IDs start at zero and continue across file boundaries without restarting.
  */
 
 #include <exception>

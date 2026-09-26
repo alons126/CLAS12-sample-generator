@@ -16,9 +16,10 @@
  *   -> write lund-creation-log.json.tmp -> rename it to lund-creation-log.json.
  *
  * Written format:
- *   The LUND format uses fixed whitespace, precision, and uniform per-file IDs. Particle masses come
- *   from the external target source through particleMass(). Records use momentum in GeV/c, mass in
- *   GeV/c², energy in GeV, and vertices in cm.
+ *   The LUND format uses fixed whitespace and precision. Both sources serialize the event ID supplied
+ *   by Event: a run-global generated index for uniform events or the GST input-entry index for physical
+ *   events. Particle masses come from the external target source through particleMass(). Records use
+ *   momentum in GeV/c, mass in GeV/c², energy in GeV, and vertices in cm.
  *
  * Failure:
  *   Unsafe replacement targets are rejected before deletion. Stream and filesystem failures throw and
@@ -240,9 +241,9 @@ void LundWriter::write(const Event& e) {
         stream_.open(directory_ / files_.back().path);
     }
 
-    // Preserve archived header precision and numbering. Uniform IDs
-    // restart from zero in each split file; physical IDs retain the source entry index stored in e.id.
-    const auto id = static_cast<unsigned long long>(workflow_ == "uniform" ? files_.back().events : e.id);
+    // Serialize the source-supplied run/input index. Uniform generation assigns a continuous index from
+    // zero across split files; physical conversion retains the GST input-entry index.
+    const auto id = static_cast<unsigned long long>(e.id);
 
     // electron–hadron samples and the beam-momentum electron tester historically wrote beam energy with one decimal;
     // ordinary 1e and physical conversion used six decimals. Other header fields retain their

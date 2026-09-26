@@ -86,8 +86,8 @@ class LundWriter {
      *              The writer calculates particle energy from momentum and mass.
      * @throws std::exception If capacity is exhausted, the event is empty or non-finite, or file output
      *         fails. Counters advance only after the complete event is written.
-     * @note Opens the first file lazily and rotates after RunConfig::events-per-file events. Uniform
-     *       records display per-file event IDs; count() remains run-global.
+     * @note Opens the first file lazily and rotates after RunConfig::events-per-file events. The event
+     *       ID is serialized unchanged, so file rotation does not restart numbering.
      */
     void write(const Event& event);
 

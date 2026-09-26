@@ -566,6 +566,7 @@ std::string help(bool uniform) {
         "Every event samples the selected target geometry.\n"
         "Files use key = value; CLI values override file settings. Seed 0 requests ROOT automatic, nonrepeatable seeding.\n"
         "Existing output is replaced after a warning.\n";
+    if (uniform) { result += "Uniform event IDs start at zero and continue across split files.\n"; }
 
     if (uniform) {
         // List the uniform-only acceptance and sampling settings. parse() resolves automatic values

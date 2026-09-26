@@ -97,7 +97,7 @@ struct Particle {
  *   uniform hadron comes second, while physical conversion keeps supported final-state input order.
  */
 struct Event {
-    std::uint64_t id = 0;             ///< Uniform event index or scanned GST entry index. Uniform LUND text may use a per-file index instead.
+    std::uint64_t id = 0;             ///< Run-global uniform event index or scanned GST input-entry index written unchanged to LUND.
     int A = 1;                        ///< Target mass number written in the LUND header.
     int Z = 1;                        ///< Target charge number, configured separately from the vertex geometry.
     double beam_energy = 0;           ///< Incident-electron energy in GeV.

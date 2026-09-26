@@ -24,7 +24,7 @@ Electron, proton, neutron, and charged-pion masses come from the external target
 | 6 | 11 (electron beam) | 11 |
 | 7 | Configured beam energy, with output-mode rounding | Same |
 | 8 | 1 | 1 |
-| 9 | Per-file event index | Global input entry index, including skipped entries |
+| 9 | Global generated-event index, starting at zero | Global input entry index, including skipped entries |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
 
 The GENIE process tag and resonance metadata are historical application conventions, not a claim that field 10 is a physical cross-section weight. We produce LUND files following the format in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
@@ -47,7 +47,7 @@ The writer rejects empty events and non-finite particle energy/vertex data. GENI
 
 ## 5. Output precision and compatibility
 
-The single maintained format uses established whitespace, five decimal places for particle momenta, energy, mass, and vertices, and per-file uniform numbering. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
+The single maintained format uses established whitespace and five decimal places for particle momenta, energy, mass, and vertices. Uniform event IDs start at zero and remain continuous across split files, matching the physical converter's use of one input-wide index rather than restarting at each file. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
 
 Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`. `--prefix` remains an explicit override for a downstream naming requirement. Output directories are explicit and never inferred from the current machine.
 
@@ -68,7 +68,7 @@ Neutral-pion mass is deliberately absent from the maintained table because PDG 1
 
 ## 7. File splitting and completion
 
-Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that accepted-event capacity, with an additional submission cutoff tied to `events-per-file`. Before an accepted event would start a follow-up LUND file, conversion compares the inclusive GST input-entry count beginning with that entry against `events-per-file`; it stops without creating the file when the count is smaller. The first file is always allowed, and the cutoff is never reevaluated inside a file that has started. Because this is an input-entry test rather than an accepted-event test, unsupported reactions inside an allowed block can still make its LUND file short. `events-per-file` defaults to 10,000 for physical conversion and also controls normal rollover. Uniform generation defaults to 25,000 events per file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available, and uniform event IDs restart from zero in each file.
+Uniform generation writes exactly the requested `events` count. GENIE conversion writes up to that accepted-event capacity, with an additional submission cutoff tied to `events-per-file`. Before an accepted event would start a follow-up LUND file, conversion compares the inclusive GST input-entry count beginning with that entry against `events-per-file`; it stops without creating the file when the count is smaller. The first file is always allowed, and the cutoff is never reevaluated inside a file that has started. Because this is an input-entry test rather than an accepted-event test, unsupported reactions inside an allowed block can still make its LUND file short. `events-per-file` defaults to 10,000 for physical conversion and also controls normal rollover. Uniform generation defaults to 25,000 events per file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available. Uniform event IDs use one zero-based sequence for the complete run and therefore do not restart when a new file opens.
 
 Submission resolves manifest/config/CLI inputs into shell settings: `NUM_OF_JOBS` selects numbered LUND files and `JOB_NEVENTS` supplies the shared per-task event limit to GEMC and reconstruction. Physical conversion uses its `events-per-file` value as the input-tail cutoff block so generation and the intended per-task limit share one scale. The cutoff prevents a known-short raw-input tail from starting a follow-up file without interrupting an exact final block; unsupported reactions can still yield fewer written events than raw entries. The completed manifest supplies actual per-file counts automatically; explicit configuration supports inputs without a manifest.
 
