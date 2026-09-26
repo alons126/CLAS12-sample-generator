@@ -133,7 +133,7 @@ if ($#argv == 0) then
     echo "Submit completed LUND files:"
     echo "  source run.csh --workflow submit --lund-dir RUN/lundfiles"
     echo ""
-    echo "Build without running a workflow payload:"
+    echo "Build without running a workflow program:"
     echo "  source run.csh --workflow create-lund --source uniform --build true --run false"
     echo ""
     echo "Run 'source run.csh --help' for launcher options."
@@ -226,9 +226,9 @@ if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/launcher/enviro
 endif
 # endregion
 
-# Workflow dispatch -----------------------------------------------------------
+# Start selected workflow -----------------------------------------------------
 
-# region Workflow dispatch
+# region Start selected workflow
 # Submission uses its shell bridge; LUND creation uses the Python workflow driver.
 if ($CLAS12_SAMPLE_STATUS == 0) then
     if ($_clas12_submit == 1) then
@@ -242,7 +242,7 @@ endif
 
 # Return to the directory from which the user sourced run.csh.
 popd > /dev/null
-# endregion
+# endregion Start selected workflow
 
 # Caller status ---------------------------------------------------------------
 

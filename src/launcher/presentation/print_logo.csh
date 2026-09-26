@@ -6,28 +6,28 @@
 
 # print_logo.csh --------------------------------------------------------------
 # Description:
-#   Presentation-only CLAS12 sample-generator startup banner.
+#   Print the CLAS12 sample-generator startup banner.
 # 
 # Purpose:
-#   Make the beginning of a long ifarm update/build log easy to identify without changing workflow
-#   configuration, environment state, or success/failure decisions.
+#   Make the beginning of a long ifarm log easy to find. This script does not change settings or decide
+#   whether the workflow succeeds.
 # 
 # Workflow:
 #   1. Select blue ANSI output.
-#   2. Stream the literal banner through the established @-to-$ placeholder filter.
+#   2. Print the banner and replace each `@` placeholder with a dollar sign.
 #   3. Reset terminal formatting after the final separator.
 # 
 # Inputs:
 #   None. The banner is static and does not read sample or launcher settings.
 # 
 # Outputs:
-#   Writes only to standard output. run.csh treats this helper as optional presentation.
+#   Writes only to the terminal. run.csh can continue if this optional banner fails.
 #
 # Usage:
 #   Run from the repository root when a startup banner is wanted.
 # 
 # Failure behavior:
-#   A printer failure must not determine whether synchronization, build, or submission proceeds.
+#   A printing error does not stop an update, build, or submission.
 
 # Banner rendering ------------------------------------------------------------
 

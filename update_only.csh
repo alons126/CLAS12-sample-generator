@@ -9,21 +9,20 @@
 #   C-shell entry point for refreshing the disposable ifarm checkout without building or running a workflow.
 #
 # Purpose:
-#   Expose the guarded repository synchronization owned by src/launcher/checkout/code_updater.csh as one explicit
-#   operator command.
+#   Give users one command that safely updates the ifarm checkout.
 #
 # Workflow:
-#   Source the maintained updater -> preserve its output and final status for the calling C shell.
+#   Run the shared updater -> show its output -> return its status to the calling C shell.
 #
 # Inputs:
-#   The current checkout, its configured Git remote/branch, and the exclusions enforced by the updater.
+#   The current checkout, its Git remote and branch, and the build directories that must be kept.
 #
 # Outputs:
 #   A synchronized disposable checkout. No build, LUND creation, or submission is started.
 #
 # Failure:
-#   Repository identification, cleanup, reset, pull, or submodule failures propagate through the sourced
-#   updater. Server-side uncommitted work is intentionally disposable under this operational contract.
+#   A failed checkout check, cleanup, reset, pull, or submodule update returns a nonzero status. Uncommitted
+#   files on the server may be removed because the ifarm checkout is only a copy used for running jobs.
 #
 # Usage:
 #   source update_only.csh

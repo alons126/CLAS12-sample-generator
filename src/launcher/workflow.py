@@ -32,7 +32,7 @@ CLI options (owned by this launcher):
     --run-settings FILE          Read strict build settings (default: config/run.json).
     --workflow create-lund       Select the LUND-creation workflow (required here).
     --source uniform|physical    Select the LUND event source (required for create-lund).
-    --build true|false           Configure and build before dispatch (JSON default: true).
+    --build true|false           Configure and build before running (JSON default: true).
     --run true|false             Run the selected LUND executable (JSON default: true).
     --build-dir DIRECTORY        Select the CMake binary tree (JSON default: build/release).
     --build-type TYPE            Select Debug, Release, RelWithDebInfo, or MinSizeRel (default: Release).
@@ -40,9 +40,9 @@ CLI options (owned by this launcher):
     --help                       Print launcher options without updating, building, or running.
 
 Forwarded options:
-    Unrecognized arguments are preserved and passed to uniform-lund-creator or
+    Options not listed above are passed unchanged to uniform-lund-creator or
     event-generator-to-lund-converter. Use -- --help after the launcher selections to print that
-    executable's authoritative sample options.
+    program's sample options.
 """
 
 import argparse
@@ -53,15 +53,15 @@ import subprocess
 import sys
 import os
 
-# Launcher configuration objects ----------------------------------------------------------------------------------------------------------------------------------------
+# Launcher settings ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# region Launcher configuration objects
+# region Launcher settings
 # Purpose:
-#     Define the repository root, launcher defaults, accepted names, and optional terminal colors.
+#     Store the repository root, default settings, accepted names, and optional terminal colors.
 #
-# Lifecycle:
-#     Python creates these values once. Settings copy DEFAULTS before applying JSON and command-line
-#     values, so DEFAULTS stays unchanged.
+# Use:
+#     Python creates these values once. settings() copies DEFAULTS before it applies JSON and command-line
+#     values, so the defaults do not change.
 #
 # Scope:
 #     These values control building, execution, and display. Sample and physics settings stay on the
@@ -270,7 +270,7 @@ def settings(args):
         if override is not None:
             result[key] = override
 
-    # This driver handles LUND creation. run.csh dispatches submission directly in its shell.
+    # This file handles LUND creation. run.csh starts submission through a different script.
     if args.workflow is None:
         raise ValueError(error_message('Missing required --workflow.\n\n' + WORKFLOW_GUIDANCE))
 
@@ -396,8 +396,7 @@ def main():
     """Run the requested build and LUND stages in order.
 
     Purpose:
-        Keep shell wrappers focused on checkout and environment setup. This function controls the
-        build and LUND program.
+        Let the shell scripts handle checkout setup while this function builds and runs the LUND program.
 
     Workflow:
         Parse settings -> resolve the build path -> optionally build -> optionally run the selected
@@ -460,7 +459,7 @@ def main():
 
         print()
 
-    # Dispatch exactly one workflow; generation does not automatically launch GEMC.
+    # Run exactly one workflow; LUND creation does not automatically launch GEMC.
     if config['run']:
         if workflow == 'create-lund':
             # Select the uniform generator or the physical-input converter.

@@ -9,18 +9,18 @@
 #   Refresh the disposable ifarm checkout from its configured remote branch.
 #
 # Purpose:
-#   Make the server checkout match the pushed project revision before a workflow starts.
+#   Make the server checkout match the remote branch before a workflow starts.
 #
 # Workflow:
 #   Load banner colors -> verify the Git checkout -> clean server-only files -> reset tracked files ->
 #   pull the branch -> update submodules -> print the selected commit and branch.
 #
 # Inputs:
-#   The current Git checkout, its configured upstream branch, and the build-directory exclusions.
+#   The current Git checkout, its remote branch, and the build directories that must be kept.
 #
 # Outputs:
 #   A refreshed checkout. Build directories are kept; other untracked files and tracked local changes
-#   are removed under the disposable-server contract.
+#   are removed because the ifarm checkout is only a copy used for running jobs.
 #
 # Usage:
 #   This helper is run by run.csh. Run it from the verified repository root.

@@ -17,8 +17,7 @@
 #   3. Restore the normal terminal color.
 # 
 # Usage:
-#   Invoke through the current workflow coordinator after every requested sample or stage succeeds.
-#   Current and future workflows use this same boundary and shared printer.
+#   A workflow calls this script once after every requested sample or stage succeeds.
 # 
 # Inputs:
 #   The sourced color helper exports COMPLETION_COLOR and RESET_COLOR.
@@ -32,7 +31,7 @@
 # Color initialization --------------------------------------------------------
 
 # region Color initialization
-# Load the palette even when this script is called directly.
+# Load the color settings even when this script is called directly.
 source ./src/launcher/presentation/set_colors.csh
 # endregion
 

@@ -11,8 +11,8 @@ Purpose:
     does not submit jobs.
 
 Workflow:
-    Merge command line, config, run log, and defaults -> reject truth conflicts -> check LUND and
-    detector files -> return one settings dictionary per sample.
+    Merge command line, config, run log, and defaults -> reject settings that disagree with the LUND
+    sample -> check LUND and detector files -> return one settings dictionary per sample.
 
 Inputs:
     One or more RUN/lundfiles directories, optional flat key = value configuration, CLI overrides,
@@ -23,7 +23,7 @@ Outputs:
     detectors, or call Slurm.
 
 Failure:
-    Invalid metadata, missing inputs, conflicting truth values, and unsafe paths raise before
+    Invalid sample information, missing inputs, conflicting settings, and unsafe paths raise before
     submission starts.
 
 CLI options:
@@ -61,9 +61,9 @@ from pathlib import Path
 import re
 import sys
 
-# Input contract --------------------------------------------------------------
+# Accepted settings -----------------------------------------------------------
 
-# region Input contract
+# region Accepted settings
 # OPTIONS defines both command-line names and allowed config keys. Config paths start at the config
 # file; command-line paths start at the checkout when run.csh is used.
 OPTIONS = {
@@ -107,7 +107,7 @@ BEAMS = {2070: ('2GeV', '0.5', 'rgm_fall2021-cv.yaml'),
 # Map hadron choices to filename labels and accept completed runs that already use FD/CD labels.
 HADRONS = {'proton': 'ep', 'neutron': 'en', 'pip': 'epip', 'pim': 'epim'}
 LABELS = {'1e', 'electron-tester', 'ep', 'en'} | {label + region for label in HADRONS.values() for region in ('FD', 'CD')}
-# endregion Input contract
+# endregion Accepted settings
 
 # Parsing and validation ------------------------------------------------------
 
@@ -369,12 +369,12 @@ def resolve(lund_directory, explicit, root):
         root: Checkout root used to find detector defaults and reject unsafe output paths.
 
     Returns:
-        One environment dictionary for the submission coordinator. A subset selects files 1..N;
+        One environment dictionary for submit.py. A subset selects files 1..N;
         JOB_NEVENTS is one shared limit for the selected array tasks.
 
     Failure:
-        Unsafe paths, truth conflicts, missing LUND files, invalid settings, or missing detector files
-        raise ValueError before submission.
+        Unsafe paths, settings that disagree with the LUND sample, missing LUND files, invalid settings,
+        or missing detector files raise ValueError before submission.
     """
 
     # Use the selected lundfiles directory as the run location, not a path stored on another machine.
@@ -571,9 +571,9 @@ def resolve(lund_directory, explicit, root):
                 FC_STATUS_ENABLED=values['fc-status'], FC_STATUS=fc)
 # endregion Resolution
 
-# Invocation resolution -------------------------------------------------------
+# Command resolution ----------------------------------------------------------
 
-# region Invocation
+# region Command resolution
 def resolve_samples(args, root):
     """Check all selected samples as one submission batch.
 
@@ -593,7 +593,7 @@ def resolve_samples(args, root):
 
     Failure:
         Missing sample selection, any per-sample failure, or repeated OUTPATH raises before output
-        cleanup or submission. Detector setup remains the coordinator's responsibility.
+        cleanup or submission. submit.py loads and checks the detector software later.
     """
 
     # Command-line values replace config values before individual run logs are checked.
@@ -632,14 +632,15 @@ def main():
         Stop malformed commands before run.csh updates the ifarm checkout.
 
     Workflow:
-        Parse arguments, require an input selector, and accept only the internal
-        --check-arguments path. submit.py owns full input resolution and execution.
+        Parse arguments, require --lund-dir or --config, and accept only the internal
+        --check-arguments mode. submit.py performs the full checks and submission later.
 
     Returns:
         Zero for a syntactically valid launcher precheck.
 
     Failure:
-        argparse prints usage and exits nonzero for missing selectors or direct invocation.
+        argparse prints usage and exits nonzero when the input choice is missing or this file is run
+        directly without the internal check flag.
     """
 
     p = parser()
@@ -656,4 +657,4 @@ def main():
 # Direct execution performs only the early syntax check. Full submission starts through run.csh.
 if __name__ == '__main__':
     sys.exit(main())
-# endregion Invocation
+# endregion Command resolution

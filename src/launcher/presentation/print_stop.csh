@@ -23,8 +23,8 @@
 #   Prints the colored banner. It creates no files and keeps no shell changes.
 # 
 # Usage:
-#   Invoke through the current workflow coordinator before its final error diagnostic. Current and
-#   future workflows use this same boundary and shared printer, preserving the original status.
+#   A workflow calls this script before printing its final error. The workflow keeps the original
+#   failure status.
 # 
 # Failure behavior:
 #   This helper does not handle the error or choose an exit status.

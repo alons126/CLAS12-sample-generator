@@ -14,7 +14,7 @@
 #   Keep terminal color values in one shell file.
 # 
 # Workflow:
-#   Remove old local and exported values -> export the current palette -> let child programs inherit it.
+#   Remove old color values -> export the current colors -> let child programs use them.
 #
 # Inputs:
 #   None. Re-sourcing always replaces stale values.

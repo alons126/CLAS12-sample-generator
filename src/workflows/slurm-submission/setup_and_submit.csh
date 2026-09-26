@@ -42,20 +42,19 @@
 #     --help                        Print submission help before synchronization.
 #
 # Workflow:
-#     initialize colors -> submit.py -> resolve_inputs.py -> load selected GEMC module ->
-#     sbatch -> capture the accepted job ID -> write provenance -> print the shared final status.
+#     Load colors -> check settings -> load the selected GEMC module -> call sbatch -> read the accepted
+#     job ID -> write the submission log -> print the shared final status.
 #
 # Inputs:
 #     quoted CLI arguments and the ifarm module/reconstruction environment.
 #
 # Outputs:
-#     the same report, final-status artwork, and Slurm arrays; preview is default, --execute
-#     replaces only mchipo/reconhipo, submits, reports the job ID, and records it in provenance.
-#     Python owns resolved exports for its sbatch children; it does not change the calling shell's
-#     sample variables or module environment.
+#     Preview prints the checks and Slurm command. With --execute, Python replaces only mchipo and
+#     reconhipo, submits the arrays, prints each job ID, and saves each ID in the submission log.
+#     Changes made for sbatch stay inside Python and do not change the user's shell.
 #
 # Failure:
-#     preserve Python's exit status without exiting the user's sourced shell.
+#     Return Python's exit status without closing the user's shell.
 
 # region Submission
 set CLAS12_SAMPLE_STATUS = 1

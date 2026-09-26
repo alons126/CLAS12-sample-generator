@@ -15,7 +15,7 @@ Workflow:
 
 Inputs:
     The repository README, docs/**/*.md, tutorial index, sample-profile reference, and build/launcher
-    references. The repository slug and default branch are explicit so source links are stable.
+    references. The GitHub OWNER/NAME and branch are given directly so source links stay stable.
 
 Outputs:
     A flat wiki directory. Existing non-Markdown files and `.git` stay in place. File links use the
@@ -86,8 +86,8 @@ def source_pages():
     """Map each maintained Markdown source to its wiki filename.
 
     Workflow:
-        Add the pages with fixed names, then add every remaining documentation page. Turn nested paths
-        into unique flat names.
+        Add the pages with fixed names, then add every remaining documentation page. Give each page a
+        unique filename because a GitHub Wiki keeps all pages in one directory.
 
     Returns:
         Absolute source paths mapped to flat wiki filenames.
@@ -143,7 +143,7 @@ def repository_url(repository, branch, relative, fragment="", image=False):
     """Build a public URL for one repository path.
 
     Args:
-        repository: GitHub OWNER/NAME slug.
+        repository: GitHub repository written as OWNER/NAME.
         branch: Branch containing the maintained source.
         relative: Repository-relative path to link.
         fragment: Optional existing Markdown anchor, including its leading hash.
@@ -290,7 +290,7 @@ def link_code_references(text, source, repository, branch, paths, suffixes, defi
     Inputs:
         text: Complete Markdown page after ordinary local-link rewriting.
         source: Absolute Markdown source path, used for relative file references.
-        repository: Public GitHub OWNER/NAME slug.
+        repository: Public GitHub repository written as OWNER/NAME.
         branch: Public source branch.
         paths: Eligible repository paths.
         suffixes: Unique shortened-path lookup.
@@ -344,7 +344,7 @@ def rewrite_links(text, source, pages, repository, branch):
         text: Complete Markdown page text.
         source: Absolute source file owning relative links.
         pages: Absolute maintained-source to wiki-filename mapping.
-        repository: Public GitHub OWNER/NAME slug.
+        repository: Public GitHub repository written as OWNER/NAME.
         branch: Public source branch.
 
     Returns:

@@ -30,9 +30,8 @@
 
 # region Shared colors
 
-# Load the synchronized palette before its first use. This is deliberately repeated even when
-# run.csh already loaded colors: a Git update may have changed the palette contract while the parent
-# shell was still executing the previously sourced launcher revision.
+# Load the current color settings before printing. Do this again even if run.csh already loaded them,
+# because the Git update may have changed the color file while the old run.csh was still running.
 source ./src/launcher/presentation/set_colors.csh
 # endregion
 
@@ -52,8 +51,8 @@ echo ""
 
 # region Project root
 
-# Remove both tcsh namespaces before exporting the authoritative value. A local variable created
-# with `set` otherwise shadows a same-named environment variable created with `setenv`.
+# Remove both forms of the variable before exporting the new value. In tcsh, a local value made with
+# `set` can hide an environment value made with `setenv`.
 unset DIR_CLAS12_SAMPLE_GENERATOR_CODE
 unsetenv DIR_CLAS12_SAMPLE_GENERATOR_CODE
 

@@ -12,13 +12,13 @@ Purpose:
 Workflow:
     Resolve inputs -> check and load GEMC -> check worker inputs -> prepare output only with --execute
     -> submit one array per sample -> record each accepted Slurm job ID in its submission log.
-    Python changes a private copy of the shell environment, so the user's interactive module setup
+    Python changes a separate copy of the shell environment, so the user's interactive module setup
     stays unchanged. Detector commands remain in the external worker.
 
 Inputs:
     Completed LUND files and manifests, optional config/CLI overrides, GCARD and YAML files,
     and the ifarm shell environment containing the module command, Slurm, reconstruction tools,
-    and the shared ``*_COLOR`` palette. Standard GEMC selections also require the matching shared
+    and the shared ``*_COLOR`` settings. Standard GEMC selections also require the matching shared
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
 
 Outputs:
@@ -70,9 +70,9 @@ import sys
 
 from resolve_inputs import parser, path_value, resolve_samples
 
-# Provenance -----------------------------------------------------------------
+# Submission record ----------------------------------------------------------
 
-# region Provenance
+# region Submission record
 def git_information(root):
     """Read Git details without changing the checkout.
 
@@ -151,8 +151,8 @@ def write_submission_log(values, environment, root, executables, command, job_id
 
     Args:
         values: Fully resolved sample and detector settings returned by the resolver.
-        environment: Final private environment that will be passed to ``sbatch``.
-        root: Verified checkout containing the submitted payload.
+        environment: Final environment dictionary that will be passed to ``sbatch``.
+        root: Verified checkout containing the submitted worker script.
         executables: Verified absolute paths for GEMC, reconstruction, and sbatch.
         command: Exact argument list passed to ``subprocess.run``.
         job_id: Numeric identifier read from Slurm's successful submission response.
@@ -162,7 +162,7 @@ def write_submission_log(values, environment, root, executables, command, job_id
 
     Failure:
         Hashing or final file replacement errors stop later samples. The accepted array remains
-        submitted if log publication fails after the scheduler handoff.
+        submitted if writing the log fails after Slurm accepts the job.
     """
 
     parameters = dict(values)
@@ -192,7 +192,7 @@ def write_submission_log(values, environment, root, executables, command, job_id
     temporary.replace(completed)
 
     return completed
-# endregion Provenance
+# endregion Submission record
 
 # Status presentation --------------------------------------------------------
 
@@ -232,14 +232,14 @@ class Report:
     Purpose:
         Use the same messages in preview and execution without defining colors here.
 
-    Lifecycle:
+    Use:
         One Report copies the six color values and prints text. It stores no workflow state.
 
     Output:
         Banners are 100 columns wide. Summary values align to the border; path checks stay compact.
 
     Failure:
-        Construction rejects an incomplete color palette. check() prints the missing path
+        Construction rejects missing color settings. check() prints the missing path
         before raising so the caller can stop without a duplicate diagnostic.
     """
 
@@ -250,7 +250,7 @@ class Report:
         """Copy the colors supplied by the sourced launcher.
 
         Args:
-            environment: Invocation environment containing every required ``*_COLOR`` value.
+            environment: Environment dictionary containing every required ``*_COLOR`` value.
 
         Failure:
             Missing colors raise ValueError before any report is printed.
@@ -310,8 +310,8 @@ class Report:
         Args:
             name: Visible label printed before the colon.
             value: Value converted to text; an empty value receives no trailing padding.
-            color: Semantic palette name used for the label.
-            value_color: Semantic palette name used for the value.
+            color: Name of the shared color used for the label.
+            value_color: Name of the shared color used for the value.
 
         Output:
             A summary line whose nonempty value ends at BANNER_WIDTH - 1. Values longer than
@@ -341,7 +341,7 @@ class Report:
 
         Failure:
             Print the specific missing-path message, then raise RuntimeError so no dependent
-            cleanup or Slurm handoff can proceed.
+            cleanup or Slurm submission can proceed.
         """
 
         kind = 'directory' if directory else 'file'
@@ -372,20 +372,17 @@ def check_gemc_version(version, environment, report):
     """Check that the requested ifarm clas12Tags version exists before changing modules.
 
     Purpose:
-        Prevent a requested standard GEMC version from replacing the working module environment
-        when its matching clas12Tags data is unavailable.
+        Check that the requested GEMC data exists before changing the loaded GEMC module.
 
     Workflow:
-        Derive the shared clas12Tags base by removing the active version component from the
-        inherited GEMC_DATA_DIR. When no active path is available, use the documented ifarm base.
-        Check both that base and its requested-version child before module loading begins. This
-        ordering preserves the caller's working module environment when the requested installation
-        is absent instead of unloading GEMC and discovering the problem afterward.
+        Find the shared clas12Tags directory from GEMC_DATA_DIR. If GEMC_DATA_DIR is missing, use the
+        normal ifarm location. Check the shared directory and the requested version before loading
+        the module, so a missing version does not disturb the current module setup.
 
     Args:
         version: Validated GEMC version requested for the sample.
-        environment: Pre-load environment inherited from the sourced ifarm launcher.
-        report: Shared renderer used for visible safety checks.
+        environment: Environment copied from the sourced ifarm launcher before loading GEMC.
+        report: Helper that prints the path checks.
 
     Returns:
         The checked, version-specific directory expected to become GEMC_DATA_DIR after loading
@@ -408,28 +405,27 @@ def check_gemc_version(version, environment, report):
     return requested
 
 def load_gemc(version, environment, report):
-    """Load one GEMC module into the private environment passed to Slurm.
+    """Load one GEMC module into the environment dictionary passed to Slurm.
 
     Purpose:
         Reproduce ``module unload gemc`` followed by ``module load gemc/VERSION`` without
         modifying the interactive shell that sourced run.csh.
 
     Workflow:
-        Locate modulecmd in the inherited PATH; start a short Python helper with the invocation's
-        environment; ask modulecmd for Python environment mutations for unload and load; execute
-        those mutations inside the helper; serialize the resulting environment as JSON; validate
-        it and replace the invocation-owned environment dictionary. modulecmd diagnostics remain
-        connected to the terminal so their original text and ANSI colors are preserved.
+        Find modulecmd in PATH -> start a small Python process with the copied environment -> ask
+        modulecmd to unload and load GEMC -> apply those changes in that process -> return its final
+        environment as JSON -> check the JSON and replace the copied dictionary. Module messages stay
+        connected to the terminal, so their original text and colors remain visible.
 
     Args:
         version: Validated GEMC module version selected for this sample.
-        environment: Invocation-owned environment updated in place.
-        report: Shared renderer used for the version-switch status message.
+        environment: Environment dictionary updated in place for this command.
+        report: Helper that prints the version change.
 
     Failure:
-        A missing module command, rejected unload/load, or malformed environment result raises
-        ValueError before output replacement or job submission. A failed helper never partially
-        updates the coordinator's environment because replacement occurs only after JSON validation.
+        A missing module command, failed unload/load, or invalid JSON raises ValueError before output
+        replacement or job submission. The dictionary changes only after the complete result passes
+        validation, so a failed helper cannot leave a partly changed environment.
     """
 
     # Print the requested version before module commands can fail.
@@ -454,11 +450,11 @@ def load_gemc(version, environment, report):
     # Flush the report before module messages are printed.
     sys.stdout.flush()
 
-    # Give the helper the private environment and capture its final JSON output.
+    # Give the helper the copied environment and capture its final JSON output.
     result = subprocess.run([sys.executable, '-c', helper, modulecmd, version], env=environment,
                             stdout=subprocess.PIPE, stderr=sys.stdout, text=True)
 
-    # On failure, keep the original private environment unchanged.
+    # On failure, keep the copied environment unchanged.
     if result.returncode:
         raise ValueError('failed to load GEMC module ' + version + '.')
 
@@ -484,31 +480,27 @@ def verify_gemc(version, expected_data, environment, report):
     """Check the loaded GEMC data path and program before calling Slurm.
 
     Purpose:
-        Prove that loading ``gemc/VERSION`` changed both the detector-data directory and the
-        executable search path, rather than trusting the requested module name alone. This guards
-        against a stale PATH, a misconfigured modulefile, or a module that reports success while
-        retaining resources from another version.
+        Check that loading ``gemc/VERSION`` selected the matching detector data and GEMC program.
+        This catches an old PATH, a broken module file, or data left from another version.
 
     Workflow:
-        Require GEMC_DATA_DIR; resolve it canonically; compare it with the prechecked standard path
-        when applicable; require its final component to equal VERSION; resolve ``gemc`` through the
-        loaded PATH; require the executable to live inside that data tree; print the checked path.
+        Require GEMC_DATA_DIR -> make its path absolute and resolve links -> compare it with the path
+        checked before loading -> require its last directory to equal VERSION -> find ``gemc`` in the
+        loaded PATH -> require that program to be inside the same GEMC directory -> print its path.
 
     Args:
         version: Validated GEMC version requested for the sample.
         expected_data: Prechecked standard ifarm version directory, or None when a custom
             CLAS12TAGS_DIR will replace module data after executable validation.
         environment: Environment returned by the module command.
-        report: Shared renderer used for the executable safety check.
+        report: Helper that prints the executable check.
 
     Returns:
-        Canonical absolute GEMC executable path inherited by Slurm. The caller currently uses the
-        return value as a verified contract result rather than a separate configuration input.
+        Checked absolute path to the GEMC program that Slurm will use.
 
     Failure:
-        Missing/mismatched module data or an executable outside that data tree raises before
-        simulation outputs are replaced. An explicit custom CLAS12TAGS_DIR changes detector data
-        only after this binary/module consistency check succeeds.
+        Missing or mismatched module data, or a GEMC program outside that data directory, raises before
+        simulation outputs are replaced. A custom CLAS12TAGS_DIR is applied only after this check.
     """
 
     # A loaded GEMC module must provide GEMC_DATA_DIR.
@@ -563,12 +555,12 @@ def clear_farm(values, root, execute, report, cleared):
     Args:
         values: Resolved settings containing CLEAR_FAR_OUT and farm_out.
         root: Checkout path used to reject unsafe cleanup destinations.
-        execute: Whether this invocation may modify files.
-        report: Shared colored output renderer.
+        execute: Whether this command may modify files.
+        report: Helper that prints colored output.
         cleared: Whether an earlier sample already handled this request.
 
     Returns:
-        Updated invocation-wide cleanup state. Preview also marks the request handled so
+        Updated cleanup state for this command. Preview also marks the request handled so
         a multi-sample preview reports the proposed cleanup only once.
 
     Failure:
@@ -580,7 +572,7 @@ def clear_farm(values, root, execute, report, cleared):
         return cleared
 
     if cleared:
-        report.text('farm_out was already cleared for this submission invocation. Preserve newly created job logs.')
+        report.text('farm_out was already cleared for this command. Preserve newly created job logs.')
     else:
         farm = Path(values['farm_out'])
 
@@ -612,12 +604,12 @@ def submit_array(command, environment, root):
 
     Args:
         command: Exact checked sbatch argument list.
-        environment: Final private environment exported to the scheduler.
+        environment: Final environment dictionary passed to the scheduler.
         root: Verified checkout used as the child working directory.
 
     Returns:
         The numeric Slurm job identifier as text, preserving its value exactly for reporting and
-        JSON provenance.
+        the JSON submission log.
 
     Failure:
         A rejected command or successful response without the standard numeric notice raises and
@@ -627,7 +619,7 @@ def submit_array(command, environment, root):
 
     result = subprocess.run(command, env=environment, cwd=root, capture_output=True, text=True)
 
-    # Preserve the scheduler's own notice and diagnostics in the workflow transcript.
+    # Copy the scheduler's own notice and errors into the workflow log.
     if result.stdout:
         print(result.stdout, end='' if result.stdout.endswith('\n') else '\n')
 
@@ -648,40 +640,39 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     """Check, report, and optionally submit one completed LUND sample.
 
     Purpose:
-        Bridge a resolver-approved sample to the external GEMC/reconstruction Slurm payload.
+        Pass one checked sample to the external GEMC/reconstruction Slurm worker.
 
     Workflow:
-        1. Merge resolver-approved worker values and fixed checkout-owned exports.
-        2. Report invocation identity and handle optional invocation-wide farm-log cleanup.
-        3. Precheck standard GEMC data, load the selected module, and verify its data/executable.
+        1. Add the checked sample settings and fixed checkout paths to the environment dictionary.
+        2. Print the sample details and handle the optional one-time farm-log cleanup.
+        3. Check standard GEMC data, load the selected module, and verify its data and program.
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output replacement.
         6. Preserve outputs in preview or recreate only mchipo/reconhipo during execution.
-        7. Report the array contract and call the external payload through sbatch only in execute.
-        8. Read and report the accepted job ID, then publish it with the submission provenance.
+        7. Print the array settings and call the external worker through sbatch only with --execute.
+        8. Read and print the accepted job ID, then save it in the submission log.
 
     Args:
         values: One validated sample dictionary returned by resolve_samples().
-        environment: Invocation-owned copy of os.environ. Sample exports and the selected GEMC
-            module override inherited values. It is intentionally carried between samples so each
-            subsequent module transition starts from the preceding private environment.
-        root: Checkout directory containing the external worker payload.
+        environment: Copy of os.environ used only by this command. Sample settings and the selected
+            GEMC module replace matching values. The same copy is reused for later samples.
+        root: Checkout directory containing the external worker script.
         execute: False for read-only preview; true for cleanup and Slurm submission.
-        report: Shared renderer for the legacy-style transcript.
-        farm_cleared: Invocation-wide farm_out cleanup state.
+        report: Helper that prints the report.
+        farm_cleared: Whether this command already handled farm_out cleanup.
 
     Returns:
         Updated farm_out state for the next selected sample. This prevents repeated cleanup from
-        deleting log files created by an earlier array in the same invocation.
+        deleting log files created by an earlier array in the same command.
 
     Failure:
         Missing inputs, unsafe output children, absent commands, or sbatch failure raise and
-        stop later samples. All read-only preflight checks occur before mchipo/reconhipo replacement.
-        Provenance publication occurs after Slurm accepts the array. Already accepted Slurm arrays
+        stop later samples. All read-only checks occur before mchipo/reconhipo replacement.
+        The submission log is written after Slurm accepts the array. Already accepted Slurm arrays
         are not canceled when log publication or a later sample fails.
     """
 
-    # Copy worker values into the private environment and add fixed checkout paths.
+    # Copy worker values into the environment dictionary and add fixed checkout paths.
     environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
     environment.update(RUNNING_DIR=str(root), SLURM_EXPORT_ENV='ALL', SBATCH_EXPORT='ALL',
                        SUBMIT_SCRIPT_FILE=str(root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh'))
@@ -876,7 +867,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         # Flush report text before the captured scheduler response is reproduced.
         sys.stdout.flush()
 
-        # Pass arguments directly, report the accepted ID, and bind it to the provenance log.
+        # Pass arguments directly, report the accepted ID, and save it in the submission log.
         command = ['sbatch', '--job-name=' + values['SLURM_JOB_NAME'], '--array=' + environment['ARRAY'], payload]
         job_id = submit_array(command, environment, root)
         report.value('SLURM_JOB_ID', job_id, value_color='INFO')
@@ -894,28 +885,25 @@ def main():
     """Preview or submit every selected completed LUND sample.
 
     Purpose:
-        Provide the process boundary called by run.csh after its shell environment is ready.
-        Keep Python exceptions, per-sample state, and child environments behind one shell-visible
-        integer status without terminating the interactive shell that sourced the launcher.
+        Run the Python part called by run.csh after the shell environment is ready. Return one integer
+        status without closing the interactive shell that sourced run.csh.
 
     Workflow:
-        Copy the inherited environment and initialize reporting; parse the CLI; resolve and
-        validate every requested sample before processing the first; verify the checkout and
-        external payload boundary; process distinct samples in caller order while carrying the
-        private module environment and farm-cleanup state; print the shared success banner after
-        all samples finish; print the shared stop banner before a final failure diagnostic.
+        Copy the shell environment -> prepare the report -> read the command line -> check every sample
+        before processing the first -> check the checkout and worker script -> process samples in order
+        while reusing the copied module environment and cleanup state -> print the shared success or
+        stop banner.
 
     Inputs:
-        Process arguments and the ifarm environment, including the shared color palette and
+        Process arguments and the ifarm environment, including the shared colors and
         module/reconstruction paths. The current working directory must be the verified checkout
-        root because maintained resource paths and the external payload are checkout-relative.
+        root because project files and the external worker path are relative to the checkout.
 
     Outputs:
-        A complete preview or execution transcript on standard output. Execution creates fresh
-        mchipo/reconhipo directories, submits arrays, and publishes each accepted job ID in its
-        submission-provenance log; preview performs the same validation without those mutations.
-        Both modes print the same final-status artwork as LUND creation. Neither mode exports its
-        private environment back to the caller's shell.
+        A complete preview or execution report on standard output. Execution creates fresh mchipo and
+        reconhipo directories, submits arrays, and saves each accepted job ID in its submission log.
+        Preview runs the same checks without changing files or submitting. Neither mode changes the
+        environment in the caller's shell.
 
     Returns:
         Zero when every selected sample is previewed or submitted successfully; one for a
@@ -923,8 +911,8 @@ def main():
 
     Failure:
         A failed sample stops later samples. Slurm arrays accepted earlier in the same
-        invocation remain submitted. The shared stop banner precedes the diagnostic. Errors are
-        printed through Report when available; failures before palette construction use a plain
+        command remain submitted. The shared stop banner appears before the error. Errors are
+        printed through Report when available; failures before colors are ready use a plain
         standard-error fallback.
     """
 
@@ -935,7 +923,7 @@ def main():
     report = None
 
     try:
-        # Change a private environment copy so the interactive shell stays unchanged.
+        # Change a copied environment so the interactive shell stays unchanged.
         environment = dict(os.environ)
         report = Report(environment)
 
@@ -952,7 +940,7 @@ def main():
         if Path.cwd().resolve() != root or not (root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh').is_file():
             raise ValueError('source the submission script from the CLAS12-sample-generator checkout.')
 
-        # Reuse the private environment and one-time farm cleanup across samples.
+        # Reuse the copied environment and one-time farm cleanup across samples.
         farm_cleared = False
 
         for values in samples:
