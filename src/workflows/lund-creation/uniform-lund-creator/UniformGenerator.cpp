@@ -71,7 +71,6 @@ std::string legacyBeamLabel(double beam) {
     if (std::abs(beam - 2.07052) < 1e-6) { return "2070MeV"; }
     if (std::abs(beam - 4.02962) < 1e-6) { return "4029MeV"; }
     if (std::abs(beam - 5.98636) < 1e-6) { return "5986MeV"; }
-    if (std::abs(beam - 10.6) < 1e-6) { return "10600MeV"; }
 
     return std::to_string(static_cast<long long>(std::llround(beam * 1000))) + "MeV";
 }
@@ -156,6 +155,8 @@ double triggerPhi(double phi, double offset) {
 #pragma region /* generateUniform */
 void generateUniform(const RunConfig& c) {
 #pragma region /* Run preparation */
+    std::cout << "\n" << env::SYSTEM_COLOR << "Initializing..." << env::RESET_COLOR << "\n";
+    
     // Check and print the settings before the writer replaces an existing run.
     c.validate(true);
     LundWriter::printWorkflowSummary(c, "uniform");
@@ -180,6 +181,8 @@ void generateUniform(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Event generation */
+    std::cout << "\n" << env::SYSTEM_COLOR << "Creating samples..." << env::RESET_COLOR << "\n";
+    
     // Create one event per loop. writer.count() changes only after a successful write.
     while (!writer.full()) {
         Event event;
@@ -235,6 +238,8 @@ void generateUniform(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Run completion */
+    std::cout << "\n" << env::SYSTEM_COLOR << "Finishing..." << env::RESET_COLOR << "\n";
+    
     // Save the ROOT, PDF, and PNG plots before writing the completed run log.
     const auto output = std::filesystem::path(c.get("output"));
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";

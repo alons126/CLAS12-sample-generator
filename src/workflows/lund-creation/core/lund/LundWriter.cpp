@@ -39,7 +39,6 @@
 #include <stdexcept>
 
 #include "Version.h"
-#include "support/environment.h"
 
 namespace env = environment;
 
@@ -85,8 +84,8 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         std::cout << env::SYSTEM_COLOR << "\n- Event counts -------------------------------------------------------------------------------------\n" << env::RESET_COLOR;
         print_value(uniform ? "Events generated" : "Input entries scanned", scanned);
         print_value("Events written", written);
+        print_value("Events per file", config.get("events-per-file"));
         print_value("LUND files written", output_files);
-        print_value("Status", "complete");
         std::cout << "\n";
 
         return;

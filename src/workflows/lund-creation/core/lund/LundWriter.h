@@ -27,6 +27,7 @@
 
 #include "core/config/RunConfig.h"
 #include "core/lund/Event.h"
+#include "support/environment.h"
 
 namespace samples {
 
