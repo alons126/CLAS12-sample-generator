@@ -6,13 +6,11 @@ This chapter inventories the supported code and the archived support code so a f
 
 | File | Responsibilities and interfaces |
 | --- | --- |
-| `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds production libraries/apps and installation |
-| `src/CMakeLists.txt` | Separates workflow implementations from launcher integration |
+| `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds the workflow registry and launcher integration |
 | `src/workflows/CMakeLists.txt` | Adds the currently implemented peer workflows |
-| `src/workflows/lund-creation/CMakeLists.txt` | Defines `LundCore`, `UniformGeneration`, `GenieGstConversion`, and `PhysicalConversion` |
+| `src/workflows/lund-creation/CMakeLists.txt` | Defines the LUND libraries, links the two application entry points, and installs their executables |
 | `src/workflows/slurm-submission/CMakeLists.txt` | Installs the external submission worker |
 | `src/launcher/CMakeLists.txt` | Keeps the launcher source boundary separate from installed targets |
-| `src/workflows/lund-creation/apps/CMakeLists.txt` | Defines and installs the two application targets |
 | `src/workflows/lund-creation/apps/uniform_lund_creator_main.cpp` | Uniform creator entry point and error reporting |
 | `src/workflows/lund-creation/apps/event_generator_to_lund_converter_main.cpp` | Generator-independent physical entry point and error reporting |
 | `.vscode/c_cpp_properties.json` | Uses Debug compile_commands.json for editor compiler/include settings |

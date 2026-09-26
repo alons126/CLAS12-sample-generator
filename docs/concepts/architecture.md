@@ -38,7 +38,7 @@ The architecture is intentionally modestly modular around two files obtained fro
 | `uniform-lund-creator` | `src/workflows/lund-creation/apps/uniform_lund_creator_main.cpp` | Parse CLI, call generator, report errors |
 | `event-generator-to-lund-converter` | `src/workflows/lund-creation/apps/event_generator_to_lund_converter_main.cpp` | Parse physical input settings and dispatch an adapter |
 
-The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` separates workflow implementations from the launcher, and `src/workflows/CMakeLists.txt` adds only workflows that currently exist. Production libraries do not include archived implementations. `src/workflows/lund-creation/apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
+The root CMake file discovers ROOT, adds the workflow registry, and adds launcher integration directly. `src/workflows/CMakeLists.txt` adds only workflows that currently exist. The LUND workflow's CMake file defines its libraries and links the two entry points stored in `apps/`; production libraries do not include archived implementations. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
 
 ## Workflow dispatcher
 

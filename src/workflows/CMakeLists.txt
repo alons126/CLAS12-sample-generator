@@ -11,7 +11,7 @@
 #   workflow support to remain outside any individual workflow.
 #
 # Workflow:
-#   src/CMakeLists.txt -> current workflow directories -> workflow-owned libraries and programs.
+#   Root CMakeLists.txt -> current workflow directories -> workflow-owned libraries and programs.
 #
 # Inputs:
 #   Root build options and dependencies discovered before the source tree is added.

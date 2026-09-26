@@ -137,9 +137,10 @@ configure_file(cmake/Version.h.in generated/Version.h @ONLY)
 # Build graph ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Build graph
-# Purpose: Add source directories in the order needed by their production targets.
+# Purpose: Add the workflow registry and launcher integration without an extra pass-through directory.
 include(CTest)
-add_subdirectory(src)
+add_subdirectory(src/workflows)
+add_subdirectory(src/launcher)
 # endregion
 
 # Installation -----------------------------------------------------------------------------------------------------------------------------------------------------------
