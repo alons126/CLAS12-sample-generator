@@ -70,11 +70,11 @@ The tester always scans electron θ from 5–40° and all φ at beam momentum, a
 
 ## Targets, reproducibility, and masses
 
-`--rgm-target` first resolves LUND A/Z metadata, the external [`targets.h`](../../src/lund-creation/external/targets.h) geometry key, and the default GEMC target variation. Production profiles therefore contain only `rgm-target = Ar40`; the resolved manifest contains `target = Ar`, `A = 40`, `Z = 18`, and `gemc-target-variation = rgm_fall2021_Ar`. Explicit field values remain available as later overrides for controlled studies.
+`--rgm-target` first resolves LUND A/Z metadata, the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) geometry key, and the default GEMC target variation. Production profiles therefore contain only `rgm-target = Ar40`; the resolved manifest contains `target = Ar`, `A = 40`, `Z = 18`, and `gemc-target-variation = rgm_fall2021_Ar`. Explicit field values remain available as later overrides for controlled studies.
 
 `seed` controls kinematics and `vertex-seed` controls geometry. Defaults 67890 and 12345 are repeatable. `TRandom3(0)` asks ROOT to choose an automatic seed; a manifest that records zero therefore cannot reproduce the event sequence. The streams are separate so geometry draws do not shift kinematics.
 
-Electron, proton, neutron, and charged-pion masses come directly from the external `src/lund-creation/external/targets.h` source through `particleMass()`. The photon mass is exactly zero. LUND serialization still writes every mass and derived energy to five decimal places.
+Electron, proton, neutron, and charged-pion masses come directly from the external `src/workflows/lund-creation/external/targets.h` source through `particleMass()`. The photon mass is exactly zero. LUND serialization still writes every mass and derived energy to five decimal places.
 
 ## Output and diagnostics
 

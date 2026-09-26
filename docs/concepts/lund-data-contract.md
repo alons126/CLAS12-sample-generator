@@ -4,7 +4,7 @@
 
 `Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one selected hadron. Converted events contain the scattered electron followed by retained GST particles in their input order. Retained physical species are protons, neutrons, charged pions and photons. Neutral pions must be decayed upstream into photons before GST production; residual PDG 111 entries are skipped rather than copied or decayed by the converter.
 
-These types are defined in [Event.h](../../src/lund-creation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../../src/lund-creation/core/lund/LundWriter.cpp).
+These types are defined in [Event.h](../../src/workflows/lund-creation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../../src/workflows/lund-creation/core/lund/LundWriter.cpp).
 
 ## 2. Units and conventions
 
@@ -53,7 +53,7 @@ Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`.
 
 ## 6. Mass convention
 
-Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/lund-creation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes external [`targets.h`](../../src/lund-creation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
+Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/workflows/lund-creation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
 
 | Species (PDG) | LUND mass (GeV/c²) |
 | --- | ---: |
@@ -63,7 +63,7 @@ Supported PDG identifiers are declared with the particle record in [`Event.h`](.
 | pip/pim (±211) | 0.13957 |
 | photon (22) | 0 |
 
-The table shows five-decimal serialized values. Internally, [`targets.h`](../../src/lund-creation/external/targets.h) supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
+The table shows five-decimal serialized values. Internally, [`targets.h`](../../src/workflows/lund-creation/external/targets.h) supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
 Neutral-pion mass is deliberately absent from the maintained table because PDG 111 is not a supported LUND output species. CLAS12 reconstructs neutral pions from their two-photon decays, so physical GST input must already contain the daughter photons generated upstream.
 
 ## 7. File splitting and completion
@@ -85,7 +85,7 @@ For an input shorter than `events-per-file`, the first file is allowed to consum
 | `schema_version` | integer | Currently 1 |
 | `workflow` | string | `uniform` or `physical`; physical generator identity is in `config.event-generator` |
 | `version`, `revision`, `root_version` | strings | Project version, short configure-time Git description/dirty marker, ROOT version |
-| `targets_sha256` | string | SHA-256 of the external [`targets.h`](../../src/lund-creation/external/targets.h) used at compilation |
+| `targets_sha256` | string | SHA-256 of the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) used at compilation |
 | `git` | object | Configure-time repository URL, branch, commit subject/hash/date/author, porcelain status summary, nearest tag, detached-HEAD state, tracking branch and ahead/behind counts, and GitHub tree link |
 | `scanned_events`, `written_events` | integers | Input scan count and output count |
 | `config` | object of strings | Fully merged/resolved settings, including RNG/output/mass/sampling modes |

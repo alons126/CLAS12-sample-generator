@@ -8,7 +8,7 @@ source run.csh --workflow create-lund --source uniform|physical ...
 
 source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
   -> guarded server-checkout update
-  -> source src/slurm-submission/setup_and_submit.csh
+  -> source src/workflows/slurm-submission/setup_and_submit.csh
      -> submit.py
         -> resolve_inputs.py: manifest + configuration + CLI -> validated settings
         -> preloaded GEMC checks, setup report, output preparation

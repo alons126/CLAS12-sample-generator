@@ -7,10 +7,10 @@
 #   Entry point for the source subdirectories.
 # 
 # Purpose:
-#   Keep LUND creation, Slurm submission, the launcher, and project-wide support in clear directories.
+#   Separate user-facing workflows from the launcher that selects them.
 # 
 # Workflow:
-#   Root configuration -> LUND targets -> submission coordinators -> launcher; shared support is consumed directly.
+#   Root configuration -> workflow targets -> launcher integration.
 # 
 # Inputs:
 #   Root workflow options and imported dependencies.
@@ -21,10 +21,9 @@
 # Failure behavior:
 #   A child configuration failure stops the root CMake configure step.
 
-# Workflow source trees --------------------------------------------------------------------------------------------------------------------------------------------------
+# Source boundaries ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# region Workflow source trees
-add_subdirectory(lund-creation)
-add_subdirectory(slurm-submission)
+# region Source boundaries
+add_subdirectory(workflows)
 add_subdirectory(launcher)
 # endregion

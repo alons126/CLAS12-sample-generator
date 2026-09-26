@@ -32,12 +32,12 @@
 
 # region Color and banner setup
 
-if ( -f ./src/support/environment/set_banners.csh ) then
-    source ./src/support/environment/set_banners.csh
+if ( -f ./src/launcher/presentation/set_banners.csh ) then
+    source ./src/launcher/presentation/set_banners.csh
     # printf "${SYSTEM_COLOR}-->${RESET_COLOR} %b\n" "${COMPLETION_COLOR}Color environment loaded.${RESET_COLOR}"
     echo
 else
-    echo "\033[31mError:\033[0m the following file does not exist: ./src/support/environment/set_banners.csh\n"
+    echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/presentation/set_banners.csh\n"
     exit 1
 endif
 

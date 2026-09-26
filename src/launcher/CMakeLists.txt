@@ -21,7 +21,7 @@
 # Failure behavior:
 #   Optional local development integration is skipped when its files or tools are unavailable.
 
-# Optional local development integration --------------------------------------------------------------------------------------------------------------------------------
+# Optional local development integration ---------------------------------------------------------------------------------------------------------------------------------
 
 # region Optional local development integration
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/launcher.py")

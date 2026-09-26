@@ -610,7 +610,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # Copy worker values into the private environment and add fixed checkout paths.
     environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
     environment.update(RUNNING_DIR=str(root), SLURM_EXPORT_ENV='ALL', SBATCH_EXPORT='ALL',
-                       SUBMIT_SCRIPT_FILE=str(root / 'src/slurm-submission/external/submit_GEMC_sample.sh'))
+                       SUBMIT_SCRIPT_FILE=str(root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh'))
 
     uniform = values['source'] == 'uniform'
 
@@ -647,7 +647,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # Reapply checked sample values after the module changes the environment.
     environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
     environment.update(RUNNING_DIR=str(root), SLURM_EXPORT_ENV='ALL', SBATCH_EXPORT='ALL',
-                       SUBMIT_SCRIPT_FILE=str(root / 'src/slurm-submission/external/submit_GEMC_sample.sh'))
+                       SUBMIT_SCRIPT_FILE=str(root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh'))
 
     # A checked custom clas12Tags directory replaces GEMC_DATA_DIR.
     if values['CLAS12TAGS_DIR']:
@@ -867,13 +867,13 @@ def main():
 
         # Check every sample before the first one can change output.
         args = parser().parse_args()
-        root = Path(__file__).resolve().parents[2]
+        root = Path(__file__).resolve().parents[3]
         samples = resolve_samples(args, root)
 
         # Require the external worker at its expected safe checkout path.
-        path_value(root / 'src/slurm-submission/external/submit_GEMC_sample.sh', 'SUBMIT_SCRIPT_FILE')
+        path_value(root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh', 'SUBMIT_SCRIPT_FILE')
 
-        if Path.cwd().resolve() != root or not (root / 'src/slurm-submission/external/submit_GEMC_sample.sh').is_file():
+        if Path.cwd().resolve() != root or not (root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh').is_file():
             raise ValueError('source the submission script from the CLAS12-sample-generator checkout.')
 
         # Reuse the private environment and one-time farm cleanup across samples.

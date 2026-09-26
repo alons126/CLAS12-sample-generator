@@ -1,6 +1,6 @@
 # CLAS12 sample generator documentation
 
-This project has exactly two user-facing workflows. First create completed LUND files from uniform acceptance sampling or existing physical event-generator truth. Later, and only as a separate action, submit those LUND files to ifarm Slurm for GEMC detector simulation followed by CLAS12 reconstruction.
+This project currently has two user-facing workflows. First create completed LUND files from uniform acceptance sampling or existing physical event-generator truth. Later, and only as a separate action, submit those LUND files to ifarm Slurm for GEMC detector simulation followed by CLAS12 reconstruction. Future downstream workflows will join these as peers when they are implemented.
 
 ## 1. Create LUND files
 
@@ -30,7 +30,7 @@ flowchart TD
     class MONITORING,LOCAL note;
 ```
 
-Code shown in the diagram: [`run.csh`](../run.csh), [`workflow.py`](../src/launcher/workflow.py), [`RunConfig.h`](../src/lund-creation/core/config/RunConfig.h), and [`LundWriter.h`](../src/lund-creation/core/lund/LundWriter.h).
+Code shown in the diagram: [`run.csh`](../run.csh), [`workflow.py`](../src/launcher/workflow.py), [`RunConfig.h`](../src/workflows/lund-creation/core/config/RunConfig.h), and [`LundWriter.h`](../src/workflows/lund-creation/core/lund/LundWriter.h).
 
 See [Create LUND files](create-lund/index.md) for configuration, source-specific behavior, examples, and output contracts.
 
@@ -63,7 +63,7 @@ flowchart TB
     class INPUTS,ENTRY,VALIDATE,PREVIEW,SUBMIT,GEMC,RECON stage;
 ```
 
-Code shown in the diagram: [`run.csh`](../run.csh), [`setup_and_submit.csh`](../src/slurm-submission/setup_and_submit.csh), [`submit.py`](../src/slurm-submission/submit.py), and [`resolve_inputs.py`](../src/slurm-submission/resolve_inputs.py).
+Code shown in the diagram: [`run.csh`](../run.csh), [`setup_and_submit.csh`](../src/workflows/slurm-submission/setup_and_submit.csh), [`submit.py`](../src/workflows/slurm-submission/submit.py), and [`resolve_inputs.py`](../src/workflows/slurm-submission/resolve_inputs.py).
 
 See [Submit simulation](submit-simulation/index.md) for preview, execution, environment, and worker details.
 

@@ -383,7 +383,7 @@ def banner(name):
     # Use an absolute path and pass it as an argument, not shell source text.
     try:
         # Show printer output but ignore its status.
-        subprocess.run(['tcsh', '-f', str(ROOT / 'src/support/printers' / f'print_{name}.csh')], cwd=ROOT, check=False)
+        subprocess.run(['tcsh', '-f', str(ROOT / 'src/launcher/presentation' / f'print_{name}.csh')], cwd=ROOT, check=False)
     except OSError:
         # Keep the status visible when tcsh is unavailable.
         print(f'CLAS12 samples: {name}', flush=True)

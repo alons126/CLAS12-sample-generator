@@ -1,6 +1,6 @@
 # Unified legacy GEMC payload
 
-`src/slurm-submission/external/submit_GEMC_sample.sh` was obtained from the RG-M job-submission code represented by `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` under `legacy/GEMC-samples/scripts/job_submission_scripts/`. It has been modified for this project, but keeps the RG-M scripts' overall structure and usage pattern: Slurm supplies one array index, environment variables identify the input and detector settings, GEMC runs first, and reconstruction follows. The archived originals remain untouched.
+`src/workflows/slurm-submission/external/submit_GEMC_sample.sh` was obtained from the RG-M job-submission code represented by `submit_GEMC_GENIE_sample.sh` and `submit_GEMC_uniform_sample.sh` under `legacy/GEMC-samples/scripts/job_submission_scripts/`. It has been modified for this project, but keeps the RG-M scripts' overall structure and usage pattern: Slurm supplies one array index, environment variables identify the input and detector settings, GEMC runs first, and reconstruction follows. The archived originals remain untouched.
 
 This external payload is one of the project's deliberately modular RG-M boundaries. Maintained Python code validates and resolves inputs but does not duplicate the detector commands. When RG-M provides an updated job script, compare it with this payload and carry forward the small generator-independent adaptation described below. The external payload remains excluded from routine edits so its RG-M lineage and update path stay clear.
 
@@ -42,7 +42,7 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | `TORUS_FIELD` | +0.5 at 2 GeV; −1 at 4/6 GeV |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction configurations |
 
-The sourced `src/slurm-submission/setup_and_submit.csh` invokes `submit.py`, which passes these settings to `sbatch`, checks the preloaded environment and inputs, recreates simulation output directories with `--execute`, and submits one array per sample. Slurm exports the configured environment and supplies the task index. The configured event limit is shared by the array, including a shorter final LUND file; it is not an exact per-file count.
+The sourced `src/workflows/slurm-submission/setup_and_submit.csh` invokes `submit.py`, which passes these settings to `sbatch`, checks the preloaded environment and inputs, recreates simulation output directories with `--execute`, and submits one array per sample. Slurm exports the configured environment and supplies the task index. The configured event limit is shared by the array, including a shorter final LUND file; it is not an exact per-file count.
 
 ## Integration with the maintained launcher
 

@@ -59,4 +59,4 @@ The LUND executables and external `submit_GEMC_sample.sh` payload are installed 
 
 The supported checkout entry point is `source run.csh` in csh/tcsh; see [SSH execution](../submit-simulation/ifarm-environment.md). Geometry source, LUND format, gcard provenance and the required energy-dependent field settings are documented in [external inputs](../concepts/external-inputs.md).
 
-The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.
+The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.

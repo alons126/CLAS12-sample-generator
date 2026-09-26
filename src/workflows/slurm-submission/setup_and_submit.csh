@@ -58,14 +58,14 @@
 
 # region Submission
 set CLAS12_SAMPLE_STATUS = 1
-if (-f ./src/support/environment/set_colors.csh) then
-    source ./src/support/environment/set_colors.csh
+if (-f ./src/launcher/presentation/set_colors.csh) then
+    source ./src/launcher/presentation/set_colors.csh
     if ($status == 0) then
-        python3 src/slurm-submission/submit.py $argv:q
+        python3 src/workflows/slurm-submission/submit.py $argv:q
         set CLAS12_SAMPLE_STATUS = $status
     endif
 else
-    echo "Error: the following file does not exist: ./src/support/environment/set_colors.csh"
+    echo "Error: the following file does not exist: ./src/launcher/presentation/set_colors.csh"
 endif
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
 # endregion Submission

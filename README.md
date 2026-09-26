@@ -1,6 +1,6 @@
 # CLAS12 sample generator
 
-Two separate workflows:
+Current user-facing workflows:
 
 1. **Create LUND files:** uniform acceptance samples or conversion of physical GENIE GST truth.
 2. **Submit simulation on ifarm:** consume completed LUND files, configure GEMC/detector inputs, and submit GEMC followed by reconstruction as Slurm array jobs.
@@ -44,7 +44,7 @@ Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-creation-moni
 
 ## Documentation
 
-Start at the [documentation home](docs/index.md). It presents the two workflows first and routes readers by task instead of exposing the complete reference at once.
+Start at the [documentation home](docs/index.md). It presents the currently implemented workflows first and routes readers by task instead of exposing the complete reference at once.
 
 | Subject | Use it for |
 | --- | --- |
@@ -57,9 +57,9 @@ Start at the [documentation home](docs/index.md). It presents the two workflows 
 
 Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) remain available for the established production matrix.
 
-Maintained source is grouped first by workflow under `src/lund-creation/` and `src/slurm-submission/`; the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
+Maintained workflow implementations are peers under `src/workflows/`; shared C++ workflow support is under `src/workflows/support/`, and the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
 
-The project keeps two narrow, RG-M-derived update boundaries. `src/lund-creation/external/targets.h` is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted. `src/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived payload that keeps the source structure and usage pattern. Maintained adapters surround both files so later RG-M updates can be reviewed and incorporated without duplicating their geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
+The project keeps two narrow, RG-M-derived update boundaries. `src/workflows/lund-creation/external/targets.h` is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted. `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived payload that keeps the source structure and usage pattern. Maintained adapters surround both files so later RG-M updates can be reviewed and incorporated without duplicating their geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
 
 The original source trees are retained in `legacy/` for historical comparison. Their public repository baseline is the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0), which records the archived tree and the pinned Uniform submodule revision. `legacy/Uniform-sample-generator` remains a submodule of its independent upstream repository. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
 

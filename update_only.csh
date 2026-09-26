@@ -9,7 +9,7 @@
 #   C-shell entry point for refreshing the disposable ifarm checkout without building or running a workflow.
 #
 # Purpose:
-#   Expose the guarded repository synchronization owned by src/launcher/code_updater.csh as one explicit
+#   Expose the guarded repository synchronization owned by src/launcher/checkout/code_updater.csh as one explicit
 #   operator command.
 #
 # Workflow:
@@ -31,5 +31,5 @@
 # Checkout update --------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Checkout update
-source ./src/launcher/code_updater.csh
+source ./src/launcher/checkout/code_updater.csh
 # endregion

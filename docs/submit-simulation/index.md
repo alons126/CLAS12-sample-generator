@@ -29,7 +29,7 @@ flowchart TB
     class INPUTS,ENTRY,VALIDATE,PREVIEW,SUBMIT,GEMC,RECON stage;
 ```
 
-Code shown in the diagram: [`run.csh`](../../run.csh), [`setup_and_submit.csh`](../../src/slurm-submission/setup_and_submit.csh), [`submit.py`](../../src/slurm-submission/submit.py), and [`resolve_inputs.py`](../../src/slurm-submission/resolve_inputs.py).
+Code shown in the diagram: [`run.csh`](../../run.csh), [`setup_and_submit.csh`](../../src/workflows/slurm-submission/setup_and_submit.csh), [`submit.py`](../../src/workflows/slurm-submission/submit.py), and [`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py).
 
 ## Normal path
 

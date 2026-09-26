@@ -2,7 +2,7 @@
 
 ## Target source and replacement
 
-The project aims to remain modestly modular at two RG-M-derived boundaries: target geometry enters through [`src/lund-creation/external/targets.h`](../../src/lund-creation/external/targets.h), and per-array-task detector execution enters through [`src/slurm-submission/external/submit_GEMC_sample.sh`](../../src/slurm-submission/external/submit_GEMC_sample.sh). Maintained adapters and coordinators surround these files instead of duplicating their geometry or detector commands. If RG-M publishes an update, the corresponding external file can therefore be reviewed and replaced or readapted without redesigning the two user-facing workflows.
+The project aims to remain modestly modular at two RG-M-derived boundaries: target geometry enters through [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h), and per-array-task detector execution enters through [`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh). Maintained adapters and coordinators surround these files instead of duplicating their geometry or detector commands. If RG-M publishes an update, the corresponding external file can therefore be reviewed and replaced or readapted without redesigning the currently implemented workflows or future peer workflows.
 
 The checked-in `targets.h` is an exact copy of the RG-M target source containing the latest RG-M target implementations available with GEMC 5.14 when this snapshot was adopted. Its external origin is [awild7/rgm](https://github.com/awild7/rgm/tree/main), and the target implementations are documented in CLAS12 Note 2026-001[^sportes-2026-rgm]. The file is consumed byte-for-byte through `TargetGeometry`; project-specific validation and RNG isolation remain outside it.
 
@@ -14,7 +14,7 @@ Both uniform generation and physical conversion call this header's `randomVertex
 
 To update geometry:
 
-1. Replace only `src/lund-creation/external/targets.h` with the reviewed RG-M version, preserving it as an exact copy. Keep `legacy/` unchanged as the comparison baseline.
+1. Replace only `src/workflows/lund-creation/external/targets.h` with the reviewed RG-M version, preserving it as an exact copy. Keep `legacy/` unchanged as the comparison baseline.
 2. Preserve the external API: `targets` maps names to nonempty position vectors, `ran` is a `TRandom3`, and `randomVertex(std::string)` returns a `TVector3` in cm. If upstream changes this API, adapt `TargetGeometry.cpp` as well. New target names are discovered from the map; their sampling prescription comes from the replacement function.
 3. Build with `source run.csh --workflow create-lund --source uniform --build true --run false` in tcsh, or the CMake commands in the build guide. CMake detects header changes and recalculates its SHA-256; each generated manifest records `targets_sha256` for the compiled header, including uncommitted replacements.
 4. Review changed vertex bounds. Geometry updates can intentionally change results relative to the frozen archive; record the reason and revised scientific validation. Update the snapshot table in the configuration guide and choose matching detector geometry and A/Z.
@@ -54,6 +54,6 @@ For 4 and 6 GeV:
 
 The checked-in gcards contain these scales. The sourced submission settings select torus `0.5` at 2 GeV and `-1.0` at 4/6 GeV; the external payload applies the chosen torus scale and fixed solenoid `-1.0` on the GEMC command line. Review these explicit settings together with the selected card, YAML and GEMC module. No detector settings are inferred from a LUND filename.
 
-The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.
+The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)

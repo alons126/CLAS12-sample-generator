@@ -74,9 +74,9 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 
 `--workflow create-lund|submit` is required. `--source uniform|physical` is required for `create-lund` and invalid for `submit`.
 
-`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/slurm-submission/setup_and_submit.csh` directly; its Python coordinator accepts `--lund-dir`, `--config` and CLI overrides without invoking the LUND build driver. See the [submission guide](guide.md).
+`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/workflows/slurm-submission/setup_and_submit.csh` directly; its Python coordinator accepts `--lund-dir`, `--config` and CLI overrides without invoking the LUND build driver. See the [submission guide](guide.md).
 
-Building always invokes CMake dependency checking, so replacing an uncommitted `src/lund-creation/external/targets.h` is sufficient to trigger rebuilding.
+Building always invokes CMake dependency checking, so replacing an uncommitted `src/workflows/lund-creation/external/targets.h` is sufficient to trigger rebuilding.
 
 After transferring committed changes to the remote, a server refresh/build is:
 
@@ -98,4 +98,4 @@ This previews setup and the Slurm command. Add `--execute` to submit the selecte
 
 ## Supporting shell files
 
-`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/build_and_run.csh` is a LUND build helper without refresh. `src/launcher/code_updater.csh` performs checked Git operations in a child shell. The sourced submission bridge invokes Python with the preloaded environment and returns its status without exiting the login shell. Python passes resolved settings directly to `sbatch`.
+`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/checkout/code_updater.csh` performs checked Git operations in a child shell. The sourced submission bridge invokes Python with the preloaded environment and returns its status without exiting the login shell. Python passes resolved settings directly to `sbatch`.

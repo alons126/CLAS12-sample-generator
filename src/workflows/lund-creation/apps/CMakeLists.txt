@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# src/lund-creation/apps/CMakeLists.txt ----------------------------------------------------------------------------------------------------------------------------------
+# src/workflows/lund-creation/apps/CMakeLists.txt ------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Command-line executable targets.
 # 

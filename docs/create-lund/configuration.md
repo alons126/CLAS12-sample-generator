@@ -19,7 +19,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
 | `rgm-target` | `Ar40` | Catalog identity that first supplies geometry, A/Z, and GEMC-variation defaults |
-| `target` | `auto` | Optional override of the external [`targets.h`](../../src/lund-creation/external/targets.h) geometry selected by `rgm-target` |
+| `target` | `auto` | Optional override of the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) geometry selected by `rgm-target` |
 | `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
 | `gemc-target-variation` | `auto` | Optional GCARD target-variation override applied after the catalog default |
 | `events` | Required | Total number of accepted events to write |
@@ -56,7 +56,7 @@ Every event samples exactly one vertex from the selected target geometry and sha
 
 ## Target geometry
 
-The authoritative source is the replaceable [`src/lund-creation/external/targets.h`](../../src/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
+The authoritative source is the replaceable [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
 
 All positions below are in cm in the imported GEMC coordinate convention. Target-sampled x and y are independent Gaussians with mean 0 and sigma 0.04 cm.
 

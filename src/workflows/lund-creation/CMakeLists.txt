@@ -2,7 +2,7 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# src/lund-creation/CMakeLists.txt ---------------------------------------------------------------------------------------------------------------------------------------
+# src/workflows/lund-creation/CMakeLists.txt -----------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   C++ libraries grouped by their job.
 #
@@ -34,7 +34,7 @@ add_library(
     core/geometry/TargetGeometry.cpp
     core/lund/Particle.cpp
     core/lund/LundWriter.cpp)
-target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/src PRIVATE ${PROJECT_BINARY_DIR}/generated)
+target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/src/workflows PRIVATE ${PROJECT_BINARY_DIR}/generated)
 target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO)
 # endregion
 

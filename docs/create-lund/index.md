@@ -28,7 +28,7 @@ flowchart TD
     class MONITORING,LOCAL note;
 ```
 
-Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src/launcher/workflow.py), [`RunConfig.h`](../../src/lund-creation/core/config/RunConfig.h), and [`LundWriter.h`](../../src/lund-creation/core/lund/LundWriter.h).
+Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src/launcher/workflow.py), [`RunConfig.h`](../../src/workflows/lund-creation/core/config/RunConfig.h), and [`LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h).
 
 ## Choose a source
 

@@ -163,7 +163,7 @@ if ($_clas12_submit == 1) then
         shift _clas12_submission_args
     endif
     # Help and invalid arguments must not update the server checkout.
-    python3 "$_clas12_root/src/slurm-submission/resolve_inputs.py" --check-arguments $_clas12_submission_args:q
+    python3 "$_clas12_root/src/workflows/slurm-submission/resolve_inputs.py" --check-arguments $_clas12_submission_args:q
     set CLAS12_SAMPLE_STATUS = $status
     if ($CLAS12_SAMPLE_STATUS != 0) goto clas12_launcher_finish
     foreach _clas12_argument ($_clas12_submission_args:q)
@@ -179,8 +179,8 @@ endif
 pushd "$_clas12_root" > /dev/null
 
 # Missing color or logo helpers do not stop the workflow.
-if (-f src/support/environment/set_colors.csh) source src/support/environment/set_colors.csh
-if (-f src/support/printers/print_logo.csh) source src/support/printers/print_logo.csh
+if (-f src/launcher/presentation/set_colors.csh) source src/launcher/presentation/set_colors.csh
+if (-f src/launcher/presentation/print_logo.csh) source src/launcher/presentation/print_logo.csh
 
 # Tests may explicitly skip the server update. Normal ifarm use always updates.
 set _clas12_skip_server_sync = 0
@@ -189,7 +189,7 @@ if ($?CLAS12_SKIP_SERVER_SYNC) then
 endif
 
 # Run the updater in a child shell so it cannot close the shell that sourced run.csh.
-# `src/launcher/code_updater.csh` performs, in order:
+# `src/launcher/checkout/code_updater.csh` performs, in order:
 #   - `git rev-parse --show-toplevel` to require a recognized worktree;
 #   - `git clean -fxd -e build/ -e build` to remove server-only untracked and ignored content while
 #     retaining the reusable build tree;
@@ -204,24 +204,24 @@ if ($_clas12_skip_server_sync == 1) then
     set CLAS12_SAMPLE_STATUS = 0
 else
     echo "${INFO_COLOR}Updating disposable ifarm checkout at:${RESET_COLOR}\n${_clas12_root}"
-    tcsh -f src/launcher/code_updater.csh
+    tcsh -f src/launcher/checkout/code_updater.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
 
 # Reload colors because the update may have changed their names or values.
 if ($CLAS12_SAMPLE_STATUS == 0) then
-    if (-f src/support/environment/set_colors.csh) then
-        source src/support/environment/set_colors.csh
+    if (-f src/launcher/presentation/set_colors.csh) then
+        source src/launcher/presentation/set_colors.csh
         set CLAS12_SAMPLE_STATUS = $status
     else
-        echo "Error: the synchronized checkout is missing src/support/environment/set_colors.csh."
+        echo "Error: the synchronized checkout is missing src/launcher/presentation/set_colors.csh."
         set CLAS12_SAMPLE_STATUS = 1
     endif
 endif
 
 # Source the environment so its settings reach the Python driver and child programs.
-if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/support/environment/set_environment.csh) then
-    source src/support/environment/set_environment.csh
+if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/launcher/environment/set_environment.csh) then
+    source src/launcher/environment/set_environment.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
 # endregion
@@ -232,7 +232,7 @@ endif
 # Submission uses its shell bridge; LUND creation uses the Python workflow driver.
 if ($CLAS12_SAMPLE_STATUS == 0) then
     if ($_clas12_submit == 1) then
-        source src/slurm-submission/setup_and_submit.csh $_clas12_submission_args:q
+        source src/workflows/slurm-submission/setup_and_submit.csh $_clas12_submission_args:q
         set CLAS12_SAMPLE_STATUS = $status
     else
         python3 src/launcher/workflow.py $argv:q
