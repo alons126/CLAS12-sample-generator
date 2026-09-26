@@ -556,7 +556,7 @@ std::string jsonString(const std::string& s) {
 #pragma region /* help */
 std::string help(bool uniform) {
     // Quote the physical input glob so the shell passes the pattern to the converter unchanged.
-    std::string result = uniform ? "uniform-lund-generator --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
+    std::string result = uniform ? "uniform-lund-creator --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
                                  : "event-generator-to-lund-converter --event-generator genie-gst --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
     // List the settings shared by both LUND sources.

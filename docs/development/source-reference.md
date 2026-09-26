@@ -12,7 +12,7 @@ This chapter inventories the supported code and the archived support code so a f
 | `src/slurm-submission/CMakeLists.txt` | Installs the external submission worker |
 | `src/launcher/CMakeLists.txt` | Keeps the launcher source boundary separate from installed targets |
 | `src/lund-generation/apps/CMakeLists.txt` | Defines and installs the two application targets |
-| `src/lund-generation/apps/uniform_lund_generator_main.cpp` | Uniform generator entry point and error reporting |
+| `src/lund-generation/apps/uniform_lund_creator_main.cpp` | Uniform creator entry point and error reporting |
 | `src/lund-generation/apps/event_generator_to_lund_converter_main.cpp` | Generator-independent physical entry point and error reporting |
 | `.vscode/c_cpp_properties.json` | Uses Debug compile_commands.json for editor compiler/include settings |
 
@@ -48,11 +48,11 @@ The scripts in [`src/support/printers/`](../../src/support/printers/) render the
 
 ## 3. Uniform-to-LUND implementation
 
-[UniformConfig.h](../../src/lund-generation/uniform-lund-generator/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
+[UniformConfig.h](../../src/lund-generation/uniform-lund-creator/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
 
-[UniformGenerator.h](../../src/lund-generation/uniform-lund-generator/UniformGenerator.h) / [UniformGenerator.cpp](../../src/lund-generation/uniform-lund-generator/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, one `UniformMonitoring` object and a writer. Internal `momentum()` constructs Cartesian vectors; `triggerPhi()` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves one ROOT product, the required rendered plots, and the generation log.
+[UniformGenerator.h](../../src/lund-generation/uniform-lund-creator/UniformGenerator.h) / [UniformGenerator.cpp](../../src/lund-generation/uniform-lund-creator/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, one `UniformMonitoring` object and a writer. Internal `momentum()` constructs Cartesian vectors; `triggerPhi()` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves one ROOT product, the required rendered plots, and the generation log.
 
-[UniformMonitoring.h](../../src/lund-generation/uniform-lund-generator/UniformMonitoring.h) / [UniformMonitoring.cpp](../../src/lund-generation/uniform-lund-generator/UniformMonitoring.cpp) own the complete uniform-only monitoring contract. The implementation preserves the legacy organization, titles, correlations, axis text settings and canvas layout, sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets[^sportes-2026-rgm][^rgm-analysis-note], and generalizes hadron tokens to `pFD`, `pCD`, `nFD`, `nCD`, `pipFD`, `pipCD`, `pimFD`, and `pimCD`. `UniformMonitoring::save()` writes all histograms once to `<prefix>_monitoring_plots.root` and always renders those same objects into `MonitoringPlotsPath`.
+[UniformMonitoring.h](../../src/lund-generation/uniform-lund-creator/UniformMonitoring.h) / [UniformMonitoring.cpp](../../src/lund-generation/uniform-lund-creator/UniformMonitoring.cpp) own the complete uniform-only monitoring contract. The implementation preserves the legacy organization, titles, correlations, axis text settings and canvas layout, sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets[^sportes-2026-rgm][^rgm-analysis-note], and generalizes hadron tokens to `pFD`, `pCD`, `nFD`, `nCD`, `pipFD`, `pipCD`, `pimFD`, and `pimCD`. `UniformMonitoring::save()` writes all histograms once to `<prefix>_monitoring_plots.root` and always renders those same objects into `MonitoringPlotsPath`.
 
 The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p components using the run-global index. Neutrons use uniform momentum unless their optional fixed mode is selected. Hadron species and FD/CD region resolve the documented angular and threshold defaults. Mathematical definitions are in [sampling models](../concepts/sampling-models.md).
 

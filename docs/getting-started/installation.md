@@ -17,7 +17,7 @@ cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug --parallel 4
 ```
 
-Executables are `build/debug/apps/uniform-lund-generator` and `build/debug/apps/event-generator-to-lund-converter`. Both support `--help` and return nonzero on failure.
+Executables are `build/debug/apps/uniform-lund-creator` and `build/debug/apps/event-generator-to-lund-converter`. Both support `--help` and return nonzero on failure.
 
 For production:
 

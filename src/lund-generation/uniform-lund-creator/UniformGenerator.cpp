@@ -19,7 +19,7 @@
  *   not change the random numbers used for particle motion.
  */
 
-#include "uniform-lund-generator/UniformGenerator.h"
+#include "uniform-lund-creator/UniformGenerator.h"
 
 #include <TMath.h>
 
@@ -27,8 +27,8 @@
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
-#include "uniform-lund-generator/UniformConfig.h"
-#include "uniform-lund-generator/UniformMonitoring.h"
+#include "uniform-lund-creator/UniformConfig.h"
+#include "uniform-lund-creator/UniformMonitoring.h"
 
 namespace samples {
 

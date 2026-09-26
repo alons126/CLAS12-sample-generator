@@ -5,7 +5,7 @@ The `create-lund` workflow has one common output contract and two event sources.
 ```mermaid
 flowchart TD
     BUILD["run.csh --workflow create-lund<br/>workflow.py builds the application<br/>RunConfig validates profile and CLI"]
-    U["--source uniform<br/>uniform-lund-generator<br/>Sample configured acceptance kinematics"]
+    U["--source uniform<br/>uniform-lund-creator<br/>Sample configured acceptance kinematics"]
     P["--source physical<br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
     SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex per event, serialize, and split"]
     DONE["Completed LUND files and manifest"]

@@ -3,7 +3,7 @@
 //
 
 /**
- * @file uniform_lund_generator_main.cpp
+ * @file uniform_lund_creator_main.cpp
  * @brief Starts uniform LUND generation from the command line.
  *
  * Purpose:
@@ -47,7 +47,7 @@
 #include <string>
 
 #include "support/environment.h"
-#include "uniform-lund-generator/UniformGenerator.h"
+#include "uniform-lund-creator/UniformGenerator.h"
 
 namespace env = environment;
 

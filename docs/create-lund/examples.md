@@ -105,10 +105,10 @@ The converter copies supported GST truth, samples only the vertex, and records t
 After building, bypass the launcher when debugging application options locally:
 
 ```bash
-build/debug/apps/uniform-lund-generator --help
+build/debug/apps/uniform-lund-creator --help
 build/debug/apps/event-generator-to-lund-converter --help
 
-build/debug/apps/uniform-lund-generator \
+build/debug/apps/uniform-lund-creator \
   --config config/samples/uniform-enFD-2070MeV.conf \
   --events 100 \
   --output runs/direct

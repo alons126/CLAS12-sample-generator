@@ -19,7 +19,7 @@
  *   The caller saves the plots before writing the completed LUND run log.
  */
 
-#include "uniform-lund-generator/UniformMonitoring.h"
+#include "uniform-lund-creator/UniformMonitoring.h"
 
 #include <TCanvas.h>
 #include <TFile.h>

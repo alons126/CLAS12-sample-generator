@@ -10,7 +10,7 @@ Purpose:
     Keep build settings separate from sample settings and detector submission.
 
 Workflow:
-    Parse launcher flags -> load config/run.json -> configure/build -> run uniform-lund-generator or
+    Parse launcher flags -> load config/run.json -> configure/build -> run uniform-lund-creator or
     event-generator-to-lund-converter with the original sample arguments.
 
 Inputs:
@@ -40,7 +40,7 @@ CLI options (owned by this launcher):
     --help                       Print launcher options without updating, building, or running.
 
 Forwarded options:
-    Unrecognized arguments are preserved and passed to uniform-lund-generator or
+    Unrecognized arguments are preserved and passed to uniform-lund-creator or
     event-generator-to-lund-converter. Use -- --help after the launcher selections to print that
     executable's authoritative sample options.
 """
@@ -464,7 +464,7 @@ def main():
     if config['run']:
         if workflow == 'create-lund':
             # Select the uniform generator or the physical-input converter.
-            app = 'uniform-lund-generator' if source == 'uniform' else 'event-generator-to-lund-converter'
+            app = 'uniform-lund-creator' if source == 'uniform' else 'event-generator-to-lund-converter'
 
             # Calculate padding from the visible text without color codes.
             message = f"Creating LUND files from '{RESET_COLOR}{source}{SYSTEM_COLOR}' input"

@@ -30,7 +30,7 @@ git submodule update --init --recursive
 cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug --parallel 4
 
-build/debug/apps/uniform-lund-generator \
+build/debug/apps/uniform-lund-creator \
   --config config/samples/uniform-1e-5986MeV.conf \
   --events 100 \
   --output runs/first-electron

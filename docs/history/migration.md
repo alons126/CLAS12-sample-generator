@@ -6,7 +6,7 @@ The imported sources are retained under `legacy/` and recorded by the public [`l
 
 | Previous | Supported replacement |
 | --- | --- |
-| Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `uniform-lund-generator --config FILE --channel ... --output NEW_DIR` |
+| Sourced `Uniform-sample-generator/run.sh` → edited `CodeRun.cpp` | `uniform-lund-creator --config FILE --channel ... --output NEW_DIR` |
 | `Uniform_sample_generator_e_tester.C` | `electron-tester-{2070,4029,5986}MeV.conf` |
 | `GENIE_to_LUND_converter.csh` → ROOT macro | `event-generator-to-lund-converter --event-generator genie-gst --input ... --config ... --output ...` |
 | Sourced `setup_and_submit_jobs.csh` → selected setup script | `source run.csh --workflow submit` → small sourced bridge → Python setup → one Slurm array per sample |

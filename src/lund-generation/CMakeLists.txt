@@ -42,9 +42,9 @@ target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::
 
 # region Uniform generation
 # Purpose:
-#     Build the implementation behind the uniform-lund-generator executable as UniformGeneration.
+#     Build the implementation behind the uniform-lund-creator executable as UniformGeneration.
 if(BUILD_UNIFORM)
-    add_library(UniformGeneration STATIC uniform-lund-generator/UniformGenerator.cpp uniform-lund-generator/UniformMonitoring.cpp)
+    add_library(UniformGeneration STATIC uniform-lund-creator/UniformGenerator.cpp uniform-lund-creator/UniformMonitoring.cpp)
     target_link_libraries(UniformGeneration PUBLIC LundCore PRIVATE ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
 endif()
 # endregion

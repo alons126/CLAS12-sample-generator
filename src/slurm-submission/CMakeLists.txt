@@ -31,7 +31,7 @@ if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py"
     find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
     if(BUILD_UNIFORM)
         add_test(NAME submission-input-resolution COMMAND ${Python3_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py ${PROJECT_SOURCE_DIR} $<TARGET_FILE:uniform-lund-generator>)
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py ${PROJECT_SOURCE_DIR} $<TARGET_FILE:uniform-lund-creator>)
     else()
         add_test(NAME submission-input-resolution COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py ${PROJECT_SOURCE_DIR})

@@ -16,7 +16,7 @@
 #   BUILD_UNIFORM and BUILD_GENIE, plus the libraries defined in src/.
 # 
 # Outputs:
-#   uniform-lund-generator and/or event-generator-to-lund-converter in the build apps/ directory.
+#   uniform-lund-creator and/or event-generator-to-lund-converter in the build apps/ directory.
 # 
 # Notes:
 #   Defining or building a target does not generate samples or submit detector jobs.
@@ -27,10 +27,10 @@
 # Purpose:
 #     Link the uniform entry point to the implementation library and install its executable.
 if(BUILD_UNIFORM)
-    add_executable(uniform-lund-generator uniform_lund_generator_main.cpp)
-    target_link_libraries(uniform-lund-generator PRIVATE UniformGeneration)
-    set_target_properties(uniform-lund-generator PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
-    install(TARGETS uniform-lund-generator RUNTIME DESTINATION bin)
+    add_executable(uniform-lund-creator uniform_lund_creator_main.cpp)
+    target_link_libraries(uniform-lund-creator PRIVATE UniformGeneration)
+    set_target_properties(uniform-lund-creator PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/apps)
+    install(TARGETS uniform-lund-creator RUNTIME DESTINATION bin)
 endif()
 # endregion
 
