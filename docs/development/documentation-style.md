@@ -12,7 +12,9 @@ For C++, put a function's complete public Doxygen contract on its declaration, n
 
 Descriptions follow each component's actual responsibilities. Small accessors need a short contract; event loops and orchestration functions need ordered stages. Names, units, ownership, configuration precedence and differences between preview and execution should be explicit. Comments must be updated when the implementation changes.
 
-The shared palette values are defined only in `src/launcher/presentation/set_colors.csh`. `src/workflows/support/environment.h` is the only maintained C++ color source: it maps the inherited `*_COLOR` values onto semantic constants. Other C++ files select those constants and must not contain literal ANSI escape definitions or fallback palettes.
+The shared runtime palette is defined only in `src/launcher/presentation/set_colors.csh`. `run.csh` loads it before workflow diagnostics and exports it to child processes. `src/workflows/support/environment.h` is the maintained C++ interface that maps those inherited `*_COLOR` values onto semantic constants. Other C++ files select those constants and must not contain literal ANSI escape definitions or fallback palettes. Python and CMake decode the inherited environment values instead of defining another palette.
+
+Every project-owned terminal error uses `ERROR_COLOR + "Error: " + RESET_COLOR + message`, and every project-owned warning uses `WARNING_COLOR + "Warning: " + RESET_COLOR + message`. Exception text and validation messages do not include their own label; the final output boundary adds exactly one colored prefix. Output copied from an external command is left unchanged, followed by the standardized project error when that command stops the workflow.
 
 External and archived files are excluded from edits: `legacy/`, `src/workflows/lund-creation/external/targets.h`, `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Repository instructions are recorded in `AGENTS.md`.
 

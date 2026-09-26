@@ -65,7 +65,7 @@ if (-f ./src/launcher/presentation/set_colors.csh) then
         set CLAS12_SAMPLE_STATUS = $status
     endif
 else
-    echo "Error: the following file does not exist: ./src/launcher/presentation/set_colors.csh"
+    echo "${ERROR_COLOR}Error: ${RESET_COLOR}the following file does not exist: ./src/launcher/presentation/set_colors.csh"
 endif
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
 # endregion Submission

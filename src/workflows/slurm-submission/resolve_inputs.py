@@ -57,9 +57,33 @@ CLI options:
 import argparse
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import json
+import os
 from pathlib import Path
 import re
 import sys
+
+# Error presentation -----------------------------------------------------------------------------------------------------------------------
+
+# region Error presentation
+# run.csh loads the shared environment palette before invoking this argument check.
+ERROR_COLOR = os.environ.get('ERROR_COLOR', '').replace(r'\033', '\033')
+RESET_COLOR = os.environ.get('RESET_COLOR', '').replace(r'\033', '\033')
+
+def print_error(message):
+    """Print one prefix-free message with the standard colored error label."""
+
+    print(f'{ERROR_COLOR}Error: {RESET_COLOR}{message}', file=sys.stderr)
+
+class SubmissionArgumentParser(argparse.ArgumentParser):
+    """Render every submission command-line failure with the shared error prefix."""
+
+    def error(self, message):
+        """Print usage and one colored error diagnostic, then exit with status 2."""
+
+        self.print_usage(sys.stderr)
+        print_error(message)
+        self.exit(2)
+# endregion
 
 # Accepted settings -----------------------------------------------------------
 
@@ -129,7 +153,7 @@ def parser():
     """
 
     # Help explains setting priority and what execution changes.
-    p = argparse.ArgumentParser(description='Resolve LUND inputs and preview or submit one Slurm array per sample.',
+    p = SubmissionArgumentParser(description='Resolve LUND inputs and preview or submit one Slurm array per sample.',
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
                'With --execute, submission replaces mchipo/reconhipo while preserving lundfiles. '
                'GEMC defaults to 5.14. Use source run.csh --workflow submit --lund-dir RUN/lundfiles.')
@@ -656,5 +680,12 @@ def main():
 
 # Direct execution performs only the early syntax check. Full submission starts through run.csh.
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print_error('Interrupted.')
+        sys.exit(130)
+    except Exception as error:
+        print_error(error)
+        sys.exit(1)
 # endregion Command resolution

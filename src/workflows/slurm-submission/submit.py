@@ -70,6 +70,19 @@ import sys
 
 from resolve_inputs import parser, path_value, resolve_samples
 
+# Error presentation ----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Error presentation
+# run.csh loads the shared environment palette before starting submission.
+ERROR_COLOR = os.environ.get('ERROR_COLOR', '').replace(r'\033', '\033')
+RESET_COLOR = os.environ.get('RESET_COLOR', '').replace(r'\033', '\033')
+
+def print_error(message):
+    """Print one prefix-free message with the standard colored error label."""
+
+    print(f'{ERROR_COLOR}Error: {RESET_COLOR}{message}', file=sys.stderr)
+# endregion
+
 # Submission record ----------------------------------------------------------
 
 # region Submission record
@@ -282,6 +295,16 @@ class Report:
 
         print(text)
 
+    def error(self, message):
+        """Print one prefix-free message with the standard colored error label."""
+
+        self.text('{ERROR}Error: {RESET}' + str(message))
+
+    def warning(self, message):
+        """Print one prefix-free message with the standard colored warning label."""
+
+        self.text('{WARNING}Warning: {RESET}' + str(message))
+
     def banner(self, title, main=False):
         """Print a main or subsection banner.
 
@@ -351,7 +374,7 @@ class Report:
         self.text('{SYSTEM}--> Checking if {RESET}' + name + '{SYSTEM} is a ' + kind + '...{RESET}')
 
         if not (Path(path).is_dir() if directory else Path(path).is_file()):
-            self.text('{SYSTEM}-->{RESET} {ERROR}Error:{RESET} the following ' + kind + ' does not exist: ' + path)
+            self.error('the following ' + kind + ' does not exist: ' + path)
 
             raise RuntimeError()  # The precise failure has already been printed.
 
@@ -954,20 +977,20 @@ def main():
         status_banner('stop', root)
 
         if report:
-            report.text('{ERROR}Error:{RESET} Interrupted.')
+            report.error('Interrupted.')
         else:
-            print('Error: Interrupted.', file=sys.stderr)
+            print_error('Interrupted.')
 
         return 130
-    except (OSError, ValueError, TypeError, KeyError, RuntimeError) as error:
-        # Convert expected errors to one shell-visible failure status.
+    except Exception as error:
+        # Convert every remaining submission failure to one shell-visible diagnostic and status.
         status_banner('stop', root)
 
         if str(error):
             if report:
-                report.text('{ERROR}Error:{RESET} ' + str(error))
+                report.error(error)
             else:
-                print(f'Error: {error}', file=sys.stderr)
+                print_error(error)
 
         return 1
 

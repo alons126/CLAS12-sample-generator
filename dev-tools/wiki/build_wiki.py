@@ -33,9 +33,33 @@ CLI options:
 
 import argparse
 from collections import defaultdict
+import os
 from pathlib import Path
 import re
+import sys
 import urllib.parse
+
+# Error presentation ----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Error presentation
+ERROR_COLOR = os.environ.get("ERROR_COLOR", "").replace(r"\033", "\033")
+RESET_COLOR = os.environ.get("RESET_COLOR", "").replace(r"\033", "\033")
+
+def print_error(message):
+    """Print one prefix-free message with the standard colored error label."""
+
+    print(f"{ERROR_COLOR}Error: {RESET_COLOR}{message}", file=sys.stderr)
+
+class WikiArgumentParser(argparse.ArgumentParser):
+    """Render command-line failures with the standard colored error prefix."""
+
+    def error(self, message):
+        """Print usage and the diagnostic, then exit with argparse status 2."""
+
+        self.print_usage(sys.stderr)
+        print_error(message)
+        self.exit(2)
+# endregion
 
 
 # Repository inputs -----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -483,7 +507,7 @@ def build(output, repository, branch):
 def parser():
     """Create the command-line parser shown in this file's help."""
 
-    result = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    result = WikiArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     result.add_argument("--output", required=True, type=Path)
     result.add_argument("--repository", required=True)
     result.add_argument("--branch", default="main")
@@ -507,5 +531,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print_error("Interrupted.")
+        sys.exit(130)
+    except Exception as error:
+        print_error(error)
+        sys.exit(1)
 # endregion

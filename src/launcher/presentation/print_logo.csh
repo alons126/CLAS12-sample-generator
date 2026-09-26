@@ -13,12 +13,12 @@
 #   whether the workflow succeeds.
 # 
 # Workflow:
-#   1. Select blue ANSI output.
+#   1. Load the shared palette and select its blue logo color.
 #   2. Print the banner and replace each `@` placeholder with a dollar sign.
 #   3. Reset terminal formatting after the final separator.
 # 
 # Inputs:
-#   None. The banner is static and does not read sample or launcher settings.
+#   LOGO_COLOR and RESET_COLOR from the shared palette.
 # 
 # Outputs:
 #   Writes only to the terminal. run.csh can continue if this optional banner fails.
@@ -32,8 +32,11 @@
 # Banner rendering ------------------------------------------------------------
 
 # region Banner rendering
+# Load the centralized palette even when this printer is called directly.
+source ./src/launcher/presentation/set_colors.csh
+
 # Start the blue logo color.
-echo "\033[34m"
+printf "$LOGO_COLOR"
 
 # Keep the artwork readable here. Replace `@` with a literal dollar sign when printing.
 cat << EOF | sed 's/@/\$/g'
@@ -60,5 +63,5 @@ By: Alon Sportes for e4nu
 EOF
 
 # Restore the normal terminal color.
-echo "\033[0m"
+printf "$RESET_COLOR"
 # endregion

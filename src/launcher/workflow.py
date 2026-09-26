@@ -82,7 +82,7 @@ WORKFLOWS = ('create-lund', 'submit')
 SOURCES = ('uniform', 'physical')
 
 # Read the colors exported by set_colors.csh. Convert written `\033` text to the escape byte used by
-# the terminal. Missing values produce plain text.
+# the terminal. run.csh loads this shared palette before starting the launcher.
 ERROR_COLOR = os.environ.get("ERROR_COLOR", "").replace(r"\033", "\033")
 COMPLETION_COLOR = os.environ.get("COMPLETION_COLOR", "").replace(r"\033", "\033")
 SYSTEM_COLOR = os.environ.get("SYSTEM_COLOR", "").replace(r"\033", "\033")
@@ -94,7 +94,7 @@ RESET_COLOR = os.environ.get("RESET_COLOR", "").replace(r"\033", "\033")
 # Error presentation ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Error presentation
-ERROR_PREFIX = f'{ERROR_COLOR}Error:{RESET_COLOR}'
+ERROR_PREFIX = f'{ERROR_COLOR}Error: {RESET_COLOR}'
 
 WORKFLOW_GUIDANCE = """Choose one of these forms:
   source run.csh --workflow create-lund --source uniform \\
@@ -109,21 +109,19 @@ create-lund source to see that executable's sample options."""
 def error_message(message):
     """Return a message with one colored ``Error:`` prefix.
 
-    Remove any existing prefix before adding the shared form.
+    The caller supplies prefix-free diagnostic text.
     """
 
-    normalized = str(message).replace(f'{ERROR_PREFIX} ', '').replace(ERROR_PREFIX, '').strip()
-
-    return f'{ERROR_PREFIX} {normalized}'
+    return f'{ERROR_PREFIX}{str(message).strip()}'
 
 def print_error(message):
     """Write one launcher error to standard error.
 
     Args:
-        message: Text with or without an existing ``Error:`` prefix.
+        message: Prefix-free diagnostic text.
 
     Outputs:
-        Prints the shared prefix and message. Missing colors produce plain text.
+        Prints the shared prefix and message inherited from run.csh.
     """
 
     print(error_message(message), file=sys.stderr)
@@ -176,7 +174,7 @@ def boolean(value):
         return False
 
     # argparse sends this error through the shared parser format.
-    raise argparse.ArgumentTypeError(error_message('Use true or false'))
+    raise argparse.ArgumentTypeError('Use true or false')
 # endregion
 
 # parser ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -258,7 +256,7 @@ def settings(args):
 
     # Require one JSON object with only known keys.
     if not isinstance(provided, dict) or set(provided) - DEFAULTS.keys():
-        raise ValueError(error_message('Run settings contain unknown keys or are not an object'))
+        raise ValueError('Run settings contain unknown keys or are not an object')
 
     # Every setting is a single value, so one shallow merge is enough.
     result = {**DEFAULTS, **provided}
@@ -272,30 +270,30 @@ def settings(args):
 
     # This file handles LUND creation. run.csh starts submission through a different script.
     if args.workflow is None:
-        raise ValueError(error_message('Missing required --workflow.\n\n' + WORKFLOW_GUIDANCE))
+        raise ValueError('Missing required --workflow.\n\n' + WORKFLOW_GUIDANCE)
 
     result['workflow'] = args.workflow
     result['source'] = args.source
 
     if result['workflow'] == 'create-lund' and result['source'] is None:
-        raise ValueError(error_message('--source uniform|physical is required for create-lund.\n\n' + WORKFLOW_GUIDANCE))
+        raise ValueError('--source uniform|physical is required for create-lund.\n\n' + WORKFLOW_GUIDANCE)
 
     # Require real JSON booleans; do not accept the integers 0 and 1.
     for key in ('build', 'run'):
         if type(result[key]) is not bool:
-            raise ValueError(error_message(f'{key} must be a JSON boolean'))
+            raise ValueError(f'{key} must be a JSON boolean')
 
     # Require at least one build worker and reject booleans.
     if type(result['jobs']) is not int or result['jobs'] < 1:
-        raise ValueError(error_message('jobs must be a positive integer'))
+        raise ValueError('jobs must be a positive integer')
 
     # Accept only the build types shown by the launcher.
     if result['build_type'] not in ('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'):
-        raise ValueError(error_message('Invalid build_type'))
+        raise ValueError('Invalid build_type')
 
     # main() turns this nonempty text into an absolute path.
     if not isinstance(result['build_dir'], str) or not result['build_dir']:
-        raise ValueError(error_message('build_dir must be a nonempty path'))
+        raise ValueError('build_dir must be a nonempty path')
 
     return result
 # endregion
@@ -479,7 +477,7 @@ def main():
 
             # When building is off, report a missing program before starting it.
             if not executable.is_file():
-                raise RuntimeError(error_message(f'Executable missing: {executable}; enable --build true'))
+                raise RuntimeError(f'Executable missing: {executable}; enable --build true')
 
             command = [str(executable)]
         else:
@@ -524,8 +522,8 @@ if __name__ == '__main__':
         # Quote the failed command only for the error message.
         print_error(f'Command failed with exit status {exit_status}: {shlex.join(map(str, error.cmd))}')
         sys.exit(exit_status)
-    except (OSError, ValueError, TypeError, RuntimeError) as error:
-        # Configuration, filesystem, and launcher errors return status 1.
+    except Exception as error:
+        # Every remaining launcher failure uses the same diagnostic boundary and status.
         banner('stop')
         print_error(error)
         sys.exit(1)

@@ -4,7 +4,7 @@
 
 /**
  * @file environment.h
- * @brief Reads the project-wide terminal colors set by the shell support layer.
+ * @brief Provides the project-wide terminal colors for maintained C++ output.
  *
  * Purpose:
  *   Give C++ output clear color names while keeping the actual color values in set_colors.csh.

@@ -32,7 +32,18 @@
 
 # Load the current color settings before printing. Do this again even if run.csh already loaded them,
 # because the Git update may have changed the color file while the old run.csh was still running.
-source ./src/launcher/presentation/set_colors.csh
+set _clas12_environment_status = 1
+if (-f ./src/launcher/presentation/set_colors.csh) then
+    source ./src/launcher/presentation/set_colors.csh
+
+    if ($status != 0) then
+        echo "${ERROR_COLOR}Error: ${RESET_COLOR}failed to load src/launcher/presentation/set_colors.csh."
+        goto clas12_environment_finish
+    endif
+else
+    echo "${ERROR_COLOR}Error: ${RESET_COLOR}the following file does not exist: ./src/launcher/presentation/set_colors.csh"
+    goto clas12_environment_finish
+endif
 # endregion
 
 # Environment banner -----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,10 +79,15 @@ echo ""
 
 # region Host name
 
-unset ANALYSIS_HOSTNAME
+if ($?ANALYSIS_HOSTNAME) unset ANALYSIS_HOSTNAME
 unsetenv ANALYSIS_HOSTNAME
 
-setenv ANALYSIS_HOSTNAME `hostname`
+set _clas12_hostname = `hostname`
+if ($status != 0 || "$_clas12_hostname" == "") then
+    echo "${ERROR_COLOR}Error: ${RESET_COLOR}failed to read the host name."
+    goto clas12_environment_finish
+endif
+setenv ANALYSIS_HOSTNAME "$_clas12_hostname"
 
 echo "${SYSTEM_COLOR}ANALYSIS_HOSTNAME:${RESET_COLOR} ${ANALYSIS_HOSTNAME}"
 echo ""
@@ -109,4 +125,14 @@ endif
 
 echo "${SYSTEM_COLOR}IFARM_RUN:${RESET_COLOR} ${IFARM_RUN}"
 echo ""
+# endregion
+
+# Return status ----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Return status
+set _clas12_environment_status = 0
+
+clas12_environment_finish:
+if ($?_clas12_hostname) unset _clas12_hostname
+/bin/sh -c "exit $_clas12_environment_status"
 # endregion

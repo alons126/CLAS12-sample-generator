@@ -199,7 +199,7 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     // Create the parent, then replace only the exact final run directory when it already exists.
     std::filesystem::create_directories(directory_.parent_path());
     if (std::filesystem::exists(directory_)) {
-        std::cout << env::WARNING_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << env::RESET_COLOR << "\n";
+        std::cout << env::WARNING_COLOR << "Warning: " << env::RESET_COLOR << "Replacing existing run directory (legacy behavior): " << directory_ << "\n";
         std::filesystem::remove_all(directory_);
     }
 

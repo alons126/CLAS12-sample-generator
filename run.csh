@@ -101,9 +101,17 @@ endif
 # Make the path absolute before any cleanup or Git command.
 set _clas12_root = `cd "$_clas12_root" && pwd`
 
+# Load the one shared palette before run.csh prints any project-owned diagnostic. If this bootstrap
+# source fails, tcsh supplies its own diagnostic because no project color is available yet.
+source "$_clas12_root/src/launcher/presentation/set_colors.csh"
+if ($status != 0) then
+    set CLAS12_SAMPLE_STATUS = 1
+    goto clas12_launcher_finish
+endif
+
 # Require both Git data and this project's workflow driver so cleanup cannot target another directory.
 if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
-    echo "Error: Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
+    echo "${ERROR_COLOR}Error: ${RESET_COLOR}Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
 
     # Return through the shared block so a sourced shell stays open.
     set CLAS12_SAMPLE_STATUS = 1
@@ -120,7 +128,7 @@ if ($#argv == 1) then
 endif
 
 if ($#argv == 0) then
-    echo "Error: source run.csh requires an explicit workflow."
+    echo "${ERROR_COLOR}Error: ${RESET_COLOR}source run.csh requires an explicit workflow."
     echo ""
     echo "Create a uniform LUND sample:"
     echo '  source run.csh --workflow create-lund --source uniform \'
@@ -214,15 +222,21 @@ if ($CLAS12_SAMPLE_STATUS == 0) then
         source src/launcher/presentation/set_colors.csh
         set CLAS12_SAMPLE_STATUS = $status
     else
-        echo "Error: the synchronized checkout is missing src/launcher/presentation/set_colors.csh."
+        echo "${ERROR_COLOR}Error: ${RESET_COLOR}the synchronized checkout is missing src/launcher/presentation/set_colors.csh."
         set CLAS12_SAMPLE_STATUS = 1
     endif
 endif
 
 # Source the environment so its settings reach the Python driver and child programs.
-if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/launcher/environment/set_environment.csh) then
-    source src/launcher/environment/set_environment.csh
-    set CLAS12_SAMPLE_STATUS = $status
+if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0) then
+    if (-f src/launcher/environment/set_environment.csh) then
+        source src/launcher/environment/set_environment.csh
+        set CLAS12_SAMPLE_STATUS = $status
+        if ($?_clas12_environment_status) unset _clas12_environment_status
+    else
+        echo "${ERROR_COLOR}Error: ${RESET_COLOR}the synchronized checkout is missing src/launcher/environment/set_environment.csh."
+        set CLAS12_SAMPLE_STATUS = 1
+    endif
 endif
 # endregion
 

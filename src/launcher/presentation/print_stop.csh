@@ -12,12 +12,12 @@
 #   Clearly mark a stopped workflow in the terminal or ifarm log.
 # 
 # Workflow:
-#   1. Select the orange text color.
+#   1. Load the shared palette and select its orange stop color.
 #   2. Print the banner and replace `@` placeholders with dollar signs.
 #   3. Restore the normal terminal color.
 # 
 # Inputs:
-#   None. The caller prints the diagnostic message before invoking this presentation helper.
+#   STOP_COLOR and RESET_COLOR from the shared palette.
 # 
 # Outputs:
 #   Prints the colored banner. It creates no files and keeps no shell changes.
@@ -32,8 +32,11 @@
 # Failure-banner rendering -------------------------------------------------------------------------
 
 # region Failure-banner rendering
+# Load the centralized palette even when this printer is called directly.
+source ./src/launcher/presentation/set_colors.csh
+
 # Orange distinguishes a stopped/cancelled operation from the normal success banner.
-echo "\033[38;5;208m"
+printf "$STOP_COLOR"
 
 # Keep the artwork literal and use `@` as a safe placeholder for a dollar sign.
 cat << \EOF | sed 's/@/\$/g'
@@ -59,6 +62,6 @@ cat << \EOF | sed 's/@/\$/g'
 \EOF
 
 # Restore the normal color for later messages.
-echo "\033[0m"
+printf "$RESET_COLOR"
 echo ""
 # endregion Failure-banner rendering

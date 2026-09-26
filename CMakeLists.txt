@@ -31,6 +31,42 @@ option(BUILD_UNIFORM "Build uniform sample generation" ON)
 option(BUILD_GENIE "Build GENIE GST conversion" ON)
 # endregion
 
+# Terminal diagnostics ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Terminal diagnostics
+# Purpose:
+#   Give project-owned configure errors and warnings the same colored prefixes as runtime output.
+#
+# Workflow:
+#   Read colors inherited from run.csh -> decode shell escape markers -> route project diagnostics
+#   through the helpers below.
+#
+# Inputs:
+#   Optional ERROR_COLOR, WARNING_COLOR, and RESET_COLOR environment values.
+#
+# Outputs:
+#   Colored project-owned CMake diagnostics. Native CMake and dependency output remains unchanged.
+#
+# Failure:
+#   project_fatal_error prints the standard prefix and stops configuration.
+string(ASCII 27 TERMINAL_ESCAPE)
+foreach(color ERROR WARNING RESET)
+    string(REPLACE "\\033" "${TERMINAL_ESCAPE}" ${color}_COLOR "$ENV{${color}_COLOR}")
+endforeach()
+
+# project_fatal_error:
+#   Print one prefix-free stopping message with the standard error label and stop configuration.
+function(project_fatal_error message_text)
+    message(FATAL_ERROR "${ERROR_COLOR}Error: ${RESET_COLOR}${message_text}")
+endfunction()
+
+# project_warning:
+#   Print one prefix-free non-stopping message with the standard warning label.
+function(project_warning message_text)
+    message(WARNING "${WARNING_COLOR}Warning: ${RESET_COLOR}${message_text}")
+endfunction()
+# endregion
+
 # Compiler and dependency requirements -----------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiler and dependency requirements
@@ -49,7 +85,7 @@ find_package(Threads REQUIRED)
 find_package(ROOT REQUIRED COMPONENTS ${ROOT_COMPONENTS})
 # Use the same C++ standard as the selected ROOT installation.
 if(NOT ROOT_CXX_STANDARD OR ROOT_CXX_STANDARD LESS 17)
-    message(FATAL_ERROR "ROOT must publish ROOT_CXX_STANDARD >= 17; select a supported ROOT installation")
+    project_fatal_error("ROOT must publish ROOT_CXX_STANDARD >= 17; select a supported ROOT installation")
 endif()
 set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 # endregion
