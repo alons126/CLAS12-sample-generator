@@ -58,9 +58,11 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto print_value = [](const std::string& label, const auto& value) { std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << " " << value << "\n"; };
 
     // Make setup and completion easy to find in long batch logs.
-    std::cout << env::SYSTEM_COLOR << "\n=============================================================\n"
-              << "= " << (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") << (final ? " completion\n" : " setup\n")
-              << "=============================================================\n"
+    std::cout << env::SYSTEM_COLOR << "\n====================================================================================================\n"
+              << "= "
+              << (uniform ? "Uniform sample generation                                                                           ="
+                          : "Physical generator to LUND conversion                                                               =")
+              << (final ? " completion\n" : " setup\n") << "====================================================================================================\n"
               << env::RESET_COLOR;
 
     // Completion reports do not repeat setup values.
@@ -68,7 +70,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         const auto events_per_file = config.integer("events-per-file");
         const auto output_files = (written + events_per_file - 1) / events_per_file;
 
-        std::cout << env::SYSTEM_COLOR << "\n- Event counts ----------------------------------------------\n" << env::RESET_COLOR;
+        std::cout << env::SYSTEM_COLOR << "\n- Event counts -------------------------------------------------------------------------------------\n" << env::RESET_COLOR;
         print_value(uniform ? "Events generated" : "Input entries scanned", scanned);
         print_value("Events written", written);
         print_value("LUND files written", output_files);
@@ -79,12 +81,12 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     }
 
     // These limits control the total count and file splitting for both sources.
-    std::cout << env::SYSTEM_COLOR << "\n- Run limits ------------------------------------------------\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "\n- Run limits ---------------------------------------------------------------------------------------\n" << env::RESET_COLOR;
     print_value("Requested events", config.get("events"));
     print_value("Events per file", config.get("events-per-file"));
 
     // Beam and target settings control event headers and vertex sampling. Geometry and A/Z stay separate.
-    std::cout << env::SYSTEM_COLOR << "\n- Beam and target -------------------------------------------\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "\n- Beam and target ----------------------------------------------------------------------------------\n" << env::RESET_COLOR;
     print_value("Beam energy [GeV]", config.get("beam-energy"));
     print_value("RG-M target", config.get("rgm-target"));
     print_value("Target geometry", config.get("target"));
@@ -98,7 +100,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         const bool electron_tester = channel == "electron-tester";
 
         // Print only the kinematic settings used by the selected channel.
-        std::cout << env::SYSTEM_COLOR << "\n- Uniform event content -------------------------------------\n" << env::RESET_COLOR;
+        std::cout << env::SYSTEM_COLOR << "\n- Uniform event content ----------------------------------------------------------------------------\n" << env::RESET_COLOR;
         print_value("Channel", channel);
         print_value("Kinematic seed", config.get("seed") + (config.get("seed") == "0" ? " (ROOT automatic; nonrepeatable)" : ""));
 
@@ -130,7 +132,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         }
     } else {
         // These values identify the physical input in names and the run log.
-        std::cout << env::SYSTEM_COLOR << "\n- Physical input --------------------------------------------\n" << env::RESET_COLOR;
+        std::cout << env::SYSTEM_COLOR << "\n- Physical input -----------------------------------------------------------------------------------\n" << env::RESET_COLOR;
         print_value("Event generator", config.get("event-generator"));
         print_value("Event generator version", config.get("event-generator-version"));
         print_value("Input files", config.get("input"));
@@ -141,7 +143,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     }
 
     // Print only paths that the selected workflow actually creates or consumes.
-    std::cout << env::SYSTEM_COLOR << "\n- Output ----------------------------------------------------\n" << env::RESET_COLOR;
+    std::cout << env::SYSTEM_COLOR << "\n- Output -------------------------------------------------------------------------------------------\n" << env::RESET_COLOR;
     print_value("Output prefix", config.get("prefix"));
     print_value("Run directory", output);
     print_value("LUND directory", lund_dir);
