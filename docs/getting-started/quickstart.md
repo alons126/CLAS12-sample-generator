@@ -2,12 +2,11 @@
 
 All commands below start at the repository root. `run.csh` is a tcsh/csh workflow entry point; source it from a compatible shell. Examples intentionally use small event counts.
 
-## Build and test
+## Build
 
 ```bash
-cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug --parallel 4
-ctest --test-dir build/debug --output-on-failure
 ```
 
 ## Create a small uniform sample

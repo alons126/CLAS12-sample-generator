@@ -48,4 +48,4 @@ The sourced `src/slurm-submission/setup_and_submit.csh` invokes `submit.py`, whi
 
 `source run.csh --workflow submit` refreshes the disposable server checkout and sources the setup script directly in the login shell. The Python coordinator imports `resolve_inputs.py` to resolve the LUND manifest, optional key=value config and CLI. There is no site JSON, local detector runner, lock database or generated wrapper. The payload retains its scheduler directives and detector commands unchanged.
 
-CMake installs only this external payload under `bin/`. The setup workflow runs from the checkout through `run.csh`. Review the [submission guide](guide.md) for settings, output replacement and tests.
+CMake installs only this external payload under `bin/`. The setup workflow runs from the checkout through `run.csh`. Review the [submission guide](guide.md) for settings and output replacement.

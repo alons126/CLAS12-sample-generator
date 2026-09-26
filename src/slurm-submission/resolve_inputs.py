@@ -86,7 +86,7 @@ OPTIONS = {
     'num-jobs': 'Submit the first N files (default: all completed files)',
     'events-per-job': 'Shared event limit (default: maximum selected manifest file count)',
     'job-name': 'Slurm job name (default: derived from sample metadata)',
-    'clas12tags-dir': 'Custom gemc/clas12Tags checkout used as GEMC_DATA_DIR; intended for detector-development tests',
+    'clas12tags-dir': 'Custom gemc/clas12Tags checkout used as GEMC_DATA_DIR; intended for detector-development studies',
     'clear-farm-out': 'true/false (default: false); delete files directly in farm-out once',
     'farm-out': 'Explicit farm_out directory, required only when clearing it',
     'fc-status': '0 or 1 legacy physical filename/report label only (default: 0)',

@@ -303,7 +303,7 @@ class Report:
             directory: Check for a directory when true, a file otherwise.
 
         Output:
-            The compact ``NAME: path`` line, a description of the test, and a colored success or
+            The compact ``NAME: path`` line, a description of the check, and a colored success or
             failure result. Successful directory checks add one blank separator line.
 
         Failure:

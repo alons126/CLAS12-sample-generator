@@ -1,17 +1,17 @@
+#!/usr/bin/env python3
+
 #
 # Created by Alon Sportes on 14/09/2026.
 #
 
-#!/usr/bin/env python3
-
-"""Build, test, and start LUND creation for run.csh.
+"""Build and start LUND creation for run.csh.
 
 Purpose:
     Keep build settings separate from sample settings and detector submission.
 
 Workflow:
-    Parse launcher flags -> load config/run.json -> configure/build -> optional CTest ->
-    run uniform-lund-generator or event-generator-to-lund-converter with the original sample arguments.
+    Parse launcher flags -> load config/run.json -> configure/build -> run uniform-lund-generator or
+    event-generator-to-lund-converter with the original sample arguments.
 
 Inputs:
     A create-lund source, strict build JSON, optional terminal colors, and sample options. Relative
@@ -29,11 +29,10 @@ Notes:
     the LUND build settings.
 
 CLI options (owned by this launcher):
-    --run-settings FILE          Read strict build/test settings (default: config/run.json).
+    --run-settings FILE          Read strict build settings (default: config/run.json).
     --workflow create-lund       Select the LUND-creation workflow (required here).
     --source uniform|physical    Select the LUND event source (required for create-lund).
     --build true|false           Configure and build before dispatch (JSON default: true).
-    --test true|false            Run CTest after building (JSON default: false).
     --run true|false             Run the selected LUND executable (JSON default: true).
     --build-dir DIRECTORY        Select the CMake binary tree (JSON default: build/release).
     --build-type TYPE            Select Debug, Release, RelWithDebInfo, or MinSizeRel (default: Release).
@@ -65,17 +64,17 @@ import os
 #     values, so DEFAULTS stays unchanged.
 #
 # Scope:
-#     These values control building, testing, and display. Sample and physics settings stay on the
+#     These values control building, execution, and display. Sample and physics settings stay on the
 #     command line or in the selected sample profile.
 
 # Find the repository root from this file so calls work from any directory.
 ROOT = Path(__file__).resolve().parents[2]
 
-# Build and test defaults used when JSON and command-line options do not replace them.
+# Build defaults used when JSON and command-line options do not replace them.
 DEFAULTS = {
     # The workflow and source remain required command-line choices.
     'build_dir': 'build/release', 'build_type': 'Release',
-    'jobs': 4, 'build': True, 'run': True, 'test': False,
+    'jobs': 4, 'build': True, 'run': True,
 }
 
 # Names accepted by the launcher. SOURCES applies only to LUND creation.
@@ -103,7 +102,7 @@ WORKFLOW_GUIDANCE = """Choose one of these forms:
   source run.csh --workflow create-lund --source physical \\
     --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
   source run.csh --workflow submit --lund-dir RUN/lundfiles
-  source run.csh --workflow create-lund --source uniform --build true --test true --run false
+  source run.csh --workflow create-lund --source uniform --build true --run false
 Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
 create-lund source to see that executable's sample options."""
 
@@ -150,7 +149,7 @@ def boolean(value):
     """Convert one command-line token into a launcher boolean.
 
     Purpose:
-        Let build, run, and test options accept clear text values and return a Python bool.
+        Let build and run options accept clear text values and return a Python bool.
 
     Workflow:
         Ignore letter case, check the accepted true and false words, and reject anything else.
@@ -190,7 +189,7 @@ def parser():
         Parse build controls here and leave sample options unchanged for the selected program.
 
     Workflow:
-        Register the build profile, workflow, source, build/test switches, and build resources.
+        Register the build profile, workflow, source, stage switches, and build resources.
 
     Returns:
         Parser for the options owned by this launcher.
@@ -204,14 +203,13 @@ def parser():
                                epilog='Unrecognized options are forwarded unchanged.\n\n' + WORKFLOW_GUIDANCE)
 
     # Select the workflow and, for LUND creation, the event source.
-    p.add_argument('--run-settings', type=Path, help='build/test JSON settings; defaults to config/run.json')
+    p.add_argument('--run-settings', type=Path, help='build JSON settings; defaults to config/run.json')
     p.add_argument('--workflow', choices=WORKFLOWS)
     p.add_argument('--source', choices=SOURCES, help='LUND source mode for create-lund')
 
     # Command-line switches replace matching JSON values.
     p.add_argument('--build', type=boolean)
     p.add_argument('--run', type=boolean)
-    p.add_argument('--test', type=boolean)
 
     # Select the build directory, build type, and worker count. settings() checks them together.
     p.add_argument('--build-dir')
@@ -241,7 +239,7 @@ def settings(args):
         A new checked dictionary. DEFAULTS and the parsed JSON object stay unchanged.
 
     Assumptions:
-        The file is strict JSON and contains only build and test defaults.
+        The file is strict JSON and contains only build defaults.
 
     Raises:
         OSError: If the selected profile cannot be read.
@@ -283,7 +281,7 @@ def settings(args):
         raise ValueError(error_message('--source uniform|physical is required for create-lund.\n\n' + WORKFLOW_GUIDANCE))
 
     # Require real JSON booleans; do not accept the integers 0 and 1.
-    for key in ('build', 'run', 'test'):
+    for key in ('build', 'run'):
         if type(result[key]) is not bool:
             raise ValueError(error_message(f'{key} must be a JSON boolean'))
 
@@ -395,15 +393,15 @@ def banner(name):
 
 # region main
 def main():
-    """Run the requested build, test, and LUND stages in order.
+    """Run the requested build and LUND stages in order.
 
     Purpose:
         Keep shell wrappers focused on checkout and environment setup. This function controls the
-        build, test, and LUND program.
+        build and LUND program.
 
     Workflow:
-        Parse settings -> resolve the build path -> optionally build -> optionally test -> optionally
-        run the selected LUND program -> print success.
+        Parse settings -> resolve the build path -> optionally build -> optionally run the selected
+        LUND program -> print success.
 
     Args:
         None. Launcher and forwarded child options are read from ``sys.argv``.
@@ -412,11 +410,11 @@ def main():
         Zero when every requested stage succeeds.
 
     Outputs:
-        May update the build tree, run tests, or create LUND files. It does not submit Slurm jobs.
+        May update the build tree or create LUND files. It does not submit Slurm jobs.
 
     Raises:
         OSError, ValueError, TypeError, RuntimeError: For invalid configuration or unavailable files.
-        subprocess.CalledProcessError: When a checked build, test, generation, or submission command
+        subprocess.CalledProcessError: When a checked build, generation, or submission command
         fails. The module entry point converts these exceptions to diagnostics and nonzero statuses.
     """
 
@@ -453,31 +451,12 @@ def main():
         print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
         print()
 
-        # Reconfigure so CMake sees local external-file changes. Build both LUND programs and add test
-        # targets only when tests were requested.
+        # Reconfigure so CMake sees local external-file changes and build both LUND programs.
         execute(['cmake', '-S', str(ROOT), '-B', str(build), '-DCMAKE_BUILD_TYPE='+config['build_type'],
-                 '-DBUILD_UNIFORM=ON', '-DBUILD_GENIE=ON', '-DBUILD_TESTING='+('ON' if config['test'] else 'OFF')])
+                 '-DBUILD_UNIFORM=ON', '-DBUILD_GENIE=ON', '-DBUILD_TESTING=OFF'])
 
         # Let CMake use its configured build tool and worker count.
         execute(['cmake', '--build', str(build), '--parallel', str(config['jobs'])])
-
-        print()
-
-    # Tests must succeed before the selected workflow can run.
-    if config['test']:
-        print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
-        print(f"{SYSTEM_COLOR}= Running tests                                                                                    ={RESET_COLOR}")
-        print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
-        print()
-
-        # A reused build directory must already have tests enabled.
-        cache = (build / 'CMakeCache.txt').read_text()
-
-        if 'BUILD_TESTING:BOOL=ON' not in cache:
-            raise RuntimeError(error_message('Tests are not configured; use --build true --test true'))
-
-        # Show full output for a failed test and stop before LUND creation.
-        execute(['ctest', '--test-dir', str(build), '--output-on-failure'])
 
         print()
 

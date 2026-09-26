@@ -22,9 +22,8 @@
 #   --workflow create-lund|submit  Select one of the two user-facing workflows (required).
 #   --source uniform|physical      Select event content for create-lund; submit has its own
 #                                  forwarded --source option for manifest-free inputs.
-#   --run-settings FILE            Select strict build/test JSON (default: config/run.json).
+#   --run-settings FILE            Select strict build JSON (default: config/run.json).
 #   --build true|false             Configure and build LUND applications (default from run JSON).
-#   --test true|false              Run CTest before LUND creation (default from run JSON).
 #   --run true|false               Execute the selected LUND application (default from run JSON).
 #   --build-dir DIRECTORY          Select the CMake binary tree.
 #   --build-type TYPE              Select Debug, Release, RelWithDebInfo, or MinSizeRel.
@@ -134,8 +133,8 @@ if ($#argv == 0) then
     echo "Submit completed LUND files:"
     echo "  source run.csh --workflow submit --lund-dir RUN/lundfiles"
     echo ""
-    echo "Build and test without running a workflow payload:"
-    echo "  source run.csh --workflow create-lund --source uniform --build true --test true --run false"
+    echo "Build without running a workflow payload:"
+    echo "  source run.csh --workflow create-lund --source uniform --build true --run false"
     echo ""
     echo "Run 'source run.csh --help' for launcher options."
     echo "After selecting a create-lund source, add '-- --help' for its sample options."
@@ -201,7 +200,7 @@ endif
 #   - `git log -1 --oneline` plus `git branch --show-current` to report the resulting checkout.
 # Any updater failure stops environment setup and the selected workflow.
 if ($_clas12_skip_server_sync == 1) then
-    echo "${SYSTEM_COLOR}Skipping ifarm checkout replacement (explicit local/test override).${RESET_COLOR}"
+    echo "${SYSTEM_COLOR}Skipping ifarm checkout replacement (explicit local-development override).${RESET_COLOR}"
     set CLAS12_SAMPLE_STATUS = 0
 else
     echo "${INFO_COLOR}Updating disposable ifarm checkout at:${RESET_COLOR}\n${_clas12_root}"

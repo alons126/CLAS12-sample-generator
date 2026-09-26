@@ -1,7 +1,6 @@
 {
     "build": true,
     "run": true,
-    "test": false,
     "build_dir": "build/release",
     "build_type": "Release",
     "jobs": 4

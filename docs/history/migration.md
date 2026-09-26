@@ -17,7 +17,7 @@ The imported sources are retained under `legacy/` and recorded by the public [`l
 
 The writer always uses the established whitespace, precision, and uniform per-file IDs. Particle masses now come directly from the external target source, including its nonzero electron and six-decimal proton values. Production sampling uses the documented electron/charged-hadron p/1-p mixtures and uniform neutron momentum; `hadron-momentum=fixed` preserves the optional neutron-only 1 GeV/c study. Set matching channel, beam energy, target geometry, A/Z, file counts and seeds; choose the same file prefix when needed by downstream tools.
 
-`legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture active reference launch settings. Their counts are production-sized; override `--events` for local tests. The maintained uniform default remains 25,000 events per file, while the pinned upstream uniform generator and physical conversion currently use 10,000; the compatibility profile selects the upstream value explicitly.
+`legacy-coderun.conf` and `legacy-genie-wrapper.conf` capture active reference launch settings. Their counts are production-sized; override `--events` for a small local comparison. The maintained uniform default remains 25,000 events per file, while the pinned upstream uniform generator and physical conversion currently use 10,000; the compatibility profile selects the upstream value explicitly.
 
 The unified external worker has one output-naming contract: `mc_LUNDSTEM_torusFIELD.hipo` and `recon_LUNDSTEM_torusFIELD.hipo`. There is no maintained `--output-naming` mode.
 
@@ -39,7 +39,7 @@ Uniform generation writes one `lundfiles/lund-gen-monitoring/<prefix>_monitoring
 
 Physical conversion retains a remaining-input cutoff generalized to the configured `events-per-file` block used to align with submission `JOB_NEVENTS`, but corrects the premature mid-file stop: the cutoff is checked only before a follow-up file starts. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completed manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](../submit-simulation/ifarm-environment.md).
 
-Full parity scope and limitations—including unknown historical random states and untested detector execution—are listed in [validation](../development/validation.md).
+Known behavior differences and detector-level limitations—including unknown historical random states—are listed in [scientific validation boundaries](../development/validation.md).
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
 

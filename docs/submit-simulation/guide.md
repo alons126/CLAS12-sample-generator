@@ -120,14 +120,3 @@ After the array finishes:
    ```
 
 The dump must open successfully and display CLAS12 data banks. Treat this as a minimum smoke test only: one readable file does not prove that the remaining tasks or files succeeded.
-
-## Validation
-
-`submission-legacy-parity` checks captured working C-shell report fixtures for both sources in preview/execute modes, array arguments and exported settings using temporary configs and fake tools. It also exercises manifest-driven submission, multiple samples, cleanup, failures and the external detector-command contract. The migration comparison preserved report text and ANSI colors, normalizing platform-specific `wc` padding. Physical reporting retains the resolved generator/tune instead of unsetting them before use, and farm cleanup uses the intended banner color; these correct two failures in the former shell implementation. `submission-input-resolution` checks defaults (including GEMC 5.14), precedence, moved manifests, partial final files, manual input, truth conflicts and malformed inputs; when built, it also consumes actual uniform-generator output. Tests never submit real jobs. Server detector behavior requires a small ifarm validation run.
-
-Run the submission and launcher checks with the shared palette initialized (the existing launcher preflight uses it):
-
-```tcsh
-source src/launcher/environment/set_colors.csh
-ctest --test-dir build/debug --output-on-failure -R 'submission|ssh-launcher'
-```

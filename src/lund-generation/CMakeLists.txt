@@ -10,7 +10,7 @@
 #   Compile the shared LUND pipeline once and link source-specific generation or conversion code against it.
 #
 # Workflow:
-#   The root discovers ROOT/Threads first; this directory creates libraries consumed by apps/ and tests/.
+#   The root discovers ROOT/Threads first; this directory creates libraries consumed by the applications.
 #
 # Inputs:
 #   Root workflow options, imported ROOT/Threads targets and the generated provenance include directory.
@@ -62,13 +62,13 @@ if(BUILD_GENIE)
 endif()
 # endregion
 
-# Applications and tests -------------------------------------------------------------------------------------------------------------------------------------------------
+# Applications -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# region Applications and tests
+# region Applications
 # Purpose:
-#     Keep LUND executable entry points and validation beside the implementation they exercise.
+#     Keep the LUND executable entry points beside the implementation they use.
 add_subdirectory(apps)
-if(BUILD_TESTING)
+if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
     add_subdirectory(tests)
 endif()
 # endregion

@@ -4,29 +4,30 @@
 
 # Ifarm submission -------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#     Install the external worker and register maintained submission tests.
+#     Install the external worker used by submitted array tasks.
 #
 # Purpose:
-#     Check the sourced setup and the external detector worker without submitting real jobs.
+#     Publish the protected detector worker without duplicating its commands.
 #
 # Workflow:
 #     run.csh -> setup_and_submit.csh -> submit.py -> sbatch array -> external payload.
 #
 # Inputs:
-#     Python and tcsh for isolated tests; no detector execution or real submission.
+#     The protected external worker script.
 #
 # Outputs:
-#     The worker is installed under bin, and tests run from the checkout.
+#     The worker is installed under bin.
 #
 # Failure:
-#     a failed parity or safety assertion fails CTest.
+#     Installation fails when CMake cannot copy the worker to the selected prefix.
 
 # region Installation
 install(PROGRAMS external/submit_GEMC_sample.sh DESTINATION bin)
 # endregion
 
-# region Tests
-if(BUILD_TESTING)
+# region Optional local development integration
+if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py"
+        AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/submission_parity.py")
     find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
     if(BUILD_UNIFORM)
         add_test(NAME submission-input-resolution COMMAND ${Python3_EXECUTABLE}

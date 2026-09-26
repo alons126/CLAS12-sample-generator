@@ -6,17 +6,17 @@ This chapter inventories the supported code and the archived support code so a f
 
 | File | Responsibilities and interfaces |
 | --- | --- |
-| `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds libraries/apps/tests and installation |
+| `CMakeLists.txt` | Defines project/version and BUILD_UNIFORM/BUILD_GENIE; discovers ROOT; matches ROOT's C++ standard; configures revision header; adds production libraries/apps and installation |
 | `src/CMakeLists.txt` | Adds the LUND-generation, Slurm-submission, and shared-launcher source trees |
 | `src/lund-generation/CMakeLists.txt` | Defines `LundCore`, `UniformGeneration`, `GenieGstConversion`, and `PhysicalConversion` |
-| `src/slurm-submission/CMakeLists.txt` | Installs submission programs and registers submission tests |
-| `src/launcher/CMakeLists.txt` | Registers the sourced-launcher integration test |
+| `src/slurm-submission/CMakeLists.txt` | Installs the external submission worker |
+| `src/launcher/CMakeLists.txt` | Keeps the launcher source boundary separate from installed targets |
 | `src/lund-generation/apps/CMakeLists.txt` | Defines and installs the two application targets |
 | `src/lund-generation/apps/uniform_lund_generator_main.cpp` | Uniform generator entry point and error reporting |
 | `src/lund-generation/apps/event_generator_to_lund_converter_main.cpp` | Generator-independent physical entry point and error reporting |
 | `.vscode/c_cpp_properties.json` | Uses Debug compile_commands.json for editor compiler/include settings |
 
-Production sources compile once into conventional targets. References to archived implementation files appear only in test adapters. Test executables are not installed.
+Production sources compile once into conventional targets. Archived implementation files are not linked into production targets.
 
 ## 2. Shared maintained layers
 
@@ -69,7 +69,7 @@ The reader arrays have no maintained fixed-size particle buffer. ROOT reports ea
 | File | Contract |
 | --- | --- |
 | `run.csh` | Guarded ifarm refresh; source submission directly or dispatch LUND creation |
-| `src/launcher/workflow.py` | LUND configuration, build/test stages and application dispatch |
+| `src/launcher/workflow.py` | LUND configuration, build stages and application dispatch |
 | `src/slurm-submission/resolve_inputs.py` | Manifest/config/CLI precedence, truth validation, portable file inventory and in-memory resolved settings |
 | `src/slurm-submission/setup_and_submit.csh` | Small sourced bridge: shared palette, quoted arguments and Python exit status |
 | `src/slurm-submission/submit.py` | Preloaded environment, established report/checks, guarded output reset and one array per sample |
@@ -85,40 +85,19 @@ The resolver obtains the prefix and task count from the completed manifest or ex
 - `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
 - `config/detector/Generation_files_*`: unchanged 2/4/6 GeV cards and reconstruction YAML for the archived versions. They are resources, not generated models. Matching detector/data dependencies are external.
 
-## 7. Test code
-
-| File | Role |
-| --- | --- |
-| `src/lund-generation/tests/CMakeLists.txt` | Registers LUND integration, parity, distribution, and geometry tests |
-| `src/slurm-submission/tests/` | Legacy setup transcript, environment and failure tests |
-| `src/launcher/tests/launcher.py` | Shared sourced/direct launcher, argument, build, and update-safety checks |
-| `integration.py` | LUND invariants, channel behavior, config validation, deterministic output, conversion splitting/schema errors |
-| `check_monitoring.cpp` | Checks representative FD/CD proton, neutron, pip and pim ROOT names, titles, axis labels, styles and histogram counts |
-| `make_gst_fixture.cpp` | Generates normal, long parity, short, missing/wrong-type, empty, unsupported and >250-particle GST fixtures |
-| `legacy_uniform_driver.cpp` | Calls archived uniform/tester kernels and archived histogram initialization with controlled seeds and temporary files |
-| `prepare_legacy_genie.py` | Builds a redirected reference converter without changing its event loop |
-| `legacy_parity.py` | Development-only comparison of reference/current LUND bytes and histograms; verifies the physical-input cutoff |
-| `compare_histograms.cpp` | Compares ROOT histogram names/counts, axes, entries, contents/errors including flow bins |
-| `distributions.py` | Compares new neutron/proton draws to analytic CDFs |
-| `src/slurm-submission/tests/submission_parity.py` | Compares full archived setup stdout and Slurm environment using temporary fixtures |
-
-Exact test scope and acceptance criteria are in [validation](validation.md).
-
-## 8. Archived supporting code
+## 7. Archived supporting code
 
 The public repository baseline for the archived sources is the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0). Use that tag when comparing maintained code with the historical tree described below.
 
-`legacy/Uniform-sample-generator/` is a Git submodule pinned to the independent `alons126/Uniform-sample-generator` repository. It retains the configuration/path helpers, text printing, particle formatter, angle calculation, target globals, histogram globals, main/ROOT launchers, tester and upstream historical material. Only selected event/diagnostic kernels are compiled into maintained test references; production targets do not link the submodule.
+`legacy/Uniform-sample-generator/` is a Git submodule pinned to the independent `alons126/Uniform-sample-generator` repository. It retains the configuration/path helpers, text printing, particle formatter, angle calculation, target globals, histogram globals, main/ROOT launchers, tester and upstream historical material. Production targets do not link the submodule.
 
 `legacy/GEMC-samples/` retains the converter, geometry helper, shell setup/submission chains and resource snapshots. Its `framework/classes/AMaps` implements historical acceptance-map lookup, `hPlots` implements plotting containers, and `DSCuts` stores cut parameters. `framework/namespaces/general_utilities` holds environment/text/ROOT helpers and the restored converter mass constants. The acceptance-map/fiducial application is commented out in the archived converter; these classes are not active new generation dependencies. They are not a supported replacement for downstream acceptance analysis.
 
 The archived root [`genie_job_submission_script.csh`](../../legacy/genie_job_submission_script.csh) is another historical submission copy. There is one supported new Slurm runner. Do not infer which historical copy was last used from its location alone.
 
-## 9. SSH checkout orchestration
+## 8. SSH checkout orchestration
 
-[SSH workflow](../submit-simulation/ifarm-environment.md) documents the disposable ifarm checkout refresh and `config/run.json`. `src/launcher/workflow.py` reads build/test defaults, requires an explicit workflow and LUND source, builds/tests, and dispatches LUND creation. Submission is sourced directly by `run.csh`; the external Bash payload is the array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
-
-`src/launcher/tests/launcher.py` exercises sourced/direct invocation, paths with spaces, failures, configuration/build calls and Git update safety using an isolated local repository. `src/lund-generation/tests/prepare_replacement_geometry.py` creates a changed target header; `src/lund-generation/tests/replacement_geometry.cpp` checks the actual adapter against that replacement, including new target discovery and RNG independence.
+[SSH workflow](../submit-simulation/ifarm-environment.md) documents the disposable ifarm checkout refresh and `config/run.json`. `src/launcher/workflow.py` reads build defaults, requires an explicit workflow and LUND source, builds when requested, and dispatches LUND creation. Submission is sourced directly by `run.csh`; the external Bash payload is the array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
 
 See [source documentation conventions](documentation-style.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded from edits.
 

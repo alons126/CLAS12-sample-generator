@@ -6,6 +6,6 @@ The public baseline for the legacy code is the [`legacy-v1.0.0` GitHub release t
 
 - [Migration and compatibility options](migration.md) maps retired entry points to the maintained workflows.
 - [Legacy launch chains](legacy-workflows.md) records exact archived selections and their current equivalents.
-- [Validation and legacy parity](../development/validation.md) defines what is compared, intentional differences, and remaining detector-level validation.
+- [Scientific validation boundaries](../development/validation.md) defines intentional behavior and remaining detector-level validation.
 
 The archived source trees are independent historical references. Current user and developer contracts must stand on their own and must not require readers to understand those trees.

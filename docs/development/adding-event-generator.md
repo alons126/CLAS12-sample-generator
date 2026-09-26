@@ -103,7 +103,7 @@ The example is architectural, not a copy-ready reader. `supportedParticles` must
 
 ## 4. Decide source-specific header semantics
 
-Document and test how the generator maps into:
+Document and validate how the generator maps into:
 
 - event identifier and ordering;
 - nuclear A/Z metadata versus target geometry;
@@ -139,7 +139,7 @@ If the adapter needs a new optional build switch, document its interaction with 
 
 ## 7. Preserve splitting and provenance
 
-`LundWriter` owns successful-event capacity, file rotation, serialization, guarded output replacement, and manifest publication. The adapter owns input traversal and rejection counts. If the input has a finite entry inventory and must align follow-up files with `JOB_NEVENTS`, implement and test the documented inclusive remaining-input cutoff or extract the common policy without changing GENIE behavior.
+`LundWriter` owns successful-event capacity, file rotation, serialization, guarded output replacement, and manifest publication. The adapter owns input traversal and rejection counts. If the input has a finite entry inventory and must align follow-up files with `JOB_NEVENTS`, implement and validate the documented inclusive remaining-input cutoff or extract the common policy without changing GENIE behavior.
 
 Physical output naming already includes event-generator name/version, tune, Q²/input-selection label, beam energy, target variation, and GEMC version. Use explicit `none` or `unknown` tokens when a field does not apply; preserve the original unsanitized values in the manifest.
 

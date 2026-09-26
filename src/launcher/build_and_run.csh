@@ -20,11 +20,10 @@
 #   source src/launcher/build_and_run.csh --workflow create-lund --source uniform --output runs/example
 #
 # CLI options (forwarded unchanged to workflow.py):
-#   --run-settings FILE          Read build/test JSON (default: config/run.json).
+#   --run-settings FILE          Read build JSON (default: config/run.json).
 #   --workflow create-lund       Select the LUND workflow (required by this driver).
 #   --source uniform|physical    Select LUND event source (required).
 #   --build true|false           Configure and build (JSON default: true).
-#   --test true|false            Run CTest (JSON default: false).
 #   --run true|false             Run the LUND executable (JSON default: true).
 #   --build-dir DIRECTORY        Select CMake binary tree (JSON default: build/release).
 #   --build-type TYPE            Select CMake build type (default: Release).

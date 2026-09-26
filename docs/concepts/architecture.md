@@ -6,8 +6,8 @@ Maintained code is grouped first by the two user-facing workflows. `src/lund-gen
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/lund-generation/` | Both uniform and physical LUND creation, their entry points, external geometry, and tests |
-| `src/slurm-submission/` | Sourced setup/submission script, external GEMC payload, and parity tests |
+| `src/lund-generation/` | Both uniform and physical LUND creation, their entry points, and external geometry |
+| `src/slurm-submission/` | Sourced setup/submission script and external GEMC payload |
 | `src/launcher/` | Shared Python dispatcher and sourced-shell support used by `run.csh` |
 | `src/lund-generation/core/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
 | `src/lund-generation/core/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
@@ -34,7 +34,7 @@ The architecture is intentionally modestly modular around two files obtained fro
 | `uniform-lund-generator` | `src/lund-generation/apps/uniform_lund_generator_main.cpp` | Parse CLI, call generator, report errors |
 | `event-generator-to-lund-converter` | `src/lund-generation/apps/event_generator_to_lund_converter_main.cpp` | Parse physical input settings and dispatch an adapter |
 
-The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. The test targets alone compile archived reference code; production libraries do not include archived implementations. `src/lund-generation/apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
+The root CMake file discovers ROOT and adds subdirectories. `src/CMakeLists.txt` declares reusable libraries and target-scoped dependencies. Production libraries do not include archived implementations. `src/lund-generation/apps/CMakeLists.txt` links entry points. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
 
 ## Workflow dispatcher
 
@@ -45,7 +45,7 @@ flowchart TB
     R["run.csh"] --> G["Guard and refresh the disposable ifarm checkout"]
     G --> W{"--workflow"}
 
-    W -->|create-lund| L["workflow.py<br/>Optionally configure, build, and test"]
+    W -->|create-lund| L["workflow.py<br/>Optionally configure and build"]
     L --> S{"--source"}
     S -->|uniform| U["uniform-lund-generator<br/>RunConfig::parse then generateUniform"]
     S -->|physical| P["event-generator-to-lund-converter<br/>RunConfig::parse then convertPhysical"]
@@ -63,7 +63,7 @@ flowchart TB
 
 Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src/launcher/workflow.py), [`uniform_lund_generator_main.cpp`](../../src/lund-generation/apps/uniform_lund_generator_main.cpp), `generateUniform()`, [`event_generator_to_lund_converter_main.cpp`](../../src/lund-generation/apps/event_generator_to_lund_converter_main.cpp), `convertPhysical()`, [`setup_and_submit.csh`](../../src/slurm-submission/setup_and_submit.csh), [`submit.py`](../../src/slurm-submission/submit.py), [`resolve_inputs.py`](../../src/slurm-submission/resolve_inputs.py), and [`submit_GEMC_sample.sh`](../../src/slurm-submission/external/submit_GEMC_sample.sh).
 
-The Python driver owns LUND build/test staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the external payload. Creation never submits jobs automatically. See the [submission guide](../submit-simulation/guide.md) for the full call chain and editable settings.
+The Python driver owns LUND build staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in `config/samples/*.conf`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, prepares outputs with `--execute`, and passes validated settings to `sbatch`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the external payload. Creation never submits jobs automatically. See the [submission guide](../submit-simulation/guide.md) for the full call chain and editable settings.
 
 ## Sample configuration boundary
 
@@ -106,15 +106,15 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 
 ## Adding functionality
 
-- Add a sampling prescription in `src/lund-generation/uniform-lund-generator/` with validated settings and an output-level test of its distribution or invariants.
+- Add a sampling prescription in `src/lund-generation/uniform-lund-generator/` with validated settings and documented distribution or invariants.
 - Add another physical adapter under `src/lund-generation/event-generator-to-lund-converter/<generator-format>/` and register it behind `convertPhysical()`; keep the public executable and manifest contract unchanged.
-- Replace or extend `src/lund-generation/external/targets.h`, the external geometry source, and test its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
+- Replace or extend `src/lund-generation/external/targets.h`, the external geometry source, and validate its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
 - Resolve submission inputs from the completed manifest, explicit config and CLI; use the external payload’s scheduler defaults.
 
 Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 
-The complete [source/API inventory](../development/source-reference.md) also covers tests, examples, error paths, and archived supporting utilities.
+The complete [source/API inventory](../development/source-reference.md) also covers examples, error paths, and archived supporting utilities.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
 

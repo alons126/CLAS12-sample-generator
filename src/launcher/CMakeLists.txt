@@ -4,27 +4,27 @@
 
 # src/launcher/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Test setup for the shared local and ifarm launcher.
+#   Build boundary for the shared local and ifarm launcher.
 # 
 # Purpose:
-#   Check sourced-shell behavior, build selection, argument forwarding, and checkout safety checks.
+#   Keep launcher-specific optional development integration separate from production targets.
 # 
 # Workflow:
 #   run.csh -> launcher/workflow.py -> selected LUND source; submission is sourced directly.
 # 
 # Inputs:
-#   Python 3.9+, tcsh/csh when available, both enabled LUND applications, and the configured build tree.
+#   The configured source and build trees.
 # 
 # Outputs:
-#   The optional ssh-launcher CTest case.
+#   No installed target; runtime launcher files are used directly from the checkout.
 # 
 # Failure behavior:
-#   The launcher test is omitted when its shell or compiled applications are unavailable.
+#   Optional local development integration is skipped when its files or tools are unavailable.
 
-# Launcher integration test ----------------------------------------------------------------------------------------------------------------------------------------------
+# Optional local development integration --------------------------------------------------------------------------------------------------------------------------------
 
-# region Launcher integration test
-if(BUILD_TESTING)
+# region Optional local development integration
+if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/launcher.py")
     find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
     find_program(TCSH_EXECUTABLE NAMES tcsh csh)
     if(TCSH_EXECUTABLE AND BUILD_UNIFORM AND BUILD_GENIE)

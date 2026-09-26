@@ -7,13 +7,13 @@
 #   Top-level project build settings.
 # 
 # Purpose:
-#   Select workflows, find dependencies, record build details, and add the source targets and tests.
+#   Select workflows, find dependencies, record build details, and add the production source targets.
 # 
 # Workflow:
-#   CMake configure -> dependencies -> provenance header -> source targets -> optional tests -> install rules.
+#   CMake configure -> dependencies -> provenance header -> source targets -> install rules.
 # 
 # Inputs:
-#   CMake 3.20+, compatible ROOT, Threads, Git when available; BUILD_UNIFORM, BUILD_GENIE and BUILD_TESTING cache options.
+#   CMake 3.20+, compatible ROOT, Threads, Git when available; BUILD_UNIFORM and BUILD_GENIE cache options.
 # 
 # Outputs:
 #   Build targets, generated/Version.h, compile_commands.json and installation rules.
@@ -134,10 +134,10 @@ file(SHA256 "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h" SAMPL
 configure_file(src/lund-generation/core/support/Version.h.in generated/Version.h @ONLY)
 # endregion
 
-# Build graph and tests --------------------------------------------------------------------------------------------------------------------------------------------------
+# Build graph ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# region Build graph and tests
-# Purpose: Add source directories in the order needed by their targets and tests.
+# region Build graph
+# Purpose: Add source directories in the order needed by their production targets.
 include(CTest)
 add_subdirectory(src)
 # endregion

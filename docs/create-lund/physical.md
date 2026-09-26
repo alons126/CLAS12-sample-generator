@@ -24,7 +24,7 @@ Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>_
 
 Missing branches, wrong types, inconsistent array lengths, empty inputs and unsupported-only inputs produce errors. `El` and `Ef` are not required: output energy is calculated from momentum and the selected particle mass.
 
-`pdgf`, `pxf`, `pyf`, and `pzf` are read through `TTreeReaderArray`. For every loaded entry, ROOT derives each array view's current length from the branch leaf-count metadata. Before any indexed access, conversion requires `nf >= 0`, `pdgf.GetSize() == nf`, and the three momentum-array sizes to equal `pdgf.GetSize()`. A mismatch aborts the run without a completion manifest. This establishes the proper length for every well-formed ROOT entry and rejects inconsistent metadata/data instead of imposing a fixed maximum. No software can promise correctness for a physically corrupted file or a defect inside ROOT itself; within ROOT's validated branch contract, the converter checks every available length before use. Integration tests exercise 300 supported particles and an intentionally mismatched array.
+`pdgf`, `pxf`, `pyf`, and `pzf` are read through `TTreeReaderArray`. For every loaded entry, ROOT derives each array view's current length from the branch leaf-count metadata. Before any indexed access, conversion requires `nf >= 0`, `pdgf.GetSize() == nf`, and the three momentum-array sizes to equal `pdgf.GetSize()`. A mismatch aborts the run without a completion manifest. This establishes the proper length for every well-formed ROOT entry and rejects inconsistent metadata/data instead of imposing a fixed maximum. No software can promise correctness for a physically corrupted file or a defect inside ROOT itself; within ROOT's validated branch contract, the converter checks every available length before use.
 
 ## Retained physics conventions
 
@@ -36,7 +36,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
   a decay or replace it with photons because the required daughter four-momenta are absent.
 - Give every particle in an event the same sampled vertex.
 - Store `resid` in LUND header field 4.
-- Store process code 1=QE, 2=MEC, 3=RES, 4=DIS in header field 10. The converter requires and supports only these four reactions. Events with none of these flags are skipped; supporting another reaction requires updating the required GST branches, process-code mapping, validation, documentation, and tests. When multiple supported flags are true, use the listed priority order.
+- Store process code 1=QE, 2=MEC, 3=RES, 4=DIS in header field 10. The converter requires and supports only these four reactions. Events with none of these flags are skipped; supporting another reaction requires updating the required GST branches, process-code mapping, validation, and documentation. When multiple supported flags are true, use the listed priority order.
 - Preserve the input entry index in header field 9.
 - Apply no acceptance or Q² cuts. The old filename labels and disabled fiducial code were not active selection logic.
 

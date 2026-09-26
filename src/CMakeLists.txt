@@ -10,13 +10,13 @@
 #   Keep LUND generation, Slurm submission, and the shared launcher in separate directories.
 # 
 # Workflow:
-#   Root configuration -> LUND targets/tests -> submission coordinators/tests -> shared launcher test.
+#   Root configuration -> LUND targets -> submission coordinators -> shared launcher.
 # 
 # Inputs:
-#   Root workflow options, imported dependencies, and BUILD_TESTING.
+#   Root workflow options and imported dependencies.
 # 
 # Outputs:
-#   Compiled LUND applications, installed submission programs, and registered workflow tests.
+#   Compiled LUND applications and installed submission programs.
 # 
 # Failure behavior:
 #   A child configuration failure stops the root CMake configure step.

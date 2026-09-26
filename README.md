@@ -16,7 +16,7 @@ This repository does not run the physical event generator or calculate final acc
 
 ## First build and sample
 
-Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, and Python 3.9+ for tests and both workflow drivers, and csh/tcsh for the sourced ifarm launcher. Submission preview and execution require the ifarm module command, the requested shared GEMC version, and `recon-util`; only execution requires `sbatch`.
+Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, Python 3.9+ for the workflow drivers, and csh/tcsh for the sourced ifarm launcher. Submission preview and execution require the ifarm module command, the requested shared GEMC version, and `recon-util`; only execution requires `sbatch`.
 
 Clone with the pinned legacy reference submodule, or initialize it after an existing clone:
 
@@ -27,9 +27,8 @@ git submodule update --init --recursive
 ```
 
 ```bash
-cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug --parallel 4
-ctest --test-dir build/debug --output-on-failure
 
 build/debug/apps/uniform-lund-generator \
   --config config/samples/uniform-1e-5986MeV.conf \
@@ -53,7 +52,7 @@ Start at the [documentation home](docs/index.md). It presents the two workflows 
 | [Create LUND files](docs/create-lund/index.md) | Uniform generation, physical conversion, configuration, examples, and monitoring |
 | [Submit simulation](docs/submit-simulation/index.md) | Preview and submit ifarm GEMC/reconstruction jobs |
 | [Concepts and contracts](docs/concepts/index.md) | Architecture, sampling, LUND records, provenance, and scientific scope |
-| [Development](docs/development/index.md) | Source reference, tests, documentation, wiki publishing, and [adding an event-generator adapter](docs/development/adding-event-generator.md) |
+| [Development](docs/development/index.md) | Source reference, documentation, wiki publishing, and [adding an event-generator adapter](docs/development/adding-event-generator.md) |
 | [History and migration](docs/history/index.md) | Archived behavior, parity, and migration context |
 
 Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) remain available for the established production matrix.
@@ -62,6 +61,6 @@ Maintained source is grouped first by workflow under `src/lund-generation/` and 
 
 The project keeps two narrow, RG-M-derived update boundaries. `src/lund-generation/external/targets.h` is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted. `src/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived payload that keeps the source structure and usage pattern. Maintained adapters surround both files so later RG-M updates can be reviewed and incorporated without duplicating their geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
 
-The original source trees are retained in `legacy/` for comparison. Their public repository baseline is the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0), which records the archived tree and the pinned Uniform submodule revision. `legacy/Uniform-sample-generator` remains a submodule of its independent upstream repository; its selected kernels are compiled only by parity tests. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
+The original source trees are retained in `legacy/` for historical comparison. Their public repository baseline is the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0), which records the archived tree and the pinned Uniform submodule revision. `legacy/Uniform-sample-generator` remains a submodule of its independent upstream repository. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
 
 For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/submit-simulation/ifarm-environment.md). When sourcing from outside the checkout, the user may set the optional `CLAS12_SAMPLES_DIR` environment variable to its absolute path; the project does not define it automatically. Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/concepts/external-inputs.md).

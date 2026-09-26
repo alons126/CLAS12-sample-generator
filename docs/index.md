@@ -79,16 +79,16 @@ The project does not run a physical event generator, derive acceptance maps, or 
 | Create uniform or physical LUND files | [Create LUND files](create-lund/index.md) |
 | Submit completed LUND files to ifarm | [Submit simulation](submit-simulation/index.md) |
 | Understand sampling, records, architecture, or provenance | [Concepts and data contracts](concepts/index.md) |
-| Modify, test, or extend the software | [Development guide](development/index.md) |
+| Modify or extend the software | [Development guide](development/index.md) |
 | Understand compatibility and archived behavior | [History and migration](history/index.md) |
 
 ## Common reader paths
 
-- **New user:** [install and test](getting-started/installation.md) → [quickstart](getting-started/quickstart.md) → [output layout](getting-started/outputs.md).
+- **New user:** [install and build](getting-started/installation.md) → [quickstart](getting-started/quickstart.md) → [output layout](getting-started/outputs.md).
 - **Uniform-sample user:** [creation overview](create-lund/index.md) → [uniform sampling](create-lund/uniform.md) → [examples](create-lund/examples.md).
 - **Physical-sample user:** [creation overview](create-lund/index.md) → [physical conversion](create-lund/physical.md) → [examples](create-lund/examples.md).
 - **ifarm operator:** [submission overview](submit-simulation/index.md) → [examples](submit-simulation/examples.md) → [full operational guide](submit-simulation/guide.md).
-- **Adapter developer:** [architecture](concepts/architecture.md) → [adding an event generator](development/adding-event-generator.md) → [validation](development/validation.md).
+- **Adapter developer:** [architecture](concepts/architecture.md) → [adding an event generator](development/adding-event-generator.md) → [scientific validation boundaries](development/validation.md).
 
 ## Safety and provenance
 

@@ -2,14 +2,13 @@
 
 These examples show supported option combinations beyond the minimal quickstart. Commands use small counts unless explicitly marked as production-style. Existing resolved run directories are replaced after a warning.
 
-## Build and test without creating output
+## Build without creating output
 
 ```tcsh
 source run.csh \
   --workflow create-lund \
   --source uniform \
   --build true \
-  --test true \
   --run false \
   --build-type Debug \
   --jobs 4

@@ -66,7 +66,7 @@ One million events reproduces the tester's server default of 100 files × 10,000
 
 The pinned upstream ep/en prescription maps to uniform hadron momentum, flat theta, and a 0.3 GeV/c lower bound. `fixed` preserves the older selectable 1 GeV/c neutron mode, while the maintained production profiles activate the newer channel-dependent prescriptions.
 
-The reference tests call the actual pinned upstream event functions. They supply deterministic seeds, initialize upstream histograms and write into temporary directories; they do not source `run.sh`, which contains repository cleanup/update commands. With matched modes, tests compare archived kinematics and diagnostics while explicitly allowing the maintained mass and tester-vertex changes.
+Historical comparisons require matched deterministic seeds, upstream histogram initialization, and isolated output directories. Do not source the archived `run.sh` for such a comparison because it contains repository cleanup and update commands. Account explicitly for the maintained mass source and tester-vertex behavior.
 
 ## 2. GENIE conversion
 
@@ -103,7 +103,7 @@ build/debug/apps/event-generator-to-lund-converter --event-generator genie-gst \
   --events 10000 --output runs/legacy-genie-smoke
 ```
 
-The archived wrapper limited the number of input ROOT files. The maintained converter instead takes the complete input file or glob explicitly and limits accepted output with `--events`; it has no `--files` option. It checks the GST schema and does not infer physical metadata from filenames. The archived converter reference used by tests keeps the original event loop; an adapter only redirects includes/output paths, captures its histogram and replaces directory shell calls with checked filesystem operations.
+The archived wrapper limited the number of input ROOT files. The maintained converter instead takes the complete input file or glob explicitly and limits accepted output with `--events`; it has no `--files` option. It checks the GST schema and does not infer physical metadata from filenames. Historical comparisons must preserve the archived event loop while isolating its output and replacing unsafe directory shell calls.
 
 ## 3. Shared detector-job submission
 
@@ -138,4 +138,4 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Simulation output reset | Recreate `mchipo`/`reconhipo` for either source; preserve LUND |
 | Repository update | Guarded disposable-clone refresh in `run.csh` |
 
-`source run.csh --workflow submit` sources the unified setup directly. Select completed samples with `--lund-dir`; supply optional config/CLI overrides. Full archived setup stdout and exported Slurm settings are compared in isolated tests; see the [submission guide](../submit-simulation/guide.md). Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.
+`source run.csh --workflow submit` sources the unified setup directly. Select completed samples with `--lund-dir`; supply optional config/CLI overrides. See the [submission guide](../submit-simulation/guide.md) for the maintained handoff. Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.

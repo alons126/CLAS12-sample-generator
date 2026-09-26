@@ -2,7 +2,7 @@
 
 ## Purpose
 
-[run.json](run.json) supplies stable build/test controls to `src/launcher/workflow.py`. It deliberately does not select a user-facing workflow, a LUND source, a sample profile, input data, or output location. Those choices remain visible in every `source run.csh` command.
+[run.json](run.json) supplies stable build controls to `src/launcher/workflow.py`. It deliberately does not select a user-facing workflow, a LUND source, a sample profile, input data, or output location. Those choices remain visible in every `source run.csh` command.
 
 This is strict JSON. Its consumer rejects unknown keys, so explanations live in this adjacent Markdown file rather than comment properties inside the JSON object.
 
@@ -35,8 +35,7 @@ source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
 | JSON key | Checked-in value | CLI override and purpose |
 | --- | --- | --- |
 | `build` | `true` for `create-lund` | `--build true` or `--build false` explicitly selects whether to configure/build |
-| `run` | `true` | `--run false` stops after the requested build/test stages |
-| `test` | `false` | `--test true` enables tests in CMake and requires CTest to pass before dispatch |
+| `run` | `true` | `--run false` stops after the requested build stage |
 | `build_dir` | `build/release` | `--build-dir PATH` selects the CMake binary directory |
 | `build_type` | `Release` | `--build-type Debug|Release|RelWithDebInfo|MinSizeRel` |
 | `jobs` | `4` | `--jobs N` selects positive parallel build-worker count |
@@ -49,7 +48,7 @@ workflow.py built-in build defaults
     -> explicit launcher options
 ```
 
-For `--workflow submit`, [`run.csh`](../run.csh) directly sources the shell setup script. Build/run/test settings do not apply to submission.
+For `--workflow submit`, [`run.csh`](../run.csh) directly sources the shell setup script. Build/run settings do not apply to submission.
 
 Use `--run-settings FILE` to select a different strict JSON build profile explicitly. There is no automatic `config/run.local.json`: normal ifarm synchronization removes untracked files, so an implicit local profile would be unreliable.
 
@@ -61,4 +60,4 @@ Sample physics and generation settings belong in [samples](samples). Submission 
 
 ## Failure behavior
 
-Unknown keys, non-Boolean stage controls, unsupported build types, empty build paths, and nonpositive job counts fail before CMake or a child workflow runs. A failed checked build or test prevents LUND creation. Submission bypasses these build controls.
+Unknown keys, non-Boolean stage controls, unsupported build types, empty build paths, and nonpositive job counts fail before CMake or a child workflow runs. A failed checked build prevents LUND creation. Submission bypasses these build controls.

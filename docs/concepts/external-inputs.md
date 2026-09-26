@@ -16,11 +16,11 @@ To update geometry:
 
 1. Replace only `src/lund-generation/external/targets.h` with the reviewed RG-M version, preserving it as an exact copy. Keep `legacy/` unchanged as the comparison baseline.
 2. Preserve the external API: `targets` maps names to nonempty position vectors, `ran` is a `TRandom3`, and `randomVertex(std::string)` returns a `TVector3` in cm. If upstream changes this API, adapt `TargetGeometry.cpp` as well. New target names are discovered from the map; their sampling prescription comes from the replacement function.
-3. Build and test with `source run.csh --workflow create-lund --source uniform --build true --test true --run false` in tcsh, or the CMake commands in the build guide. CMake detects header changes and recalculates its SHA-256; each generated manifest records `targets_sha256` for the compiled header, including uncommitted replacements.
-4. Review changed vertex bounds and any legacy-parity failures. Geometry updates can intentionally invalidate comparisons to the frozen archive; record the reason and revised scientific validation. Update the snapshot table in the configuration guide and choose matching detector geometry and A/Z.
+3. Build with `source run.csh --workflow create-lund --source uniform --build true --run false` in tcsh, or the CMake commands in the build guide. CMake detects header changes and recalculates its SHA-256; each generated manifest records `targets_sha256` for the compiled header, including uncommitted replacements.
+4. Review changed vertex bounds. Geometry updates can intentionally change results relative to the frozen archive; record the reason and revised scientific validation. Update the snapshot table in the configuration guide and choose matching detector geometry and A/Z.
 5. Commit the header and documentation, recording the upstream revision or download origin. Rebuild the server checkout before producing samples.
 
-The replacement-geometry test compiles the production adapter with a modified header, checks shifted vertices and a new target name, and checks independent interleaved RNG streams. It demonstrates that there is no second geometry table to maintain.
+The maintained adapter compiles directly against the selected header, so there is no second geometry table to maintain.
 
 ## LUND format
 
