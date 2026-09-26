@@ -52,8 +52,7 @@ output/
 
 # Local samples and tutorial working copies ----------------------------------
 # Ignore generated comparison runs and personal copies of tutorial commands.
-legacy/GENIE-GST-test-samples/test-runs
-legacy/GENIE-GST-test-samples/*.root
+legacy/GENIE-GST-test-samples/*
 tutorials/uniform-samples/uniform-lund-creation copy.txt
 tutorials/uniform-samples/uniform-slurm-submission copy.txt
 
