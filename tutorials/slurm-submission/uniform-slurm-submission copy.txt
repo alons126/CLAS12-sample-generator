@@ -1,0 +1,74 @@
+# Corresponding creation commands: uniform-lund-creation.txt
+# Run on ifarm after the matching LUND creation finishes.
+# Each command submits only the first 5 LUND files (array 1-5), rather than all 40 files.
+# At 25000 events per file, that is 125000 events per sample; the manifest supplies the event limit.
+# GEMC defaults to 5.14; the manifest supplies sample metadata and detector defaults.
+# Omit --execute to preview without sbatch, output replacement, or farm-log cleanup.
+# With --execute, existing simulation output directories are replaced; LUND inputs are preserved.
+# Both preview and execution retain run.csh's normal disposable-server-checkout refresh.
+
+#########################################################################################
+# Uniform (e,e') sample Slurm submission
+#########################################################################################
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_1e_2070MeV/lundfiles \
+  --num-jobs 5 \
+  --execute
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_1e_4029MeV/lundfiles \
+  --num-jobs 5 \
+  --execute
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_1e_5986MeV/lundfiles \
+  --num-jobs 5 \
+  --execute
+
+#########################################################################################
+# Uniform (e,e'nFD) sample Slurm submission
+#########################################################################################
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_enFD_2070MeV/lundfiles \
+  --num-jobs 5 \
+  --execute
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/GEMC_5.14_rgm_fall2021_Ar/Uniform_sample_enFD_4029MeV/lundfiles \
+  --num-jobs 4000 \
+  --execute
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/2N_Analysis_Reco_Samples/Uniform_samples/GEMC_5.14_rgm_fall2021_Ar/Uniform_sample_enFD_5986MeV/lundfiles \
+  --num-jobs 4000 \
+  --execute
+
+#########################################################################################
+# Uniform (e,e'pFD) sample Slurm submission
+#########################################################################################
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_epFD_2070MeV/lundfiles \
+  --num-jobs 5 \
+  --execute
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_epFD_4029MeV/lundfiles \
+  --num-jobs 5 \
+  --execute
+
+source run.csh \
+  --workflow submit \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_epFD_5986MeV/lundfiles \
+  --num-jobs 5 \
+  --execute
