@@ -99,7 +99,7 @@ source run.csh \
   --output runs/physical
 ```
 
-The converter copies supported GST truth, samples only the vertex, and records the unsanitized provenance in the manifest. `q2-cut` labels the upstream selection; the converter does not apply a Q² cut. This 6 GeV carbon example uses the four-foil target; the small and large one-foil targets belong to 2 and 4 GeV running, with run 15733 as the small-foil 4 GeV exception.[^sportes-2026-rgm][^rgm-analysis-note]
+The converter copies supported GST truth, samples only the vertex, and records the unsanitized provenance in the manifest. `q2-cut` labels the upstream selection; the converter does not apply a Q² cut. This 6 GeV carbon example uses the four-foil target; the small and large one-foil targets belong to 2 and 4 GeV running, with run 15733 as the small-foil 4 GeV exception[^sportes-2026-rgm][^rgm-analysis-note].
 
 ## Direct executable help and execution
 

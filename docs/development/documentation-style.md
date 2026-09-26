@@ -16,6 +16,16 @@ The shared palette values are defined only in `src/launcher/environment/set_colo
 
 External and archived files are excluded from edits: `legacy/`, `src/lund-generation/external/targets.h`, `src/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Maintained test adapters can explain how they read external sources and create isolated reference fixtures. Repository instructions are recorded in `AGENTS.md`.
 
+## Citations and references
+
+Use `docs/references.bib` to identify the maintained BibTeX key and citation details. Markdown pages use footnote citations that render in GitHub and the generated wiki; they do not show raw LaTeX `\cite{...}` commands and do not send readers to the bibliography file. Put each citation marker directly after the text it supports and before the closing punctuation:
+
+```markdown
+This statement is supported by the target note[^sportes-2026-rgm].
+```
+
+Place the complete footnote definition at the bottom of every page that uses it. Copy its author, title, institution, report number, date and URL from the matching BibTeX entry, and update both together when those details change.
+
 ## Build and JSON configuration
 
 Maintained `CMakeLists.txt` files use comment-based description, purpose, workflow, input/output and failure notes, plus named `# region` / `# endregion` sections. The comments explain target dependencies, optional workflows, generated files and installation boundaries without changing CMake commands.
