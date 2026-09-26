@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
         samples::convertPhysical(samples::RunConfig::parse(argc, argv, uniform));
         return 0;
     } catch (const std::exception& error) {
-        std::cerr << env::ERROR_COLOR << "Error: " << env::RESET_COLOR << error.what() << '\n';
+        std::cerr << env::ERROR_COLOR << "Error:" << env::RESET_COLOR << ' ' << error.what() << '\n';
         return 1;
     }
 }

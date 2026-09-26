@@ -35,7 +35,7 @@
 if ( -f ./src/launcher/presentation/set_colors.csh ) then
     source ./src/launcher/presentation/set_colors.csh
 else
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}the following file does not exist: ./src/launcher/presentation/set_colors.csh\n"
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} the following file does not exist: ./src/launcher/presentation/set_colors.csh\n"
     exit 1
 endif
 

@@ -111,7 +111,7 @@ endif
 
 # Require both Git data and this project's workflow driver so cleanup cannot target another directory.
 if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
 
     # Return through the shared block so a sourced shell stays open.
     set CLAS12_SAMPLE_STATUS = 1
@@ -128,7 +128,7 @@ if ($#argv == 1) then
 endif
 
 if ($#argv == 0) then
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}source run.csh requires an explicit workflow."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} source run.csh requires an explicit workflow."
     echo ""
     echo "Create a uniform LUND sample:"
     echo '  source run.csh --workflow create-lund --source uniform \'
@@ -222,7 +222,7 @@ if ($CLAS12_SAMPLE_STATUS == 0) then
         source src/launcher/presentation/set_colors.csh
         set CLAS12_SAMPLE_STATUS = $status
     else
-        echo "${ERROR_COLOR}Error: ${RESET_COLOR}the synchronized checkout is missing src/launcher/presentation/set_colors.csh."
+        echo "${ERROR_COLOR}Error:${RESET_COLOR} the synchronized checkout is missing src/launcher/presentation/set_colors.csh."
         set CLAS12_SAMPLE_STATUS = 1
     endif
 endif
@@ -234,7 +234,7 @@ if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0) then
         set CLAS12_SAMPLE_STATUS = $status
         if ($?_clas12_environment_status) unset _clas12_environment_status
     else
-        echo "${ERROR_COLOR}Error: ${RESET_COLOR}the synchronized checkout is missing src/launcher/environment/set_environment.csh."
+        echo "${ERROR_COLOR}Error:${RESET_COLOR} the synchronized checkout is missing src/launcher/environment/set_environment.csh."
         set CLAS12_SAMPLE_STATUS = 1
     endif
 endif

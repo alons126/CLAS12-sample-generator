@@ -80,7 +80,7 @@ RESET_COLOR = os.environ.get('RESET_COLOR', '').replace(r'\033', '\033')
 def print_error(message):
     """Print one prefix-free message with the standard colored error label."""
 
-    print(f'{ERROR_COLOR}Error: {RESET_COLOR}{message}', file=sys.stderr)
+    print(f'{ERROR_COLOR}Error:{RESET_COLOR} {message}', file=sys.stderr)
 # endregion
 
 # Submission record ----------------------------------------------------------
@@ -298,12 +298,12 @@ class Report:
     def error(self, message):
         """Print one prefix-free message with the standard colored error label."""
 
-        self.text('{ERROR}Error: {RESET}' + str(message))
+        self.text('{ERROR}Error:{RESET} ' + str(message))
 
     def warning(self, message):
         """Print one prefix-free message with the standard colored warning label."""
 
-        self.text('{WARNING}Warning: {RESET}' + str(message))
+        self.text('{WARNING}Warning:{RESET} ' + str(message))
 
     def banner(self, title, main=False):
         """Print a main or subsection banner.

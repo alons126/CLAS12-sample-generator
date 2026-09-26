@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
         return 0;
     } catch (const std::exception& error) {
         // Reset the color before the error text and return failure.
-        std::cerr << env::ERROR_COLOR << "Error: " << env::RESET_COLOR << error.what() << '\n';
+        std::cerr << env::ERROR_COLOR << "Error:" << env::RESET_COLOR << ' ' << error.what() << '\n';
 
         return 1;
     }

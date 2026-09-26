@@ -57,13 +57,13 @@ endforeach()
 # project_fatal_error:
 #   Print one prefix-free stopping message with the standard error label and stop configuration.
 function(project_fatal_error message_text)
-    message(FATAL_ERROR "${ERROR_COLOR}Error: ${RESET_COLOR}${message_text}")
+    message(FATAL_ERROR "${ERROR_COLOR}Error:${RESET_COLOR} ${message_text}")
 endfunction()
 
 # project_warning:
 #   Print one prefix-free non-stopping message with the standard warning label.
 function(project_warning message_text)
-    message(WARNING "${WARNING_COLOR}Warning: ${RESET_COLOR}${message_text}")
+    message(WARNING "${WARNING_COLOR}Warning:${RESET_COLOR} ${message_text}")
 endfunction()
 # endregion
 

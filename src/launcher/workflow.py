@@ -94,7 +94,7 @@ RESET_COLOR = os.environ.get("RESET_COLOR", "").replace(r"\033", "\033")
 # Error presentation ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Error presentation
-ERROR_PREFIX = f'{ERROR_COLOR}Error: {RESET_COLOR}'
+ERROR_PREFIX = f'{ERROR_COLOR}Error:{RESET_COLOR} '
 
 WORKFLOW_GUIDANCE = """Choose one of these forms:
   source run.csh --workflow create-lund --source uniform \\

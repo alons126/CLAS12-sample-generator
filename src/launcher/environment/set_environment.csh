@@ -37,11 +37,11 @@ if (-f ./src/launcher/presentation/set_colors.csh) then
     source ./src/launcher/presentation/set_colors.csh
 
     if ($status != 0) then
-        echo "${ERROR_COLOR}Error: ${RESET_COLOR}failed to load src/launcher/presentation/set_colors.csh."
+        echo "${ERROR_COLOR}Error:${RESET_COLOR} failed to load src/launcher/presentation/set_colors.csh."
         goto clas12_environment_finish
     endif
 else
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}the following file does not exist: ./src/launcher/presentation/set_colors.csh"
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} the following file does not exist: ./src/launcher/presentation/set_colors.csh"
     goto clas12_environment_finish
 endif
 # endregion
@@ -84,7 +84,7 @@ unsetenv ANALYSIS_HOSTNAME
 
 set _clas12_hostname = `hostname`
 if ($status != 0 || "$_clas12_hostname" == "") then
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}failed to read the host name."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} failed to read the host name."
     goto clas12_environment_finish
 endif
 setenv ANALYSIS_HOSTNAME "$_clas12_hostname"

@@ -36,7 +36,7 @@ if ( -f ./src/launcher/presentation/set_banners.csh ) then
     source ./src/launcher/presentation/set_banners.csh
     echo
 else
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}the following file does not exist: ./src/launcher/presentation/set_banners.csh\n"
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} the following file does not exist: ./src/launcher/presentation/set_banners.csh\n"
     exit 1
 endif
 
@@ -55,13 +55,13 @@ echo ""
 
 git rev-parse --show-toplevel
 if ( $status != 0 ) then
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}Cannot identify the current Git worktree."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} Cannot identify the current Git worktree."
     exit 1
 endif
 
 git clean -fxd -e build/ -e build
 if ( $status != 0 ) then
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}Git cleanup failed. Aborting update script."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} Git cleanup failed. Aborting update script."
     exit 1
 endif
 
@@ -74,7 +74,7 @@ echo ""
 
 git reset --hard
 if ( $status != 0 ) then
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}Git reset failed. Aborting update script."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} Git reset failed. Aborting update script."
     exit 1
 endif
 
@@ -82,21 +82,21 @@ git pull
 
 if ( $status != 0 ) then
     echo ""
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}git pull failed. Aborting update script."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} git pull failed. Aborting update script."
     echo ""
     exit 1
 endif
 
 git submodule sync --recursive
 if ( $status != 0 ) then
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}git submodule sync failed. Aborting update script."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} git submodule sync failed. Aborting update script."
     exit 1
 endif
 
 git submodule update --init --recursive
 if ( $status != 0 ) then
     echo ""
-    echo "${ERROR_COLOR}Error: ${RESET_COLOR}git submodule update failed. Aborting update script."
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} git submodule update failed. Aborting update script."
     echo ""
     exit 1
 endif

@@ -48,7 +48,7 @@ RESET_COLOR = os.environ.get("RESET_COLOR", "").replace(r"\033", "\033")
 def print_error(message):
     """Print one prefix-free message with the standard colored error label."""
 
-    print(f"{ERROR_COLOR}Error: {RESET_COLOR}{message}", file=sys.stderr)
+    print(f"{ERROR_COLOR}Error:{RESET_COLOR} {message}", file=sys.stderr)
 
 class WikiArgumentParser(argparse.ArgumentParser):
     """Render command-line failures with the standard colored error prefix."""
