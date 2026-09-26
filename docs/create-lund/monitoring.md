@@ -2,15 +2,15 @@
 
 ## 1. Scope and output file
 
-Monitoring is produced only by uniform LUND generation. Physical event-generator conversion copies supported truth particles into LUND and creates no ROOT monitoring file, PDF, or PNG.
+Monitoring is produced only by uniform LUND creation. Physical event-generator conversion copies supported truth particles into LUND and creates no ROOT monitoring file, PDF, or PNG.
 
 Each uniform run stores every monitoring histogram exactly once in:
 
 ```text
-lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root
+lundfiles/lund-creation-monitoring/<prefix>_monitoring_plots.root
 ```
 
-`UniformMonitoring` is implemented beside the generator in [`src/lund-generation/uniform-lund-creator/`](../../src/lund-generation/uniform-lund-creator). There is no separate shared monitoring layer because physical conversion does not consume it.
+`UniformMonitoring` is implemented beside the generator in [`src/lund-creation/uniform-lund-creator/`](../../src/lund-creation/uniform-lund-creator). There is no separate shared monitoring layer because physical conversion does not consume it.
 
 ## 2. Legacy plot contract
 
@@ -52,7 +52,7 @@ The region-bearing particle token is used consistently in momentum, theta, phi, 
 Every uniform generation run renders the same histograms stored in the ROOT file into:
 
 ```text
-lundfiles/lund-gen-monitoring/MonitoringPlotsPath/
+lundfiles/lund-creation-monitoring/MonitoringPlotsPath/
 ├── Uniform_<sample-label>_plots_<beam>MeV.pdf
 ├── 1_<histogram-name>.png
 ├── 2_<histogram-name>.png

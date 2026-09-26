@@ -14,7 +14,7 @@ source run.csh --workflow create-lund --source physical \
 
 The executable installs built-in defaults, reads the named profile, then applies explicit `--key value` overrides. Unknown and repeated keys fail. Blank lines and lines beginning with `#` are ignored; inline comments, sections, quoting, and environment expansion are unsupported. Every checked-in profile groups its values under comment-only explanation sections covering their purpose, consumers, units, derived behavior, output contract, and relevant validation limits.
 
-Profiles normally specify only `rgm-target`. The maintained target catalog first resolves its vertex geometry, A/Z metadata, and default GEMC target variation. Explicit `target`, `A`, `Z`, or `gemc-target-variation` settings are optional overrides applied afterward and should appear only when the run intentionally departs from the selected identity. All resolved values are recorded in `lundfiles/lund-gen-monitoring/lund-gen-log.json` even when they are absent from the profile.
+Profiles normally specify only `rgm-target`. The maintained target catalog first resolves its vertex geometry, A/Z metadata, and default GEMC target variation. Explicit `target`, `A`, `Z`, or `gemc-target-variation` settings are optional overrides applied afterward and should appear only when the run intentionally departs from the selected identity. All resolved values are recorded in `lundfiles/lund-creation-monitoring/lund-creation-log.json` even when they are absent from the profile.
 
 ## Uniform production matrix
 

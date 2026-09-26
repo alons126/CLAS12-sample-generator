@@ -40,7 +40,7 @@ The resolved uniform run is written below `runs/first-electron/Uniform_sample_1e
 
 LUND output always preserves the established text conventions. Electron, proton, neutron, and charged-pion masses come from the external target source; photons are massless. Production momentum defaults are mixed p/1-p for the 1e electron and charged hadrons, and uniform p for neutrons. Sampled hadron momentum always extends to the beam energy; fixed 1 GeV/c momentum is a neutron-only option. Select electron–hadron samples with `--channel eh --hadron proton|neutron|pip|pim --hadron-region FD|CD`.
 
-Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-gen-monitoring/lund-gen-log.json` to see the resolved settings, output counts, and full configure-time Git information. LUND text is under `lundfiles/`; uniform diagnostics are stored once in `lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root`. Physical conversion does not create monitoring histograms.
+Open `runs/first-electron/Uniform_sample_1e_5986MeV/lundfiles/lund-creation-monitoring/lund-creation-log.json` to see the resolved settings, output counts, and full configure-time Git information. LUND text is under `lundfiles/`; uniform diagnostics are stored once in `lundfiles/lund-creation-monitoring/<prefix>_monitoring_plots.root`. Physical conversion does not create monitoring histograms.
 
 ## Documentation
 
@@ -57,9 +57,9 @@ Start at the [documentation home](docs/index.md). It presents the two workflows 
 
 Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) remain available for the established production matrix.
 
-Maintained source is grouped first by workflow under `src/lund-generation/` and `src/slurm-submission/`; the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
+Maintained source is grouped first by workflow under `src/lund-creation/` and `src/slurm-submission/`; the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
 
-The project keeps two narrow, RG-M-derived update boundaries. `src/lund-generation/external/targets.h` is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted. `src/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived payload that keeps the source structure and usage pattern. Maintained adapters surround both files so later RG-M updates can be reviewed and incorporated without duplicating their geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
+The project keeps two narrow, RG-M-derived update boundaries. `src/lund-creation/external/targets.h` is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted. `src/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived payload that keeps the source structure and usage pattern. Maintained adapters surround both files so later RG-M updates can be reviewed and incorporated without duplicating their geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
 
 The original source trees are retained in `legacy/` for historical comparison. Their public repository baseline is the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0), which records the archived tree and the pinned Uniform submodule revision. `legacy/Uniform-sample-generator` remains a submodule of its independent upstream repository. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
 

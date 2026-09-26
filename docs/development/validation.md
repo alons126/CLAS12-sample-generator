@@ -6,7 +6,7 @@ Software behavior and detector-level scientific validation are separate responsi
 
 - **Physical-input cutoff:** before starting a follow-up file, conversion requires at least `events-per-file` inclusive input entries beginning with the current accepted entry. The first file is allowed through input exhaustion, and an exact final block is never interrupted after it starts. This is an input-entry cutoff, not an accepted-event calculation.
 - **Random state:** archived `TRandom3(0)` runs cannot be reconstructed from a seed that was never recorded. Use explicit nonzero seeds when repeatability is required.
-- **Mass source:** electron, proton, neutron, and charged-pion masses come from external [`targets.h`](../../src/lund-generation/external/targets.h); photons use exact zero.
+- **Mass source:** electron, proton, neutron, and charged-pion masses come from external [`targets.h`](../../src/lund-creation/external/targets.h); photons use exact zero.
 - **Neutral pions:** the maintained converter requires neutral pions to be decayed during upstream GENIE production and consumes the resulting photons. Residual PDG 111 entries are skipped because the converter does not invent missing decay kinematics.
 - **Production sampling:** the 1e and charged-hadron mixtures use the configured uniform-p/uniform-1/p prescription. Neutrons use uniform momentum, including the configured zero-to-beam range.
 - **Diagnostics:** monitoring is uniform-only and is stored once in `<prefix>_monitoring_plots.root`. Physical conversion creates no monitoring histograms.

@@ -19,7 +19,7 @@
 #   The current checkout, its configured Git remote/branch, and the exclusions enforced by the updater.
 #
 # Outputs:
-#   A synchronized disposable checkout. No build, LUND generation, or submission is started.
+#   A synchronized disposable checkout. No build, LUND creation, or submission is started.
 #
 # Failure:
 #   Repository identification, cleanup, reset, pull, or submodule failures propagate through the sourced

@@ -15,14 +15,14 @@ flowchart LR
     W --> F["LUND files and completion manifest"]
 ```
 
-Code shown in the diagram: [`event_generator_to_lund_converter_main.cpp`](../../src/lund-generation/apps/event_generator_to_lund_converter_main.cpp), [`RunConfig.h`](../../src/lund-generation/core/config/RunConfig.h), `convertPhysical()`, [`TargetGeometry.h`](../../src/lund-generation/core/geometry/TargetGeometry.h), and [`LundWriter.h`](../../src/lund-generation/core/lund/LundWriter.h).
+Code shown in the diagram: [`event_generator_to_lund_converter_main.cpp`](../../src/lund-creation/apps/event_generator_to_lund_converter_main.cpp), [`RunConfig.h`](../../src/lund-creation/core/config/RunConfig.h), `convertPhysical()`, [`TargetGeometry.h`](../../src/lund-creation/core/geometry/TargetGeometry.h), and [`LundWriter.h`](../../src/lund-creation/core/lund/LundWriter.h).
 
 ## 1. Define the adapter boundary
 
-Create a format-specific directory beneath `src/lund-generation/event-generator-to-lund-converter/`, for example:
+Create a format-specific directory beneath `src/lund-creation/event-generator-to-lund-converter/`, for example:
 
 ```text
-src/lund-generation/event-generator-to-lund-converter/
+src/lund-creation/event-generator-to-lund-converter/
 └── mygenerator-myformat/
     ├── MyGeneratorConverter.h
     └── MyGeneratorConverter.cpp
@@ -133,7 +133,7 @@ The explicit dispatcher is intentional. Do not introduce a registry or plugin li
 
 ## 6. Add build integration
 
-Create a source-specific library in `src/lund-generation/CMakeLists.txt`, link only its required parser/runtime dependencies, and link it privately into `PhysicalConversion`. Keep generator libraries out of `LundCore` so uniform-only builds do not acquire unrelated dependencies.
+Create a source-specific library in `src/lund-creation/CMakeLists.txt`, link only its required parser/runtime dependencies, and link it privately into `PhysicalConversion`. Keep generator libraries out of `LundCore` so uniform-only builds do not acquire unrelated dependencies.
 
 If the adapter needs a new optional build switch, document its interaction with the existing physical executable and ensure the executable is not built with a dispatcher branch whose adapter library is absent.
 

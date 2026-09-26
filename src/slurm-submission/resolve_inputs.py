@@ -16,7 +16,7 @@ Workflow:
 
 Inputs:
     One or more RUN/lundfiles directories, optional flat key = value configuration, CLI overrides,
-    and completed lund-gen-log.json manifests when available.
+    and completed lund-creation-log.json manifests when available.
 
 Outputs:
     Checked values for preview or execution. This file does not load software, clean output, run
@@ -323,7 +323,7 @@ def read_manifest(lund_dir):
     """
 
     # The final JSON exists only after success. A temporary file means creation was interrupted.
-    path = lund_dir / 'lund-gen-monitoring/lund-gen-log.json'
+    path = lund_dir / 'lund-creation-monitoring/lund-creation-log.json'
 
     if not path.exists():
         if path.with_suffix('.json.tmp').exists():
@@ -390,7 +390,7 @@ def resolve(lund_directory, explicit, root):
         raise ValueError(f'Unsafe simulation output directory: {run}')
 
     # Repository inputs cannot be simulation output directories.
-    for protected in (root / 'legacy', root / 'config/detector', root / 'src/slurm-submission/external', root / 'src/lund-generation/external'):
+    for protected in (root / 'legacy', root / 'config/detector', root / 'src/slurm-submission/external', root / 'src/lund-creation/external'):
         if run == protected or protected in run.parents:
             raise ValueError(f'Protected output directory: {run}')
 

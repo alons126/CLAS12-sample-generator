@@ -1,5 +1,5 @@
-# Corresponding generation commands: uniform-lund-generation.txt
-# Run on ifarm after the matching LUND generation finishes.
+# Corresponding creation commands: uniform-lund-creation.txt
+# Run on ifarm after the matching LUND creation finishes.
 # Each command submits only the first 5 LUND files (array 1-5), rather than all 40 files.
 # At 25000 events per file, that is 125000 events per sample; the manifest supplies the event limit.
 # GEMC defaults to 5.14; the manifest supplies sample metadata and detector defaults.

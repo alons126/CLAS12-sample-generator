@@ -14,7 +14,7 @@ Descriptions follow each component's actual responsibilities. Small accessors ne
 
 The shared palette values are defined only in `src/support/environment/set_colors.csh`. `src/support/environment.h` is the only maintained C++ color source: it maps the inherited `*_COLOR` values onto semantic constants. Other C++ files select those constants and must not contain literal ANSI escape definitions or fallback palettes.
 
-External and archived files are excluded from edits: `legacy/`, `src/lund-generation/external/targets.h`, `src/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Repository instructions are recorded in `AGENTS.md`.
+External and archived files are excluded from edits: `legacy/`, `src/lund-creation/external/targets.h`, `src/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Repository instructions are recorded in `AGENTS.md`.
 
 ## Citations and references
 

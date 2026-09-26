@@ -30,7 +30,7 @@ flowchart TD
     class MONITORING,LOCAL note;
 ```
 
-Code shown in the diagram: [`run.csh`](../run.csh), [`workflow.py`](../src/launcher/workflow.py), [`RunConfig.h`](../src/lund-generation/core/config/RunConfig.h), and [`LundWriter.h`](../src/lund-generation/core/lund/LundWriter.h).
+Code shown in the diagram: [`run.csh`](../run.csh), [`workflow.py`](../src/launcher/workflow.py), [`RunConfig.h`](../src/lund-creation/core/config/RunConfig.h), and [`LundWriter.h`](../src/lund-creation/core/lund/LundWriter.h).
 
 See [Create LUND files](create-lund/index.md) for configuration, source-specific behavior, examples, and output contracts.
 
@@ -94,4 +94,4 @@ The project does not run a physical event generator, derive acceptance maps, or 
 
 LUND creation reports the fully resolved run directory, then recursively replaces that exact directory when it already exists. Submission previews by default; `--execute` replaces simulation output directories while preserving LUND input. The ifarm checkout is intentionally disposable and is refreshed from Git before a real workflow. Read the relevant workflow page before using production paths.
 
-Every successful LUND run publishes `lundfiles/lund-gen-monitoring/lund-gen-log.json`. That manifest is the handoff from creation to submission and records resolved settings, software provenance, scanned/written counts, and the exact LUND file inventory.
+Every successful LUND run publishes `lundfiles/lund-creation-monitoring/lund-creation-log.json`. That manifest is the handoff from creation to submission and records resolved settings, software provenance, scanned/written counts, and the exact LUND file inventory.

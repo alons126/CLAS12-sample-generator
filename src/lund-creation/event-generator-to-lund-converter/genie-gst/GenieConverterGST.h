@@ -63,7 +63,7 @@ namespace samples {
  *   again and does not store it after returning.
  *
  * Outputs:
- *   No C++ value is returned. Success leaves split LUND files and lund-gen-log.json in the output
+ *   No C++ value is returned. Success leaves split LUND files and lund-creation-log.json in the output
  *   directory and prints the scanned and written event counts.
  *
  * Expected input:

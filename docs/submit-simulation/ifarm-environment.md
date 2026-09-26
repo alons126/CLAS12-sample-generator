@@ -76,7 +76,7 @@ There is no automatic `config/run.local.json`. The normal ifarm refresh removes 
 
 `workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/slurm-submission/setup_and_submit.csh` directly; its Python coordinator accepts `--lund-dir`, `--config` and CLI overrides without invoking the LUND build driver. See the [submission guide](guide.md).
 
-Building always invokes CMake dependency checking, so replacing an uncommitted `src/lund-generation/external/targets.h` is sufficient to trigger rebuilding.
+Building always invokes CMake dependency checking, so replacing an uncommitted `src/lund-creation/external/targets.h` is sufficient to trigger rebuilding.
 
 After transferring committed changes to the remote, a server refresh/build is:
 

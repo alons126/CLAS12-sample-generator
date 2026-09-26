@@ -13,7 +13,7 @@
  * Workflow:
  *   Print the setup -> check and replace the exact run directory -> open or rotate LUND files as needed
  *   -> write headers and particles in order -> let the source save monitoring -> close the active file
- *   -> write lund-gen-log.json.tmp -> rename it to lund-gen-log.json.
+ *   -> write lund-creation-log.json.tmp -> rename it to lund-creation-log.json.
  *
  * Written format:
  *   The LUND format uses fixed whitespace, precision, and uniform per-file IDs. Particle masses come
@@ -22,7 +22,7 @@
  *
  * Failure:
  *   Unsafe replacement targets are rejected before deletion. Stream and filesystem failures throw and
- *   may leave partial output for inspection; absence of lund-gen-log.json marks the run incomplete.
+ *   may leave partial output for inspection; absence of lund-creation-log.json marks the run incomplete.
  */
 
 #include "core/lund/LundWriter.h"
@@ -52,7 +52,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const bool uniform = workflow == "uniform";
     const auto output = std::filesystem::path(config.get("output"));
     const auto lund_dir = output / "lundfiles";
-    const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
+    const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
 
     // Print every label and value in the same one-line form.
     const auto print_value = [](const std::string& label, const auto& value) { std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << " " << value << "\n"; };
@@ -145,7 +145,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     print_value("Output prefix", config.get("prefix"));
     print_value("Run directory", output);
     print_value("LUND directory", lund_dir);
-    print_value("Completion manifest", diagnostics / "lund-gen-log.json");
+    print_value("Completion manifest", diagnostics / "lund-creation-log.json");
 
     if (uniform) {
         print_value("MC HIPO directory", output / "mchipo");
@@ -190,12 +190,12 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     }
 
     // write() opens the first LUND file, so construction cannot create an empty numbered file.
-    std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring");
+    std::filesystem::create_directories(directory_ / "lundfiles" / "lund-creation-monitoring");
 
     // Uniform runs prepare the folders later used by simulation, reconstruction, and plot output.
     if (workflow_ == "uniform") {
         for (const auto* child : {"mchipo", "reconhipo"}) { std::filesystem::create_directories(directory_ / child); }
-        std::filesystem::create_directories(directory_ / "lundfiles" / "lund-gen-monitoring" / "MonitoringPlotsPath");
+        std::filesystem::create_directories(directory_ / "lundfiles" / "lund-creation-monitoring" / "MonitoringPlotsPath");
     }
 }
 #pragma endregion
@@ -268,9 +268,9 @@ void LundWriter::finish(std::uint64_t scanned) {
     // Write a temporary log so readers never see a partly written final file.
     std::ofstream manifest;
     manifest.exceptions(std::ios::badbit | std::ios::failbit);
-    const auto monitoring_directory = directory_ / "lundfiles" / "lund-gen-monitoring";
-    const auto temporary_log = monitoring_directory / "lund-gen-log.json.tmp";
-    const auto completed_log = monitoring_directory / "lund-gen-log.json";
+    const auto monitoring_directory = directory_ / "lundfiles" / "lund-creation-monitoring";
+    const auto temporary_log = monitoring_directory / "lund-creation-log.json.tmp";
+    const auto completed_log = monitoring_directory / "lund-creation-log.json";
     manifest.open(temporary_log);
 
     // Record the log version, project build, Git state, ROOT version, targets.h hash, and event

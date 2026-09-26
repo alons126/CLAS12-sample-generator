@@ -13,7 +13,7 @@
  * Workflow:
  *   Construct from a checked RunConfig -> safely replace the exact run directory -> create its folders
  *   -> write nonempty Event records into split LUND files -> let the caller save monitoring -> finish()
- *   closes the files and renames the temporary manifest to lund-gen-log.json.
+ *   closes the files and renames the temporary manifest to lund-creation-log.json.
  *
  * Written data:
  *   Particle momentum is in GeV/c, mass is in GeV/c², derived energy and beam energy are in GeV, and
@@ -47,7 +47,7 @@ namespace samples {
  *
  * Use:
  *   Construct it with checked settings -> call write() for events in order -> save monitoring outside
- *   this class -> call finish() once to publish `lund-gen-log.json`.
+ *   this class -> call finish() once to publish `lund-creation-log.json`.
  *
  * Ownership and lifetime:
  *   The caller owns RunConfig and must keep it alive longer than the writer. This object owns its label,
@@ -59,7 +59,7 @@ namespace samples {
  *
  * Failure:
  *   Construction or I/O failures throw. A failed run may intentionally leave its partial directory and
- *   LUND files for inspection, but the run is incomplete because only finish() creates lund-gen-log.json.
+ *   LUND files for inspection, but the run is incomplete because only finish() creates lund-creation-log.json.
  */
 class LundWriter {
    public:
@@ -95,7 +95,7 @@ class LundWriter {
      * @param scanned Number of source events examined. It equals count() for uniform generation and may
      *                exceed count() when physical conversion rejects unsupported input interactions.
      * @throws std::exception If manifest writing, stream closure, or final rename fails.
-     * @note Call only after required monitoring is saved; lund-gen-log.json marks the run as complete.
+     * @note Call only after required monitoring is saved; lund-creation-log.json marks the run as complete.
      */
     void finish(std::uint64_t scanned);
 

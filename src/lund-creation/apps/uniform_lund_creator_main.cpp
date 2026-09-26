@@ -4,7 +4,7 @@
 
 /**
  * @file uniform_lund_creator_main.cpp
- * @brief Starts uniform LUND generation from the command line.
+ * @brief Starts uniform LUND creation from the command line.
  *
  * Purpose:
  *   Read command-line settings, run uniform generation, and return a process status.

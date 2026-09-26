@@ -116,7 +116,7 @@ build/debug/apps/uniform-lund-creator \
 
 Direct executable paths are interpreted from the caller's current directory. The `run.csh` workflow instead anchors paths to the repository root and supplies the ifarm synchronization/build stages.
 
-For the full production matrix, see the checked-in [uniform generation command list](../../tutorials/uniform-samples/uniform-lund-generation.txt).
+For the full production matrix, see the checked-in [uniform creation command list](../../tutorials/uniform-samples/uniform-lund-creation.txt).
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
 

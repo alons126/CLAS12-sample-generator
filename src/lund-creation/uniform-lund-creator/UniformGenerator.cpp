@@ -237,7 +237,7 @@ void generateUniform(const RunConfig& c) {
 #pragma region /* Run completion */
     // Save the ROOT, PDF, and PNG plots before writing the completed run log.
     const auto output = std::filesystem::path(c.get("output"));
-    const auto diagnostics = output / "lundfiles" / "lund-gen-monitoring";
+    const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
     const auto monitoring_root = diagnostics / (c.get("prefix") + "_monitoring_plots.root");
     const auto plot_directory = diagnostics / "MonitoringPlotsPath";
     const auto plot_channel = sampleLabel(c);

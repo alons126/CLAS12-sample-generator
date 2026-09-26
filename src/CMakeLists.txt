@@ -7,7 +7,7 @@
 #   Entry point for the source subdirectories.
 # 
 # Purpose:
-#   Keep LUND generation, Slurm submission, the launcher, and project-wide support in clear directories.
+#   Keep LUND creation, Slurm submission, the launcher, and project-wide support in clear directories.
 # 
 # Workflow:
 #   Root configuration -> LUND targets -> submission coordinators -> launcher; shared support is consumed directly.
@@ -24,7 +24,7 @@
 # Workflow source trees --------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Workflow source trees
-add_subdirectory(lund-generation)
+add_subdirectory(lund-creation)
 add_subdirectory(slurm-submission)
 add_subdirectory(launcher)
 # endregion

@@ -76,7 +76,7 @@ def git_information(root):
     """Read Git details without changing the checkout.
 
     Purpose:
-        Record the same main Git details as LUND generation.
+        Record the same main Git details as LUND creation.
 
     Args:
         root: Verified project checkout passed to Git as its working directory.

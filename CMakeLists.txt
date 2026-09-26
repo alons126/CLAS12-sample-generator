@@ -129,8 +129,8 @@ if(SAMPLE_GIT_REPOSITORY MATCHES "^(https://github\\.com/|git@github\\.com:)(.+)
     set(SAMPLE_GIT_FILES_URL "https://github.com/${github_path}/tree/${SAMPLE_GIT_COMMIT_HASH}")
 endif()
 # Reconfigure when the external geometry file changes so its new hash is recorded.
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h")
-file(SHA256 "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h" SAMPLE_TARGETS_SHA256)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/lund-creation/external/targets.h")
+file(SHA256 "${PROJECT_SOURCE_DIR}/src/lund-creation/external/targets.h" SAMPLE_TARGETS_SHA256)
 configure_file(src/support/Version.h.in generated/Version.h @ONLY)
 # endregion
 
