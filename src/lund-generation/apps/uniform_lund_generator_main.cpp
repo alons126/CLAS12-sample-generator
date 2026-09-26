@@ -46,7 +46,7 @@
 #include <iostream>
 #include <string>
 
-#include "core/support/environment.h"
+#include "support/environment.h"
 #include "uniform-lund-generator/UniformGenerator.h"
 
 namespace env = environment;

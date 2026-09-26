@@ -4,7 +4,7 @@
 
 /**
  * @file environment.h
- * @brief Reads the terminal colors set by the launcher.
+ * @brief Reads the project-wide terminal colors set by the shell support layer.
  *
  * Purpose:
  *   Give C++ output clear color names while keeping the actual color values in set_colors.csh.
@@ -50,7 +50,7 @@ namespace environment {
 
 #pragma region /* Environment decoding */
 /**
- * @brief Read one launcher color and make it ready for terminal output.
+ * @brief Read one project color and make it ready for terminal output.
  * @param variable Name of the `*_COLOR` environment variable to read.
  * @return The decoded color string, or an empty string when the variable is missing.
  * @note Replaces every written `\033` marker with one escape byte. All other characters stay unchanged.

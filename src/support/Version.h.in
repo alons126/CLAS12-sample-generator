@@ -4,7 +4,7 @@
 
 /**
  * @file Version.h.in
- * @brief CMake template for build and Git details stored in run logs.
+ * @brief Defines project-wide build and Git details for generated provenance.
  *
  * Purpose:
  *   Give LUND programs the project version, Git state, source path, and targets.h hash.

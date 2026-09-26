@@ -2,17 +2,17 @@
 
 ## Source layout
 
-Maintained code is grouped first by the two user-facing workflows. `src/lund-generation/` owns LUND creation, while `src/slurm-submission/` owns ifarm job submission. `src/launcher/` contains the shared entry-point machinery that selects either workflow. Inside LUND generation, responsibility folders remain ownership boundaries while `LundCore` compiles the small shared layers together.
+Maintained code is grouped first by the two user-facing workflows. `src/lund-generation/` owns LUND creation, while `src/slurm-submission/` owns ifarm job submission. `src/launcher/` contains the entry-point machinery that selects either workflow, and `src/support/` contains environment, presentation, and build-provenance support shared across those boundaries. Inside LUND generation, responsibility folders remain ownership boundaries while `LundCore` compiles the small shared layers together.
 
 | Directory | Responsibility |
 | --- | --- |
 | `src/lund-generation/` | Both uniform and physical LUND creation, their entry points, and external geometry |
 | `src/slurm-submission/` | Sourced setup/submission script and external GEMC payload |
-| `src/launcher/` | Shared Python dispatcher and sourced-shell support used by `run.csh` |
+| `src/launcher/` | Python dispatcher and checkout updater used by `run.csh` |
+| `src/support/` | Project-wide shell environment, terminal printers, C++ color adapter, and generated-version template |
 | `src/lund-generation/core/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
 | `src/lund-generation/core/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
 | `src/lund-generation/core/geometry/` | Adapt the external target definitions to one sampled interaction vertex per event |
-| `src/lund-generation/core/support/` | Terminal presentation and the generated-version template |
 | `src/lund-generation/uniform-lund-generator/` | Produce deliberately unphysical acceptance-map events and their monitoring |
 | `src/lund-generation/event-generator-to-lund-converter/` | Dispatch a physical input source to its event-generator/format adapter |
 | `src/lund-generation/event-generator-to-lund-converter/genie-gst/` | Read GENIE GST as the currently implemented physical adapter |
@@ -27,7 +27,7 @@ The architecture is intentionally modestly modular around two files obtained fro
 
 | Target | Source | Responsibility |
 | --- | --- | --- |
-| `LundCore` | `src/lund-generation/core/config/`, `src/lund-generation/core/lund/`, `src/lund-generation/core/geometry/`, `src/lund-generation/core/support/` | Shared configuration-to-manifest LUND pipeline |
+| `LundCore` | `src/lund-generation/core/config/`, `src/lund-generation/core/lund/`, `src/lund-generation/core/geometry/` | Shared configuration-to-manifest LUND pipeline |
 | `UniformGeneration` | `src/lund-generation/uniform-lund-generator/` | Uniform sampling prescriptions and uniform-only monitoring |
 | `GenieGstConversion` | `src/lund-generation/event-generator-to-lund-converter/genie-gst/` | GENIE GST input adapter |
 | `PhysicalConversion` | `src/lund-generation/event-generator-to-lund-converter/` | Select the configured physical event-generator/format adapter |

@@ -64,7 +64,7 @@ Use module/function docstrings and `# region` / `# endregion` comment markers fo
 
 For maintained Python, leave exactly one blank line after a function or method docstring before executable code. Separate a `for`, `while`, `if`/`elif`/`else`, `try`/`except`/`finally`, or `with` block from preceding and following unrelated statements with exactly one blank line; keep the clauses of one compound statement together. Apply the same spacing to distinct return, raise, assignment/definition, and function-call stages. Consecutive statements that form one logical block, such as related assignments, calls, or a guard and its immediate return or raise, stay together. Do not insert blank lines at the beginning or end of an indented suite or between a comment and the code it explains. Preserve Python's required indentation and run syntax checks after spacing edits.
 
-Use `src/lund-generation/core/support/environment.h` as the only source of ANSI color definitions in maintained C++. Other C++ files may select its semantic constants but must not define terminal escape sequences locally. Shell and Python launchers use their separate environment-variable palette because they cannot include a C++ header.
+Use `src/support/environment.h` as the only source of ANSI color definitions in maintained C++. Other C++ files may select its semantic constants but must not define terminal escape sequences locally. Shell and Python launchers use the environment-variable palette in `src/support/environment/` because they cannot include a C++ header.
 
 # Project architecture and scope
 

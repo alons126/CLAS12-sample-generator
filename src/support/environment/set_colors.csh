@@ -20,7 +20,7 @@
 #   None. Re-sourcing always replaces stale values.
 # 
 # Outputs:
-#   Exported `*_COLOR` variables remain available to run.csh, printer helpers, and child processes.
+#   Exported `*_COLOR` variables remain available to run.csh, shared printer helpers, and child processes.
 #
 # Usage:
 #   Source this file before printing with a `*_COLOR` variable.

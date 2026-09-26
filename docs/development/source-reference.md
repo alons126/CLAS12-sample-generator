@@ -40,11 +40,11 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 The imported header is kept as an exact RG-M copy, while `src/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived script that retains its source structure and usage pattern. The maintained adapters around both files provide narrow update points for later RG-M releases; detailed provenance and replacement guidance are in [external inputs](../concepts/external-inputs.md) and the [worker reference](../submit-simulation/worker-reference.md).
 
-### Support (`src/lund-generation/core/support/`)
+### Project support (`src/support/`)
 
-[set_colors.csh](../../src/launcher/environment/set_colors.csh) owns the shared ANSI palette and exports it through `*_COLOR` environment variables. [environment.h](../../src/lund-generation/core/support/environment.h) decodes those inherited values once for C++ and exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. A C++ executable launched without the shared environment uses empty color strings, so its output remains readable without introducing a second fallback palette.
+[set_colors.csh](../../src/support/environment/set_colors.csh) owns the shared ANSI palette and exports it through `*_COLOR` environment variables. The other scripts in [`src/support/environment/`](../../src/support/environment/) prepare shared banners and the checkout/host environment used across workflow boundaries. [environment.h](../../src/support/environment.h) decodes the inherited palette once for C++ and exposes immutable semantic colors for errors, completion, system messages, information, warnings, and reset. Application entry points, workflow summaries, replacement warnings, and completion messages reference those names instead of defining escape sequences locally. A C++ executable launched without the shared environment uses empty color strings, so its output remains readable without introducing a second fallback palette.
 
-[Version.h.in](../../src/lund-generation/core/support/Version.h.in) embeds project version, target-header SHA-256, and full configure-time Git repository/commit/status/tracking metadata into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
+The scripts in [`src/support/printers/`](../../src/support/printers/) render the optional startup and final-status artwork used by the top-level dispatcher. [Version.h.in](../../src/support/Version.h.in) embeds project version, target-header SHA-256, and full configure-time Git repository/commit/status/tracking metadata into the generated `Version.h` used by the manifest. This is build provenance, not a runtime Git dependency.
 
 ## 3. Uniform-to-LUND implementation
 

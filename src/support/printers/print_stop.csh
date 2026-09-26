@@ -6,7 +6,7 @@
 
 # print_stop.csh -----------------------------------------------------------------------------------
 # Description:
-#   Print the orange "operation cancelled" banner used when a maintained workflow stops early.
+#   Print the orange "operation cancelled" banner used when a project workflow stops early.
 # 
 # Purpose:
 #   Clearly mark a stopped workflow in the terminal or ifarm log.

@@ -32,10 +32,10 @@
 
 # region Banner setup
 
-if ( -f ./src/launcher/environment/set_colors.csh ) then
-    source ./src/launcher/environment/set_colors.csh
+if ( -f ./src/support/environment/set_colors.csh ) then
+    source ./src/support/environment/set_colors.csh
 else
-    echo "\033[31mError:\033[0m the following file does not exist: ./src/launcher/environment/set_colors.csh\n"
+    echo "\033[31mError:\033[0m the following file does not exist: ./src/support/environment/set_colors.csh\n"
     exit 1
 endif
 

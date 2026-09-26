@@ -24,7 +24,7 @@
 #   Writes only to standard output. run.csh treats this helper as optional presentation.
 #
 # Usage:
-#   Run from the repository launcher when a startup banner is wanted.
+#   Run from the repository root when a startup banner is wanted.
 # 
 # Failure behavior:
 #   A printer failure must not determine whether synchronization, build, or submission proceeds.

@@ -42,8 +42,8 @@
 #include <iostream>
 #include <string>
 
-#include "core/support/environment.h"
 #include "event-generator-to-lund-converter/PhysicalConverter.h"
+#include "support/environment.h"
 
 namespace env = environment;
 

@@ -26,7 +26,7 @@
 
 # region Shared LUND pipeline
 # Purpose:
-#     Build the shared configuration, geometry, LUND writing, and support code as one library.
+#     Build the shared configuration, geometry, and LUND writing code as one library.
 add_library(
     LundCore STATIC
     core/config/RunConfig.cpp
@@ -34,7 +34,7 @@ add_library(
     core/geometry/TargetGeometry.cpp
     core/lund/Particle.cpp
     core/lund/LundWriter.cpp)
-target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${PROJECT_BINARY_DIR}/generated)
+target_include_directories(LundCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/src PRIVATE ${PROJECT_BINARY_DIR}/generated)
 target_link_libraries(LundCore PUBLIC ROOT::Core ROOT::Physics PRIVATE Threads::Threads ROOT::RIO)
 # endregion
 

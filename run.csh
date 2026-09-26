@@ -179,8 +179,8 @@ endif
 pushd "$_clas12_root" > /dev/null
 
 # Missing color or logo helpers do not stop the workflow.
-if (-f src/launcher/environment/set_colors.csh) source src/launcher/environment/set_colors.csh
-if (-f src/launcher/printers/print_logo.csh) source src/launcher/printers/print_logo.csh
+if (-f src/support/environment/set_colors.csh) source src/support/environment/set_colors.csh
+if (-f src/support/printers/print_logo.csh) source src/support/printers/print_logo.csh
 
 # Tests may explicitly skip the server update. Normal ifarm use always updates.
 set _clas12_skip_server_sync = 0
@@ -210,18 +210,18 @@ endif
 
 # Reload colors because the update may have changed their names or values.
 if ($CLAS12_SAMPLE_STATUS == 0) then
-    if (-f src/launcher/environment/set_colors.csh) then
-        source src/launcher/environment/set_colors.csh
+    if (-f src/support/environment/set_colors.csh) then
+        source src/support/environment/set_colors.csh
         set CLAS12_SAMPLE_STATUS = $status
     else
-        echo "Error: the synchronized checkout is missing src/launcher/environment/set_colors.csh."
+        echo "Error: the synchronized checkout is missing src/support/environment/set_colors.csh."
         set CLAS12_SAMPLE_STATUS = 1
     endif
 endif
 
 # Source the environment so its settings reach the Python driver and child programs.
-if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/launcher/environment/set_environment.csh) then
-    source src/launcher/environment/set_environment.csh
+if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/support/environment/set_environment.csh) then
+    source src/support/environment/set_environment.csh
     set CLAS12_SAMPLE_STATUS = $status
 endif
 # endregion

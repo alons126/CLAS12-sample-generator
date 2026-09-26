@@ -6,7 +6,7 @@
 
 # set_environment.csh ----------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Set the launcher environment for the current checkout and host.
+#   Set the shared project environment for the current checkout and host.
 #
 # Purpose:
 #   Tell later scripts where the project is and whether they are running on Jefferson Lab ifarm.
@@ -33,7 +33,7 @@
 # Load the synchronized palette before its first use. This is deliberately repeated even when
 # run.csh already loaded colors: a Git update may have changed the palette contract while the parent
 # shell was still executing the previously sourced launcher revision.
-source ./src/launcher/environment/set_colors.csh
+source ./src/support/environment/set_colors.csh
 # endregion
 
 # Environment banner -----------------------------------------------------------------------------------------------------------------------------------------------------

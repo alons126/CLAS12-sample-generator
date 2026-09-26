@@ -32,7 +32,7 @@
 
 # region Color initialization
 # Load the palette even when this script is called directly.
-source ./src/launcher/environment/set_colors.csh
+source ./src/support/environment/set_colors.csh
 # endregion
 
 # Banner rendering ------------------------------------------------------------

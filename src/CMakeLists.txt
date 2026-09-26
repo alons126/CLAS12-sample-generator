@@ -7,10 +7,10 @@
 #   Entry point for the source subdirectories.
 # 
 # Purpose:
-#   Keep LUND generation, Slurm submission, and the shared launcher in separate directories.
+#   Keep LUND generation, Slurm submission, the launcher, and project-wide support in clear directories.
 # 
 # Workflow:
-#   Root configuration -> LUND targets -> submission coordinators -> shared launcher.
+#   Root configuration -> LUND targets -> submission coordinators -> launcher; shared support is consumed directly.
 # 
 # Inputs:
 #   Root workflow options and imported dependencies.

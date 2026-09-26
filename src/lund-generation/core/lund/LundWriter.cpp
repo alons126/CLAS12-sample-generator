@@ -38,7 +38,7 @@
 #include <stdexcept>
 
 #include "Version.h"
-#include "core/support/environment.h"
+#include "support/environment.h"
 
 namespace env = environment;
 
