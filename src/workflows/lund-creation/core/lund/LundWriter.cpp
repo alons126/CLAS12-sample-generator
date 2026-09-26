@@ -53,16 +53,15 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto output = std::filesystem::path(config.get("output"));
     const auto lund_dir = output / "lundfiles";
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
+    const auto summary_title = (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") + std::string(final ? " completion" : " setup");
 
     // Print every label and value in the same one-line form.
     const auto print_value = [](const std::string& label, const auto& value) { std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << " " << value << "\n"; };
 
     // Make setup and completion easy to find in long batch logs.
     std::cout << env::SYSTEM_COLOR << "\n====================================================================================================\n"
-              << "= "
-              << (uniform ? "Uniform sample generation                                                                           ="
-                          : "Physical generator to LUND conversion                                                               =")
-              << (final ? " completion\n" : " setup\n") << "====================================================================================================\n"
+              << "= " << summary_title << std::string(96 - summary_title.size(), ' ') << " =\n"
+              << "====================================================================================================\n"
               << env::RESET_COLOR;
 
     // Completion reports do not repeat setup values.
