@@ -59,12 +59,6 @@ source run.csh \
   --workflow create-lund \
   --source uniform \
   --config config/samples/uniform-epFD-2070MeV.conf \
-  --events 100000 \
-  --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
-source run.csh \
-  --workflow create-lund \
-  --source uniform \
-  --config config/samples/uniform-epFD-2070MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
