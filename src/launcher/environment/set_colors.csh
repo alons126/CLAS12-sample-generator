@@ -6,23 +6,28 @@
 
 # Terminal color environment --------------------------------------------------
 
+# Description:
+#   Define the terminal colors shared by maintained shell, Python, and C++ output.
+
 # region Terminal color environment
 # Purpose:
-#   Publish one shared ANSI color palette for sourced tcsh helpers and the Python workflow driver.
+#   Keep terminal color values in one shell file.
 # 
 # Workflow:
-#   Re-sourcing this file first removes same-named tcsh local variables, which otherwise take
-#   precedence over environment variables during `*_COLOR` expansion. It then replaces stale
-#   exported values. Shell output interprets the escape sequence, while workflow.py and the C++
-#   environment adapter convert the literal `\033` prefix before using the inherited environment.
+#   Remove old local and exported values -> export the current palette -> let child programs inherit it.
+#
+# Inputs:
+#   None. Re-sourcing always replaces stale values.
 # 
 # Outputs:
 #   Exported `*_COLOR` variables remain available to run.csh, printer helpers, and child processes.
+#
+# Usage:
+#   Source this file before printing with a `*_COLOR` variable.
 # 
 # Notes:
-#   SYSTEM_COLOR is the default heading color. RESET_COLOR must follow colored text so later terminal
-#   output does not inherit the style. Clearing both tcsh namespaces makes this file recover from a
-#   contaminated interactive shell. These assignments intentionally contain no terminal output.
+#   SYSTEM_COLOR is the normal heading color. RESET_COLOR stops color from leaking into later output.
+#   The file prints nothing.
 
 unset ERROR_COLOR COMPLETION_COLOR SYSTEM_COLOR INFO_COLOR WARNING_COLOR RESET_COLOR
 unsetenv ERROR_COLOR COMPLETION_COLOR SYSTEM_COLOR INFO_COLOR WARNING_COLOR RESET_COLOR

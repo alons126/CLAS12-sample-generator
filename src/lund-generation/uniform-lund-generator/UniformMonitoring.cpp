@@ -7,16 +7,16 @@
  * @brief Creates and saves monitoring plots for uniform samples.
  *
  * Purpose:
- *   Keep the established histogram order, bins, axes, canvas size, margins, text sizes, and drawing
- *   modes. Add clear FD/CD names for protons, neutrons, and charged pions. Store each histogram once.
+ *   Keep the established plot order and style. Add clear FD/CD names for each supported hadron, and
+ *   store every histogram once.
  *
  * Workflow:
  *   Create the histograms for one uniform channel -> fill them after each event is written -> apply the
  *   saved axis style -> write one ROOT file -> render the same plots as PDF and PNG files.
  *
  * Failure behavior:
- *   Missing particles, unsupported labels, ROOT I/O failures, and rendering filesystem failures throw.
- *   The caller saves monitoring before publishing the completed LUND-generation log.
+ *   Missing particles, unknown labels, ROOT file errors, and directory errors throw exceptions.
+ *   The caller saves the plots before writing the completed LUND run log.
  */
 
 #include "uniform-lund-generator/UniformMonitoring.h"
@@ -43,8 +43,8 @@ namespace samples {
  * @struct UniformMonitoring::Impl
  * @brief Stores the plots in fill and output order.
  *
- * Entry stores one histogram and the particle values used for its axes. An empty y_metric means the
- * histogram is one-dimensional. The order is electron TH1, hadron TH1, particle TH2, then correlations.
+ * Each Entry stores one histogram and the particle values used for its axes. An empty y_metric means a
+ * one-dimensional histogram. Entry order is also the output order.
  */
 struct UniformMonitoring::Impl {
     /** @struct Entry @brief One histogram and the particle values used to fill it. */
@@ -67,7 +67,7 @@ struct UniformMonitoring::Impl {
 
 namespace {
 
-/** @struct HadronLabel @brief Plain ROOT-name token and TLatex title token for one regional hadron. */
+/** @struct HadronLabel @brief Stores the ROOT name and displayed title for one regional hadron. */
 struct HadronLabel {
     std::string name;   ///< `pFD`, `nCD`, `pipFD`, or `pimCD`.
     std::string title;  ///< `pFD`, `nCD`, `#pi^{+}FD`, or `#pi^{-}CD`.
@@ -78,7 +78,7 @@ struct HadronLabel {
  *
  * @param pid Supported hadron PDG identifier.
  * @param region Detector-region suffix, normally `FD` or `CD`.
- * @return The plain histogram-name token and formatted title token.
+ * @return The plain histogram name and formatted title.
  * @throws std::runtime_error If pid does not identify a supported uniform-sample hadron.
  */
 HadronLabel hadronLabel(int pid, const std::string& region) {
@@ -99,7 +99,7 @@ HadronLabel hadronLabel(int pid, const std::string& region) {
 /**
  * @brief Read one monitored scalar from the first particle with the requested identity.
  *
- * @param event Event to read without changing its particle order or values.
+ * @param event Event to read without changing it.
  * @param pid PDG identifier of the particle to inspect.
  * @param metric Supported quantity name: `P`, `Theta`, `Phi`, `Vx`, `Vy`, or `Vz`.
  * @return Momentum in GeV/c, angle in degrees, or vertex coordinate in cm, as selected by metric.
@@ -162,8 +162,7 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
 
     const std::string region = sample_label.size() >= 2 && sample_label.compare(sample_label.size() - 2, 2, "CD") == 0 ? "CD" : "FD";
     const auto hadron = hadronLabel(hadron_pid, region);
-    // ROOT shows the object name in its statistics box. Use the complete sample label so the name shows
-    // the hadron and detector region, for example `Theta_pipCD_epipCD`.
+    // ROOT shows the object name in its statistics box. Include the hadron and detector region.
     const std::string& channel = sample_label;
     const std::string context = "(e,e'" + hadron.title + ") sample";
     const double theta_high = region == "CD" ? 150 : 50;
@@ -245,7 +244,7 @@ void UniformMonitoring::fill(const Event& event) {
 #pragma region /* Output and rendering */
 
 void UniformMonitoring::save(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
-    // Apply the axis style before writing so stored and rendered plots use the same text settings.
+    // Apply the axis style before writing so saved and drawn plots look the same.
     for (auto& entry : impl_->entries) {
         auto* histogram = entry.histogram.get();
         histogram->Sumw2();

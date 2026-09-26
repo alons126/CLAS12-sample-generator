@@ -2,16 +2,16 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Compare new outputs to controlled archived reference runs.
+"""Compare maintained output with controlled archived runs.
 
 Purpose:
-    Check exact LUND bytes, numerical histograms, and the physical-input cutoff during development.
+    Check exact LUND text, plot values, and the physical-input stopping rule.
 
 Workflow:
-    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+    CTest supplies the programs -> temporary reference runs create files -> comparisons report failures.
 
 Notes:
-    Test fixtures are isolated; external and legacy sources are read-only.
+    Tests use temporary files and keep external and archived sources unchanged.
 """
 
 import json
@@ -30,7 +30,7 @@ def uniform_output(root, channel, beam):
 # run --------------------------------------------------------------------
 # region run
 def run(*args):
-    """Run a parity-test command with captured diagnostics.
+    """Run one comparison command and capture its messages.
 
     Algorithm:
         Execute the supplied argv list and require success.
@@ -39,7 +39,7 @@ def run(*args):
         args: Executable and arguments.
 
     Returns:
-        Captured subprocess result; failure raises an assertion.
+        Captured command result. A failed command raises an assertion.
     """
 
     result = subprocess.run([str(a) for a in args], capture_output=True, text=True)
@@ -51,18 +51,18 @@ def run(*args):
 # compare --------------------------------------------------------------------
 # region compare
 def comparable_lines(path, drop_legacy_unsupported=False):
-    """Return tokenized LUND lines with optional legacy-species normalization.
+    """Read LUND fields and optionally remove one archived unsupported particle.
 
     Algorithm:
-        Parse complete events, remove the legacy unsupported record when requested, and update the
-        corresponding header multiplicity to match the maintained supported-species contract.
+        Read complete events, remove the archived unsupported particle when requested, and fix that
+        event's particle count and indexes.
 
     Args:
         path: LUND file to read.
         drop_legacy_unsupported: Whether to remove the archived unsupported output record.
 
     Returns:
-        Token lists in original event and retained-particle order.
+        LUND fields in their original event and retained-particle order.
     """
 
     source = [line.split() for line in path.read_text().splitlines()]
@@ -89,11 +89,11 @@ def comparable_lines(path, drop_legacy_unsupported=False):
     return result
 
 def compare(actual, expected, ignore_vertex=False, drop_legacy_unsupported=False, compare_mass_energy=False):
-    """Compare archived and maintained LUND records under selected normalization rules.
+    """Compare archived and maintained LUND records with the requested exceptions.
 
     Algorithm:
-        Compare headers and selected particle fields, optionally including energy/mass or omitting
-        tester vertices. Physical parity may also remove an archived unsupported output record.
+        Compare headers and selected particle fields. The caller may include mass and energy, ignore
+        tester vertices, or remove the archived unsupported particle.
 
     Args:
         actual: New output path.
@@ -164,10 +164,11 @@ with tempfile.TemporaryDirectory(prefix='clas12-parity-') as temp:
                 monitoring = new/'lundfiles/lund-gen-monitoring'/f"{m['config']['prefix']}_monitoring_plots.root"
                 assert monitoring.is_file()
 
-                # The 1e definitions retain exact archived names/ranges/content. Electron-hadron
-                # definitions deliberately add FD/CD to hadron names and titles.
+                # The 1e definitions retain the archived names and content. Electron-hadron
+                # definitions add FD/CD to hadron names and titles. The archived Vz_e_1e range was
+                # too narrow for the Ar target, so the comparator allows only its corrected range.
                 if channel == '1e':
-                    run(sys.argv[4], original/'histograms.root', monitoring)
+                    run(sys.argv[4], original/'histograms.root', monitoring, '--allow-corrected-vz')
 
                 assert len(m['files']) == 1
                 compare(new/m['files'][0]['path'],original/'legacy_1.txt', channel == 'tester')

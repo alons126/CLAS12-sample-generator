@@ -6,16 +6,15 @@
 
 # print_success.csh -----------------------------------------------------------
 # Description:
-#   Presentation-only completion banner for a successfully finished checkout workflow.
+#   Print the banner for a completed workflow.
 # 
 # Purpose:
-#   Mark the end of long ifarm build, generation, or submission logs after all required commands
-#   have already returned success.
+#   Clearly mark the end of a successful terminal or ifarm log.
 # 
 # Workflow:
-#   1. Load the shared terminal-color palette from the checkout.
-#   2. Select the completion color and print the static Unicode artwork.
-#   3. Reset terminal formatting and terminate the banner with a newline.
+#   1. Load the shared colors.
+#   2. Print the artwork in the completion color.
+#   3. Restore the normal terminal color.
 # 
 # Usage:
 #   Invoke from the repository root through workflow.py's banner helper.
@@ -24,27 +23,25 @@
 #   The sourced color helper exports COMPLETION_COLOR and RESET_COLOR.
 # 
 # Outputs:
-#   Writes only to standard output and does not modify workflow state or generated artifacts.
+#   Prints the banner. It does not change workflow files or state.
 # 
 # Failure behavior:
-#   The caller treats printer failures as presentation failures; they do not replace the completed
-#   workflow's result.
+#   A banner error does not change the completed workflow's result.
 
 # Color initialization --------------------------------------------------------
 
 # region Color initialization
-# Reload the palette so direct invocation and calls from different shells render consistently.
+# Load the palette even when this script is called directly.
 source ./src/launcher/environment/set_colors.csh
 # endregion
 
 # Banner rendering ------------------------------------------------------------
 
 # region Banner rendering
-# Begin green completion output without adding an extra line before the artwork.
+# Start the completion color without adding a line.
 printf "$COMPLETION_COLOR"
 
-# Keep the wide artwork readable as a heredoc. The filter supports the shared convention in which
-# @ represents a literal dollar sign without triggering shell expansion in banner text.
+# Keep the artwork literal and use `@` as a safe placeholder for a dollar sign.
 cat << EOF | sed 's/@/\$/g'
 ####################################################################################################
 ####################################################################################################
@@ -66,7 +63,7 @@ cat << EOF | sed 's/@/\$/g'
 ####################################################################################################
 EOF
 
-# Restore default terminal formatting, then finish on a clean line for the caller's next prompt.
+# Restore the normal color and finish on a new line.
 printf "$RESET_COLOR"
 echo ""
 # endregion

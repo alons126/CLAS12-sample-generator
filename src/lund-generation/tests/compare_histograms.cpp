@@ -7,10 +7,17 @@
  * @brief Compare numerical ROOT histograms.
  *
  * Purpose:
- *   Check names, axes, entries, cell contents and errors rather than ROOT container bytes.
+ *   Compare the stored histogram values instead of the raw ROOT file bytes.
  *
  * Workflow:
- *   CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+ *   Read the archived and maintained ROOT files -> compare each histogram -> report the first
+ *   difference. An explicit option allows the corrected vertex-z display range.
+ *
+ * CLI options:
+ *   EXPECTED ACTUAL                     Compare every histogram exactly.
+ *   EXPECTED ACTUAL --allow-corrected-vz
+ *                                       Allow `Vz_e_1e` to use the maintained -7.5 to 5 cm range
+ *                                       instead of the archived, incorrect -5 to 5 cm range.
  */
 
 #include <TFile.h>
@@ -27,16 +34,20 @@
 /**
  * @brief Compare numerical ROOT histograms.
  *
- * Algorithm:
- *   Check names, axes, entries, cell contents and errors rather than ROOT container bytes.
+ * Steps:
+ *   Check names, axes, entries, bin values, and errors.
  *
- * @param argc Number of executable arguments.
- * @param argv Paths and options supplied by the caller.
+ * @param argc Number of executable arguments. Three arguments run an exact comparison; four also
+ *             require the `--allow-corrected-vz` option.
+ * @param argv Expected ROOT file, actual ROOT file, and the optional corrected-range flag.
  *
- * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ * @return Zero when all checks pass; nonzero otherwise.
  */
 int main(int argc, char** argv) {
-    if (argc != 3) { return 2; }
+    if (argc != 3 && argc != 4) { return 2; }
+    const bool allow_corrected_vz = argc == 4 && std::string(argv[3]) == "--allow-corrected-vz";
+    if (argc == 4 && !allow_corrected_vz) { return 2; }
+
     try {
         TFile expected(argv[1]), actual(argv[2]);
         if (expected.IsZombie() || actual.IsZombie()) { throw std::runtime_error("Missing ROOT histogram file"); }
@@ -46,6 +57,17 @@ int main(int argc, char** argv) {
             auto* old = dynamic_cast<TH1*>(expected.Get(key->GetName()));
             auto* now = dynamic_cast<TH1*>(actual.Get(key->GetName()));
             if (!old || !now || old->GetNcells() != now->GetNcells() || old->GetEntries() != now->GetEntries()) { throw std::runtime_error(key->GetName()); }
+
+            // The old range put some RG-M argon vertices in the underflow bin. The LUND comparison
+            // checks the vertex values, so this test permits only the corrected plot range.
+            if (allow_corrected_vz && std::string(key->GetName()) == "Vz_e_1e") {
+                if (old->GetXaxis()->GetNbins() != 100 || old->GetXaxis()->GetXmin() != -5 || old->GetXaxis()->GetXmax() != 5 || now->GetXaxis()->GetNbins() != 100 ||
+                    now->GetXaxis()->GetXmin() != -7.5 || now->GetXaxis()->GetXmax() != 5) {
+                    throw std::runtime_error("Vz_e_1e: corrected axis mismatch");
+                }
+                continue;
+            }
+
             for (int bin = 0; bin < old->GetNcells(); ++bin) {
                 if (old->GetBinContent(bin) != now->GetBinContent(bin) || std::abs(old->GetBinError(bin) - now->GetBinError(bin)) > 1e-12) {
                     throw std::runtime_error(std::string(key->GetName()) + ": bin mismatch");

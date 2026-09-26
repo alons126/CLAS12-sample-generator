@@ -4,15 +4,14 @@
 
 /**
  * @file Version.h.in
- * @brief CMake template for build and Git information stored in run manifests.
+ * @brief CMake template for build and Git details stored in run logs.
  *
  * Purpose:
- *   Put the project version, Git state, source path, and targets.h hash into the programs that create
- *   run manifests.
+ *   Give LUND programs the project version, Git state, source path, and targets.h hash.
  *
  * Workflow:
  *   CMake replaces every @...@ token when it configures the build -> the compiler includes the generated
- *   constants -> LundWriter copies them into each completed manifest.
+ *   constants -> LundWriter copies them into each completed run log.
  *
  * Inputs and outputs:
  *   CMake project data, Git, and the SHA-256 hash of targets.h are the inputs. CMake writes the completed
@@ -46,7 +45,7 @@
 /** @brief Author of the commit used to configure the build. */
 #define SAMPLE_GIT_COMMIT_AUTHOR "@SAMPLE_GIT_COMMIT_AUTHOR@"
 
-/** @brief Short machine-readable Git status at configure time, or `clean` when it was empty. */
+/** @brief Short Git status at configure time, or `clean` when no changes were present. */
 #define SAMPLE_GIT_STATUS "@SAMPLE_GIT_STATUS@"
 
 /** @brief Nearest Git tag at configure time. */

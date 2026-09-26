@@ -4,16 +4,16 @@
 
 /**
  * @file legacy_uniform_driver.cpp
- * @brief Maintained test adapter for archived uniform kernels.
+ * @brief Run archived uniform functions for comparison tests.
  *
  * Purpose:
- *   Supply controlled streams and seeds to the read-only archive; never invoke its cleanup launchers.
+ *   Give fixed random streams and seeds to the read-only archive without running its cleanup scripts.
  *
  * Workflow:
- *   CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+ *   CTest supplies the settings and reads this program's exit status.
  */
 
-// Test-only adapter: execute the archived event kernels, never the launch/cleanup scripts.
+// Run only the archived event functions, never their launch or cleanup scripts.
 #include <TFile.h>
 #include <TRandom3.h>
 #include <TVector3.h>
@@ -35,15 +35,15 @@ using namespace std;
 
 #pragma region /* main */
 /**
- * @brief Maintained test adapter for archived uniform kernels.
+ * @brief Run archived uniform functions for one comparison test.
  *
- * Algorithm:
- *   Supply controlled streams and seeds to the read-only archive; never invoke its cleanup launchers.
+ * Steps:
+ *   Set the random seeds, create the requested events, and save their plots.
  *
  * @param argc Number of executable arguments.
  * @param argv Paths and options supplied by the caller.
  *
- * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ * @return Zero on success; nonzero for an invalid command or failed run.
  */
 int main(int argc, char** argv) {
     if (argc != 9) { return 2; }

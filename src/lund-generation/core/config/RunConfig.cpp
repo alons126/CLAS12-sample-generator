@@ -4,7 +4,7 @@
 
 /**
  * @file RunConfig.cpp
- * @brief Reads, resolves, and checks LUND run settings.
+ * @brief Builds and checks final LUND run settings.
  *
  * Purpose:
  *   Build one valid configuration for uniform generation or physical conversion before either workflow
@@ -23,7 +23,7 @@
  *   Each option uses `--key value`. The application handles `--help` before parse(). A profile uses the
  *   same names without `--` and writes them as `key = value`.
  *
- * Precedence and defaults:
+ * Setting priority:
  *   Command-line values replace profile values, and profile values replace defaults. The code resolves
  *   `auto` only after all explicit values are known. Each application documents its defaults and units.
  *
@@ -52,7 +52,7 @@ namespace samples {
 #pragma region /* Translation-unit helpers */
 /**
  * @namespace samples::<anonymous>
- * @brief Small text and naming helpers used only in this source file.
+ * @brief Text and naming helpers used only in this file.
  *
  * These functions read profile text and build output names. They are not part of the public API.
  */
@@ -62,14 +62,14 @@ namespace {
 
 #pragma region /* trim */
 /**
- * @brief Remove surrounding configuration whitespace.
+ * @brief Remove spaces around configuration text.
  *
  * Purpose:
  *   Remove whitespace around profile lines, keys, and values without changing spaces inside the text.
  *
- * Algorithm:
- *   Find the first and last non-whitespace characters and return the text between them. Return an empty
- *   string when the input contains only whitespace.
+ * Steps:
+ *   Find the first and last non-space characters and return the text between them. Return an empty
+ *   string when no text remains.
  *
  * @param s Copy of the configuration text to trim.
  *
@@ -79,10 +79,10 @@ namespace {
  * @note Spaces inside the value and all other characters stay unchanged.
  */
 std::string trim(std::string s) {
-    // No first character means that the string is empty or contains only whitespace.
+    // No first character means the value is empty or only spaces.
     auto first = s.find_first_not_of(" \t\r\n");
 
-    // When first exists, the last non-whitespace character sets the other end of the result.
+    // Use the last non-space character as the other end.
     return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
 }
 #pragma endregion
@@ -97,7 +97,7 @@ std::string trim(std::string s) {
  *   Keep target, generator, tune, cut, and GEMC text readable without allowing that text to create extra
  *   path components.
  *
- * Algorithm:
+ * Steps:
  *   Keep letters, digits, `.`, `_`, and `-`. Replace every other character with `-`. Reject an empty
  *   result and the special path names `.` and `..`.
  *
@@ -107,16 +107,15 @@ std::string trim(std::string s) {
  *
  * @throws std::runtime_error If the resulting component is empty, `.` or `..`.
  *
- * @note Different inputs can produce the same safe text, and the change cannot always be reversed. The
- *       manifest keeps the original value.
+ * @note Different inputs can produce the same safe text. The run log keeps the original value.
  */
 std::string pathToken(std::string value) {
-    // std::isalnum requires an unsigned byte value. Keep only the three listed punctuation marks.
+    // std::isalnum needs an unsigned byte. Keep only the three allowed punctuation marks.
     for (char& ch : value) {
         if (!(std::isalnum(static_cast<unsigned char>(ch)) || ch == '.' || ch == '_' || ch == '-')) { ch = '-'; }
     }
 
-    // Do not allow empty names or the two path-navigation names.
+    // Reject empty names and the special `.` and `..` paths.
     if (value.empty() || value == "." || value == "..") { throw std::runtime_error("Invalid empty output-name component"); }
     return value;
 }
@@ -131,7 +130,7 @@ std::string pathToken(std::string value) {
  * Purpose:
  *   Keep the established 2070, 4029, and 5986 MeV labels and provide a rounded label for other energies.
  *
- * Algorithm:
+ * Steps:
  *   Return the fixed label when the energy is within `1e-6` GeV of a known setting. Otherwise multiply
  *   by 1000 and round to the nearest integer.
  *
@@ -175,7 +174,7 @@ std::string uniformSampleLabel(const RunConfig& config) {
 #pragma region /* RunConfig::parse */
 RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma region /* Default settings */
-    // Keep settings as text so the manifest can record the exact final values. These defaults select the
+    // Keep settings as text so the run log records their exact final values. These defaults select the
     // usual RG-M beam and argon target and keep separate seeds for kinematics and vertices. Particle
     // masses come from targets.h and cannot be set here.
     RunConfig c;
@@ -218,8 +217,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "unknown"}, {"q2-cut", "auto"}, {"gemc-version", "unknown"}});
     }
 
-    // Use one assignment check for both profiles and command-line values. The lambda changes only the
-    // RunConfig being built by this call.
+    // Use the same assignment check for profiles and command-line values.
     auto assign = [&](const std::string& k, const std::string& v) {
         if (!c.values_.count(k)) { throw std::runtime_error("Unknown setting: " + k); }
 
@@ -228,8 +226,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma endregion
 
 #pragma region /* Profile and CLI input */
-    // Save command-line values until after the profile is read, even when `--config` appears last. The
-    // map also makes repeated options easy to detect.
+    // Save command-line values until the profile is read. The map also detects repeated options.
     std::map<std::string, std::string> overrides;
     std::string config;
 
@@ -355,8 +352,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 #pragma endregion
 
 #pragma region /* Validation and path resolution */
-    // Check settings before adding the final run name to `output` or changing a local input path. This
-    // check does not create or replace output.
+    // Check settings before changing paths or adding the final run name. This creates no output.
     c.validate(uniform);
 
     // Leave URI-like inputs unchanged. Make local files and glob patterns absolute so later directory
@@ -378,8 +374,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     }
 
-    // Give all later code one absolute, normalized run directory. The generator or writer creates and
-    // safely replaces that directory later.
+    // Give later code one absolute run directory. The writer replaces it safely later.
     c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
 #pragma endregion
 

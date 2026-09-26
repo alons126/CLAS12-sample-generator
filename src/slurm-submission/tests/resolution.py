@@ -2,18 +2,18 @@
 # Created by Alon Sportes on 20/09/2026.
 #
 
-"""Validate the LUND-to-submission bridge without module loading or real jobs.
+"""Test LUND input handling without loading modules or submitting jobs.
 
 Workflow:
-    create portable manifests -> resolve defaults/overrides -> reject contradictions,
-    malformed records and unsafe shell input. Optionally consume actual uniform-generator output.
+    Create portable run logs -> apply defaults and overrides -> reject conflicts, bad records, and
+    unsafe shell text. Also check real uniform output when its executable is available.
 
 Inputs:
-    repository root and optional built uniform executable. All fixtures are temporary;
-    protected detector inputs are read-only.
+    Repository root and optional built uniform executable. All test files are temporary, and detector
+    inputs stay unchanged.
 
 Outputs:
-    Assertion diagnostics.
+    Assertions report any mismatch.
 """
 
 import copy
@@ -80,7 +80,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     assert result['DETECTOR_ENERGY_GROUP'] == '2GeV'
     assert result['TORUS_FIELD'] == '0.5'
     assert result['CLAS12TAGS_DIR'] == result['farm_out'] == ''
-    # Simulated resources for a nondefault version avoid editing detector originals.
+    # Use temporary resources for a nondefault version so detector files stay unchanged.
     card, yaml = root / 'custom.gcard', root / 'custom.yaml'
 
     card.write_text('<gcard/>')
@@ -158,7 +158,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
 
     unfinished.unlink()
 
-    # A physical manifest uses the same bridge and does not need uniform channel settings.
+    # A physical run log uses the same resolver without uniform channel settings.
     physical = copy.deepcopy(manifest)
     physical['workflow'] = 'physical'
 
@@ -172,7 +172,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-resolve-') as directory:
     assert result['source'] == 'physical' and result['SAMPLE_GENERATOR'] == 'genie-gst'
     assert result['UNIFORM_SAMPLE_CHANNEL'] == 'none' and result['JOB_NEVENTS'] == '3'
 
-    # Check actual output schema and relative paths from workflow 1, when the executable is available.
+    # When available, use the real generator to check its run-log fields and relative paths.
     if len(sys.argv) > 2:
         subprocess.run([str(Path(sys.argv[2]).resolve()), '--config', str(project / 'config/samples/uniform-1e-2070MeV.conf'),
                         '--events', '4', '--events-per-file', '3', '--output', str(root / 'generated')],

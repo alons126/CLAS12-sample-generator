@@ -2,13 +2,11 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Verify the Python submission contract without real Slurm or detector execution.
+"""Test submission without running Slurm or detector programs.
 
 Workflow:
-    isolated checkout fixtures -> sourced bridge -> inert sbatch capture. Golden
-    reports were captured from the working C-shell coordinator before its Python migration.
-    Cover both source types, beam/channel variations, preview, failures and array environments.
-    External payload execution uses only fake gemc/recon-util commands in temporary directories.
+    Build temporary checkouts -> source the shell bridge -> capture calls with fake tools. Check both
+    source types, beam and channel choices, preview, failures, and array environments.
 """
 
 import difflib
@@ -30,11 +28,10 @@ PAYLOAD = PROJECT / 'src/slurm-submission/external/submit_GEMC_sample.sh'
 
 # region Fixtures
 def fixture(root, source, energy, channel='en', fc=0):
-    """Create a self-contained checkout with inert Slurm and detector tools.
+    """Create a temporary checkout with fake Slurm and detector tools.
 
-    All script replacements happen under the temporary root. Real detector configuration
-    and external payload files are only read or copied. Returns paths, explicit settings,
-    and the inherited environment for subsequent success/failure tests.
+    All replacements stay under the temporary root. Real detector files are only read or copied.
+    Return the wrapper path, expected settings, and test environment.
     """
 
     root.mkdir(parents=True)
@@ -73,7 +70,7 @@ def fixture(root, source, energy, channel='en', fc=0):
     card.write_text('<gcard/>')
     yaml.write_text('test: true\n')
 
-    # The final file is shorter; one configured event limit must still yield one array.
+    # The last file is shorter, but the shared event limit must still produce one array.
     for index, count in ((1, 3), (2, 1)):
         (run / f'lundfiles/{prefix}_{index}.txt').write_text(('1 1 1 0 0 11 2.07 0 1 1\n1 -1 1 11 0 0 0 0 1 1 0 0 0 0\n') * count)
 
@@ -141,7 +138,7 @@ def fixture(root, source, energy, channel='en', fc=0):
 
     new_path = root / 'new.csh'
 
-    # Test wrapper supplies a normal config, leaving the maintained setup completely unmodified.
+    # The test wrapper supplies a normal config and leaves the maintained setup unchanged.
     shutil.copy2(SETUP, payload.parent.parent / 'setup_and_submit.csh')
     new_path.write_text(f'source src/slurm-submission/setup_and_submit.csh --config "{config}" $argv:q\n')
 
@@ -152,7 +149,7 @@ def fixture(root, source, energy, channel='en', fc=0):
     return new_path, values, env
 
 def run_script(path, env, success=True, arguments=(), execute=True):
-    """Source a fixture; verify status and caller-shell survival, including stale locals."""
+    """Source one fixture and check its status, shell survival, and stale local variables."""
 
     if execute:
         arguments = (*arguments, '--execute')
@@ -245,7 +242,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-setup-parity-') as temp:
         if failure != 'sbatch':
             assert (run / 'reconhipo/old.hipo').exists()
 
-    # Feed a completed manifest through the real resolver and sourced shell, with no sample config.
+    # Send a completed run log through the real resolver and shell without a sample config file.
     for source in ('uniform', 'physical'):
         new, values, env = fixture(root / f'manifest-{source}', source, '2070MeV', 'enFD')
         lund = Path(values['OUTPATH']) / 'lundfiles'

@@ -28,4 +28,8 @@
 # Usage:
 #   source update_only.csh
 
+# Checkout update --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Checkout update
 source ./src/launcher/code_updater.csh
+# endregion

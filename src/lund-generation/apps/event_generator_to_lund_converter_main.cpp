@@ -4,10 +4,10 @@
 
 /**
  * @file event_generator_to_lund_converter_main.cpp
- * @brief Command-line entry point for converting physical events to LUND.
+ * @brief Starts physical-event conversion from the command line.
  *
  * Purpose:
- *   Read the requested physical input format, run its converter, and return a process status.
+ *   Read the selected physical input, run its converter, and return success or failure.
  *
  * Workflow:
  *   Print help when requested -> read and check the options -> convert the events -> return success or
@@ -51,10 +51,10 @@ namespace env = environment;
 
 #pragma region /* main */
 /**
- * @brief Event-generator-to-LUND converter command-line entry point.
+ * @brief Run physical-event conversion from command-line arguments.
  *
  * Purpose:
- *   Handle help, errors, and the exit code here while the selected converter reads the event data.
+ *   Handle help and errors here while the selected converter handles event data.
  *
  * Workflow:
  *   Read and check the settings, call the selected converter, and return status 1 when a standard

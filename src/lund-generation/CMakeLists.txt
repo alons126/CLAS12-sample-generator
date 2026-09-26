@@ -4,7 +4,7 @@
 
 # src/lund-generation/CMakeLists.txt -------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Responsibility-grouped C++ libraries.
+#   C++ libraries grouped by their job.
 #
 # Purpose:
 #   Compile the shared LUND pipeline once and link source-specific generation or conversion code against it.
@@ -19,15 +19,14 @@
 #   LundCore, optional UniformGeneration, and optional GenieGstConversion/PhysicalConversion static libraries.
 #
 # Notes:
-#   Converter directories describe their implementation responsibility rather than executable names. Physical
-#   event-generator format adapters are nested below event-generator-to-lund-converter; LundCore remains one target
-#   because its shared layers form one small pipeline.
+#   Format-specific converters are kept below event-generator-to-lund-converter. LundCore remains one
+#   small shared library used by both LUND sources.
 
 # Shared LUND pipeline ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Shared LUND pipeline
 # Purpose:
-#     Join the core configuration, geometry, LUND records/serialization, and support layers without hiding their source boundaries.
+#     Build the shared configuration, geometry, LUND writing, and support code as one library.
 add_library(
     LundCore STATIC
     core/config/RunConfig.cpp
@@ -54,7 +53,7 @@ endif()
 
 # region Physical-event conversion
 # Purpose:
-#     Build the event-generator-to-lund-converter dispatcher and keep ROOT GST dependencies on its nested GENIE GST adapter.
+#     Build physical conversion and keep ROOT tree libraries inside the GENIE GST adapter.
 if(BUILD_GENIE)
     add_library(GenieGstConversion STATIC event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp)
     target_link_libraries(GenieGstConversion PUBLIC LundCore PRIVATE ROOT::Tree ROOT::TreePlayer ROOT::RIO)

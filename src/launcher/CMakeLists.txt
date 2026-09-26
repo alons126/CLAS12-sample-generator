@@ -4,10 +4,10 @@
 
 # src/launcher/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Test registration for the shared local/ifarm workflow dispatcher.
+#   Test setup for the shared local and ifarm launcher.
 # 
 # Purpose:
-#   Verify sourced-shell behavior, build dispatch, argument preservation, and disposable-clone safeguards.
+#   Check sourced-shell behavior, build selection, argument forwarding, and checkout safety checks.
 # 
 # Workflow:
 #   run.csh -> launcher/workflow.py -> selected LUND source; submission is sourced directly.

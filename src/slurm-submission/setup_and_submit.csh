@@ -5,8 +5,11 @@
 #
 
 # Submission shell bridge -----------------------------------------------------
+# Description:
+#     Connect the sourced launcher to the Python submission program.
+#
 # Purpose:
-#     retain the sourced run.csh interface and shared terminal palette.
+#     Keep the sourced run.csh interface and shared terminal colors.
 #
 # Usage:
 #     source run.csh --workflow submit --lund-dir RUN/lundfiles [options].

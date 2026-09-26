@@ -4,7 +4,7 @@
 
 /**
  * @file PhysicalConverter.cpp
- * @brief Chooses the converter for one physical input format.
+ * @brief Selects the converter for a physical input format.
  *
  * Purpose:
  *   Map the configured event-generator name to its converter. This file does not read generator data,
@@ -22,7 +22,7 @@
  *   This function returns no value and creates no files itself. The selected converter and LundWriter
  *   create and report the output.
  *
- * Design:
+ * Adding a format:
  *   Each supported format has one visible branch. Adding a format requires its converter and one new
  *   branch here; the shared LUND workflow does not need to be copied.
  *
@@ -44,7 +44,7 @@ namespace samples {
 #pragma region /* convertPhysical */
 
 void convertPhysical(const RunConfig& config) {
-    // Use an exact name match and pass the same unchanged settings to the GENIE converter.
+    // Match the exact name and pass the unchanged settings to the GENIE converter.
     if (config.get("event-generator") == "genie-gst") {
         convertGenieGST(config);
 

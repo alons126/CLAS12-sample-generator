@@ -9,29 +9,24 @@
 #   Print the orange "operation cancelled" banner used when a maintained workflow stops early.
 # 
 # Purpose:
-#   Give interactive terminals and ifarm logs a clear visual boundary after the caller reports the
-#   error that caused the workflow to stop.
+#   Clearly mark a stopped workflow in the terminal or ifarm log.
 # 
 # Workflow:
-#   1. Select the banner's ANSI foreground color.
-#   2. Stream the literal banner through sed so any placeholder `@` characters would be rendered as
-#      dollar signs without allowing tcsh to expand variables inside the here-document.
-#   3. Restore the terminal's default formatting and add a trailing blank line.
+#   1. Select the orange text color.
+#   2. Print the banner and replace `@` placeholders with dollar signs.
+#   3. Restore the normal terminal color.
 # 
 # Inputs:
 #   None. The caller prints the diagnostic message before invoking this presentation helper.
 # 
 # Outputs:
-#   Writes ANSI color controls and the banner to standard output. It creates no files and changes no
-#   persistent shell state.
+#   Prints the colored banner. It creates no files and keeps no shell changes.
 # 
 # Usage:
-#   Invoke this script from the workflow error path; the calling workflow remains responsible for
-#   preserving and returning the underlying nonzero exit status.
+#   Run this script after an error. The caller must keep and return the original failure status.
 # 
 # Failure behavior:
-#   This helper does not interpret errors or choose an exit status. A rendering failure is local to
-#   the banner and must not replace the workflow failure already captured by the caller.
+#   This helper does not handle the error or choose an exit status.
 
 # Failure-banner rendering -------------------------------------------------------------------------
 
@@ -39,8 +34,7 @@
 # Orange distinguishes a stopped/cancelled operation from the normal success banner.
 echo "\033[38;5;208m"
 
-# The quoted delimiter keeps the artwork literal. The sed filter preserves the convention used by
-# the other banner helpers, where `@` is a safe placeholder for a displayed dollar sign.
+# Keep the artwork literal and use `@` as a safe placeholder for a dollar sign.
 cat << \EOF | sed 's/@/\$/g'
 ####################################################################################################
 ####################################################################################################
@@ -63,7 +57,7 @@ cat << \EOF | sed 's/@/\$/g'
 ####################################################################################################
 \EOF
 
-# Reset formatting so later terminal messages do not inherit the banner color.
+# Restore the normal color for later messages.
 echo "\033[0m"
 echo ""
 # endregion Failure-banner rendering

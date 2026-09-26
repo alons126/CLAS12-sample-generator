@@ -3,8 +3,11 @@
 #
 
 # Ifarm submission -------------------------------------------------------------------------------------------------------------------------------------------------------
+# Description:
+#     Install the external worker and register maintained submission tests.
+#
 # Purpose:
-#     register tests for the sourced setup and external detector payload.
+#     Check the sourced setup and the external detector worker without submitting real jobs.
 #
 # Workflow:
 #     run.csh -> setup_and_submit.csh -> submit.py -> sbatch array -> external payload.
@@ -13,7 +16,7 @@
 #     Python and tcsh for isolated tests; no detector execution or real submission.
 #
 # Outputs:
-#     payload installed under bin; setup runs from the server checkout.
+#     The worker is installed under bin, and tests run from the checkout.
 #
 # Failure:
 #     a failed parity or safety assertion fails CTest.

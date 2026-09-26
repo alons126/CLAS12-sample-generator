@@ -4,33 +4,33 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-# -------------------------------------------------------------------------------------------------
-# Interpreter declaration
-# -------------------------------------------------------------------------------------------------
-# The script is executed with the tcsh shell. This ensures that tcsh syntax such as
-# `if (...) then`, `$status`, and `set` variables works correctly regardless of the
-# user's default login shell.
-
-# ------------------------------------------------------------------------------------------
-# code_updater.csh
-# ------------------------------------------------------------------------------------------
-# Purpose
-# -------
-# Replaces the disposable ifarm checkout with the pushed CLAS12 sample-generator revision.
+# code_updater.csh -------------------------------------------------------------------------------------------------------------------------------------------------------
+# Description:
+#   Refresh the disposable ifarm checkout from its configured remote branch.
 #
-# Steps performed
-# ---------------
-# 1. Clean untracked build artifacts.
-# 2. Reset local repository state.
-# 3. Pull latest changes from remote.
-# 4. Synchronize and initialize pinned Git submodules.
-# 5. Display commit and branch information.
-# 6. Return status to run.csh; environment loading happens there after the update.
-# ------------------------------------------------------------------------------------------
+# Purpose:
+#   Make the server checkout match the pushed project revision before a workflow starts.
+#
+# Workflow:
+#   Load banner colors -> verify the Git checkout -> clean server-only files -> reset tracked files ->
+#   pull the branch -> update submodules -> print the selected commit and branch.
+#
+# Inputs:
+#   The current Git checkout, its configured upstream branch, and the build-directory exclusions.
+#
+# Outputs:
+#   A refreshed checkout. Build directories are kept; other untracked files and tracked local changes
+#   are removed under the disposable-server contract.
+#
+# Usage:
+#   This helper is run by run.csh. Run it from the verified repository root.
+#
+# Failure:
+#   A failed Git or submodule command returns a nonzero status and stops the update.
 
-# -------------------------------------------------------------------------------------------------
-# Terminal color initialization
-# -------------------------------------------------------------------------------------------------
+# Color and banner setup -------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Color and banner setup
 
 if ( -f ./src/launcher/environment/set_banners.csh ) then
     source ./src/launcher/environment/set_banners.csh
@@ -45,10 +45,11 @@ set banner_title = "Running update script"
 set banner_color = "$SYSTEM_COLOR"
 code_banner
 echo ""
+# endregion
 
-# -------------------------------------------------------------------------------------------------
-# Clean working tree
-# -------------------------------------------------------------------------------------------------
+# Checkout cleanup -------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Checkout cleanup
 
 echo "${SYSTEM_COLOR}- Cleaning excessive files -------------------------------------------------------------------------${RESET_COLOR}"
 echo ""
@@ -60,10 +61,11 @@ git clean -fxd -e build/ -e build
 if ( $status != 0 ) exit 1
 
 echo ""
+# endregion
 
-# -------------------------------------------------------------------------------------------------
-# Synchronize repository with remote
-# -------------------------------------------------------------------------------------------------
+# Remote synchronization ------------------------------------------------------------------------------------------------------------------------------------------------
+
+# region Remote synchronization
 
 git reset --hard
 if ( $status != 0 ) exit 1
@@ -103,12 +105,14 @@ echo "${SYSTEM_COLOR}Branch:${RESET_COLOR}"
 git branch --show-current
 
 echo ""
+# endregion
 
-# -------------------------------------------------------------------------------------------------
-# Reload environment
-# -------------------------------------------------------------------------------------------------
+# Return to launcher -----------------------------------------------------------------------------------------------------------------------------------------------------
 
-# run.csh sources the environment after this child process succeeds.
+# region Return to launcher
+
+# run.csh loads the environment after this script succeeds.
 
 unalias code_banner
 echo ""
+# endregion

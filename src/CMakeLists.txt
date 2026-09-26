@@ -4,10 +4,10 @@
 
 # src/CMakeLists.txt -----------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Workflow-oriented source-tree entry point.
+#   Entry point for the source subdirectories.
 # 
 # Purpose:
-#   Keep LUND generation, Slurm submission, and their shared launcher visibly separated below src/.
+#   Keep LUND generation, Slurm submission, and the shared launcher in separate directories.
 # 
 # Workflow:
 #   Root configuration -> LUND targets/tests -> submission coordinators/tests -> shared launcher test.

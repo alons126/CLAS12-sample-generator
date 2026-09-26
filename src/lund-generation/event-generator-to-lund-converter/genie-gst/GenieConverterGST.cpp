@@ -4,7 +4,7 @@
 
 /**
  * @file GenieConverterGST.cpp
- * @brief Converts existing GENIE GST events to LUND records.
+ * @brief Copies supported GENIE GST events to LUND records.
  *
  * Purpose:
  *   Read supported GENIE processes and final-state particles, keep their input momenta, and give every
@@ -25,12 +25,12 @@
  *   LundWriter creates split LUND text files and the completion manifest in the final run directory.
  *   Physical conversion creates no monitoring histograms.
  *
- * Assumptions:
+ * Expected input:
  *   GST final-state arrays use nf as their per-entry leaf count. Only QE, MEC, RES and DIS reactions
  *   are supported; adding another reaction requires updating this converter.
  *
  * Failure:
- *   Empty input, missing or mistyped branches, inconsistent per-entry arrays, unsupported-only input,
+ *   Empty input, missing or wrong branch types, different array lengths, unsupported-only input,
  *   ROOT read failures and output failures terminate conversion with an exception.
  */
 
@@ -56,22 +56,18 @@ void convertGenieGST(const RunConfig& c) {
     LundWriter::printWorkflowSummary(c, "physical");
 
 #pragma region /* GST input preparation */
-    // TChain presents one file or a matching group of files as one ordered `gst` tree. Check the input
-    // before constructing LundWriter so bad input cannot replace an existing run directory.
+    // TChain reads matching files as one ordered `gst` tree. Check input before output can be replaced.
     TChain chain("gst");
     if (!chain.Add(c.get("input").c_str()) || chain.GetEntries() == 0) { throw std::runtime_error("No GST entries found for: " + c.get("input")); }
     if (chain.LoadTree(0) < 0) { throw std::runtime_error("Cannot load GST tree"); }
 
-    // Interaction flags determine whether an entry is retained and which historical code is written in
-    // the LUND header. resid is copied to the target-polarization header position. nf counts the parallel
-    // final-state arrays; pxl/pyl/pzl describe the scattered electron, which is always written first.
+    // Interaction flags decide whether an entry is kept and which code is written. resid goes in the
+    // old target-polarization field. nf counts final particles; pxl/pyl/pzl describe the first electron.
     for (const char* branch : {"qel", "mec", "res", "dis", "resid", "nf", "pdgf", "pxf", "pyf", "pzf", "pxl", "pyl", "pzl"}) {
         if (!chain.GetBranch(branch)) { throw std::runtime_error(std::string("Missing GST branch: ") + branch); }
     }
 
-    // TTreeReader moves through every tree in the chain. Value readers return one number from the current
-    // entry. Array readers use the current `nf` length, so no fixed particle buffer is needed. The event
-    // loop checks all array lengths before using an index.
+    // TTreeReader moves through the chain. Array readers use the current `nf`, so no fixed buffer is needed.
     TTreeReader reader(&chain);
     TTreeReaderValue<Bool_t> qel(reader, "qel"), mec(reader, "mec"), res(reader, "res"), dis(reader, "dis");
     TTreeReaderValue<Int_t> resid(reader, "resid"), nf(reader, "nf");
@@ -93,8 +89,7 @@ void convertGenieGST(const RunConfig& c) {
     const int A = static_cast<int>(c.integer("A")), Z = static_cast<int>(c.integer("Z"));
     LundWriter writer(c, "physical");
 
-    // submission_block is both the output split size and the minimum input tail needed to start a later
-    // file. scanned counts every entry read, including rejected interactions.
+    // submission_block is the split size and the minimum input left before starting another file.
     const auto total_entries = static_cast<std::uint64_t>(chain.GetEntries());
     const auto submission_block = static_cast<std::uint64_t>(c.integer("events-per-file"));
     std::uint64_t scanned = 0;
@@ -106,8 +101,7 @@ void convertGenieGST(const RunConfig& c) {
     // Read GST entries in order until the writer is full, ROOT reaches the end, or the tail cutoff stops
     // a later file from starting.
     while (!writer.full() && reader.Next()) {
-        // A branch can exist with the wrong ROOT type. Check every typed reader after loading an entry,
-        // including entries from later files in the chain.
+        // Check reader types for every entry, including entries in later files.
         if (qel.GetSetupStatus() < 0 || mec.GetSetupStatus() < 0 || res.GetSetupStatus() < 0 || dis.GetSetupStatus() < 0 || resid.GetSetupStatus() < 0 || nf.GetSetupStatus() < 0 ||
             pxl.GetSetupStatus() < 0 || pyl.GetSetupStatus() < 0 || pzl.GetSetupStatus() < 0 || pdgf.GetSetupStatus() < 0 || pxf.GetSetupStatus() < 0 || pyf.GetSetupStatus() < 0 ||
             pzf.GetSetupStatus() < 0) {
@@ -122,20 +116,13 @@ void convertGenieGST(const RunConfig& c) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
         }
 
-        // Map the supported interaction flags to the LUND interaction code: QE=1, MEC=2, RES=3 and
-        // DIS=4. This converter requires one of these four reactions. Supporting another reaction requires
-        // adding its GST flag branch, LUND code mapping, validation and tests here. GST is expected to make
-        // the supported flags mutually exclusive; the expression has the stated priority if malformed
-        // input sets more than one. Code zero skips every other reaction before vertex sampling or output,
-        // so skipped entries consume neither RNG draws nor writer capacity.
+        // Map QE, MEC, RES, and DIS to codes 1 through 4. Skip other reactions before sampling a vertex.
+        // If bad input sets several flags, the written order here gives the first one priority.
         double code = *qel ? 1 : *mec ? 2 : *res ? 3 : *dis ? 4 : 0;
         if (!code) { continue; }
 
-        // Use the submission block only to decide whether a follow-up LUND file may start. The first file
-        // is always allowed, including for inputs shorter than one block. At each later file boundary,
-        // require at least one inclusive block of GST entries beginning with the current accepted entry.
-        // Once a file starts, do not reapply this test inside it: doing so would interrupt an exact final
-        // block after its second event because the inclusive remaining count has fallen below the block.
+        // Always allow the first file. Before a later file starts, require one full inclusive block of
+        // input entries. Do not repeat this check after that file has started.
         const auto current_entry = scanned - 1;
         const auto inclusive_entries_remaining = total_entries - current_entry;
         const bool starting_followup_file = writer.count() > 0 && writer.count() % submission_block == 0;
@@ -144,9 +131,8 @@ void convertGenieGST(const RunConfig& c) {
             break;
         }
 
-        // Fill the LUND header values directly from the accepted GST entry and final settings.
-        // resonance_id is written in the established target-polarization position, while weight
-        // carries the interaction code. A/Z and beam energy remain constant across the run.
+        // Fill the LUND header from the GST entry and final settings. resonance_id uses the old
+        // target-polarization field, and weight stores the interaction code.
         Event event;
         event.id = scanned - 1;
         event.A = A;
@@ -155,15 +141,11 @@ void convertGenieGST(const RunConfig& c) {
         event.resonance_id = *resid;
         event.weight = code;
 
-        // Sample exactly one accepted-event vertex and assign it first to the scattered electron. Every
-        // retained final-state particle below receives the same position, preserving one interaction
-        // point per event. The electron remains the first output particle.
+        // Sample one vertex, write the electron first, and give every kept particle the same position.
         auto vertex = geometry.sample(random);
         event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg), {*pxl, *pyl, *pzl}, vertex});
 
-        // Copy only detector-stable supported species while preserving input order and momenta.
-        // Unsupported identities are omitted; none are substituted or given invented kinematics.
-        // particleMass obtains the maintained targets.h value for every retained identity.
+        // Copy supported particles in input order. Skip others without changing or inventing momentum.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
             if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::photon_pdg) {
@@ -179,20 +161,15 @@ void convertGenieGST(const RunConfig& c) {
 
 #pragma region /* Completion and publication */
 
-    // A false reader.Next() is successful only when ROOT reached the normal end of the chain. Capacity
-    // and submission-cutoff exits do not call reader.Next() again, so their current reader status is not
-    // an error. Any other status indicates a read or schema failure, including one encountered only in a
-    // later chained file.
+    // When neither limit stopped the loop, require ROOT to have reached the normal end of input.
     if (!writer.full() && !stopped_at_submission_cutoff && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) {
         throw std::runtime_error("Failed reading GST entries (check branch types and input files)");
     }
 
-    // An input containing no QE/MEC/RES/DIS interaction is not a successful empty production run. Fail
-    // before publishing the completion manifest so submission cannot treat it as complete.
+    // Do not publish a completed run when no supported event was written.
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
 
-    // finish() closes the last LUND file, records counts and the split-file list, then publishes
-    // lund-gen-log.json with one rename. The summary prints the final counts.
+    // Close output, publish the run log, and print final counts.
     writer.finish(scanned);
     LundWriter::printWorkflowSummary(c, "physical", scanned, writer.count(), true);
 

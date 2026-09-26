@@ -7,7 +7,7 @@
 #   Command-line executable targets.
 # 
 # Purpose:
-#   Connect small CLI entry points to their implementation libraries and install enabled applications.
+#   Link each small command-line program to its library and install enabled programs.
 # 
 # Workflow:
 #   src/ creates libraries -> this directory links executables -> CMake install places them under bin/.
@@ -38,7 +38,7 @@ endif()
 
 # region Physical conversion CLI
 # Purpose:
-#     Link the selected event-generator adapter and install its generator-independent executable.
+#     Link physical conversion and install its format-independent command-line program.
 if(BUILD_GENIE)
     add_executable(event-generator-to-lund-converter event_generator_to_lund_converter_main.cpp)
     target_link_libraries(event-generator-to-lund-converter PRIVATE PhysicalConversion)

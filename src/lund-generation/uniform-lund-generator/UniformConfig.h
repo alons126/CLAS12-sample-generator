@@ -7,12 +7,10 @@
  * @brief Stores uniform-generator settings in their C++ types.
  *
  * Purpose:
- *   Convert the final RunConfig strings used for every event into numbers, flags, and enums once before
- *   the event loop.
+ *   Convert the final RunConfig text into numbers, flags, and enums before the event loop.
  *
  * Workflow:
- *   RunConfig reads and checks text settings -> UniformConfig converts them once -> UniformGenerator
- *   reads the stored values while creating events.
+ *   RunConfig checks the text settings -> UniformConfig converts them -> UniformGenerator uses them.
  *
  * Scope:
  *   This object stores particle and kinematic settings only. Output, formatting, RNG seeds, and target
@@ -37,14 +35,14 @@ namespace samples {
  * @brief Event type selected from the checked channel setting.
  *
  * Purpose:
- *   Let the event loop choose its particle-building branch without comparing strings for every event.
+ *   Let the event loop choose an event type without comparing text for every event.
  *
  * Creation and use:
  *   UniformConfig converts the checked channel string to this enum. UniformGenerator uses it to choose
  *   the number of particles and their sampling rules.
  *
- * Scientific meaning:
- *   Electron writes one sampled electron. ElectronHadron writes an artificial trigger electron followed
+ * Meaning:
+ *   Electron writes one sampled electron. ElectronHadron writes a trigger electron followed
  *   by the separately selected proton, neutron, pi+, or pi-. Both are acceptance probes.
  */
 enum class UniformChannel {
@@ -62,7 +60,7 @@ enum class UniformChannel {
  * @brief Hadron selected by `--hadron` for an electron-hadron sample.
  *
  * Creation and use:
- *   UniformConfig converts the validated `--hadron` text to one value. The generator uses that value
+ *   UniformConfig converts the checked `--hadron` text to one value. The generator uses that value
  *   with hadron_pid to choose the particle written after the trigger electron.
  */
 enum class HadronSpecies {
@@ -94,7 +92,7 @@ enum class HadronSpecies {
  *   Beam energy is GeV, momenta are GeV/c, and all angles are degrees. UniformGenerator converts angles
  *   to radians only at ROOT TVector3/math boundaries. A and Z are dimensionless LUND header metadata.
  *
- * Invariants:
+ * Rules:
  *   Exactly one channel enum is selected. Electron momentum is uniform-p, mixed p and 1/p, or beam-valued.
  *   Hadron momentum is exactly one of uniform-p, mixed p and 1/p, or fixed (both flags false). Hadron
  *   theta and phi are always uniform inside their configured bounds. Target metadata and mode/channel
@@ -129,13 +127,12 @@ struct UniformConfig {
     /**
      * @brief Copy and convert one checked uniform configuration.
      *
-     * @param c RunConfig read during construction. It must contain checked uniform settings with all
-     *          automatic values already replaced.
+     * @param c Checked uniform settings with all automatic values already replaced.
      *
-     * @throws std::exception If a required key is absent or a numeric conversion fails. This constructor
-     *         does not call validate(), replace automatic values, or repair invalid combinations.
+     * @throws std::exception If a required setting is missing or a number cannot be read. This constructor
+     *         does not check or repair the settings.
      *
-     * @note The channel fallback maps the only other validated value, `eh`, to ElectronHadron. Hadron text is likewise safe because RunConfig admits exactly four species.
+     * @note After validation, the only remaining channel is `eh`, and only four hadron names are allowed.
      */
     explicit UniformConfig(const RunConfig& c)
         : channel(c.get("channel") == "1e"                ? UniformChannel::Electron

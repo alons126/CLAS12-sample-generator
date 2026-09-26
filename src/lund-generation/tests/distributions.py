@@ -2,16 +2,16 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Check production uniform-sample distributions against analytic CDFs.
+"""Compare generated uniform samples with their expected distributions.
 
 Purpose:
-    Test electron/proton mixture components and the uniform neutron prescription.
+    Check the electron and proton mixture parts and the flat neutron distribution.
 
 Workflow:
-    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+    CTest supplies the executable -> temporary runs create samples -> numerical checks report failures.
 
 Notes:
-    Test fixtures are isolated; external and legacy sources are read-only.
+    Tests use temporary files and do not change external or archived sources.
 """
 
 import json
@@ -24,17 +24,17 @@ import tempfile
 # ks --------------------------------------------------------------------
 # region ks
 def ks(values, cdf):
-    """Check empirical draws against an analytical CDF.
+    """Check sampled values against an expected cumulative distribution.
 
     Algorithm:
-        Sort values and compare both sides of each empirical CDF jump against the 0.025 bound.
+        Sort the values and measure the largest distance from the expected cumulative distribution.
 
     Args:
         values: Sampled values for one distribution.
-        cdf: Expected cumulative distribution function.
+        cdf: Function that returns the expected fraction at a value.
 
     Returns:
-        None; excessive CDF distance raises an assertion.
+        Nothing. A distance of 0.025 or more raises an assertion.
     """
 
     values=sorted(values)
@@ -46,7 +46,7 @@ def ks(values, cdf):
 # Test execution ------------------------------------------------
 # region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-distributions-') as temp:
-    # The 1e default alternates uniform p and uniform 1/p over [0.7, beam].
+    # The default 1e sample alternates flat momentum and flat inverse momentum from 0.7 to the beam value.
     output_root=Path(temp)/'1e'
     out=output_root/'Uniform_sample_1e_5986MeV'
 

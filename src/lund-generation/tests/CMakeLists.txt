@@ -4,10 +4,10 @@
 
 # src/lund-generation/tests/CMakeLists.txt -------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Test executables, isolated references and CTest registration.
+#   Test programs, separate reference programs, and CTest setup.
 #
 # Purpose:
-#   Check generated data, legacy parity, sampling distributions and workflow command contracts.
+#   Check generated data, archived behavior, sampling distributions, and command arguments.
 #
 # Workflow:
 #   Root enables BUILD_TESTING -> build fixtures/references -> CTest runs registered checks.
@@ -53,8 +53,8 @@ endif()
 # Independent legacy references ------------------------------------------------------------------------------------------------------------------------------------------
 # region Independent legacy references
 # Purpose:
-#     Compile controlled adapters separately from production; compare bytes, bins and distributions.
-# Archived implementations are linked only into independent reference executables.
+#     Build archived references separately, then compare files, plots, and distributions.
+# Archived code is linked only into separate test programs.
 if(BUILD_UNIFORM)
     add_executable(legacy-uniform-reference legacy_uniform_driver.cpp)
     target_include_directories(legacy-uniform-reference PRIVATE ${PROJECT_SOURCE_DIR})
@@ -76,8 +76,8 @@ endif()
 # Isolated geometry fixture ----------------------------------------------------------------------------------------------------------------------------------------------
 # region Isolated geometry fixture
 # Purpose:
-#     Read the external header into a separate test fixture; compile the actual adapter against that fixture.
-# Prove that replacing the external header alone changes the production adapter.
+#     Build the real adapter with a test copy of the external header.
+# This proves that replacing only the external header changes the adapter output.
 set(REPLACEMENT_TARGETS ${CMAKE_CURRENT_BINARY_DIR}/replacement/external/targets.h)
 add_custom_command(OUTPUT ${REPLACEMENT_TARGETS}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/prepare_replacement_geometry.py

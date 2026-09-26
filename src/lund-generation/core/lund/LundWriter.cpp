@@ -4,7 +4,7 @@
 
 /**
  * @file LundWriter.cpp
- * @brief Implements LUND file writing and completed-run manifests.
+ * @brief Implements LUND file writing and the completed-run log.
  *
  * Purpose:
  *   Print run settings, safely replace the requested run directory, write split LUND files, count every
@@ -15,12 +15,12 @@
  *   -> write headers and particles in order -> let the source save monitoring -> close the active file
  *   -> write lund-gen-log.json.tmp -> rename it to lund-gen-log.json.
  *
- * Format contract:
+ * Written format:
  *   The LUND format uses fixed whitespace, precision, and uniform per-file IDs. Particle masses come
  *   from the external target source through particleMass(). Records use momentum in GeV/c, mass in
  *   GeV/c², energy in GeV, and vertices in cm.
  *
- * Failure behavior:
+ * Failure:
  *   Unsafe replacement targets are rejected before deletion. Stream and filesystem failures throw and
  *   may leave partial output for inspection; absence of lund-gen-log.json marks the run incomplete.
  */
@@ -63,7 +63,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
               << "=============================================================\n"
               << env::RESET_COLOR;
 
-    // Completion reports deliberately do not repeat setup values already printed before output creation.
+    // Completion reports do not repeat setup values.
     if (final) {
         const auto events_per_file = config.integer("events-per-file");
         const auto output_files = (written + events_per_file - 1) / events_per_file;
@@ -78,13 +78,12 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         return;
     }
 
-    // Run limits apply to both sources and directly control writer capacity and file rotation.
+    // These limits control the total count and file splitting for both sources.
     std::cout << env::SYSTEM_COLOR << "\n- Run limits ------------------------------------------------\n" << env::RESET_COLOR;
     print_value("Requested events", config.get("events"));
     print_value("Events per file", config.get("events-per-file"));
 
-    // Beam and target settings control event headers and vertex sampling. RG-M identity also supplies
-    // resolved defaults, while geometry and A/Z retain their distinct spatial/metadata responsibilities.
+    // Beam and target settings control event headers and vertex sampling. Geometry and A/Z stay separate.
     std::cout << env::SYSTEM_COLOR << "\n- Beam and target -------------------------------------------\n" << env::RESET_COLOR;
     print_value("Beam energy [GeV]", config.get("beam-energy"));
     print_value("RG-M target", config.get("rgm-target"));
@@ -130,7 +129,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
             }
         }
     } else {
-        // These values identify the physical input and are saved in names and the manifest.
+        // These values identify the physical input in names and the run log.
         std::cout << env::SYSTEM_COLOR << "\n- Physical input --------------------------------------------\n" << env::RESET_COLOR;
         print_value("Event generator", config.get("event-generator"));
         print_value("Event generator version", config.get("event-generator-version"));
@@ -177,7 +176,7 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     const auto directory_text = directory_.string() + std::filesystem::path::preferred_separator;
     const bool contains_checkout = source == directory_ || source.string().rfind(directory_text, 0) == 0;
 
-    // Refuse any path whose removal could erase a root, home, working directory, or source checkout.
+    // Reject any path that could erase a root, home, working directory, or source checkout.
     if (directory_.empty() || directory_ == root || (!home.empty() && directory_ == home) || directory_.filename().empty() || directory_ == std::filesystem::current_path() ||
         contains_checkout) {
         throw std::runtime_error("Refusing unsafe output-directory replacement: " + directory_.string());
@@ -215,8 +214,7 @@ void LundWriter::write(const Event& e) {
     if (full()) { throw std::runtime_error("Run file limit reached"); }
     if (e.particles.empty()) { throw std::runtime_error("Cannot write an empty event"); }
 
-    // Open a new file only when the next event actually needs one. This avoids empty trailing files for
-    // exact multiples of the configured split size and allows a partially filled final file.
+    // Open a file only when an event needs it. This avoids an empty final file.
     if (files_.empty() || files_.back().events == events_per_file_) {
         // Close and flush the previous file before opening the next one.
         if (stream_.is_open()) { stream_.close(); }
@@ -242,14 +240,12 @@ void LundWriter::write(const Event& e) {
         electron_hadron || tester ? "%i \t %i \t %i \t %.3f \t %.3f \t %i \t %.1f \t %i \t %llu \t %.3f \n" : "%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %llu \t %.2f \n";
     stream_ << TString::Format(format, static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., constants::electron_pdg, e.beam_energy, 1, id, e.weight);
 
-    // Derive mass-shell energy E=sqrt(m²+p²) under c=1 and emit fourteen fields per particle. The loop
-    // follows Event::particles order exactly; no source-specific sorting or filtering occurs here.
+    // Calculate E=sqrt(m²+p²) with c=1 and write particles in their stored order.
     int index = 0;
     for (const auto& p : e.particles) {
         const double energy = std::sqrt(p.mass * p.mass + p.momentum.Mag2());
 
-        // A non-finite momentum or mass propagates into energy; checking vertex magnitude catches any
-        // non-finite coordinate. Reject before emitting that particle record.
+        // Reject invalid energy or vertex values before writing the particle.
         if (!std::isfinite(energy) || !std::isfinite(p.vertex.Mag2())) { throw std::runtime_error("Non-finite particle data"); }
         // Particle records retain tabs, status/parent zeros, active flag 1, and five decimal places.
         stream_ << TString::Format("%i \t %.3f \t %i \t %i \t %i \t %i \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \t %.5f \n", ++index, 0., 1, p.pid, 0, 0, p.momentum.X(),
@@ -269,7 +265,7 @@ void LundWriter::finish(std::uint64_t scanned) {
     // Close the LUND file before recording its final counts.
     if (stream_.is_open()) { stream_.close(); }
 
-    // Write to a temporary file so readers never see a partly written final manifest.
+    // Write a temporary log so readers never see a partly written final file.
     std::ofstream manifest;
     manifest.exceptions(std::ios::badbit | std::ios::failbit);
     const auto monitoring_directory = directory_ / "lundfiles" / "lund-gen-monitoring";
@@ -277,7 +273,7 @@ void LundWriter::finish(std::uint64_t scanned) {
     const auto completed_log = monitoring_directory / "lund-gen-log.json";
     manifest.open(temporary_log);
 
-    // Record the manifest version, project build, Git state, ROOT version, targets.h hash, and event
+    // Record the log version, project build, Git state, ROOT version, targets.h hash, and event
     // counts. scanned may be larger than count_ when physical input events are rejected.
     manifest << "{\n  \"schema_version\": 1,\n  \"workflow\": " << jsonString(workflow_) << ",\n  \"version\": " << jsonString(SAMPLE_VERSION)
              << ",\n  \"revision\": " << jsonString(SAMPLE_REVISION) << ",\n  \"root_version\": " << jsonString(gROOT->GetVersion())
@@ -297,7 +293,7 @@ void LundWriter::finish(std::uint64_t scanned) {
              << "    \"github_files_url\": " << jsonString(SAMPLE_GIT_FILES_URL) << "\n  },\n"
              << "  \"scanned_events\": " << scanned << ",\n  \"written_events\": " << count_ << ",\n  \"config\": {";
 
-    // std::map keeps the keys sorted. jsonString() safely writes each key and its exact final value.
+    // std::map keeps keys sorted; jsonString() writes safe JSON text.
     bool first = true;
     for (const auto& [k, v] : config_.values()) {
         manifest << (first ? "\n" : ",\n") << "    " << jsonString(k) << ": " << jsonString(v);

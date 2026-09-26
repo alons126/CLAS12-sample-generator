@@ -4,10 +4,10 @@
 
 # CMakeLists.txt ---------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Project configuration and build orchestration.
+#   Top-level project build settings.
 # 
 # Purpose:
-#   Declare supported workflows, discover dependencies, embed provenance and connect libraries, applications and tests.
+#   Select workflows, find dependencies, record build details, and add the source targets and tests.
 # 
 # Workflow:
 #   CMake configure -> dependencies -> provenance header -> source targets -> optional tests -> install rules.
@@ -34,7 +34,7 @@ option(BUILD_GENIE "Build GENIE GST conversion" ON)
 # Compiler and dependency requirements -----------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiler and dependency requirements
-# Purpose: Match the selected ROOT language standard and propagate required imported targets.
+# Purpose: Use the C++ standard required by ROOT and load the needed ROOT libraries.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -47,7 +47,7 @@ if(BUILD_GENIE)
 endif()
 find_package(Threads REQUIRED)
 find_package(ROOT REQUIRED COMPONENTS ${ROOT_COMPONENTS})
-# Match the ABI/language configuration of the selected ROOT installation.
+# Use the same C++ standard as the selected ROOT installation.
 if(NOT ROOT_CXX_STANDARD OR ROOT_CXX_STANDARD LESS 17)
     message(FATAL_ERROR "ROOT must publish ROOT_CXX_STANDARD >= 17; select a supported ROOT installation")
 endif()
@@ -57,7 +57,7 @@ set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 # Compiled provenance ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiled provenance
-# Purpose: Read full Git/build provenance and the target-header hash; configure a maintained header template. External inputs are never modified.
+# Purpose: Read Git/build details and the target-header hash, then write the generated version header.
 # read_git_value:
 #   Read one Git value from the source checkout and escape it for a generated C++ string literal.
 #
@@ -128,7 +128,7 @@ if(SAMPLE_GIT_REPOSITORY MATCHES "^(https://github\\.com/|git@github\\.com:)(.+)
     string(REGEX REPLACE "\\.git$" "" github_path "${github_path}")
     set(SAMPLE_GIT_FILES_URL "https://github.com/${github_path}/tree/${SAMPLE_GIT_COMMIT_HASH}")
 endif()
-# Reconfigure when the replaceable geometry source changes, including its manifest hash.
+# Reconfigure when the external geometry file changes so its new hash is recorded.
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h")
 file(SHA256 "${PROJECT_SOURCE_DIR}/src/lund-generation/external/targets.h" SAMPLE_TARGETS_SHA256)
 configure_file(src/lund-generation/core/support/Version.h.in generated/Version.h @ONLY)
@@ -137,7 +137,7 @@ configure_file(src/lund-generation/core/support/Version.h.in generated/Version.h
 # Build graph and tests --------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Build graph and tests
-# Purpose: Order subdirectories so libraries exist before applications and tests reference them.
+# Purpose: Add source directories in the order needed by their targets and tests.
 include(CTest)
 add_subdirectory(src)
 # endregion

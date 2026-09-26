@@ -22,6 +22,9 @@
 # 
 # Outputs:
 #   Writes only to standard output. run.csh treats this helper as optional presentation.
+#
+# Usage:
+#   Run from the repository launcher when a startup banner is wanted.
 # 
 # Failure behavior:
 #   A printer failure must not determine whether synchronization, build, or submission proceeds.
@@ -29,12 +32,10 @@
 # Banner rendering ------------------------------------------------------------
 
 # region Banner rendering
-# Set the banner color directly so this standalone helper does not require set_colors.csh.
+# Start the blue logo color.
 echo "\033[34m"
 
-# The heredoc keeps the wide Unicode artwork readable in source form. The sed filter supports the
-# project's banner placeholder convention, where @ may stand in for a literal dollar sign without
-# inviting shell-variable expansion inside the heredoc.
+# Keep the artwork readable here. Replace `@` with a literal dollar sign when printing.
 cat << EOF | sed 's/@/\$/g'
 ####################################################################################################
 ####################################################################################################
@@ -58,6 +59,6 @@ By: Alon Sportes for e4nu
 ####################################################################################################
 EOF
 
-# Restore the terminal default so commands printed after the banner are not blue.
+# Restore the normal terminal color.
 echo "\033[0m"
 # endregion

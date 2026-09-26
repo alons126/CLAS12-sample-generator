@@ -4,7 +4,7 @@
 
 /**
  * @file uniform_lund_generator_main.cpp
- * @brief Uniform LUND generator command-line entry point.
+ * @brief Starts uniform LUND generation from the command line.
  *
  * Purpose:
  *   Read command-line settings, run uniform generation, and return a process status.
@@ -55,18 +55,14 @@ namespace env = environment;
 
 #pragma region /* main */
 /**
- * @brief Uniform-generator command-line entry point.
+ * @brief Run uniform generation from command-line arguments.
  *
  * Purpose:
- *   Handle help, errors, and the exit code here. RunConfig checks the settings, and generateUniform()
- *   creates the sample and its output files.
+ *   Handle help and errors here. RunConfig checks settings, and generateUniform() creates the sample.
  *
  * Workflow:
- *   1. Mark this executable as the uniform source for shared help and configuration parsing.
- *   2. Print help and stop when `--help` is the only user argument.
- *   3. Parse and validate all generation options into a RunConfig.
- *   4. Generate the configured LUND files.
- *   5. Return success, or report a caught standard exception and return failure.
+ *   Select uniform settings -> print help when requested -> check options -> generate LUND files ->
+ *   return success or report an error.
  *
  * @param argc Number of argv entries, including the executable name.
  * @param argv Process arguments read during this call. This function does not change or store them.
@@ -81,23 +77,23 @@ namespace env = environment;
  *         standard error. Non-standard exceptions are outside this boundary.
  */
 int main(int argc, char** argv) {
-    // The shared parser serves both applications. This flag selects uniform help and checks.
+    // Select the uniform branch of the shared parser.
     constexpr bool uniform = true;
 
     try {
-        // Only a standalone --help request prints help. Mixed arguments go through normal parsing.
+        // Print help only when it is the sole user argument.
         if (argc == 2 && std::string(argv[1]) == "--help") {
             std::cout << samples::help(uniform);
             return 0;
         }
 
-        // Read and check every option before generation can replace an output directory.
+        // Check every option before output can be replaced.
         samples::generateUniform(samples::RunConfig::parse(argc, argv, uniform));
 
-        // Reaching this point means the complete generation run succeeded.
+        // Generation finished successfully.
         return 0;
     } catch (const std::exception& error) {
-        // Reset the color before printing the exception text. Status 1 tells workflow.py to stop.
+        // Reset the color before the error text and return failure.
         std::cerr << env::ERROR_COLOR << "Error: " << env::RESET_COLOR << error.what() << '\n';
 
         return 1;

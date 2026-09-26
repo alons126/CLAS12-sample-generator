@@ -6,25 +6,17 @@
 
 # run.csh --------------------------------------------------------------------
 # Description:
-#   Authoritative ifarm checkout entry point.
+#   Main ifarm entry point.
 # 
 # Purpose:
-#   Replace the disposable server clone with the remote revision, load its environment, then build
-#   and run one configured CLAS12 sample workflow.
+#   Update the disposable server checkout, load its environment, and run one workflow.
 #
 # Workflow:
-#   1. Find the checkout from the caller's directory, this file, or CLAS12_SAMPLES_DIR; normalize
-#      it and verify both `.git` and the project workflow driver before any destructive command.
-#   2. Enter that verified checkout and run the intentionally destructive updater in a child tcsh.
-#      The updater validates the Git worktree, cleans untracked/ignored files except build/, resets
-#      tracked server changes, pulls the configured upstream, initializes pinned submodules, and
-#      prints the resulting HEAD/branch.
-#   3. After synchronization, initialize the LUND environment or pass preloaded GEMC/reconstruction
-#      through the sourced submission bridge to Python and sbatch.
-#   4. Source the single submission script for submit; otherwise forward the original quoted
-#      arguments to src/launcher/workflow.py for building, testing and LUND creation.
-#   5. Restore the caller's directory and return the captured result as both CLAS12_SAMPLE_STATUS and
-#      immediate tcsh `$status`, without using `exit` in this normally sourced launcher.
+#   1. Find and verify the checkout before changing any files.
+#   2. Replace the ifarm checkout with the remote version, while keeping the build directory.
+#   3. Load the needed software environment.
+#   4. Create LUND files or submit simulation jobs.
+#   5. Restore the caller's directory and return the workflow status without closing the shell.
 # 
 # CLI options (launcher-owned for create-lund):
 #   --workflow create-lund|submit  Select one of the two user-facing workflows (required).
@@ -73,16 +65,13 @@
 #   source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
 # 
 # Forwarded options:
-#   create-lund forwards remaining options to the selected LUND executable. Submit forwards them
-#   to submit.py (which imports resolve_inputs.py); key submission controls include --lund-dir, --config, and --execute.
+#   create-lund passes remaining options to the selected LUND program. Submit passes them to submit.py.
 # 
 # Inputs:
-#   $argv carries launcher and child options. CLAS12_SAMPLES_DIR is an optional environment variable
-#   set by the user with `setenv`; when present, it supplies the absolute checkout path and overrides
-#   automatic discovery. The project does not create this variable.
+#   $argv contains launcher and workflow options. An optional CLAS12_SAMPLES_DIR value sets the checkout.
 # 
 # Outputs:
-#   CLAS12_SAMPLE_STATUS and immediate $status report the complete update/build/run result.
+#   CLAS12_SAMPLE_STATUS and $status contain the final result.
 # 
 # Notes:
 #   The ifarm checkout is disposable. Commit and push valuable changes from the local development
@@ -91,53 +80,38 @@
 # Checkout discovery ----------------------------------------------------------
 
 # region Checkout discovery
-# Responsibility 1: find and verify the repository.
-#
-# In tcsh, $0 identifies the script when run directly, but commonly identifies the parent shell
-# (`tcsh`, `csh`, or an option-like value) when this file is sourced. Start from the caller's current
-# directory so the documented `source run.csh` command works from the checkout root.
+# When sourced, $0 often names the parent shell. Start from the current directory.
 set _clas12_invocation = "$0"
 set _clas12_root = "$cwd"
 
-# During direct execution, derive the checkout from the script's containing directory. The `:t`
-# modifier extracts the final path component and `:h` extracts the parent directory.
+# When run directly, use the directory that contains this file.
 if ("$_clas12_invocation:t" != "tcsh" && "$_clas12_invocation:t" != "csh" && "$_clas12_invocation" !~ "-*") then
     set _clas12_root = "$_clas12_invocation:h"
 endif
 
-# An explicit environment value has final precedence. CLAS12_SAMPLES_DIR is not defined by this
-# project: the user sets it only when they want to source run.csh from outside the checkout, for example:
+# A user-set CLAS12_SAMPLES_DIR takes priority when sourcing from outside the checkout:
 #   unset CLAS12_SAMPLES_DIR
 #   unsetenv CLAS12_SAMPLES_DIR
 #   setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
 #   source "$CLAS12_SAMPLES_DIR/run.csh"
-# It remains in the shell until `unsetenv CLAS12_SAMPLES_DIR`. When the user is already at the checkout
-# root, `source run.csh` uses $cwd and the variable is unnecessary.
+# The value remains until `unsetenv CLAS12_SAMPLES_DIR`.
 if ($?CLAS12_SAMPLES_DIR) then
     set _clas12_root = "$CLAS12_SAMPLES_DIR"
 endif
 
-# Convert the selected path to an absolute, normalized directory before any cleanup or Git command.
+# Make the path absolute before any cleanup or Git command.
 set _clas12_root = `cd "$_clas12_root" && pwd`
 
-# Require both a Git worktree marker and this project's maintained Python driver. Checking `.git`
-# alone could accept an unrelated repository; checking only `workflow.py` could permit destructive
-# cleanup in a copied source directory that is not the intended disposable clone. Preflight errors
-# remain plain text because the shared color palette is intentionally loaded only after the checkout
-# has been verified and entered.
+# Require both Git data and this project's workflow driver so cleanup cannot target another directory.
 if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
     echo "Error: Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
 
-    # Record failure and jump to the shared status-return block. Avoid `exit` because run.csh is
-    # normally sourced and must not terminate the user's interactive SSH shell.
+    # Return through the shared block so a sourced shell stays open.
     set CLAS12_SAMPLE_STATUS = 1
     goto clas12_launcher_finish
 endif
 
-# Validate the two information-only/incomplete forms before entering the checkout or changing it.
-# `--help` is handled directly by the maintained Python parser. An empty invocation prints concrete
-# commands and returns usage status 2. Neither path performs clean/reset/pull, loads the environment,
-# configures CMake, creates LUND files, or submits jobs.
+# Handle help and an empty command before updating the checkout.
 if ($#argv == 1) then
     if ("$argv[1]" == "--help") then
         python3 "$_clas12_root/src/launcher/workflow.py" --help
@@ -173,7 +147,7 @@ endif
 # Submission selection -------------------------------------------------------
 
 # region Submission selection
-# Submission accepts manifest/config/CLI inputs; its resolver has no build or submission responsibilities.
+# Detect submission so its arguments can be checked before the checkout update.
 set _clas12_submit = 0
 if ($#argv >= 1) then
     if ("$argv[1]" == "--workflow=submit") set _clas12_submit = 1
@@ -189,7 +163,7 @@ if ($_clas12_submit == 1) then
         shift _clas12_submission_args
         shift _clas12_submission_args
     endif
-    # Help and malformed arguments must not trigger the destructive server refresh.
+    # Help and invalid arguments must not update the server checkout.
     python3 "$_clas12_root/src/slurm-submission/resolve_inputs.py" --check-arguments $_clas12_submission_args:q
     set CLAS12_SAMPLE_STATUS = $status
     if ($CLAS12_SAMPLE_STATUS != 0) goto clas12_launcher_finish
@@ -202,27 +176,20 @@ endif
 # Server mirror update --------------------------------------------------------
 
 # region Server mirror update
-# Enter the verified checkout so every relative helper path and every Git command is anchored to
-# the intended disposable clone. Suppress pushd's directory-stack printout to keep logs readable.
+# Enter the verified checkout and hide pushd's extra output.
 pushd "$_clas12_root" > /dev/null
 
-# Colors and the logo are presentation helpers. Missing helpers do not block synchronization; the
-# updater and Python driver remain responsible for returning the operational status.
+# Missing color or logo helpers do not stop the workflow.
 if (-f src/launcher/environment/set_colors.csh) source src/launcher/environment/set_colors.csh
 if (-f src/launcher/printers/print_logo.csh) source src/launcher/printers/print_logo.csh
 
-# Resolve the local/test bypass without expanding an undefined tcsh variable. Normal ifarm use
-# leaves CLAS12_SKIP_SERVER_SYNC unset, so synchronization remains the default behavior.
+# Tests may explicitly skip the server update. Normal ifarm use always updates.
 set _clas12_skip_server_sync = 0
 if ($?CLAS12_SKIP_SERVER_SYNC) then
     if ("$CLAS12_SKIP_SERVER_SYNC" == "1") set _clas12_skip_server_sync = 1
 endif
 
-# Responsibility 2: replace the disposable ifarm clone with the pushed repository state.
-#
-# Automated launcher tests and deliberate local debugging may bypass destructive Git operations.
-# Otherwise run the updater in a child tcsh: its `exit` calls cannot terminate the sourced parent
-# shell, and its exit status becomes the gate for environment setup and workflow execution.
+# Run the updater in a child shell so it cannot close the shell that sourced run.csh.
 # `src/launcher/code_updater.csh` performs, in order:
 #   - `git rev-parse --show-toplevel` to require a recognized worktree;
 #   - `git clean -fxd -e build/ -e build` to remove server-only untracked and ignored content while
@@ -230,10 +197,9 @@ endif
 #   - `git reset --hard` to discard server-side tracked edits;
 #   - `git pull` to obtain the configured upstream revision;
 #   - `git submodule sync --recursive` and `git submodule update --init --recursive` to check out
-#     the exact external reference revisions recorded by that revision; and
+#     the recorded external revisions; and
 #   - `git log -1 --oneline` plus `git branch --show-current` to report the resulting checkout.
-# Each state-changing Git command is checked there. Any failure is captured below and prevents the
-# environment, build, LUND creation, and job submission stages from running.
+# Any updater failure stops environment setup and the selected workflow.
 if ($_clas12_skip_server_sync == 1) then
     echo "${SYSTEM_COLOR}Skipping ifarm checkout replacement (explicit local/test override).${RESET_COLOR}"
     set CLAS12_SAMPLE_STATUS = 0
@@ -243,9 +209,7 @@ else
     set CLAS12_SAMPLE_STATUS = $status
 endif
 
-# The updater may replace the palette and its variable names while this already-sourced run.csh is
-# still executing. Reload the synchronized helper before any newly pulled launcher file can consume
-# those variables. This also clears obsolete same-named tcsh locals through set_colors.csh itself.
+# Reload colors because the update may have changed their names or values.
 if ($CLAS12_SAMPLE_STATUS == 0) then
     if (-f src/launcher/environment/set_colors.csh) then
         source src/launcher/environment/set_colors.csh
@@ -256,11 +220,7 @@ if ($CLAS12_SAMPLE_STATUS == 0) then
     endif
 endif
 
-# Responsibility 3: load the server environment into this sourced shell.
-#
-# Source the environment only from the successfully updated checkout. Sourcing is required here so
-# compiler, ROOT, GEMC, reconstruction, and site variables remain available to the Python driver and
-# its child processes. A setup failure prevents the workflow from running.
+# Source the environment so its settings reach the Python driver and child programs.
 if ($CLAS12_SAMPLE_STATUS == 0 && $_clas12_submit == 0 && -f src/launcher/environment/set_environment.csh) then
     source src/launcher/environment/set_environment.csh
     set CLAS12_SAMPLE_STATUS = $status
@@ -270,8 +230,7 @@ endif
 # Workflow dispatch -----------------------------------------------------------
 
 # region Workflow dispatch
-# The sourced submission bridge gives Python the preloaded environment and preserves its return status.
-# LUND creation retains its existing Python build/creation driver.
+# Submission uses its shell bridge; LUND creation uses the Python workflow driver.
 if ($CLAS12_SAMPLE_STATUS == 0) then
     if ($_clas12_submit == 1) then
         source src/slurm-submission/setup_and_submit.csh $_clas12_submission_args:q
@@ -282,35 +241,23 @@ if ($CLAS12_SAMPLE_STATUS == 0) then
     endif
 endif
 
-# Balance the earlier pushd for every path that reaches this block and restore the directory from
-# which the user sourced run.csh. Suppress tcsh's directory-stack output because it is not a workflow
-# result; popd does not replace the already captured workflow status.
+# Return to the directory from which the user sourced run.csh.
 popd > /dev/null
 # endregion
 
 # Caller status ---------------------------------------------------------------
 
 # region Caller status
-# Responsibility 5: return status without closing the sourced interactive shell.
-#
-# Every completion path converges here. In particular, checkout validation uses `goto` to reach this
-# block before any directory change, while the normal path arrives here after restoring the caller's
-# working directory.
+# Every completion path returns through this block.
 clas12_launcher_finish:
 
-# Remove launcher-only scratch variables from the interactive environment because sourcing executes
-# this file in the caller's tcsh process. Keep CLAS12_SAMPLE_STATUS available so the user can inspect
-# the named workflow result after control returns.
+# Remove temporary variables but keep CLAS12_SAMPLE_STATUS for the user.
 unset _clas12_invocation _clas12_root
 if ($?_clas12_submit) unset _clas12_submit
 if ($?_clas12_submission_args) unset _clas12_submission_args
 if ($?_clas12_argument) unset _clas12_argument
 if ($?_clas12_skip_server_sync) unset _clas12_skip_server_sync
 
-# Run a child shell that exits with the captured workflow result. A direct `exit` here would close the
-# user's interactive SSH shell because `source` executes this file in that shell. The temporary
-# `/bin/sh` exits instead; its code becomes tcsh's immediate `$status` and therefore the status of
-# `source run.csh`. CLAS12_SAMPLE_STATUS remains defined for later inspection, whereas `$status` is
-# replaced by the caller's next command.
+# Use a child shell to return the result without closing the user's sourced shell.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
 # endregion

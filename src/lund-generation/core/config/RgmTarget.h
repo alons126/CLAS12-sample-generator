@@ -42,10 +42,9 @@ namespace samples {
  *   rgmTargets() creates the records once and stores them until the program ends. Callers receive
  *   read-only references and cannot change the catalog.
  *
- * Invariants and consumers:
- *   identifier is unique and comparisons are case-sensitive. A and Z are LUND header defaults. geometry
- *   is checked separately by TargetGeometry. gemc_variation is used in output names and the manifest.
- *   Users may override these defaults separately.
+ * Rules and use:
+ *   identifier is unique and case-sensitive. A and Z are LUND defaults. TargetGeometry checks geometry.
+ *   Output names and the run log use gemc_variation. Users may override each default.
  */
 struct RgmTarget {
     std::string identifier;  ///< Case-sensitive `--rgm-target` name shown in help and profiles.
@@ -70,7 +69,7 @@ struct RgmTarget {
  *
  * @return Read-only reference to records that remain valid until the program ends.
  *
- * @note C++ creates the catalog on its first use and makes that initialization thread-safe.
+ * @note C++ creates the catalog once, the first time it is used.
  */
 const std::vector<RgmTarget>& rgmTargets();
 

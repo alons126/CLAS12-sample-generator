@@ -4,29 +4,25 @@
 # Created by Alon Sportes on 24/09/2026.
 #
 
-"""Build GitHub Wiki pages from the repository's maintained Markdown.
+"""Build GitHub Wiki pages from the project's Markdown files.
 
 Purpose:
-    Keep repository documentation as the single editable source while publishing a navigable copy in
-    the public GitHub Wiki.
+    Keep one editable documentation source and publish a linked copy to the GitHub Wiki.
 
 Workflow:
-    Discover maintained pages -> index repository paths and function definitions -> assign
-    collision-free wiki names -> rewrite local links -> link prose code references to source -> write
-    the generated pages -> create the sidebar and footer -> remove stale generated Markdown pages.
+    Find source pages -> collect file and function locations -> choose unique wiki names -> rewrite
+    links -> write pages, sidebar, and footer -> remove old generated Markdown pages.
 
 Inputs:
     The repository README, docs/**/*.md, tutorial index, sample-profile reference, and build/launcher
     references. The repository slug and default branch are explicit so source links are stable.
 
 Outputs:
-    A flat GitHub Wiki tree rooted at the requested output directory. Existing non-Markdown files and
-    a possible .git directory are preserved; stale top-level Markdown pages are removed. File links
-    target the publishing branch, while function links include the current definition-line anchor.
+    A flat wiki directory. Existing non-Markdown files and `.git` stay in place. File links use the
+    selected branch, and function links include their current source line.
 
 Failure:
-    Missing source files, unresolved local links, duplicate wiki names, or an unsafe output directory
-    stop generation before the page set is reported as complete.
+    Missing files, broken local links, duplicate page names, or an unsafe output path stop the build.
 
 CLI options:
     --output DIRECTORY       Write the generated wiki tree here (required).
@@ -87,14 +83,14 @@ IGNORED_REFERENCE_PARTS = {".git", "build", "test-runs", "__pycache__"}
 
 # region Page discovery
 def source_pages():
-    """Return the maintained Markdown-to-wiki filename mapping.
+    """Map each maintained Markdown source to its wiki filename.
 
     Workflow:
-        Add the explicitly renamed overview/reference pages, then add every docs/**/*.md file except the
-        documentation home already mapped to Home.md. Nested source paths become unique flat wiki names.
+        Add the pages with fixed names, then add every remaining documentation page. Turn nested paths
+        into unique flat names.
 
     Returns:
-        Dictionary keyed by absolute source paths with flat wiki filenames as values.
+        Absolute source paths mapped to flat wiki filenames.
 
     Raises:
         FileNotFoundError: If a required explicitly mapped source is missing.
@@ -136,7 +132,7 @@ def source_pages():
 
 # region Markdown conversion
 def page_title(text, fallback):
-    """Return the first level-one Markdown heading or a filename-derived fallback."""
+    """Return the first page title, or build one from the filename."""
 
     match = re.search(r"^#\s+(.+?)\s*$", text, re.MULTILINE)
 
@@ -144,7 +140,7 @@ def page_title(text, fallback):
 
 
 def repository_url(repository, branch, relative, fragment="", image=False):
-    """Build one public URL for a repository file or directory.
+    """Build a public URL for one repository path.
 
     Args:
         repository: GitHub OWNER/NAME slug.
@@ -154,7 +150,7 @@ def repository_url(repository, branch, relative, fragment="", image=False):
         image: Use raw.githubusercontent.com for an embedded image when true.
 
     Returns:
-        URL-safe public source or raw-content URL.
+        Public source URL, or raw-content URL for an image.
     """
 
     path = urllib.parse.quote(relative.as_posix(), safe="/-._~")
@@ -168,11 +164,11 @@ def repository_url(repository, branch, relative, fragment="", image=False):
 
 
 def repository_references():
-    """Index repository paths that prose references may link to.
+    """Collect repository paths that documentation may link to.
 
     Returns:
-        Tuple containing every eligible resolved path and a suffix lookup used for unique basename or
-        shortened-path resolution. Build products, Git internals, and Python caches are excluded.
+        All usable paths and a lookup for short path names. Build output, Git data, and Python caches
+        are excluded.
     """
 
     paths = set()
@@ -194,15 +190,13 @@ def repository_references():
 
 
 def function_references(paths):
-    """Index linkable function definitions by qualified and unqualified names.
+    """Collect function definitions by full and short name.
 
     Inputs:
         paths: Eligible repository files and directories returned by `repository_references`.
 
     Returns:
-        Dictionary from a displayed function name to one or more `(path, line)` definitions. A caller
-        links only names with one unique definition, preventing arbitrary links for names such as
-        `main` that occur in several translation units.
+        Function names mapped to source paths and lines. Callers link only names with one clear match.
     """
 
     definitions = defaultdict(list)
@@ -237,7 +231,7 @@ def function_references(paths):
 
 
 def resolve_repository_path(code, source, paths, suffixes):
-    """Resolve one inline-code token to a unique repository file or directory."""
+    """Find the one repository path named by an inline-code value."""
 
     if any(character.isspace() for character in code) or any(character in code for character in "*{}<>|=$'\""):
         return None
@@ -270,7 +264,7 @@ def resolve_repository_path(code, source, paths, suffixes):
 
 
 def resolve_function(code, definitions):
-    """Resolve one inline-code token to a unique repository function definition."""
+    """Find the one function definition named by an inline-code value."""
 
     match = re.fullmatch(r"(?P<name>[A-Za-z_~][A-Za-z0-9_~]*(?:::[A-Za-z_~][A-Za-z0-9_~]*)*)(?:\(.*\))?", code)
 
@@ -287,11 +281,11 @@ def resolve_function(code, definitions):
 
 
 def link_code_references(text, source, repository, branch, paths, suffixes, definitions):
-    """Link prose file and function references to their exact repository locations.
+    """Link file and function names to their repository locations.
 
     Workflow:
-        Preserve fenced examples and existing Markdown links -> resolve an inline-code token as a
-        repository path -> otherwise resolve it as a unique function definition -> emit a GitHub link.
+        Keep code blocks and existing links unchanged -> try a repository path -> try a unique function
+        name -> write a GitHub link when one match exists.
 
     Inputs:
         text: Complete Markdown page after ordinary local-link rewriting.
@@ -303,14 +297,15 @@ def link_code_references(text, source, repository, branch, paths, suffixes, defi
         definitions: Function-definition lookup with current line numbers.
 
     Returns:
-        Markdown whose prose code spans link files to blobs/trees and functions to definition lines.
+        Markdown with links for known file and function names.
 
     Notes:
-        Fenced code remains unchanged so commands and examples stay directly copyable. Ambiguous or
-        external names remain unlinked rather than selecting a misleading destination.
+        Code blocks stay copyable. Unknown or unclear names stay unlinked.
     """
 
     def replace(match):
+        """Link one inline-code match when it names a known path or function."""
+
         start, end = match.span()
 
         if start > 0 and end < len(match.string) and match.string[start - 1] == "[" and match.string[end] == "]":
@@ -343,7 +338,7 @@ def link_code_references(text, source, repository, branch, paths, suffixes, defi
 
 
 def rewrite_links(text, source, pages, repository, branch):
-    """Rewrite local Markdown targets for the flat GitHub Wiki namespace.
+    """Rewrite local Markdown links for the flat wiki directory.
 
     Inputs:
         text: Complete Markdown page text.
@@ -353,8 +348,8 @@ def rewrite_links(text, source, pages, repository, branch):
         branch: Public source branch.
 
     Returns:
-        Markdown with wiki-to-wiki links for generated pages and public repository URLs for other
-        checked-in files. External URLs and page-local anchors are unchanged.
+        Markdown with wiki links for pages and repository links for other files. External links and
+        links within a page stay unchanged.
 
     Raises:
         FileNotFoundError: If a relative link names no checked-in source target.
@@ -362,6 +357,8 @@ def rewrite_links(text, source, pages, repository, branch):
     """
 
     def replace(match):
+        """Rewrite one local Markdown link for the generated wiki."""
+
         raw_target = match.group("target")
         target = raw_target[1:-1] if raw_target.startswith("<") and raw_target.endswith(">") else raw_target
 
@@ -393,7 +390,7 @@ def rewrite_links(text, source, pages, repository, branch):
 
 
 def generated_notice(repository, branch, source):
-    """Return the source-of-truth notice prepended to each generated page."""
+    """Return the source notice placed at the top of each generated page."""
 
     relative = source.relative_to(ROOT)
     url = repository_url(repository, branch, relative)
@@ -405,7 +402,7 @@ def generated_notice(repository, branch, source):
 
 # region Output publication
 def validate_output(output):
-    """Reject output paths that could overwrite the checkout or one of its ancestors."""
+    """Reject output paths that could overwrite the checkout or a parent directory."""
 
     resolved = output.resolve()
 
@@ -416,14 +413,14 @@ def validate_output(output):
 
 
 def build(output, repository, branch):
-    """Generate the complete flat wiki page set.
+    """Generate all pages in the flat wiki directory.
 
     Workflow:
-        Validate destination -> index source references -> convert maintained pages -> write navigation
-        -> delete obsolete top-level Markdown pages not present in the generated set.
+        Check the output path -> collect source references -> convert pages -> write navigation ->
+        delete old generated Markdown pages.
 
     Returns:
-        Number of generated content pages, excluding sidebar and footer.
+        Number of content pages, not counting sidebar and footer.
     """
 
     output = validate_output(output)
@@ -484,7 +481,7 @@ def build(output, repository, branch):
 
 # region Command-line entry point
 def parser():
-    """Create the documented command-line parser."""
+    """Create the command-line parser shown in this file's help."""
 
     result = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     result.add_argument("--output", required=True, type=Path)
@@ -495,7 +492,7 @@ def parser():
 
 
 def main():
-    """Parse arguments, build the wiki, and report its deterministic page count."""
+    """Read arguments, build the wiki, and print its page count."""
 
     args = parser().parse_args()
 

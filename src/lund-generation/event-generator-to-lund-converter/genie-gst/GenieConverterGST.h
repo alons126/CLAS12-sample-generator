@@ -4,7 +4,7 @@
 
 /**
  * @file GenieConverterGST.h
- * @brief Declares conversion from GENIE GST input to LUND.
+ * @brief Declares how GENIE GST events are copied to LUND.
  *
  * Purpose:
  *   Read existing GENIE GST truth into the common Event type. Shared code samples target vertices,
@@ -19,20 +19,20 @@
  *   event limits, output location, and sample metadata.
  *
  * Outputs:
- *   Split LUND text files and a completion manifest are written under the resolved run directory. No
+ *   Split LUND text files and a completion log are written under the resolved run directory. No
  *   event-generator execution, detector simulation or physical-conversion monitoring file is produced.
  *
  * Ownership and lifetime:
  *   The caller owns RunConfig. convertGenieGST() reads it during the call and returns after output is closed
  *   or an error stops conversion.
  *
- * Invariants:
+ * Rules:
  *   GST particle momenta and ordering are preserved for supported identities; one sampled vertex is
  *   shared by all particles in a written event. Only QE, MEC, RES and DIS reactions are supported;
  *   another reaction requires a converter update.
  *
  * Failure:
- *   Invalid configuration, unusable GST schema or data, absence of supported interactions, unsafe output
+ *   Invalid settings, unusable GST branches or data, no supported interactions, unsafe output
  *   preparation and file-writing failures are reported by exception.
  */
 
@@ -54,8 +54,8 @@ namespace samples {
  *
  * Workflow:
  *   Revalidate the resolved settings, validate required GST branches, traverse entries in chain order,
- *   retain QE/MEC/RES/DIS interactions, copy the scattered electron and supported detector-stable final
- *   state, apply the submission-block cutoff only before a follow-up file starts, stop at capacity or
+ *   keep QE/MEC/RES/DIS interactions, copy the scattered electron and supported final particles, apply
+ *   the submission-block cutoff only before a later file starts, stop at capacity or
  *   input exhaustion, then finalize the run.
  *
  * Inputs:
@@ -66,8 +66,8 @@ namespace samples {
  *   No C++ value is returned. Success leaves split LUND files and lund-gen-log.json in the output
  *   directory and prints the scanned and written event counts.
  *
- * Assumptions:
- *   Final-state PDG and momentum arrays are parallel variable-length GST branches counted by nf.
+ * Expected input:
+ *   Final-state PDG and momentum arrays have the same variable length stored in nf.
  *   Reaction selection supports only QE, MEC, RES and DIS; adding another process requires changing
  *   this converter.
  *

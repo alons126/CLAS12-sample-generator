@@ -2,16 +2,16 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Check sourced and executed SSH launcher behavior.
+"""Test the launcher when it is sourced or run with tcsh.
 
 Purpose:
-    Exercise quoting, shell survival, settings, build calls and updates using isolated local fixtures.
+    Check quoting, shell survival, settings, build calls, and updates without touching a real server checkout.
 
 Workflow:
-    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+    CTest supplies the paths -> temporary fixtures run the commands -> assertions report failures.
 
 Notes:
-    Test fixtures are isolated; protected external and legacy sources are read-only.
+    Tests use temporary files. External and archived sources stay unchanged.
 """
 
 import hashlib
@@ -28,11 +28,11 @@ project, shell, build = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
 # sourced --------------------------------------------------------------------
 # region sourced
 def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
-    # Values are argv entries to tcsh, not interpolated shell source text.
+    # Pass values as tcsh arguments so the shell does not rebuild them as source text.
     """Exercise a wrapper inside a sourced tcsh session.
 
     Algorithm:
-        Pass arguments through shell argv, source the wrapper, then check shell survival and exit status.
+        Pass arguments through shell argv, source the wrapper, then check that the shell stays open and returns the expected status.
 
     Args:
         args: Launcher argument list.
@@ -42,14 +42,13 @@ def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
         entry: Checkout-relative wrapper path.
 
     Returns:
-        Captured result; quoting, shell-exit or status mismatches raise an assertion.
+        Captured command result. Quoting, shell, or status errors raise an assertion.
     """
 
     if args:
         program = 'source "$argv[1]" $argv[2-]:q; set result=$status; echo "RESULT=$result"; echo SHELL_ALIVE; /bin/sh -c "exit $result"'
     else:
-        # Model an interactive tcsh, whose argv is empty, rather than leaking this test process's
-        # entry-path argument into the sourced launcher's no-argument preflight.
+        # Give the sourced launcher an empty argv, as it would have in an interactive shell.
         program = 'set entry="$argv[1]"; set argv=(); source "$entry"; set result=$status; echo "RESULT=$result"; echo SHELL_ALIVE; /bin/sh -c "exit $result"'
 
     effective_env = dict(os.environ, CLAS12_SKIP_SERVER_SYNC='1')
@@ -69,8 +68,7 @@ def sourced(args, cwd=project, env=None, success=True, entry='run.csh'):
 # region Execution
 with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     root=Path(tmp).resolve()
-    # Reproduce the tcsh failure mode where local variables shadow exported values. The shared
-    # loader must clear both namespaces and restore the canonical palette in a sourced shell.
+    # Check that a local tcsh variable cannot hide the exported color value after reloading colors.
     color_program = ('set SYSTEM_COLOR = "\\033[35m"; setenv SYSTEM_COLOR "\\033[31m"; '
                      'source "$argv[1]"; set | grep "^SYSTEM_COLOR" >& /dev/null; '
                      'if ($status == 0) exit 1; test "$SYSTEM_COLOR" = "\\033[33m"')
@@ -78,8 +76,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     subprocess.run([shell, '-f', '-c', color_program,
                     str(project/'src/launcher/environment/set_colors.csh')], check=True)
 
-    # Model an in-place update whose parent shell still contains the retired palette names. The
-    # newly pulled environment helper must load its current palette before printing its first banner.
+    # Check that an updated helper replaces old color variables before printing its first banner.
     upgrade_env = dict(os.environ, COLOR_START=r'\033[33m', COLOR_END=r'\033[0m')
 
     for name in ('ERROR_COLOR', 'COMPLETION_COLOR', 'SYSTEM_COLOR', 'INFO_COLOR', 'WARNING_COLOR', 'RESET_COLOR'):
@@ -92,7 +89,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
                     str(project/'src/launcher/environment/set_environment.csh')], cwd=project,
                    env=upgrade_env, check=True)
 
-    # Empty/help invocations are resolved before destructive server synchronization.
+    # Empty and help requests must stop before server synchronization.
     missing=sourced([],success=False)
     assert 'requires an explicit workflow' in missing.stdout
     assert '--workflow create-lund --source uniform' in missing.stdout
@@ -103,7 +100,7 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     assert '--workflow' in help_result.stdout and 'Choose one of these forms:' in help_result.stdout
     assert 'Updating disposable ifarm checkout' not in help_result.stdout
 
-    # Submission no longer accepts LUND build flags or touches build settings.
+    # Submission must reject LUND build options before changing build settings.
     submitted=sourced(['--workflow','submit','--run','false'],success=False)
     assert 'unrecognized arguments' in submitted.stderr
     assert 'Updating disposable ifarm checkout' not in submitted.stdout
@@ -119,21 +116,20 @@ with tempfile.TemporaryDirectory(prefix='clas12-launcher-') as tmp:
     assert m['written_events']==4
     assert m['targets_sha256'] == hashlib.sha256((project/'src/lund-generation/external/targets.h').read_bytes()).hexdigest()
     assert len(m['git']['full_commit_hash']) == 40 and m['git']['repository'].endswith('CLAS12-sample-generator.git')
-    sourced(args)  # legacy behavior replaces the resolved run directory
+    sourced(args)  # A second run replaces the same resolved output directory.
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false','--jobs','0'],success=False)
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false','--build-dir',root/'missing-build'])
     sourced(['--build','false','--workflow','create-lund','--source','physical','--build-dir',build,'--','--help'])
 
-    # From another directory, the documented environment variable identifies the checkout.
+    # The documented environment variable identifies the checkout from another directory.
     env=dict(os.environ,CLAS12_SAMPLES_DIR=str(project))
 
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false'],cwd=root,env=env)
     sourced(['--workflow','create-lund','--source','uniform','--build','false','--run','false'],entry='src/launcher/build_and_run.csh')
-    # Explicit tcsh execution also resolves the entry location. The ownership header precedes the interpreter directive,
-    # so callers that do not source this workflow must select tcsh themselves.
+    # Running with tcsh directly also finds the checkout from the script path.
     subprocess.run([shell, str(project/'run.csh'),'--workflow','create-lund','--source','uniform','--build','false','--run','false'],cwd=root,env=dict(os.environ,CLAS12_SKIP_SERVER_SYNC='1'),check=True,capture_output=True)
 
-    # Verify profile/CLI precedence and argv preservation using isolated fake build tools.
+    # Use a fake CMake command to check setting priority and argument forwarding.
     checkout=root/'checkout'
 
     shutil.copytree(project/'src/launcher',checkout/'src/launcher')

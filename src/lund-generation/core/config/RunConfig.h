@@ -31,30 +31,25 @@ namespace samples {
 #pragma region /* RunConfig object */
 /**
  * @class RunConfig
- * @brief Checked settings shared by the generator, converter, and writer.
+ * @brief Stores checked settings shared by LUND creation code.
  *
  * Purpose:
  *   Store every final key/value setting in one object. Generators can read numbers through checked
  *   conversion functions, and the manifest can record the same final text values.
  *
- * Role:
- *   RunConfig sits between the command-line programs and the LUND workflows. It defines accepted names,
- *   which source wins when values are repeated, how `auto` is resolved, which values are valid, and how
- *   final paths are named. Other components read this object instead of parsing settings again.
+ * Use:
+ *   RunConfig reads command-line and profile settings, applies their priority, replaces `auto`, checks
+ *   values, and builds final paths. Other code reads the finished result.
  *
- * Non-responsibilities:
- *   This object does not create events, read GST trees, sample random numbers, write LUND files, replace
- *   output directories, draw monitoring plots, or submit jobs. Those steps start only after parse()
- *   succeeds.
+ * Scope:
+ *   This object only prepares settings. It does not create events, sample values, write files, draw
+ *   plots, or submit jobs.
  *
- * Creation and workflow:
- *   1. parse() adds shared and source-specific defaults.
- *   2. It reads one optional profile and then applies command-line values.
- *   3. It replaces `auto` with the correct target, channel, beam, name, and path values.
- *   4. validate() rejects invalid combinations before output can be replaced.
- *   5. Generators read individual values, and the writer saves values() in the manifest.
+ * Workflow:
+ *   Add defaults -> read one profile -> apply command-line values -> replace `auto` -> check the full
+ *   result -> let generators read values and the writer save them.
  *
- * Units and representation:
+ * Stored values:
  *   Values stay as strings so the manifest can record their exact final spelling. Momentum uses GeV/c,
  *   beam energy uses GeV, angles use degrees, vertices use cm, and counts, seeds, A, and Z are unsigned
  *   integers.
@@ -63,10 +58,9 @@ namespace samples {
  *   Each RunConfig owns its map and can be copied or moved. Public functions do not change it after
  *   construction. A reference returned by values() is valid only while that RunConfig still exists.
  *
- * Invariants:
- *   A value returned by parse() contains every required key, no unknown keys, no unresolved automatic
- *   values, and an absolute output path. A default-constructed RunConfig is empty and must not be passed
- *   to a generator.
+ * Rules:
+ *   parse() returns all required keys, no unknown keys, no remaining `auto` values, and an absolute
+ *   output path. Do not pass an empty default-constructed object to a generator.
  */
 class RunConfig {
    public:
@@ -95,7 +89,7 @@ class RunConfig {
     std::string get(const std::string& key) const;
 
     /**
-     * @brief Read one complete setting as a finite double.
+     * @brief Read one setting as a finite double.
      * @param key Key whose documented unit remains the unit of the returned value.
      * @return The finite numeric value.
      * @throws std::exception If the key is absent or its complete value is not a finite number.
@@ -103,7 +97,7 @@ class RunConfig {
     double number(const std::string& key) const;
 
     /**
-     * @brief Read a digits-only setting as an unsigned 64-bit integer.
+     * @brief Read a digits-only setting as an unsigned 64-bit value.
      * @param key Total count, per-file count, seed, or nuclear-metadata key to read.
      * @return The parsed unsigned value.
      * @throws std::exception If the key is absent, malformed, negative, or out of range.
@@ -129,8 +123,7 @@ class RunConfig {
     /**
      * @brief All final key/value settings owned by this object.
      *
-     * parse() fixes the allowed keys for the selected source. Values stay as text for conversion and
-     * manifest output. Other code receives copies or a read-only reference.
+     * parse() sets the allowed keys. Values stay as text for conversion and the run log.
      */
     std::map<std::string, std::string> values_;
 };
@@ -144,7 +137,7 @@ class RunConfig {
 std::string help(bool uniform);
 
 /**
- * @brief Encode text as one complete JSON string.
+ * @brief Escape text and wrap it as one JSON string.
  * @param text Unescaped source text.
  * @return Escaped text including surrounding double quotes.
  */

@@ -7,10 +7,10 @@
  * @brief Check the adapter against a test-only replacement header.
  *
  * Purpose:
- *   Verify shifted vertices, new target discovery and independent interleaved RNG streams.
+ *   Check shifted vertices, a new target name, and separate random-number streams.
  *
  * Workflow:
- *   CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+ *   CTest supplies the replacement header and reads this program's exit status.
  */
 
 #include <cmath>
@@ -25,10 +25,10 @@
 /**
  * @brief Check the adapter against a test-only replacement header.
  *
- * Algorithm:
- *   Verify shifted vertices, new target discovery and independent interleaved RNG streams.
+ * Steps:
+ *   Sample both targets and check the positions and random-number streams.
  *
- * @return Zero on success; nonzero for a failed run, invalid invocation or test mismatch.
+ * @return Zero when all checks pass; nonzero otherwise.
  */
 int main() {
     try {

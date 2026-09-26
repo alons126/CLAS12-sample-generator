@@ -2,16 +2,16 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Check generator and converter output contracts.
+"""Test the files written by the generator and converter.
 
 Purpose:
-    Inspect emitted LUND records, manifests, deterministic seeds and rejected inputs.
+    Check LUND records, run logs, repeatable seeds, and invalid inputs.
 
 Workflow:
-    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+    CTest supplies the programs -> temporary runs create files -> assertions report failures.
 
 Notes:
-    Test fixtures are isolated; external and legacy sources are read-only.
+    Tests use temporary files and do not change external or archived sources.
 """
 
 import json
@@ -27,7 +27,7 @@ def run(*args, ok=True):
     """Run a test command and check its expected status.
 
     Algorithm:
-        Run the project's single LUND format, capture diagnostics, and assert the expected result.
+        Run one command, capture its messages, and check whether it should succeed.
 
     Args:
         args: Executable and arguments.
@@ -46,7 +46,7 @@ def run(*args, ok=True):
 # read_run --------------------------------------------------------------------
 # region read_run
 def read_run(directory):
-    """Read a completed run and verify LUND structural invariants.
+    """Read a completed run and check its LUND structure.
 
     Algorithm:
         Read the manifest, parse every header and particle record, and check counts and particle energies.
@@ -55,7 +55,7 @@ def read_run(directory):
         directory: Generated run directory.
 
     Returns:
-        Manifest and parsed event collection; malformed output raises an assertion.
+        Run log and parsed events. Invalid output raises an assertion.
     """
 
     manifest = json.loads((directory / 'lundfiles/lund-gen-monitoring/lund-gen-log.json').read_text())
@@ -114,7 +114,7 @@ def physical_output(root, beam='5.98636'):
 # angles --------------------------------------------------------------------
 # region angles
 def angles(particle):
-    """Recover polar and azimuthal angles from a particle record.
+    """Calculate momentum, polar angle, and azimuthal angle from one particle record.
 
     Algorithm:
         Convert the Cartesian momentum to degrees using polar and azimuthal formulas.

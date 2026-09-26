@@ -4,14 +4,13 @@
 
 /**
  * @file check_monitoring.cpp
- * @brief Verify stored uniform-monitoring names, titles, axes, and legacy text styling.
+ * @brief Check saved uniform-monitoring names, titles, axes, and text style.
  *
  * Purpose:
- *   Make regional hadron notation and persisted ROOT presentation settings part of integration testing.
+ *   Test the hadron region names and ROOT plot style.
  *
  * Workflow:
- *   Open the requested ROOT file -> find one named histogram -> compare its title, axis text, style, and
- *   the file's object count with the expected command-line values -> return success or print the failure.
+ *   Open the ROOT file -> find one histogram -> check its text and style -> report success or failure.
  */
 
 #include <TFile.h>
@@ -30,7 +29,7 @@
  * @brief Check one representative histogram in a generated monitoring ROOT file.
  * @param argc Six arguments: program, ROOT file, object name, title, x-axis title, expected key count.
  * @param argv Argument storage owned by the process runtime.
- * @return Zero when the complete contract matches; nonzero otherwise.
+ * @return Zero when every check passes; nonzero otherwise.
  */
 int main(int argc, char** argv) {
     if (argc != 6) { return 2; }

@@ -6,15 +6,15 @@
 
 # build_and_run.csh --------------------------------------------------------------------
 # Description:
-#   Build/run compatibility entry point.
+#   Older entry point for building and running the project.
 # 
 # Purpose:
-#   Delegate to workflow.py with Git pulling disabled by default; forwarded options may override it.
+#   Pass the request to workflow.py without updating Git by default.
 # 
 # Workflow:
-#   1. Resolve the checkout from invocation, cwd or CLAS12_SAMPLES_DIR.
-#   2. Forward quoted arguments to the shared Python driver.
-#   3. Return its status without exiting the sourced parent shell.
+#   1. Find the checkout.
+#   2. Pass all arguments to the Python driver.
+#   3. Return its status without closing the shell that sourced this file.
 # 
 # Usage (csh/tcsh, including files named .sh):
 #   source src/launcher/build_and_run.csh --workflow create-lund --source uniform --output runs/example
@@ -30,21 +30,19 @@
 #   --build-type TYPE            Select CMake build type (default: Release).
 #   --jobs N                     Set positive parallel build workers (JSON default: 4).
 #   --help                       Print launcher help.
-#   Other sample options pass through workflow.py to the selected LUND executable; its --help
-#   is authoritative for source-specific settings.
+#   Other sample options pass through workflow.py. See the selected LUND program's --help for details.
 # 
 # Inputs:
 #   $argv carries launcher/child options; CLAS12_SAMPLES_DIR overrides the root.
 # 
 # Outputs:
-#   CLAS12_SAMPLE_STATUS and immediate $status report the driver result.
+#   CLAS12_SAMPLE_STATUS and $status contain the driver result.
 # 
 # Notes:
 #   Source from the repository root unless CLAS12_SAMPLES_DIR is set.
 #   The Python driver inherits the already-loaded server software environment.
 
-# CLAS12 sample workflow entry point. Source from the repository root, or set
-# CLAS12_SAMPLES_DIR when sourcing from elsewhere. Execution works from any cwd.
+# Source from the checkout root, or set CLAS12_SAMPLES_DIR when working elsewhere.
 # Checkout discovery -----------------------------------------------------------
 
 # region Checkout discovery
@@ -74,8 +72,7 @@ endif
 
 # region Caller status
 unset _clas12_invocation _clas12_root
-# Last command propagates status to both executed and sourced callers.
-# In particular, do not use exit here: it would close a sourced SSH shell.
+# Return the saved status. Do not use exit because this file is normally sourced.
 /bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
 
 # endregion

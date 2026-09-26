@@ -4,29 +4,29 @@
 
 #!/usr/bin/env python3
 
-"""Configure, build, test and dispatch LUND creation behind run.csh.
+"""Build, test, and start LUND creation for run.csh.
 
 Purpose:
-    Keep LUND build controls separate from sample physics and detector submission settings.
+    Keep build settings separate from sample settings and detector submission.
 
 Workflow:
     Parse launcher flags -> load config/run.json -> configure/build -> optional CTest ->
     run uniform-lund-generator or event-generator-to-lund-converter with the original sample arguments.
 
 Inputs:
-    Explicit create-lund source, strict build JSON, optional color environment and forwarded
-    sample options. Paths are anchored to the repository root.
+    A create-lund source, strict build JSON, optional terminal colors, and sample options. Relative
+    project paths start at the repository root.
 
 Outputs:
     Build products and completed LUND files. Creation never submits simulation jobs.
 
 Failure:
-    Invalid settings and failed child commands stop subsequent stages and return a nonzero
-    status to the sourced launcher. Arguments are passed as argv lists without shell evaluation.
+    Invalid settings or failed commands stop the workflow and return a nonzero status. Child
+    arguments are passed directly and are not evaluated by a shell.
 
 Notes:
-    run.csh handles --workflow submit itself by sourcing setup_and_submit.csh in the login shell.
-    It bypasses this Python driver, CMake, and the LUND build settings entirely.
+    run.csh sends submission directly to setup_and_submit.csh. Submission does not use this file or
+    the LUND build settings.
 
 CLI options (owned by this launcher):
     --run-settings FILE          Read strict build/test settings (default: config/run.json).
@@ -58,41 +58,32 @@ import os
 
 # region Launcher configuration objects
 # Purpose:
-#     Define the immutable checkout anchor, launcher defaults, accepted dispatch vocabulary, and
-#     optional terminal colors used by this process.
+#     Define the repository root, launcher defaults, accepted names, and optional terminal colors.
 #
 # Lifecycle:
-#     Python creates these module-level objects once at startup. Configuration loading copies
-#     DEFAULTS before overlaying one selected JSON profile and explicit command-line controls; no
-#     workflow should mutate DEFAULTS itself.
+#     Python creates these values once. Settings copy DEFAULTS before applying JSON and command-line
+#     values, so DEFAULTS stays unchanged.
 #
 # Scope:
-#     These values control build/test execution and presentation. Workflow, source, physics parameters,
-#     target selections, input, output, and sample profile remain explicit command-line arguments.
+#     These values control building, testing, and display. Sample and physics settings stay on the
+#     command line or in the selected sample profile.
 
-# Absolute repository root derived from this file's stable src/launcher/ location. All maintained helper,
-# build, executable, and profile paths are resolved from this anchor, independent of the caller's
-# current working directory.
+# Find the repository root from this file so calls work from any directory.
 ROOT = Path(__file__).resolve().parents[2]
 
-# Complete fallback build/test configuration used when the JSON profile or command line does not
-# override a field. Child-workflow argv is intentionally absent from this object.
+# Build and test defaults used when JSON and command-line options do not replace them.
 DEFAULTS = {
-    # CMake and execution-stage defaults. Workflow/source are deliberately required on the CLI.
+    # The workflow and source remain required command-line choices.
     'build_dir': 'build/release', 'build_type': 'Release',
     'jobs': 4, 'build': True, 'run': True, 'test': False,
 }
 
-# Public workflow and LUND-source vocabularies. argparse uses these tuples for user-facing choices,
-# while settings() uses them to validate the explicit dispatch selection. `SOURCES` applies to
-# create-lund; submission consumes LUND output already created earlier.
+# Names accepted by the launcher. SOURCES applies only to LUND creation.
 WORKFLOWS = ('create-lund', 'submit')
 SOURCES = ('uniform', 'physical')
 
-# Optional ANSI presentation palette exported by set_colors.csh. The tcsh helper stores escape
-# prefixes as the printable sequence `\033`; replacing that prefix here produces the actual control
-# character expected by Python's terminal output. Missing variables become empty strings, keeping
-# logs readable in noninteractive environments and when workflow.py is invoked without run.csh.
+# Read the colors exported by set_colors.csh. Convert written `\033` text to the escape byte used by
+# the terminal. Missing values produce plain text.
 ERROR_COLOR = os.environ.get("ERROR_COLOR", "").replace(r"\033", "\033")
 COMPLETION_COLOR = os.environ.get("COMPLETION_COLOR", "").replace(r"\033", "\033")
 SYSTEM_COLOR = os.environ.get("SYSTEM_COLOR", "").replace(r"\033", "\033")
@@ -117,11 +108,9 @@ Run `source run.csh --help` for launcher options. Add `-- --help` after a select
 create-lund source to see that executable's sample options."""
 
 def error_message(message):
-    """Return an error message with exactly one colored ``Error:`` prefix.
+    """Return a message with one colored ``Error:`` prefix.
 
-    Explicitly raised exceptions use this function when they are created. The normalization also
-    handles argparse, which may add option context around an ``ArgumentTypeError`` before displaying
-    it, and caught library exceptions whose messages do not yet have the prefix.
+    Remove any existing prefix before adding the shared form.
     """
 
     normalized = str(message).replace(f'{ERROR_PREFIX} ', '').replace(ERROR_PREFIX, '').strip()
@@ -129,23 +118,21 @@ def error_message(message):
     return f'{ERROR_PREFIX} {normalized}'
 
 def print_error(message):
-    """Write one consistently formatted launcher error to standard error.
+    """Write one launcher error to standard error.
 
     Args:
-        message: Human-readable diagnostic, with or without an existing ``Error:`` prefix.
+        message: Text with or without an existing ``Error:`` prefix.
 
     Outputs:
-        Prints ``Error:`` using ERROR_COLOR, restores RESET_COLOR, and then prints the message in the
-        terminal's normal color. Missing color environment variables naturally produce plain text.
+        Prints the shared prefix and message. Missing colors produce plain text.
     """
 
     print(error_message(message), file=sys.stderr)
 
 class LauncherArgumentParser(argparse.ArgumentParser):
-    """Argument parser whose validation failures use the launcher error format.
+    """Argument parser that uses the shared launcher error format.
 
-    argparse calls :meth:`error` for invalid choices, values, and option syntax. Keeping that path on
-    the shared formatter ensures parser failures match errors caught by the module entry point.
+    argparse calls :meth:`error` for invalid choices, values, and option syntax.
     """
 
     def error(self, message):
@@ -163,12 +150,10 @@ def boolean(value):
     """Convert one command-line token into a launcher boolean.
 
     Purpose:
-        Let options such as ``--build``, ``--run``, and ``--test`` accept readable shell and JSON
-        style values while returning the native bool expected by the workflow dispatcher.
+        Let build, run, and test options accept clear text values and return a Python bool.
 
     Workflow:
-        Normalize letter case, compare the token with the accepted true and false vocabularies, and
-        raise an argparse-specific error when neither vocabulary contains it.
+        Ignore letter case, check the accepted true and false words, and reject anything else.
 
     Args:
         value: String supplied to an argparse option that uses this function as its ``type``.
@@ -178,23 +163,20 @@ def boolean(value):
         or ``0``. Alphabetic tokens are case-insensitive.
 
     Assumptions:
-        argparse supplies a string. Leading or trailing whitespace is considered invalid rather than
-        silently removed, which catches malformed profile or shell input.
+        argparse supplies a string. Leading or trailing spaces are invalid.
 
     Raises:
-        argparse.ArgumentTypeError: If the token is outside the accepted vocabularies. argparse then
-        passes the diagnostic to ``LauncherArgumentParser.error()``, which applies ``print_error()``
-        before stopping the launcher with status 2.
+        argparse.ArgumentTypeError: If the token is not an accepted true or false value.
     """
 
-    # Normalize case only: preserving whitespace lets malformed values fail validation explicitly.
+    # Change letter case only so values with extra spaces still fail.
     if value.lower() in ('true', 'yes', 'on', '1'):
         return True
 
     if value.lower() in ('false', 'no', 'off', '0'):
         return False
 
-    # LauncherArgumentParser catches this argparse error path and applies the shared colored prefix.
+    # argparse sends this error through the shared parser format.
     raise argparse.ArgumentTypeError(error_message('Use true or false'))
 # endregion
 
@@ -202,45 +184,36 @@ def boolean(value):
 
 # region parser
 def parser():
-    """Define launcher options separately from forwarded workflow options.
+    """Define launcher options without consuming sample options.
 
     Purpose:
-        Describe only the controls owned by this Python launcher. Options that configure uniform
-        generation, physical conversion, or ifarm submission remain unknown here and are forwarded
-        unchanged to the selected child workflow.
+        Parse build controls here and leave sample options unchanged for the selected program.
 
     Workflow:
-        Register build-profile selection, explicit workflow dispatch, build/test controls, and build-resource
-        settings. ``main()`` later calls ``parse_known_args()`` so these known options become the
-        launcher namespace while the remaining argv tokens become child-workflow overrides.
+        Register the build profile, workflow, source, build/test switches, and build resources.
 
     Returns:
-        A ``LauncherArgumentParser`` configured with the launcher-owned option vocabulary.
+        Parser for the options owned by this launcher.
 
     Failure behavior:
-        Invalid choices, integers, and boolean tokens flow through ``LauncherArgumentParser.error()``,
-        which prints usage followed by the shared colored error format and exits with status 2.
+        Invalid values print usage and the shared error format, then exit with status 2.
     """
 
-    # Use the module documentation as the help description. The epilog tells users how to request
-    # help from a selected child executable instead of stopping at this launcher's own help screen.
+    # Use this module's documentation for help and point users to the selected program's help.
     p = LauncherArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
                                epilog='Unrecognized options are forwarded unchanged.\n\n' + WORKFLOW_GUIDANCE)
 
-    # Profile and dispatch controls select one of the project's two user-facing workflows and, for
-    # create-lund, whether its event content comes from uniform sampling or physical generator data.
+    # Select the workflow and, for LUND creation, the event source.
     p.add_argument('--run-settings', type=Path, help='build/test JSON settings; defaults to config/run.json')
     p.add_argument('--workflow', choices=WORKFLOWS)
     p.add_argument('--source', choices=SOURCES, help='LUND source mode for create-lund')
 
-    # Execution-stage switches override matching JSON booleans. The custom converter accepts explicit
-    # true/false values so an ifarm command can enable or disable each stage without editing a profile.
+    # Command-line switches replace matching JSON values.
     p.add_argument('--build', type=boolean)
     p.add_argument('--run', type=boolean)
     p.add_argument('--test', type=boolean)
 
-    # Build controls choose the CMake output tree, configuration, and parallel build-worker count.
-    # Their cross-field constraints, including a positive jobs value, are checked in settings().
+    # Select the build directory, build type, and worker count. settings() checks them together.
     p.add_argument('--build-dir')
     p.add_argument('--build-type', choices=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     p.add_argument('--jobs', type=int)
@@ -252,58 +225,47 @@ def parser():
 
 # region settings
 def settings(args):
-    """Load and validate the effective launcher profile.
+    """Load and check the final launcher settings.
 
     Purpose:
-        Resolve the launcher's defaults, one JSON run profile, and explicit launcher options into a
-        single trusted configuration before any build, test, generation, or submission command runs.
+        Combine defaults, one JSON file, and command-line values before any command runs.
 
     Workflow:
-        1. Use ``--run-settings`` when supplied; otherwise read checked-in ``config/run.json``.
-        2. Resolve relative profile paths from the repository root and parse the JSON object.
-        3. Apply values in increasing precedence: ``DEFAULTS`` < JSON profile < explicit CLI options.
-        4. Add the explicitly selected workflow/source and validate build controls.
+        Choose the JSON file -> read it from the repository root -> apply defaults, then JSON, then
+        command-line values -> add the workflow and source -> check the result.
 
     Args:
-        args: Launcher namespace returned by ``parser()``. Attributes left unspecified by the user
-            are ``None`` and therefore do not replace JSON or built-in values.
+        args: Values returned by ``parser()``. Missing command-line values are ``None``.
 
     Returns:
-        A new validated dictionary containing every key defined by ``DEFAULTS``. The module-level
-        defaults and the parsed JSON object are not mutated.
+        A new checked dictionary. DEFAULTS and the parsed JSON object stay unchanged.
 
     Assumptions:
-        The profile is strict JSON and owns only stable build/test execution defaults. Workflow,
-        source, sample configuration, and child options are explicit command-line input.
+        The file is strict JSON and contains only build and test defaults.
 
     Raises:
         OSError: If the selected profile cannot be read.
         json.JSONDecodeError: If the profile is not valid JSON.
-        ValueError: If its shape, values, or forwarded option syntax violates the launcher contract.
-        All diagnostics are given the shared colored ``Error:`` prefix before reaching the user.
+        ValueError: If its structure or values are invalid.
     """
 
-    # An explicit build profile wins; otherwise use the checked-in stable defaults. The disposable
-    # ifarm synchronization removes untracked files, so no implicit run.local.json is advertised.
+    # Use the requested build profile or the checked-in default.
     path = args.run_settings if args.run_settings is not None else ROOT / 'config/run.json'
 
-    # Interpret relative paths from the checkout rather than the directory from which run.csh or this
-    # module was invoked. read_text and json.loads deliberately propagate I/O and syntax failures.
+    # Resolve relative profile paths from the checkout, not the caller's directory.
     if not path.is_absolute():
         path = ROOT / path
 
     provided = json.loads(path.read_text())
 
-    # Reject arrays, scalar JSON values, and misspelled/unsupported top-level keys before merging;
-    # silently accepting an unknown key could make a requested control appear to take effect.
+    # Require one JSON object with only known keys.
     if not isinstance(provided, dict) or set(provided) - DEFAULTS.keys():
         raise ValueError(error_message('Run settings contain unknown keys or are not an object'))
 
-    # This is a shallow overlay because every allowed key is a scalar build/execution control.
+    # Every setting is a single value, so one shallow merge is enough.
     result = {**DEFAULTS, **provided}
 
-    # argparse stores omitted launcher controls as None. Copy only explicit values so command-line
-    # options have final precedence without erasing fields selected by the JSON profile.
+    # Copy only command-line values the user supplied.
     for key in DEFAULTS:
         override = getattr(args, key, None)
 
@@ -320,21 +282,20 @@ def settings(args):
     if result['workflow'] == 'create-lund' and result['source'] is None:
         raise ValueError(error_message('--source uniform|physical is required for create-lund.\n\n' + WORKFLOW_GUIDANCE))
 
-    # Require real JSON booleans. Python considers bool a subclass of int, so exact type checks keep
-    # values such as 0 and 1 from silently acting as false and true in a profile.
+    # Require real JSON booleans; do not accept the integers 0 and 1.
     for key in ('build', 'run', 'test'):
         if type(result[key]) is not bool:
             raise ValueError(error_message(f'{key} must be a JSON boolean'))
 
-    # Build parallelism must be an integer of at least one; booleans are rejected by the exact check.
+    # Require at least one build worker and reject booleans.
     if type(result['jobs']) is not int or result['jobs'] < 1:
         raise ValueError(error_message('jobs must be a positive integer'))
 
-    # Limit configurations to the CMake build types supported by the launcher interface.
+    # Accept only the build types shown by the launcher.
     if result['build_type'] not in ('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'):
         raise ValueError(error_message('Invalid build_type'))
 
-    # Keep this value as a nonempty string here; main() later resolves it to an absolute Path.
+    # main() turns this nonempty text into an absolute path.
     if not isinstance(result['build_dir'], str) or not result['build_dir']:
         raise ValueError(error_message('build_dir must be a nonempty path'))
 
@@ -345,34 +306,26 @@ def settings(args):
 
 # region execute
 def execute(command):
-    """Run a checked command from the checkout root.
+    """Run one checked command from the repository root.
 
     Purpose:
-        Provide one visible, checked subprocess boundary for CMake, CTest, LUND applications, and the
-        maintained submission coordinator. Every launched command therefore uses the same working
-        directory, logging format, argv safety, and failure propagation.
+        Print and run every child command in the same safe way.
 
     Workflow:
-        1. Shell-quote each token for display only.
-        2. Start a display line for the executable and for each option-like token; attach ordinary
-           values to the preceding line so long commands remain readable in terminal and Slurm logs.
-        3. Print and flush the reconstructed command before child output begins.
-        4. Execute the original argv sequence from ``ROOT`` with ``check=True``.
+        Quote tokens for display -> split long commands across lines -> print the command -> run the
+        original argument list from ``ROOT`` and require success.
 
     Args:
-        command: Nonempty sequence containing an executable followed by its argv tokens. Elements may
-            be strings or path-like objects accepted by ``subprocess.run``.
+        command: Executable followed by its arguments.
 
     Returns:
         None after the child exits successfully.
 
     Outputs:
-        Writes the readable command and spacing to standard output. The child inherits this process's
-        standard input, output, and error streams, so its normal monitoring remains visible.
+        Prints the command. Child output remains visible in the same terminal or log.
 
     Assumptions:
-        The caller supplies a nonempty argv sequence. Display quoting is informational and never fed
-        back to execution; the original tokens go directly to ``subprocess.run`` without a shell.
+        The list is not empty. Display quoting does not change the arguments sent to the program.
 
     Raises:
         OSError: If the executable cannot be started.
@@ -380,30 +333,26 @@ def execute(command):
         prints the shared error format and returns the child's effective failure status.
     """
 
-    # Build a copy intended only for human-readable logging. shlex.quote makes spaces and shell-like
-    # characters unambiguous without changing any token in the actual command sequence.
+    # Quote a display copy without changing the real arguments.
     lines = [shlex.quote(str(command[0]))]
 
     for arg in command[1:]:
         quoted_arg = shlex.quote(str(arg))
 
-        # Put each option on a new continuation line. Non-option tokens stay beside the option or
-        # executable they follow; negative values begin with one dash and therefore remain attached.
+        # Put each option on a new line and keep its value on that line.
         if str(arg).startswith("-"):
             lines.append(quoted_arg)
         else:
             lines[-1] += f" {quoted_arg}"
 
-    # The displayed backslash-newline layout mirrors a copyable multiline shell command, although no
-    # shell parses it during execution.
+    # Show a copyable multiline command. Execution still uses the original argument list.
     formatted_command = " \\\n    ".join(lines)
 
-    # Flush before starting the child so buffered parent output cannot appear after child monitoring.
+    # Flush before child output begins.
     print(f"{INFO_COLOR}Executing command:{RESET_COLOR}\n{formatted_command}", flush=True)
     print()
 
-    # Anchor relative child paths to the verified checkout and turn any nonzero result into a checked
-    # exception handled consistently by the command-line entry point.
+    # Run from the checkout and raise when the command fails.
     subprocess.run(command, cwd=ROOT, check=True)
     print()
 # endregion
@@ -412,42 +361,33 @@ def execute(command):
 
 # region banner
 def banner(name):
-    """Print a presentation-only workflow status banner.
+    """Print a workflow status banner.
 
     Purpose:
-        Reuse the maintained tcsh artwork for success and stopped workflows without allowing optional
-        terminal presentation to replace or conceal the workflow's real result.
+        Show the maintained success or stop artwork without changing the workflow result.
 
     Workflow:
-        Build the printer path from the repository root and requested suffix, start it with a clean
-        noninteractive tcsh, and allow its output to flow directly to the current terminal or log. If
-        tcsh cannot be started, print a minimal plain-text status instead.
+        Build the printer path -> run it with tcsh -> print plain text if tcsh cannot start.
 
     Args:
-        name: Trusted internal printer suffix, currently values such as ``success`` or ``stop``. It
-            selects ``src/launcher/printers/print_<name>.csh`` and is not shell-evaluated.
+        name: Trusted printer suffix such as ``success`` or ``stop``.
 
     Returns:
-        None. Banner completion or failure never changes the status chosen by the calling workflow.
+        Nothing. Banner failure does not change the workflow status.
 
     Outputs:
-        Writes the selected artwork, or its plain-text fallback, to standard output. It creates no
-        workflow data and does not alter launcher configuration.
+        Prints artwork or a plain-text fallback. It creates no workflow data.
 
     Failure behavior:
-        A printer's nonzero exit is intentionally ignored through ``check=False``. An ``OSError``
-        while starting tcsh triggers the fallback. The caller remains responsible for printing any
-        diagnostic and returning the actual success or failure status.
+        A printer error is ignored. Failure to start tcsh uses the plain-text fallback.
     """
 
-    # Resolve an absolute path so banner selection is independent of the directory from which the
-    # launcher was called. Passing an argv list prevents the suffix or path from being shell source.
+    # Use an absolute path and pass it as an argument, not shell source text.
     try:
-        # Printers are optional presentation helpers: inherit their output, but do not promote their
-        # exit status into a build, generation, or submission failure.
+        # Show printer output but ignore its status.
         subprocess.run(['tcsh', '-f', str(ROOT / 'src/launcher/printers' / f'print_{name}.csh')], cwd=ROOT, check=False)
     except OSError:
-        # Keep status transitions visible on systems where tcsh itself is unavailable.
+        # Keep the status visible when tcsh is unavailable.
         print(f'CLAS12 samples: {name}', flush=True)
 # endregion
 
@@ -455,31 +395,24 @@ def banner(name):
 
 # region main
 def main():
-    """Run the configured checkout workflow in dependency order.
+    """Run the requested build, test, and LUND stages in order.
 
     Purpose:
-        Keep sourced-shell wrappers limited to synchronization and environment setup while this
-        function owns the ordered build, validation, and dispatch decisions shared by local and ifarm
-        use.
+        Keep shell wrappers focused on checkout and environment setup. This function controls the
+        build, test, and LUND program.
 
     Workflow:
-        1. Separate launcher options from child-workflow arguments and load build/test defaults.
-        2. Resolve the build directory while preserving explicit child arguments unchanged.
-        3. When enabled, configure CMake and build both LUND applications.
-        4. When enabled, verify that testing was configured and require CTest to succeed.
-        5. When enabled, run one create-lund source executable or the ifarm submission coordinator.
-        6. Print the success banner only after every requested stage completes.
+        Parse settings -> resolve the build path -> optionally build -> optionally test -> optionally
+        run the selected LUND program -> print success.
 
     Args:
         None. Launcher and forwarded child options are read from ``sys.argv``.
 
     Returns:
-        Zero when all enabled stages succeed, including a valid no-build/no-test/no-run configuration.
+        Zero when every requested stage succeeds.
 
     Outputs:
-        May create or update the configured CMake build tree, run tests, or create LUND output.
-        Commands and stage banners are printed as an inspectable execution record. This driver
-        does not submit Slurm jobs.
+        May update the build tree, run tests, or create LUND files. It does not submit Slurm jobs.
 
     Raises:
         OSError, ValueError, TypeError, RuntimeError: For invalid configuration or unavailable files.
@@ -487,8 +420,7 @@ def main():
         fails. The module entry point converts these exceptions to diagnostics and nonzero statuses.
     """
 
-    # Parse launcher-owned flags and retain all unknown tokens for the chosen child workflow. Users
-    # may place one bare `--` at the boundary to make that ownership explicit; it is not forwarded.
+    # Parse launcher options and keep unknown tokens for the selected LUND program.
     args, forwarded = parser().parse_known_args()
 
     if forwarded[:1] == ['--']:
@@ -497,11 +429,10 @@ def main():
     if args.workflow == 'submit':
         raise ValueError('Use source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides].')
 
-    # Resolve and validate the complete launcher configuration before performing any external action.
+    # Check all launcher settings before running a command.
     config = settings(args)
 
-    # Extract the dispatch axes and normalize the configured build location. Relative build paths are
-    # anchored to the checkout so invocation from another directory produces the same tree.
+    # Resolve relative build paths from the checkout.
     workflow = config['workflow']
     source = config['source']
     build = Path(config['build_dir'])
@@ -511,26 +442,23 @@ def main():
 
     build = build.resolve()
 
-    # Sample and submission options are explicit on the command line. In particular, create-lund users
-    # select a reviewed `--config config/samples/NAME.conf` or spell out every child option themselves.
-    # The launcher preserves argv boundaries and does not inject hidden per-source defaults.
+    # Forward sample options unchanged. The launcher adds no hidden sample defaults.
     arguments = forwarded
 
     # Compile both sample applications before selecting which workflow to execute.
     if config['build']:
-        # Stage banners use visible-width padding independent of ANSI color sequences.
+        # Color codes do not count toward the visible banner width.
         print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
         print(f"{SYSTEM_COLOR}= Compiling applications                                                                           ={RESET_COLOR}")
         print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
         print()
 
-        # Always re-run CMake configuration so dependency checks see local external-file replacements,
-        # including targets.h, that cannot be inferred from a Git commit stamp. Enable both LUND apps;
-        # enable the test targets only when this invocation requests them.
+        # Reconfigure so CMake sees local external-file changes. Build both LUND programs and add test
+        # targets only when tests were requested.
         execute(['cmake', '-S', str(ROOT), '-B', str(build), '-DCMAKE_BUILD_TYPE='+config['build_type'],
                  '-DBUILD_UNIFORM=ON', '-DBUILD_GENIE=ON', '-DBUILD_TESTING='+('ON' if config['test'] else 'OFF')])
 
-        # Let CMake select the underlying build tool while honoring configured parallelism.
+        # Let CMake use its configured build tool and worker count.
         execute(['cmake', '--build', str(build), '--parallel', str(config['jobs'])])
 
         print()
@@ -542,14 +470,13 @@ def main():
         print(f"{SYSTEM_COLOR}===================================================================================================={RESET_COLOR}")
         print()
 
-        # This guard matters when `--test true` reuses a tree with `--build false`: CTest cannot be
-        # assumed available merely because the directory exists. A missing cache propagates as OSError.
+        # A reused build directory must already have tests enabled.
         cache = (build / 'CMakeCache.txt').read_text()
 
         if 'BUILD_TESTING:BOOL=ON' not in cache:
             raise RuntimeError(error_message('Tests are not configured; use --build true --test true'))
 
-        # Show complete diagnostics for any failing test and stop before generation or submission.
+        # Show full output for a failed test and stop before LUND creation.
         execute(['ctest', '--test-dir', str(build), '--output-on-failure'])
 
         print()
@@ -557,12 +484,10 @@ def main():
     # Dispatch exactly one workflow; generation does not automatically launch GEMC.
     if config['run']:
         if workflow == 'create-lund':
-            # Uniform samples use the random-kinematics application. Physical inputs use the generic
-            # event-generator converter, whose `--event-generator` option currently defaults to the
-            # GENIE GST adapter rather than claiming every format emitted by GENIE.
+            # Select the uniform generator or the physical-input converter.
             app = 'uniform-lund-generator' if source == 'uniform' else 'event-generator-to-lund-converter'
 
-            # Compute padding from uncolored text because terminal escape sequences occupy no columns.
+            # Calculate padding from the visible text without color codes.
             message = f"Creating LUND files from '{RESET_COLOR}{source}{SYSTEM_COLOR}' input"
             visible_length = len(f"Creating LUND files from '{source}' input")
             padding = 96 - visible_length
@@ -574,8 +499,7 @@ def main():
 
             executable = build / 'apps' / app
 
-            # With building disabled, require the selected application to exist in the requested tree
-            # and give the user the direct recovery action rather than failing inside subprocess.run.
+            # When building is off, report a missing program before starting it.
             if not executable.is_file():
                 raise RuntimeError(error_message(f'Executable missing: {executable}; enable --build true'))
 
@@ -583,10 +507,10 @@ def main():
         else:
             raise ValueError('Submission must be sourced through run.csh --workflow submit.')
 
-        # Append the already validated child argv without shell parsing or string reconstruction.
+        # Append child arguments without shell parsing.
         execute(command + arguments)
 
-    # Reaching this point means every stage requested by the configuration completed successfully.
+    # Every requested stage succeeded.
     banner('success')
 
     return 0
@@ -596,42 +520,34 @@ def main():
 
 # region Execution
 # Purpose:
-#     Convert main() and its checked subprocesses into stable process exit statuses for run.csh while
-#     keeping this module importable by tests and maintenance tools without launching a workflow.
+#     Return stable process statuses to run.csh while keeping imports free of side effects.
 #
 # Workflow:
-#     Direct execution calls main(). Successful completion exits with zero; interruption, child-command
-#     failure, and launcher-owned exceptions each print the stop banner and an error diagnostic before
-#     returning their defined nonzero status. argparse handles its own usage failures with status 2.
+#     Direct execution calls main(). Success returns zero. Interruptions and errors print the stop
+#     banner and return a nonzero status.
 #
 # Outputs:
-#     Writes presentation and diagnostics to the inherited terminal streams. The final process status
-#     becomes `$status` in run.csh's caller and determines whether later shell work may continue.
+#     Prints status and error messages. run.csh receives the final process status.
 if __name__ == '__main__':
     try:
-        # Use main's return value as the process status. Imports skip this entire block.
+        # Imports skip this block; direct execution returns main's status.
         sys.exit(main())
     except KeyboardInterrupt:
-        # Ctrl-C is a user interruption rather than an internal validation failure. Status 130 follows
-        # the conventional 128 + SIGINT(2) shell representation.
+        # Ctrl-C returns the standard shell status 130.
         banner('stop')
         print_error('Interrupted.')
         sys.exit(130)
     except subprocess.CalledProcessError as error:
-        # Checked commands return positive exit codes for ordinary failures and negative signal numbers
-        # when Python observes signal termination. Preserve positive codes and translate a signal N to
-        # the shell convention 128 + N.
+        # Keep ordinary exit codes and convert a terminating signal to the shell form 128 + signal.
         banner('stop')
 
         exit_status = 128-error.returncode if error.returncode < 0 else error.returncode
 
-        # shlex.join quotes the argv for an unambiguous diagnostic only; the command was already run
-        # directly as an argv sequence by execute().
+        # Quote the failed command only for the error message.
         print_error(f'Command failed with exit status {exit_status}: {shlex.join(map(str, error.cmd))}')
         sys.exit(exit_status)
     except (OSError, ValueError, TypeError, RuntimeError) as error:
-        # Configuration, filesystem, and launcher-state failures share status 1. error_message() and
-        # print_error() are idempotent, so explicitly prefixed validation errors appear exactly once.
+        # Configuration, filesystem, and launcher errors return status 1.
         banner('stop')
         print_error(error)
         sys.exit(1)

@@ -4,7 +4,7 @@
 
 /**
  * @file RgmTarget.cpp
- * @brief Defines the supported RG-M target records.
+ * @brief Stores the supported RG-M target records.
  *
  * Purpose:
  *   Keep the default A, Z, targets.h geometry name, and GEMC variation for each RG-M target in one list.
@@ -13,9 +13,8 @@
  *   Create the list on first use -> return read-only references -> look up exact target names -> use the
  *   same ordered names in help and error messages.
  *
- * Separation of responsibilities:
- *   This file stores target names and defaults. TargetGeometry and targets.h sample vertices. GCARD
- *   files define the detector geometry used by GEMC.
+ * Scope:
+ *   This file stores names and defaults only. Other files sample vertices and configure GEMC.
  */
 
 #include "core/config/RgmTarget.h"
@@ -46,7 +45,7 @@ const std::vector<RgmTarget>& rgmTargets() {
         {"Sn120-legacy", "archived tin-120 single foil", 120, 50, "1-foil", "rgm_fall2021_Sn"},
     };
 
-    // Return the stored list without copying it. References to its records stay valid until exit.
+    // Return the stored list without copying it.
     return targets;
 }
 #pragma endregion
@@ -55,7 +54,7 @@ const std::vector<RgmTarget>& rgmTargets() {
 
 #pragma region /* Exact target lookup */
 const RgmTarget& findRgmTarget(const std::string& identifier) {
-    // The list is small, so a direct loop is clearer than keeping a second lookup table.
+    // A direct loop is clear enough for this small list.
     for (const auto& target : rgmTargets()) {
         if (target.identifier == identifier) { return target; }
     }

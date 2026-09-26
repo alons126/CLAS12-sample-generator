@@ -7,8 +7,8 @@
  * @brief Declares the plots created for uniform samples.
  *
  * Purpose:
- *   Store all uniform monitoring histograms in one ROOT file and render them with the established layout
- *   and style. Physical conversion does not use this class.
+ *   Store uniform monitoring histograms in one ROOT file and draw them with the established layout.
+ *   Physical conversion does not use this class.
  *
  * Workflow:
  *   Construct from the resolved uniform sample identity -> fill after each written event -> save one
@@ -41,7 +41,7 @@ namespace samples {
  *   The private implementation owns the ROOT histograms for one run. The object cannot be copied and
  *   must stay alive from before the event loop until save() finishes.
  *
- * Invariants:
+ * Rules:
  *   sample_label is one resolved uniform label. Electron-hadron events contain the configured hadron
  *   after the electron. Momentum is GeV, angles are degrees, and vertices are centimeters in plots.
  */
@@ -52,8 +52,7 @@ class UniformMonitoring {
      * @param sample_label Resolved label such as `1e`, `electron-tester`, `epFD`, or `epipCD`.
      * @param hadron_pid Configured hadron PDG code; ignored for electron-only channels.
      * @param beam Beam energy in GeV, used for momentum-axis limits.
-     * @throws std::runtime_error If an electron-hadron label is paired with an unsupported hadron PDG
-     *         code. Allocation failures also propagate.
+     * @throws std::runtime_error If the hadron PDG code is not supported. Memory errors also propagate.
      */
     UniformMonitoring(std::string sample_label, int hadron_pid, double beam);
 
@@ -62,7 +61,7 @@ class UniformMonitoring {
 
     /**
      * @brief Fill every configured histogram from one successfully written event.
-     * @param event Uniform event read during this call and not stored or changed.
+     * @param event Uniform event to read. It is not stored or changed.
      * @throws std::runtime_error If the event lacks a required electron or hadron.
      */
     void fill(const Event& event);
@@ -72,8 +71,7 @@ class UniformMonitoring {
      * @param path Destination `<prefix>_monitoring_plots.root` file.
      * @param plot_directory Destination directory for rendered files.
      * @param pdf_name Multipage PDF filename inside plot_directory.
-     * @throws std::runtime_error If ROOT cannot create or write an output. Filesystem errors while
-     *         creating the plot directory also propagate.
+     * @throws std::runtime_error If ROOT cannot create or write an output. Directory errors also propagate.
      */
     void save(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name);
 

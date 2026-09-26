@@ -2,16 +2,16 @@
 # Created by Alon Sportes on 14/09/2026.
 #
 
-"""Generate a maintained test adapter around the archived converter.
+"""Build a test-only copy of the archived GENIE converter.
 
 Purpose:
-    Read the external archive and write a separate build-tree reference with redirected output setup.
+    Read the archived source and write a separate build-tree copy with safe test output paths.
 
 Workflow:
-    CTest supplies paths and fixtures; assertions or exit codes report failures to the test runner.
+    CTest supplies the source and destination -> this script changes only test setup -> CMake builds the copy.
 
 Notes:
-    Test fixtures are isolated; external and legacy sources are read-only.
+    The archived source stays unchanged. Only the build-tree copy is written.
 """
 
 from pathlib import Path
@@ -19,7 +19,7 @@ import sys
 source, destination = map(Path, sys.argv[1:])
 text = source.read_text()
 
-# Redirect only external includes and output setup. Physics and rollover code are unchanged.
+# Change only includes and output setup. Physics and file splitting stay unchanged.
 # Test execution ------------------------------------------------
 # region Execution
 for relative in ['../include/targets.h', '../framework/namespaces/general_utilities/utilities.h', '../framework/classes/DSCuts/DSCuts.h']:
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 }
 '''
 
-# Macro in restored utility header only bridges the legacy namespace; do not export it to main.
+# Remove the archived namespace helper before adding the test main function.
 destination.write_text(prelude+text+'\n#undef targets\n'+postlude)
 
 # endregion

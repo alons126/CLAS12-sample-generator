@@ -4,7 +4,7 @@
 
 /**
  * @file PhysicalConverter.h
- * @brief Declares how physical input is sent to the correct converter.
+ * @brief Declares how physical input selects its converter.
  *
  * Purpose:
  *   Let callers convert physical input without knowing its file layout. Each supported format has a
@@ -20,16 +20,15 @@
  *   metadata. Each converter reads only the file layout for its own format.
  *
  * Outputs:
- *   This function creates no files itself. The selected converter runs before the function returns and
- *   produces the split LUND files and completion manifest.
+ *   This function creates no files itself. The selected converter creates the split LUND files and run log.
  *
  * Ownership and lifetime:
  *   The caller owns RunConfig and must keep it alive until convertPhysical returns. The function and the
  *   selected converter only read it and do not store it afterward.
  *
- * Extension:
+ * Adding a format:
  *   Adding another format requires one converter and one branch in convertPhysical(). It must reuse the
- *   shared target sampling, LUND writing, naming, splitting, and manifest code.
+ *   shared target sampling, LUND writing, naming, splitting, and run-log code.
  *
  * Failure:
  *   An unsupported generator is rejected before conversion begins. Configuration, input, conversion,
@@ -64,7 +63,7 @@ namespace samples {
  *   No C++ value is returned. A successful call leaves a completed physical LUND run created by the
  *   converter and shared writer.
  *
- * Invariants:
+ * Rules:
  *   Exactly one converter is called. This function does not generate interactions, change generator
  *   truth, sample uniform kinematics, or submit detector-simulation jobs.
  *
