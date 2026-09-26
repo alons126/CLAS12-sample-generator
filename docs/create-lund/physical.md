@@ -3,7 +3,7 @@
 ```bash
 build/debug/apps/event-generator-to-lund-converter \
   --event-generator genie-gst \
-  --config config/samples/genie-gst.conf \
+  --config config/samples/physical-lund-creation/genie-gst.conf \
   --input '/path/to/truth/gst*.root' \
   --output runs/genie-gst-example
 ```

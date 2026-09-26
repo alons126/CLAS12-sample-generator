@@ -20,12 +20,12 @@ The three active `CodeRun.cpp` calls map to these maintained commands. `legacy-c
 
 ```bash
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/legacy-coderun.conf \
+  --config config/samples/uniform-lund-creation/legacy-coderun.conf \
   --seed 0 \
   --output OUTPUT_PARENT
 
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/legacy-coderun.conf \
+  --config config/samples/uniform-lund-creation/legacy-coderun.conf \
   --channel eh --hadron proton --hadron-region FD \
   --electron-momentum beam \
   --hadron-momentum uniform \
@@ -35,7 +35,7 @@ source run.csh --workflow create-lund --source uniform \
   --output OUTPUT_PARENT
 
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/legacy-coderun.conf \
+  --config config/samples/uniform-lund-creation/legacy-coderun.conf \
   --channel eh --hadron neutron --hadron-region FD \
   --electron-momentum beam \
   --hadron-momentum uniform \
@@ -53,7 +53,7 @@ The separately selectable legacy electron tester maps to:
 
 ```bash
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/electron-tester-2070MeV.conf \
+  --config config/samples/uniform-lund-creation/electron-tester-2070MeV.conf \
   --beam-energy 2.07052 \
   --A 1 --Z 1 \
   --events 1000000 --events-per-file 10000 \
@@ -98,7 +98,7 @@ The Q² labels were `Q2_0_02`, `Q2_0_25` and `Q2_0_40` at the three energies. Th
 
 ```bash
 build/debug/apps/event-generator-to-lund-converter --event-generator genie-gst \
-  --config config/samples/legacy-genie-wrapper.conf \
+  --config config/samples/physical-lund-creation/legacy-genie-wrapper.conf \
   --input '/shared/truth/C12/GEM21_11a_00_000/2070MeV_Q2_0_02/master-routine_validation_01-eScattering/*.root' \
   --events 10000 --output runs/legacy-genie-smoke
 ```

@@ -8,7 +8,7 @@ Target resolution has one deliberate order. `rgm-target` first selects the catal
 
 `RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `lundfiles/lund-creation-monitoring/lund-creation-log.json`.
 
-The launcher does not select a sample profile implicitly. Pass `--config config/samples/NAME.conf` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build defaults only.
+The launcher does not select a sample profile implicitly. Pass a profile from `config/samples/uniform-lund-creation/` or `config/samples/physical-lund-creation/` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build defaults only.
 
 Relative paths are interpreted from the caller's working directory. The output path and local GENIE input pattern are resolved to absolute paths in the manifest. ROOT-supported remote URLs remain unchanged.
 

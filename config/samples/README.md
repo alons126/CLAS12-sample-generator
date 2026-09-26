@@ -4,12 +4,12 @@ These files describe the LUND sample being created. They do not select the user-
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
+  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 ```
 
 ```tcsh
 source run.csh --workflow create-lund --source physical \
-  --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+  --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 ```
 
 The executable installs built-in defaults, reads the named profile, then applies explicit `--key value` overrides. Unknown and repeated keys fail. Blank lines and lines beginning with `#` are ignored; inline comments, sections, quoting, and environment expansion are unsupported. Every checked-in profile groups its values under comment-only explanation sections covering their purpose, consumers, units, derived behavior, output contract, and relevant validation limits.
@@ -18,7 +18,7 @@ Profiles normally specify only `rgm-target`. The maintained target catalog first
 
 ## Uniform production matrix
 
-Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, legacy-derived angular conventions, rounded PDG-based masses, and 25,000 events per file. Uniform profiles request 50,000,000 events, following the legacy production scale; tester profiles request 1,000,000 events, following its server default. Override `--events` for smaller studies.
+Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, legacy-derived angular conventions, rounded PDG-based masses, and 25,000 events per file. Uniform profiles request 50,000,000 events, following the legacy production scale; tester profiles request 1,000,000 events, following its server default. Override `--events` for smaller studies.
 
 | Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
 | --- | --- | --- | --- |
@@ -39,12 +39,15 @@ FD pion and all CD profiles are marked experimental inside the files. They encod
 
 The electron tester profiles sample the selected target geometry and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
 
-## Compatibility and physical-input profiles
+The same directory contains `legacy-coderun.conf`, which preserves the archived uniform `CodeRun.cpp` launch settings.
+
+## Physical-input profiles
+
+Physical profiles are stored in `physical-lund-creation/`.
 
 | Profile | Purpose |
 | --- | --- |
 | `genie-gst.conf` | Physical GENIE GST conversion example |
-| `legacy-coderun.conf` | Archived uniform `CodeRun.cpp` compatibility settings |
 | `legacy-genie-wrapper.conf` | Archived GENIE wrapper compatibility settings |
 
 ## Available common options

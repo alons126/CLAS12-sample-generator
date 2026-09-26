@@ -20,7 +20,7 @@ source run.csh \
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-1e-4029MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-1e-4029MeV.conf \
   --events 10000 \
   --events-per-file 2500 \
   --seed 67890 \
@@ -71,7 +71,7 @@ source run.csh \
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/electron-tester-5986MeV.conf \
+  --config config/samples/uniform-lund-creation/electron-tester-5986MeV.conf \
   --events 5000 \
   --prefix tester-5986 \
   --output runs/tester
@@ -109,7 +109,7 @@ build/debug/apps/uniform-lund-creator --help
 build/debug/apps/event-generator-to-lund-converter --help
 
 build/debug/apps/uniform-lund-creator \
-  --config config/samples/uniform-enFD-2070MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-enFD-2070MeV.conf \
   --events 100 \
   --output runs/direct
 ```

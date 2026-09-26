@@ -98,9 +98,9 @@ ERROR_PREFIX = f'{ERROR_COLOR}Error:{RESET_COLOR}'
 
 WORKFLOW_GUIDANCE = """Choose one of these forms:
   source run.csh --workflow create-lund --source uniform \\
-    --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
   source run.csh --workflow create-lund --source physical \\
-    --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+    --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
   source run.csh --workflow submit --lund-dir RUN/lundfiles
   source run.csh --workflow create-lund --source uniform --build true --run false
 Run `source run.csh --help` for launcher options. Add `-- --help` after a selected

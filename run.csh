@@ -58,9 +58,9 @@
 # 
 # Usage:
 #   source run.csh --workflow create-lund --source uniform \
-#     --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
+#     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
 #   source run.csh --workflow create-lund --source physical \
-#     --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+#     --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
 #   source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
 # 
 # Forwarded options:
@@ -124,11 +124,11 @@ if ($#argv == 0) then
     echo ""
     echo "Create a uniform LUND sample:"
     echo '  source run.csh --workflow create-lund --source uniform \'
-    echo "    --config config/samples/uniform-1e-5986MeV.conf --output OUTPUT_PARENT"
+    echo "    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT"
     echo ""
     echo "Convert physical generator output:"
     echo '  source run.csh --workflow create-lund --source physical \'
-    echo "    --config config/samples/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
+    echo "    --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
     echo ""
     echo "Submit completed LUND files:"
     echo "  source run.csh --workflow submit --lund-dir RUN/lundfiles"

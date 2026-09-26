@@ -8,21 +8,21 @@
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-1e-2070MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-1e-2070MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-1e-4029MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-1e-4029MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-1e-5986MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
@@ -33,21 +33,21 @@ source run.csh \
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-enFD-2070MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-enFD-2070MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-enFD-4029MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-enFD-4029MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-enFD-5986MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-enFD-5986MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
@@ -58,20 +58,20 @@ source run.csh \
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-epFD-2070MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-epFD-2070MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-epFD-4029MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-epFD-4029MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples
 
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-epFD-5986MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-epFD-5986MeV.conf \
   --events 1000000 \
   --output /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples

@@ -15,7 +15,7 @@ cmake --build build/debug --parallel 4
 source run.csh \
   --workflow create-lund \
   --source uniform \
-  --config config/samples/uniform-1e-5986MeV.conf \
+  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
   --events 100 \
   --output runs/quickstart
 ```
@@ -28,7 +28,7 @@ The completed run is `runs/quickstart/Uniform_sample_1e_5986MeV/`. Generation re
 source run.csh \
   --workflow create-lund \
   --source physical \
-  --config config/samples/genie-gst.conf \
+  --config config/samples/physical-lund-creation/genie-gst.conf \
   --input '/path/to/gst*.root' \
   --events 100 \
   --output runs/quickstart

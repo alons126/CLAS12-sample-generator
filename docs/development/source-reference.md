@@ -80,10 +80,10 @@ The resolver obtains the prefix and task count from the completed manifest or ex
 
 ## 6. Configuration and resources
 
-- `config/samples/uniform-<label>-{2070,4029,5986}MeV.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each established beam energy; pion and CD files are explicitly marked unvalidated for production.
-- `electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and target-sampled vertices.
-- `genie-gst.conf`: an explicit Ar conversion example.
-- `legacy-coderun.conf`, `legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
+- `config/samples/uniform-lund-creation/uniform-<label>-{2070,4029,5986}MeV.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each established beam energy; pion and CD files are explicitly marked unvalidated for production.
+- `config/samples/uniform-lund-creation/electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and target-sampled vertices.
+- `config/samples/physical-lund-creation/genie-gst.conf`: an explicit Ar conversion example.
+- `config/samples/uniform-lund-creation/legacy-coderun.conf` and `config/samples/physical-lund-creation/legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
 - `config/detector/Generation_files_*`: unchanged 2/4/6 GeV cards and reconstruction YAML for the archived versions. They are resources, not generated models. Matching detector/data dependencies are external.
 
 ## 7. Archived supporting code
