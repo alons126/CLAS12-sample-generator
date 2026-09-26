@@ -35,6 +35,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 #include "Version.h"
@@ -55,8 +56,20 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
     const auto summary_title = (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") + std::string(final ? " completion" : " setup");
 
-    // Print every label and value in the same one-line form.
-    const auto print_value = [](const std::string& label, const auto& value) { std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << " " << value << "\n"; };
+    // End ordinary values one column before the 100-column banners. Keep paths left-aligned and unquoted.
+    const auto print_value = [](const std::string& label, const auto& value) {
+        std::ostringstream rendered_value;
+        rendered_value << value;
+
+        const auto text = rendered_value.str();
+        const auto label_width = label.size() + 1;
+        const auto padding = label_width + text.size() < 99 ? 99 - label_width - text.size() : 1;
+
+        std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << std::string(padding, ' ') << text << "\n";
+    };
+    const auto print_path = [](const std::string& label, const std::filesystem::path& path) {
+        std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << " " << path.string() << "\n";
+    };
 
     // Make setup and completion easy to find in long batch logs.
     std::cout << env::SYSTEM_COLOR << "\n====================================================================================================\n"
@@ -144,15 +157,15 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     // Print only paths that the selected workflow actually creates or consumes.
     std::cout << env::SYSTEM_COLOR << "\n- Output -------------------------------------------------------------------------------------------\n" << env::RESET_COLOR;
     print_value("Output prefix", config.get("prefix"));
-    print_value("Run directory", output);
-    print_value("LUND directory", lund_dir);
-    print_value("Completion manifest", diagnostics / "lund-creation-log.json");
+    print_path("Run directory", output);
+    print_path("LUND directory", lund_dir);
+    print_path("Completion manifest", diagnostics / "lund-creation-log.json");
 
     if (uniform) {
-        print_value("MC HIPO directory", output / "mchipo");
-        print_value("Reconstructed HIPO directory", output / "reconhipo");
-        print_value("Monitoring ROOT file", diagnostics / (config.get("prefix") + "_monitoring_plots.root"));
-        print_value("Monitoring plot directory", diagnostics / "MonitoringPlotsPath");
+        print_path("MC HIPO directory", output / "mchipo");
+        print_path("Reconstructed HIPO directory", output / "reconhipo");
+        print_path("Monitoring ROOT file", diagnostics / (config.get("prefix") + "_monitoring_plots.root"));
+        print_path("Monitoring plot directory", diagnostics / "MonitoringPlotsPath");
     }
 
     std::cout << "\n";

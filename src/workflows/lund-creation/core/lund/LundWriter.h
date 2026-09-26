@@ -113,7 +113,8 @@ class LundWriter {
      * @param written Events written successfully; ignored by setup and printed by completion.
      * @param final Print only completion counters when true or only resolved setup fields when false.
      * @note Presentation only: this function creates no output files and does not determine run status.
-     *       Fixed output constants and settings unused by the selected channel are omitted.
+     *       Fixed output constants and settings unused by the selected channel are omitted. Ordinary
+     *       values end one column before the banner edge; filesystem paths stay left-aligned and unquoted.
      */
     static void printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned = 0, std::uint64_t written = 0, bool final = false);
 
