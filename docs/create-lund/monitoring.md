@@ -21,7 +21,7 @@ The maintained definitions preserve the archived plot organization:
 - Electron and FD polar-angle display range 0–50 degrees.
 - CD hadron polar-angle display range 0–150 degrees, covering the configured CD generation ranges.
 - Azimuth range −180–180 degrees; paired electron-hadron azimuth correlations retain −200–200 degrees.
-- Vertex x/y ranges −5–5 cm and vertex z range −7.5–5 cm. The wider z display covers every checked-in target geometry, including the Ar volume at approximately −5.75 to −5.25 cm.
+- Vertex x/y ranges −5–5 cm and vertex z range −8–5 cm. This common z range aims to cover the target position of every RG-M target.[^sportes-2026-rgm][^rgm-analysis-note]
 - One-dimensional y-axis title `Number of events`.
 - Centered axis titles, title size 0.06 and label size 0.0425.
 - A 1000×750 grid canvas with bottom/left/right margins 0.14/0.16/0.12.
@@ -60,3 +60,7 @@ lundfiles/lund-gen-monitoring/MonitoringPlotsPath/
 ```
 
 Rendering is part of the uniform output contract for every channel and does not create a second ROOT file.
+
+[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+
+[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.

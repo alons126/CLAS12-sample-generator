@@ -10,7 +10,7 @@ build/debug/apps/event-generator-to-lund-converter \
 
 `event-generator` defaults to `genie-gst`; the name identifies GENIE as the producer and GST ROOT as the input format. Other values are rejected until their adapter is implemented. Quote globs so ROOT receives the pattern. GENIE GST inputs must contain a tree named `gst`. Select `--rgm-target` to resolve target geometry, nuclear A/Z, and the GEMC target variation together; explicit overrides remain available. The converter never guesses scientific metadata from input filenames.
 
-Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>_GEMC-<version>` below the supplied output parent. For example, `C12-small`, GENIE GST 3.2.2, tune `GEM21_11a_00_000`, and GEMC 5.14 produce `rgm_fall2021_C_S__genie-gst-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14`. Every component is also stored separately in the manifest.
+Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>_GEMC-<version>` below the supplied output parent. For example, `C12-four-foil` at 5.98636 GeV, GENIE GST 3.2.2, tune `GEM21_11a_00_000`, and GEMC 5.14 produce `rgm_fall2021_Cx4__genie-gst-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV_GEMC-5.14`. Every component is also stored separately in the manifest. Use `C12-small` for 2 GeV, `C12-large` for 4 GeV, and `C12-four-foil` for 6 GeV RG-M production; `Ar40` is valid at all three energies. Run 15733 is the exception and used `C12-small` at 4 GeV.[^sportes-2026-rgm][^rgm-analysis-note]
 
 ## Required schema
 
@@ -57,3 +57,7 @@ Once a file starts, the cutoff is not evaluated again inside it. An exact-multip
 The resolved metadata-named run directory is recreated when it already exists, following the documented replacement lifecycle. Physical conversion writes the split LUND files and `lund-gen-log.json`; it creates no ROOT monitoring file, PDF, or PNG. Monitoring is a uniform-generation responsibility.
 
 To support another input format without creating another workflow, follow [Adding another event-generator-to-LUND adapter](../development/adding-event-generator.md). Historical command mappings and compatibility profiles are isolated in the [migration guide](../history/migration.md) and [launch-chain reference](../history/legacy-workflows.md).
+
+[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+
+[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.

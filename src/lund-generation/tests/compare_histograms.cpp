@@ -16,7 +16,7 @@
  * CLI options:
  *   EXPECTED ACTUAL                     Compare every histogram exactly.
  *   EXPECTED ACTUAL --allow-corrected-vz
- *                                       Allow `Vz_e_1e` to use the maintained -7.5 to 5 cm range
+ *                                       Allow `Vz_e_1e` to use the maintained -8 to 5 cm range
  *                                       instead of the archived, incorrect -5 to 5 cm range.
  */
 
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
             // checks the vertex values, so this test permits only the corrected plot range.
             if (allow_corrected_vz && std::string(key->GetName()) == "Vz_e_1e") {
                 if (old->GetXaxis()->GetNbins() != 100 || old->GetXaxis()->GetXmin() != -5 || old->GetXaxis()->GetXmax() != 5 || now->GetXaxis()->GetNbins() != 100 ||
-                    now->GetXaxis()->GetXmin() != -7.5 || now->GetXaxis()->GetXmax() != 5) {
+                    now->GetXaxis()->GetXmin() != -8 || now->GetXaxis()->GetXmax() != 5) {
                     throw std::runtime_error("Vz_e_1e: corrected axis mismatch");
                 }
                 continue;

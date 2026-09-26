@@ -15,7 +15,9 @@
  *
  * Scope:
  *   This file stores names and defaults only. It does not define vertex shapes, change targets.h, load
- *   a GCARD, or choose geometry from A and Z.
+ *   a GCARD, or choose geometry from A and Z. For RG-M production, Ar40 works at 2, 4, and 6 GeV;
+ *   C12-small belongs to 2 GeV, C12-large to 4 GeV, and C12-four-foil to 6 GeV. Run 15733 is the
+ *   exception: it used C12-small at 4 GeV.
  */
 
 #pragma once
@@ -44,7 +46,8 @@ namespace samples {
  *
  * Rules and use:
  *   identifier is unique and case-sensitive. A and Z are LUND defaults. TargetGeometry checks geometry.
- *   Output names and the run log use gemc_variation. Users may override each default.
+ *   Output names and the run log use gemc_variation. Users may override each default. The catalog does
+ *   not reject unusual target/beam pairs, so callers must follow the documented RG-M production pairing.
  */
 struct RgmTarget {
     std::string identifier;  ///< Case-sensitive `--rgm-target` name shown in help and profiles.

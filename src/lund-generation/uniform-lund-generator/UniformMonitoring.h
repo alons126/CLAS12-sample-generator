@@ -8,7 +8,8 @@
  *
  * Purpose:
  *   Store uniform monitoring histograms in one ROOT file and draw them with the established layout.
- *   Physical conversion does not use this class.
+ *   Every Vz histogram uses -8 to 5 cm to cover the target positions of all RG-M targets. Physical
+ *   conversion does not use this class.
  *
  * Workflow:
  *   Construct from the resolved uniform sample identity -> fill after each written event -> save one

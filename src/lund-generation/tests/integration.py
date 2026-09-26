@@ -307,8 +307,6 @@ with tempfile.TemporaryDirectory(prefix='clas12-integration-') as temp:
             'C12-large':(12,6,'1-foil-large','rgm_fall2021_C_L'),
             'Ar40':(40,18,'Ar','rgm_fall2021_Ar'),
             'Sn120-large':(120,50,'1-foil-large','rgm_fall2021_Sn_L'),
-            'C12-legacy':(12,6,'1-foil','rgm_fall2021_C'),
-            'Sn120-legacy':(120,50,'1-foil','rgm_fall2021_Sn'),
         }
 
         for name,(A,Z,geometry,variation) in targets.items():

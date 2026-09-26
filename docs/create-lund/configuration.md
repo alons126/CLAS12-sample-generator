@@ -76,19 +76,20 @@ Unknown geometries fail instead of writing sentinel coordinates. Geometry does n
 
 The maintained catalog centralizes the same kind of selection that the legacy submission script performed with target/beam conditionals. Each identity supplies the external geometry key, nuclear metadata, and official default GEMC variation. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
 
-| Identifier | A/Z | Vertex geometry | GEMC target variation |
-| --- | --- | --- | --- |
-| `H1` | 1/1 | `liquid` | `rga_spring2019` |
-| `D2` | 2/1 | `liquid` | `rgb_fall2019` |
-| `He4` | 4/2 | `liquid` | `rgm_fall2021_He` |
-| `C12-four-foil` | 12/6 | `4-foil` | `rgm_fall2021_Cx4` |
-| `Sn-nat-four-foil` | 119/50 | `4-foil` | `rgm_fall2021_Snx4` |
-| `Ca40`, `Ca48` | 40/20, 48/20 | `Ca` | `rgm_fall2021_Ca` |
-| `C12-small` | 12/6 | `1-foil-small` | `rgm_fall2021_C_S` |
-| `C12-large` | 12/6 | `1-foil-large` | `rgm_fall2021_C_L` |
-| `Ar40` | 40/18 | `Ar` | `rgm_fall2021_Ar` |
-| `Sn120-large` | 120/50 | `1-foil-large` | `rgm_fall2021_Sn_L` |
-| `C12-legacy`, `Sn120-legacy` | 12/6, 120/50 | `1-foil` | Removed legacy variations retained for reproduction |
+For RG-M production, `Ar40` is valid at the nominal 2, 4, and 6 GeV beam energies. Use `C12-small`, the small 4 mm one-foil target, at 2 GeV; use `C12-large`, the large 6 mm one-foil target, at 4 GeV; and use `C12-four-foil` at 6 GeV. Run 15733 is the exception: it used the small 4 mm one-foil C12 target at 4 GeV. The target note documents the foil sizes, beam use, and corresponding GEMC variations, while the RG-M analysis note records the target cells and beam energies.[^sportes-2026-rgm][^rgm-analysis-note] The catalog does not block an explicit nonproduction pairing, but such a choice must be treated as a controlled study rather than an RG-M production setting.
+
+| Identifier | A/Z | Vertex geometry | GEMC target variation | RG-M beam use |
+| --- | --- | --- | --- | --- |
+| `H1` | 1/1 | `liquid` | `rga_spring2019` | See campaign metadata |
+| `D2` | 2/1 | `liquid` | `rgb_fall2019` | See campaign metadata |
+| `He4` | 4/2 | `liquid` | `rgm_fall2021_He` | See campaign metadata |
+| `C12-four-foil` | 12/6 | `4-foil` | `rgm_fall2021_Cx4` | 6 GeV |
+| `Sn-nat-four-foil` | 119/50 | `4-foil` | `rgm_fall2021_Snx4` | See campaign metadata |
+| `Ca40`, `Ca48` | 40/20, 48/20 | `Ca` | `rgm_fall2021_Ca` | See campaign metadata |
+| `C12-small` | 12/6 | `1-foil-small` | `rgm_fall2021_C_S` | 2 GeV; also 4 GeV for run 15733 |
+| `C12-large` | 12/6 | `1-foil-large` | `rgm_fall2021_C_L` | 4 GeV except run 15733 |
+| `Ar40` | 40/18 | `Ar` | `rgm_fall2021_Ar` | 2, 4, and 6 GeV |
+| `Sn120-large` | 120/50 | `1-foil-large` | `rgm_fall2021_Sn_L` | See campaign metadata |
 
 ## Manifest
 
@@ -99,3 +100,7 @@ It is a completion record and pipeline input, not a content-addressed archive: r
 ## Detector and submission settings
 
 Supply `--lund-dir RUN/lundfiles` to infer settings from its manifest, with optional `--config` and CLI overrides. GEMC falls back to 5.14. It selects GCARD/YAML resources explicitly and uses the external payload’s scheduler defaults. There are no site JSON files. See the [submission guide](../submit-simulation/guide.md).
+
+[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+
+[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.

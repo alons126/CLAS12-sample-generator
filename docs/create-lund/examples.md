@@ -91,7 +91,7 @@ source run.csh \
   --tune GEM21_11a_00_000 \
   --q2-cut Q2_0_40 \
   --gemc-version 5.14 \
-  --rgm-target C12-small \
+  --rgm-target C12-four-foil \
   --beam-energy 5.98636 \
   --input '/shared/truth/C12/GEM21_11a_00_000/*.root' \
   --events 50000 \
@@ -99,7 +99,7 @@ source run.csh \
   --output runs/physical
 ```
 
-The converter copies supported GST truth, samples only the vertex, and records the unsanitized provenance in the manifest. `q2-cut` labels the upstream selection; the converter does not apply a Q² cut.
+The converter copies supported GST truth, samples only the vertex, and records the unsanitized provenance in the manifest. `q2-cut` labels the upstream selection; the converter does not apply a Q² cut. This 6 GeV carbon example uses the four-foil target; the small and large one-foil targets belong to 2 and 4 GeV running, with run 15733 as the small-foil 4 GeV exception.[^sportes-2026-rgm][^rgm-analysis-note]
 
 ## Direct executable help and execution
 
@@ -118,3 +118,7 @@ build/debug/apps/uniform-lund-generator \
 Direct executable paths are interpreted from the caller's current directory. The `run.csh` workflow instead anchors paths to the repository root and supplies the ifarm synchronization/build stages.
 
 For the full production matrix, see the checked-in [uniform generation command list](../../tutorials/uniform-samples/uniform-lund-generation.txt).
+
+[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+
+[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.

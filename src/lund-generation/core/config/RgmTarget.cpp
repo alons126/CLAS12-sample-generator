@@ -14,7 +14,9 @@
  *   same ordered names in help and error messages.
  *
  * Scope:
- *   This file stores names and defaults only. Other files sample vertices and configure GEMC.
+ *   This file stores names and defaults only. Other files sample vertices and configure GEMC. RG-M
+ *   production uses Ar40 at every beam energy, small one-foil C12 at 2 GeV, large one-foil C12 at 4 GeV,
+ *   and four-foil C12 at 6 GeV. Run 15733 is an exception that used small one-foil C12 at 4 GeV.
  */
 
 #include "core/config/RgmTarget.h"
@@ -28,7 +30,8 @@ namespace samples {
 
 #pragma region /* Catalog */
 const std::vector<RgmTarget>& rgmTargets() {
-    // This order is used in help and error messages. Target lookup still requires an exact name.
+    // This order is used in help and error messages. Beam-energy guidance is documented separately;
+    // lookup still requires only an exact target name so explicit studies remain possible.
     static const std::vector<RgmTarget> targets = {
         {"H1", "liquid hydrogen", 1, 1, "liquid", "rga_spring2019"},
         {"D2", "liquid deuterium", 2, 1, "liquid", "rgb_fall2019"},
@@ -41,8 +44,6 @@ const std::vector<RgmTarget>& rgmTargets() {
         {"C12-large", "carbon-12 large 6 mm single foil", 12, 6, "1-foil-large", "rgm_fall2021_C_L"},
         {"Ar40", "liquid argon-40 short cryocell", 40, 18, "Ar", "rgm_fall2021_Ar"},
         {"Sn120-large", "tin-120 large 6 mm single foil", 120, 50, "1-foil-large", "rgm_fall2021_Sn_L"},
-        {"C12-legacy", "archived carbon-12 single foil", 12, 6, "1-foil", "rgm_fall2021_C"},
-        {"Sn120-legacy", "archived tin-120 single foil", 120, 50, "1-foil", "rgm_fall2021_Sn"},
     };
 
     // Return the stored list without copying it.

@@ -33,10 +33,14 @@ All production channels keep the original flat-theta and azimuth prescriptions, 
 
 ## Diagnostics
 
-Uniform generation writes one `lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root` file. It merges the former general and compatibility monitors, preserves the archived plot organization and rendering style, widens vertex-z axes to cover the maintained target catalog, and extends regional hadron notation for protons, neutrons, pip, and pim. Every uniform channel fills `MonitoringPlotsPath/` with PDF/PNG renderings of the same objects. Physical conversion creates no monitoring histograms. Uniform generation also prepares the `mchipo/` and `reconhipo/` directories for later simulation and reconstruction.
+Uniform generation writes one `lundfiles/lund-gen-monitoring/<prefix>_monitoring_plots.root` file. It merges the former general and compatibility monitors, preserves the archived plot organization and rendering style, sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets,[^sportes-2026-rgm][^rgm-analysis-note] and extends regional hadron notation for protons, neutrons, pip, and pim. Every uniform channel fills `MonitoringPlotsPath/` with PDF/PNG renderings of the same objects. Physical conversion creates no monitoring histograms. Uniform generation also prepares the `mchipo/` and `reconhipo/` directories for later simulation and reconstruction.
 
 ## Retained corrections
 
 Physical conversion retains a remaining-input cutoff generalized to the configured `events-per-file` block used to align with submission `JOB_NEVENTS`, but corrects the premature mid-file stop: the cutoff is checked only before a follow-up file starts. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completed manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](../submit-simulation/ifarm-environment.md).
 
 Full parity scope and limitations—including unknown historical random states and untested detector execution—are listed in [validation](../development/validation.md).
+
+[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+
+[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.
