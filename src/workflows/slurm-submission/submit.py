@@ -774,8 +774,7 @@ def apply_simulation_directory(name, path, existed, execute, report):
 
         if not execute:
             report.text('{INFO}PREVIEW:{RESET} Preserving the existing directory and all contents:\n' + str(path))
-            report.text('{INFO}PREVIEW:{RESET} With --execute, this directory and all contents would be deleted '
-                        'and the empty directory would be recreated.')
+            report.text('With --execute, this directory and all contents would be deleted and the empty directory would be recreated.')
             report.text()
 
             return
@@ -887,7 +886,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     # Preview and execution use the same checks and report.
     if not execute:
-        report.text('{INFO}PREVIEW:{RESET}\nNo sbatch, output replacement or farm_out cleanup. '
+        report.text('{INFO}PREVIEW:{RESET}\nNo sbatch, output replacement or farm_out cleanup.\n'
                     'Missing mchipo/reconhipo directories will be created.\nAdd --execute to submit.')
         report.text()
 
