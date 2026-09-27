@@ -10,6 +10,8 @@ build/debug/apps/event-generator-to-lund-converter \
 
 `event-generator` defaults to `genie-gst`; the name identifies GENIE as the producer and GST ROOT as the input format. Other values are rejected until their adapter is implemented. Quote globs so ROOT receives the pattern. GENIE GST inputs must contain a tree named `gst`. `--target` names the nucleus/material; beam energy plus target selects the GEMC variation and matching vertex geometry. `--gemc-target-variation` overrides that choice for an exceptional configuration. The converter never guesses scientific metadata from input filenames.
 
+When `tune = auto`, an input below `master-routine_validation_01-eScattering/` makes the converter look for `input_options.txt` in that directory's parent and read the value after the exact `TUNE` key. An explicit `--tune NAME` takes precedence. Remote inputs, other directory layouts, missing or unreadable metadata, and a missing or empty `TUNE` entry resolve to `unknown` without stopping conversion.
+
 Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>` below the supplied output parent. For example, C12 at 5.98636 GeV with GENIE GST 3.2.2 and tune `GEM21_11a_00_000` produces `rgm_fall2021_Cx4__genie-gst-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV`. Every component is also stored separately in the manifest. C12 selects the small foil at 2 GeV, large foil at 4 GeV, and four foils at 6 GeV. Run 15733 requires the explicit small-foil variation at 4 GeV[^sportes-2026-rgm][^rgm-analysis-note]. GEMC version is selected later by simulation submission and is not a LUND-converter option.
 
 ## Required schema

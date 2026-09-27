@@ -28,7 +28,7 @@
  *   --seed N / --vertex-seed N        Set configured kinematic/vertex seeds (defaults: 67890/12345).
  *   --prefix NAME                     Override the automatic LUND filename prefix.
  *   --event-generator-version VERSION Record the generator version (default: unknown).
- *   --tune NAME                       Record the generator tune (default: unknown).
+ *   --tune NAME                       Override automatic input_options.txt discovery (fallback: unknown).
  *   --q2-cut NAME                     Record the input selection label (default: auto; no cut is applied here).
  *   --help                            Print the complete runtime option summary.
  *

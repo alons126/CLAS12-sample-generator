@@ -29,7 +29,8 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
 | `event-generator` | `genie-gst` | Physical adapter name; generator and input format are explicit |
 | `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |
-| `tune`, `q2-cut` | `unknown` / energy-based | Generator provenance and naming components |
+| `tune` | `auto` | Read `TUNE` from `input_options.txt` beside the standard production directory; otherwise `unknown` |
+| `q2-cut` | Energy-based | Generator provenance and naming component; no cut is applied during conversion |
 
 Counts and the split threshold must be integers from 1 through 4294967295. Seeds may range from 0 through 4294967295. A nonzero seed is reproducible; `TRandom3(0)` asks ROOT to choose an automatic seed, so a manifest containing zero cannot reproduce the generated sequence. Production Ar defaults resolve to A=40/Z=18.
 

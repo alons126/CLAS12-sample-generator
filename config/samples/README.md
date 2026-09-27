@@ -60,7 +60,7 @@ Uniform profiles may set `channel`, `hadron`, `hadron-region`, `electron-theta-m
 
 ## Available physical options
 
-Physical profiles may set `input`, `event-generator`, `event-generator-version`, `tune`, and `q2-cut` in addition to the common options. `input` and `output` are normally supplied at runtime. The implemented physical adapter is `genie-gst`, identifying both the generator and its GST input format. GEMC version belongs to simulation submission, not LUND creation.
+Physical profiles may set `input`, `event-generator`, `event-generator-version`, `tune`, and `q2-cut` in addition to the common options. `tune = auto` reads `TUNE` from the standard production `input_options.txt` and falls back to `unknown`. `input` and `output` are normally supplied at runtime. The implemented physical adapter is `genie-gst`, identifying both the generator and its GST input format. GEMC version belongs to simulation submission, not LUND creation.
 
 The full types, units, allowed values, automatic resolutions, RG-M target catalog, and failure behavior are documented in [configuration.md](../../docs/create-lund/configuration.md). The selected executable also prints its current interface:
 

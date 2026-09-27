@@ -36,6 +36,7 @@
 
 #include <cctype>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -54,7 +55,8 @@ namespace samples {
  * @namespace samples::<anonymous>
  * @brief Text and naming helpers used only in this file.
  *
- * These functions read profile text and build output names. They are not part of the public API.
+ * These functions read profile and GENIE metadata text, resolve automatic provenance, and build output
+ * names. They are not part of the public API.
  */
 namespace {
 
@@ -84,6 +86,68 @@ std::string trim(std::string s) {
 
     // Use the last non-space character as the other end.
     return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
+}
+#pragma endregion
+
+// discoverGenieTune -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* discoverGenieTune */
+/**
+ * @brief Read the GENIE tune recorded beside a standard GST production directory.
+ *
+ * Workflow:
+ *   Resolve the fixed directory before any input glob -> find the
+ *   `master-routine_validation_01-eScattering` path component -> open `input_options.txt` in its parent
+ *   directory -> return the value after the exact `TUNE` key.
+ *
+ * @param input Local GST ROOT filename or quoted glob.
+ *
+ * @return The recorded tune, or `unknown` when the input is remote, the standard directory is absent,
+ *         the metadata file cannot be read, or no nonempty `TUNE` value is present.
+ *
+ * @note This best-effort lookup never changes files and never turns missing provenance into a conversion
+ *       failure. An explicit `--tune` value bypasses it.
+ */
+std::string discoverGenieTune(const std::string& input) {
+    if (input.empty() || input.find("://") != std::string::npos) { return "unknown"; }
+
+    const auto wildcard = input.find_first_of("*?[");
+    std::filesystem::path directory;
+
+    if (wildcard == std::string::npos) {
+        directory = std::filesystem::path(input).parent_path();
+    } else {
+        const auto separator = input.find_last_of("/\\", wildcard);
+        if (separator == std::string::npos) { return "unknown"; }
+
+        directory = std::filesystem::path(input.substr(0, separator));
+    }
+
+    directory = std::filesystem::absolute(directory).lexically_normal();
+
+    while (!directory.empty()) {
+        if (directory.filename() == "master-routine_validation_01-eScattering") {
+            std::ifstream metadata(directory.parent_path() / "input_options.txt");
+            std::string line;
+
+            while (std::getline(metadata, line)) {
+                std::istringstream fields(line);
+                std::string key;
+                std::string value;
+
+                if (fields >> key && key == "TUNE") { return fields >> value && !value.empty() ? value : "unknown"; }
+            }
+
+            return "unknown";
+        }
+
+        const auto parent = directory.parent_path();
+        if (parent == directory) { break; }
+
+        directory = parent;
+    }
+
+    return "unknown";
 }
 #pragma endregion
 
@@ -213,7 +277,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     } else {
         // Physical mode reads existing event-generator truth and records where it came from. It does not
         // run GENIE. The current adapter reads GENIE GST input.
-        c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "unknown"}, {"q2-cut", "auto"}});
+        c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "auto"}, {"q2-cut", "auto"}});
     }
 
     // Use the same assignment check for profiles and command-line values.
@@ -326,6 +390,10 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         const double e = c.number("beam-energy");
         c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2_0_02" : std::abs(e - 4.02962) < 1e-6 ? "Q2_0_25" : std::abs(e - 5.98636) < 1e-6 ? "Q2_0_40" : "none";
     }
+
+    // Standard GENIE productions record their tune beside the master-routine directory. Missing or
+    // unreadable metadata is valid but loses that provenance, so retain the documented unknown fallback.
+    if (!uniform && c.get("tune") == "auto") { c.values_["tune"] = discoverGenieTune(c.get("input")); }
 
     // Keep file prefixes short. The physical run-directory name below stores the longer source details.
     if (c.get("prefix") == "auto") {
@@ -578,8 +646,8 @@ std::string help(bool uniform) {
     } else {
         // List the physical-only GENIE GST and source-description settings.
         result +=
-            "Physical: --event-generator genie-gst (default), --event-generator-version VERSION, --tune NAME,\n"
-            "--q2-cut NAME.\n"
+            "Physical: --event-generator genie-gst (default), --event-generator-version VERSION, --tune NAME, --q2-cut NAME.\n"
+            "Tune defaults to TUNE from the production input_options.txt and falls back to unknown.\n"
             "For physical input, --events-per-file also sets the minimum inclusive input block required before a follow-up file starts, aligned with JOB_NEVENTS.\n";
     }
 
