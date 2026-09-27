@@ -92,6 +92,6 @@ The project does not run a physical event generator, derive acceptance maps, or 
 
 ## Safety and provenance
 
-LUND creation reports the fully resolved run directory, then recursively replaces that exact directory when it already exists. Submission previews by default; `--execute` replaces simulation output directories while preserving LUND input. The ifarm checkout is intentionally disposable and is refreshed from Git before a real workflow. Read the relevant workflow page before using production paths.
+LUND creation reports the fully resolved run directory, then recursively replaces that exact directory when it already exists. Both LUND sources prepare empty simulation output directories. Submission previews by default and creates either directory if it is missing while preserving existing contents; `--execute` replaces both directories while preserving LUND input. The ifarm checkout is intentionally disposable and is refreshed from Git before a real workflow. Read the relevant workflow page before using production paths.
 
 Every successful LUND run publishes `lundfiles/lund-creation-monitoring/lund-creation-log.json`. That manifest is the handoff from creation to submission and records resolved settings, software provenance, scanned/written counts, and the exact LUND file inventory.

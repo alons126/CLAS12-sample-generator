@@ -106,7 +106,7 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 
 ## Simulation boundary
 
-`src/workflows/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python checks the requested shared GEMC version, loads it in an invocation-owned environment, verifies the resulting data directory and executable, checks remaining inputs, resets simulation output directories only with `--execute`, and submits one array per sample. The external payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
+`src/workflows/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python checks the requested shared GEMC version, loads it in an invocation-owned environment, verifies the resulting data directory and executable, checks remaining inputs, and ensures both simulation output directories exist. Preview creates only missing directories and preserves existing contents; `--execute` replaces both directories and submits one array per sample. The external payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
 
 ## Adding functionality
 

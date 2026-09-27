@@ -7,11 +7,11 @@ flowchart TB
     subgraph PREPARE["1. Prepare and validate"]
         direction LR
         INPUTS["Completed LUND files<br/>Manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["run.csh --workflow submit<br/>Validate arguments and refresh the disposable ifarm checkout"]
-        ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate the ifarm environment"]
+        ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate ifarm and ensure output directories"]
     end
 
     EXECUTE{"--execute?"}
-    PREVIEW["Preview, by default<br/>Report the plan and stop"]
+    PREVIEW["Preview, by default<br/>Preserve output, create missing directories,<br/>report the plan and stop"]
 
     subgraph SIMULATE["2. Submit and simulate"]
         direction RL

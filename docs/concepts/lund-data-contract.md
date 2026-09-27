@@ -49,7 +49,7 @@ The writer rejects empty events and non-finite particle energy/vertex data. GENI
 
 The single maintained format uses established whitespace and five decimal places for particle momenta, energy, mass, and vertices. Uniform event IDs start at zero and remain continuous across split files, matching the physical converter's use of one input-wide index rather than restarting at each file. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
 
-Uniform prefixes are derived as `Uniform_sample_<resolved-label>_<beam-MeV>MeV`. `--prefix` remains an explicit override for a downstream naming requirement. Output directories are explicit and never inferred from the current machine.
+Uniform prefixes are derived as `Uniform_sample__<resolved-label>__<beam-MeV>MeV`. Physical prefixes are derived as `<target>__<event-generator>__<tune>__<Q2-cut>__<beam-MeV>MeV`. `--prefix` remains an explicit override for a downstream naming requirement. Output directories are explicit and never inferred from the current machine.
 
 ## 6. Mass convention
 
@@ -72,7 +72,7 @@ Uniform generation writes exactly the requested `events` count. GENIE conversion
 
 Submission resolves manifest/config/CLI inputs into shell settings: `NUM_OF_JOBS` selects numbered LUND files and `JOB_NEVENTS` supplies the shared per-task event limit to GEMC and reconstruction. Physical conversion uses its `events-per-file` value as the input-tail cutoff block so generation and the intended per-task limit share one scale. The cutoff prevents a known-short raw-input tail from starting a follow-up file without interrupting an exact final block; unsupported reactions can still yield fewer written events than raw entries. The completed manifest supplies actual per-file counts automatically; explicit configuration supports inputs without a manifest.
 
-The writer warns, removes and recreates an existing run directory before creation. It writes `lundfiles/lund-creation-monitoring/lund-creation-log.json.tmp` only after LUND output and any required uniform monitoring finish, then renames it to `lundfiles/lund-creation-monitoring/lund-creation-log.json`. Physical conversion has no monitoring stage. Failure leaves partial output for inspection without publishing a completed manifest; rerunning the same resolved output replaces those partial results.
+The writer warns, removes and recreates an existing run directory before creation. For either source it prepares empty `mchipo/` and `reconhipo/` directories beside `lundfiles/`; only uniform generation prepares rendered monitoring output. It writes `lundfiles/lund-creation-monitoring/lund-creation-log.json.tmp` only after LUND output and any required uniform monitoring finish, then renames it to `lundfiles/lund-creation-monitoring/lund-creation-log.json`. Physical conversion has no monitoring stage. Failure leaves partial output for inspection without publishing a completed manifest; rerunning the same resolved output replaces those partial results.
 
 Before output creation, the writer prints a setup report grouped into run limits, beam/target values, active source settings, and resolved output paths. It omits fixed serialization constants and settings unused by the selected channel. After the manifest is published, the completion report contains only generated/scanned events, written events, LUND file count, and completion status.
 

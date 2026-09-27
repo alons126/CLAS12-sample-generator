@@ -42,13 +42,10 @@ namespace samples {
  * overridden independently for a controlled study.
  */
 struct Target {
-    std::string identifier;  ///< Case-sensitive material name such as `C12` or `Ar40`.
-
+    std::string identifier;   ///< Case-sensitive material name such as `C12` or `Ar40`.
     std::string description;  ///< Plain description shown to developers.
-
-    int A;  ///< Default target mass number written to the LUND header.
-
-    int Z;  ///< Default target charge number written to the LUND header.
+    int A;                    ///< Default target mass number written to the LUND header.
+    int Z;                    ///< Default target charge number written to the LUND header.
 };
 #pragma endregion
 
@@ -64,10 +61,8 @@ struct Target {
  */
 struct TargetVariation {
     std::string identifier;  ///< GEMC target-variation name.
-
-    std::string target;  ///< Compatible user-facing target identity.
-
-    std::string geometry;  ///< targets.h key used to sample event vertices.
+    std::string target;      ///< Compatible user-facing target identity.
+    std::string geometry;    ///< targets.h key used to sample event vertices.
 };
 #pragma endregion
 

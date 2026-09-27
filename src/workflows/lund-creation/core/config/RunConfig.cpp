@@ -395,14 +395,17 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // unreadable metadata is valid but loses that provenance, so retain the documented unknown fallback.
     if (!uniform && c.get("tune") == "auto") { c.values_["tune"] = discoverGenieTune(c.get("input")); }
 
-    // Keep file prefixes short. The physical run-directory name below stores the longer source details.
+    // Separate each major identity group with a double underscore. Uniform labels already contain the
+    // complete particle/region identity. Physical prefixes retain the generator tune and Q2-cut label so
+    // copied LUND files remain identifiable outside their provenance directory.
     if (c.get("prefix") == "auto") {
         if (uniform) {
             std::ostringstream prefix;
-            prefix << "Uniform_sample_" << uniformSampleLabel(c) << '_' << beamMeV(c.number("beam-energy")) << "MeV";
+            prefix << "Uniform_sample__" << uniformSampleLabel(c) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         } else {
-            c.values_["prefix"] = pathToken(c.get("target")) + '_' + pathToken(c.get("event-generator")) + '_' + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
+            c.values_["prefix"] = pathToken(c.get("target")) + "__" + pathToken(c.get("event-generator")) + "__" + pathToken(c.get("tune")) + "__" + pathToken(c.get("q2-cut")) + "__" +
+                                  std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
         }
     }
 

@@ -8,7 +8,7 @@ build/debug/apps/uniform-lund-creator \
   --events 100 --output runs
 ```
 
-Uniform generation uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. A run is written below the supplied parent as `Uniform_sample_<label>_<beam MeV>MeV/`.
+Uniform generation uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. A run is written below the supplied parent as `Uniform_sample_<label>_<beam MeV>MeV/`; its automatic LUND filename prefix is `Uniform_sample__<label>__<beam-MeV>MeV`.
 
 For example, a central-detector pi+ sample is:
 
@@ -78,4 +78,4 @@ Electron, proton, neutron, and charged-pion masses come directly from the extern
 
 ## Output and diagnostics
 
-`lundfiles/lund-creation-monitoring/<prefix>_monitoring_plots.root` contains the complete monitoring set. Its legacy-style definitions cover 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel with region-bearing hadron labels. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms. Empty `mchipo/` and `reconhipo/` directories preserve the downstream layout for later simulation and reconstruction. See [diagnostics](monitoring.md) and [sampling equations](../concepts/sampling-models.md).
+`lundfiles/lund-creation-monitoring/<prefix>_monitoring_plots.root` contains the complete monitoring set. Its legacy-style definitions cover 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel with region-bearing hadron labels. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms. Like physical conversion, uniform creation prepares empty `mchipo/` and `reconhipo/` directories for later simulation and reconstruction. See [diagnostics](monitoring.md) and [sampling equations](../concepts/sampling-models.md).

@@ -51,10 +51,10 @@
 #     quoted CLI arguments and the ifarm module/reconstruction environment.
 #
 # Outputs:
-#     Preview prints the checks and Slurm command in copyable multiline shell form. With --execute,
-#     Python replaces only mchipo and reconhipo, submits the arrays, prints each job ID, and saves each
-#     ID in the submission log. Changes made for sbatch stay inside Python and do not change the
-#     user's shell.
+#     Preview prints the checks and Slurm command in copyable multiline shell form, preserves existing
+#     simulation output, and creates missing mchipo/reconhipo directories. With --execute, Python
+#     replaces those directories, submits the arrays, prints each job ID, and saves each ID in the
+#     submission log. Changes made for sbatch stay inside Python and do not change the user's shell.
 #
 # Failure:
 #     Return Python's exit status without closing the user's shell.

@@ -156,7 +156,8 @@ def parser():
     p = SubmissionArgumentParser(description='Resolve LUND inputs and preview or submit one Slurm array per sample.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
-               'With --execute, submission replaces mchipo/reconhipo while preserving lundfiles. '
+               'Preview preserves existing output and creates missing mchipo/reconhipo directories. '
+               'With --execute, submission replaces both while preserving lundfiles. '
                'GEMC defaults to 5.14. Use:\n'
                '  source run.csh \\\n'
                '    --workflow submit \\\n'
@@ -648,7 +649,8 @@ def resolve_samples(args, root):
     if len({sample['OUTPATH'] for sample in resolved}) != len(resolved):
         raise ValueError('Each selected sample must have a distinct OUTPATH')
 
-    # Preview is the default. Only execute mode may change output or call sbatch.
+    # Preview is the default and may create missing simulation directories. Only execute mode may
+    # replace existing output or call sbatch.
     for sample in resolved:
         sample['SUBMISSION_EXECUTE'] = 'true' if args.execute else 'false'
 

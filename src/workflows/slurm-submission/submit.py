@@ -10,8 +10,8 @@ Purpose:
     Pass checked LUND and detector settings to the external GEMC/reconstruction worker through Slurm.
 
 Workflow:
-    Resolve inputs -> check and load GEMC -> check worker inputs -> prepare output only with --execute
-    -> submit one array per sample -> record each accepted Slurm job ID in its submission log.
+    Resolve inputs -> check and load GEMC -> check worker inputs -> ensure simulation output directories
+    -> with --execute, submit one array per sample and record each accepted Slurm job ID.
     Python changes a separate copy of the shell environment, so the user's interactive module setup
     stays unchanged. Detector commands remain in the external worker.
 
@@ -22,9 +22,9 @@ Inputs:
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
 
 Outputs:
-    Preview prints checks and commands in copyable multiline shell form without changing output.
-    --execute replaces simulation output, calls Slurm, reports its accepted job ID, and writes the
-    submission log while preserving lundfiles.
+    Preview prints checks and commands in copyable multiline shell form and creates missing empty
+    simulation directories without replacing existing contents. --execute replaces simulation output,
+    calls Slurm, reports its accepted job ID, and writes the submission log while preserving lundfiles.
 
 CLI options (parsed by resolve_inputs.py):
     --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
@@ -699,6 +699,63 @@ def clear_farm(values, root, execute, report, cleared):
 
     return cleared
 
+def prepare_simulation_directory(name, path, replace, report):
+    """Ensure one checked simulation-output directory exists.
+
+    Purpose:
+        Give preview and execution the same explicit check, create, and verification lifecycle while
+        allowing only execution to replace existing simulation output.
+
+    Workflow:
+        Print and check the exact path -> reject links -> replace an existing path only when requested
+        -> preserve an existing preview directory or warn and create a missing directory -> verify the
+        final directory and report success.
+
+    Args:
+        name: Stable report label, either ``mchipo`` or ``reconhipo``.
+        path: Direct child of the already validated sample run directory.
+        replace: Remove an existing directory or regular file before creation when true.
+        report: Helper that prints standardized warnings and status messages.
+
+    Failure:
+        A symbolic link, a non-directory preview path, removal failure, creation failure, or failed
+        post-creation check raises before submission. A successful preview never removes contents.
+    """
+
+    report.text('{SYSTEM}' + name + ':{RESET} ' + str(path))
+    report.text('{SYSTEM}--> Checking if {RESET}' + name + '{SYSTEM} is a directory...{RESET}')
+
+    if path.is_symlink():
+        raise ValueError(f'{name} must not be a symbolic link: {path}')
+
+    if replace and path.exists():
+        report.text('{INFO}--> Replacing existing ' + name + ' output at: {RESET}' + str(path))
+
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+
+    elif path.is_dir():
+        report.text('{COMPLETION}--> ' + name + ' exists.{RESET}')
+        report.text()
+
+        return
+    elif path.exists():
+        raise ValueError(f'{name} exists but is not a directory: {path}')
+    else:
+        report.warning(f'the following directory does not exist: {path}')
+
+    report.text('{SYSTEM}--> Creating ' + name + '...{RESET}')
+    path.mkdir()
+    report.text('{SYSTEM}----> Checking if {RESET}' + name + '{SYSTEM} is a directory...{RESET}')
+
+    if not path.is_dir():
+        raise RuntimeError(f'failed to create {name} directory: {path}')
+
+    report.text('{COMPLETION}----> ' + name + ' was created successfully.{RESET}')
+    report.text()
+
 def submit_array(command, environment, root):
     """Submit one Slurm array and return its numeric job identifier.
 
@@ -723,7 +780,7 @@ def submit_array(command, environment, root):
 
     result = subprocess.run(command, env=environment, cwd=root, capture_output=True, text=True)
     print('\n')
-    
+
     # Copy the scheduler's own notice and errors into the workflow log.
     if result.stdout:
         print(result.stdout, end='' if result.stdout.endswith('\n') else '\n')
@@ -752,8 +809,9 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         2. Print the sample details and handle the optional one-time farm-log cleanup.
         3. Check standard GEMC data, load the selected module, and verify its data and program.
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
-        5. Recheck every selected LUND input and required executable before output replacement.
-        6. Preserve outputs in preview or recreate only mchipo/reconhipo during execution.
+        5. Recheck every selected LUND input and required executable before output preparation.
+        6. Create missing mchipo/reconhipo directories in either mode and replace them only during
+           execution.
         7. Print the array settings and call the external worker through sbatch only with --execute.
         8. Read and print the accepted job ID, then save it in the submission log.
 
@@ -762,7 +820,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         environment: Copy of os.environ used only by this command. Sample settings and the selected
             GEMC module replace matching values. The same copy is reused for later samples.
         root: Checkout directory containing the external worker script.
-        execute: False for read-only preview; true for cleanup and Slurm submission.
+        execute: False to preserve existing output and create only missing directories; true for
+            output replacement, cleanup, and Slurm submission.
         report: Helper that prints the report.
         farm_cleared: Whether this command already handled farm_out cleanup.
 
@@ -771,8 +830,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         deleting log files created by an earlier array in the same command.
 
     Failure:
-        Missing inputs, unsafe output children, absent commands, or sbatch failure raise and
-        stop later samples. All read-only checks occur before mchipo/reconhipo replacement.
+        Missing inputs, unsafe output children, absent commands, or sbatch failure raise and stop
+        later samples. All read-only checks occur before mchipo/reconhipo preparation.
         The submission log is written after Slurm accepts the array. Already accepted Slurm arrays
         are not canceled when log publication or a later sample fails.
     """
@@ -786,7 +845,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     # Preview and execution use the same checks and report.
     if not execute:
-        report.text('{INFO}PREVIEW:{RESET}\nNo sbatch, output replacement or farm_out cleanup; add --execute to submit.')
+        report.text('{INFO}PREVIEW:{RESET}\nNo sbatch, output replacement or farm_out cleanup. '
+                    'Missing mchipo/reconhipo directories will be created; add --execute to submit.')
         report.text()
 
     report.banner('Slurm submission workflow parameters')
@@ -891,31 +951,19 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     report.banner('Setting output directories' + (' for ' + values['UNIFORM_SAMPLE_CHANNEL'] if uniform else ''))
 
-    # Only these simulation directories may be replaced. Reject links before deletion.
+    # Validate both exact child paths before either one can be created or replaced.
     output_dirs = [run / name for name in ('mchipo', 'reconhipo')]
 
-    if any(path.is_symlink() for path in output_dirs):
-        raise ValueError('invalid setting or unsafe path; check the submission config or CLI settings.')
+    for path in output_dirs:
+        if path.is_symlink():
+            raise ValueError(f'{path.name} must not be a symbolic link: {path}')
 
-    # Execution recreates simulation output directories. Preview only reports this action. Both keep
-    # lundfiles unchanged.
-    if execute:
-        report.text('{INFO}Removing old directory structure for MC simulation here...{RESET}')
+        if not execute and path.exists() and not path.is_dir():
+            raise ValueError(f'{path.name} exists but is not a directory: {path}')
 
-        for path in output_dirs:
-            if path.is_dir():
-                shutil.rmtree(path)
-            elif path.exists():
-                path.unlink()
-
-        report.text('{INFO}Setting up directory structure for MC simulation here...{RESET}')
-
-        for path in output_dirs:
-            path.mkdir()
-
-        report.text()
-    else:
-        report.text('{INFO}PREVIEW:{RESET} would replace mchipo reconhipo under ' + str(run) + '; existing outputs are preserved.')
+    # Both modes ensure the directories exist. Only execution removes prior simulation output.
+    for path in output_dirs:
+        prepare_simulation_directory(path.name, path, execute, report)
 
     report.value('OUTPATH', str(run))
     report.text('{SYSTEM}Number of files in target directory (OUTPATH):{RESET}')
@@ -978,7 +1026,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         # Pass arguments directly, report the accepted ID, and save it in the submission log.
         job_id = submit_array(command, environment, root)
         report.text()
-        
+
         report.value('SLURM_JOB_ID', job_id, value_color='INFO')
         write_submission_log(values, environment, root, executables, command, job_id)
 
@@ -1009,10 +1057,10 @@ def main():
         root because project files and the external worker path are relative to the checkout.
 
     Outputs:
-        A complete preview or execution report on standard output. Execution creates fresh mchipo and
-        reconhipo directories, submits arrays, and saves each accepted job ID in its submission log.
-        Preview runs the same checks without changing files or submitting. Neither mode changes the
-        environment in the caller's shell.
+        A complete preview or execution report on standard output. Both modes create missing empty
+        mchipo and reconhipo directories. Execution replaces existing contents, submits arrays, and
+        saves each accepted job ID in its submission log; preview preserves existing contents and does
+        not submit. Neither mode changes the environment in the caller's shell.
 
     Returns:
         Zero when every selected sample is previewed or submitted successfully; one for a

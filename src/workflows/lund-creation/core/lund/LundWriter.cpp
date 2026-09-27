@@ -8,7 +8,8 @@
  *
  * Purpose:
  *   Print run settings, safely replace the requested run directory, write split LUND files, count every
- *   successful event, and record the final settings, build information, and output files.
+ *   successful event, prepare the downstream simulation directories for either source, and record the
+ *   final settings, build information, and output files.
  *
  * Workflow:
  *   Print the setup -> check and replace the exact run directory -> open or rotate LUND files as needed
@@ -49,7 +50,7 @@ namespace samples {
 
 #pragma region /* LundWriter::printWorkflowSummary */
 void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned, std::uint64_t written, bool final) {
-    // Only `uniform` uses the uniform settings and paths. Building these path values creates no files.
+    // Only `uniform` uses uniform settings and monitoring paths. Building path values creates no files.
     const bool uniform = workflow == "uniform";
     const auto output = std::filesystem::path(config.get("output"));
     const auto lund_dir = output / "lundfiles";
@@ -160,9 +161,10 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     print_path("LUND directory", lund_dir);
     print_path("Completion manifest", diagnostics / "lund-creation-log.json");
 
+    print_path("MC HIPO directory", output / "mchipo");
+    print_path("Reconstructed HIPO directory", output / "reconhipo");
+
     if (uniform) {
-        print_path("MC HIPO directory", output / "mchipo");
-        print_path("Reconstructed HIPO directory", output / "reconhipo");
         print_path("Monitoring ROOT file", diagnostics / (config.get("prefix") + "_monitoring_plots.root"));
         print_path("Monitoring plot directory", diagnostics / "MonitoringPlotsPath");
     }
@@ -202,14 +204,13 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
         std::filesystem::remove_all(directory_);
     }
 
-    // write() opens the first LUND file, so construction cannot create an empty numbered file.
+    // Both sources publish the same handoff layout for the later simulation and reconstruction workflow.
     std::filesystem::create_directories(directory_ / "lundfiles" / "lund-creation-monitoring");
+    for (const auto* child : {"mchipo", "reconhipo"}) { std::filesystem::create_directories(directory_ / child); }
 
-    // Uniform runs prepare the folders later used by simulation, reconstruction, and plot output.
-    if (workflow_ == "uniform") {
-        for (const auto* child : {"mchipo", "reconhipo"}) { std::filesystem::create_directories(directory_ / child); }
-        std::filesystem::create_directories(directory_ / "lundfiles" / "lund-creation-monitoring" / "MonitoringPlotsPath");
-    }
+    // write() opens the first LUND file, so construction cannot create an empty numbered file. Only
+    // uniform generation owns rendered monitoring plots.
+    if (workflow_ == "uniform") { std::filesystem::create_directories(directory_ / "lundfiles" / "lund-creation-monitoring" / "MonitoringPlotsPath"); }
 }
 #pragma endregion
 

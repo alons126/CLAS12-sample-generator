@@ -10,6 +10,8 @@ source run.csh \
   --lund-dir /shared/runs/Uniform_sample_1e_5986MeV/lundfiles
 ```
 
+Preview preserves files in existing `mchipo/` and `reconhipo/` directories and creates either empty directory when it is missing. It does not call `sbatch`.
+
 ## Submit only the first five LUND files
 
 ```tcsh

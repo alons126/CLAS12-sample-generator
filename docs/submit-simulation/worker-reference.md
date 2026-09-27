@@ -13,7 +13,7 @@ Only the sample monitoring and filename-prefix sections differ:
 - `SAMPLE_FILE_PREFIX` supplies the complete prefix instead of hardcoding either the uniform or GENIE naming formula.
 - Target, Q², beam, GEMC data directory and uniform channel monitoring are retained together. Unset optional labels print empty values, as in the originals.
 
-For uniform samples, a prefix can be `Uniform_en_sample_2070MeV`. For physical samples, it can be `C12_GEM21_11a_00_000_Q2_0_02_2070MeV`. Other generators supply their own prefix without adding branches to the script.
+For uniform samples, a prefix can be `Uniform_sample__enFD__2070MeV`. For physical samples, it can be `C12__genie-gst__GEM21_11a_00_000__Q2_0_02__2070MeV`. Other generators supply their own prefix without adding branches to the script.
 
 ## What remains the same
 
@@ -42,7 +42,7 @@ Create the directories before direct execution. `gemc` and `recon-util` must be 
 | `TORUS_FIELD` | +0.5 at 2 GeV; −1 at 4/6 GeV |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction configurations |
 
-The sourced `src/workflows/slurm-submission/setup_and_submit.csh` invokes `submit.py`, which passes these settings to `sbatch`, checks the preloaded environment and inputs, recreates simulation output directories with `--execute`, and submits one array per sample. Slurm exports the configured environment and supplies the task index. The configured event limit is shared by the array, including a shorter final LUND file; it is not an exact per-file count.
+The sourced `src/workflows/slurm-submission/setup_and_submit.csh` invokes `submit.py`, which checks the preloaded environment and inputs and ensures both simulation output directories exist. Preview creates only missing directories; `--execute` recreates both and passes these settings to `sbatch` for one array per sample. Slurm exports the configured environment and supplies the task index. The configured event limit is shared by the array, including a shorter final LUND file; it is not an exact per-file count.
 
 ## Integration with the maintained launcher
 

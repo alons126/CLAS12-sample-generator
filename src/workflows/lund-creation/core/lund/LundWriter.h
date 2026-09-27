@@ -8,7 +8,8 @@
  *
  * Purpose:
  *   Give uniform generation and physical conversion the same file format, splitting, naming, settings
- *   record, and completion marker. The writer does not create or select event content.
+ *   record, downstream simulation directories, and completion marker. The writer does not create or
+ *   select event content.
  *
  * Workflow:
  *   Construct from a checked RunConfig -> safely replace the exact run directory -> create its folders
@@ -68,7 +69,8 @@ class LundWriter {
      * @brief Safely replace and initialize the exact configured run directory.
      * @param config Checked settings owned by the caller. They must outlive this writer.
      * @param workflow Manifest/summary label, expected to be `uniform` or `physical`; copied into the
-     *                 writer without changing source-specific event semantics.
+     *                 writer without changing source-specific event semantics. Both values create empty
+     *                 `mchipo` and `reconhipo` directories; only uniform creates monitoring plot paths.
      * @throws std::exception If the path is unsafe, replacement/creation fails, or required limits and
      *         settings cannot be read.
      */
