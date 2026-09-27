@@ -24,7 +24,7 @@ GENIE glob patterns must be quoted so they reach ROOT unchanged. Options after `
 
 Use `source run.csh --help` for launcher options. Use `source run.csh --workflow create-lund --source uniform --build false -- --help` for the selected executable's help. Bash users can execute `./run.csh` with tcsh installed, or call `python3 src/launcher/workflow.py`; do not source csh syntax into Bash.
 
-An empty `source run.csh` prints uniform, physical, submission, and build examples and returns status 2. Both the empty-command guidance and `source run.csh --help` run before the disposable-clone synchronization, so asking for usage does not clean, reset, pull, build, create output, or submit jobs. A nonempty command that omits `--workflow` receives the same examples from `workflow.py`.
+An empty `source run.csh` prints uniform, physical, submission, and build examples in copyable multiline shell form and returns status 2. Both the empty-command guidance and `source run.csh --help` run before the disposable-clone synchronization, so asking for usage does not clean, reset, pull, build, create output, or submit jobs. A nonempty command that omits `--workflow` receives the same examples from `workflow.py`.
 
 To source from another directory, first set `CLAS12_SAMPLES_DIR` to the absolute checkout path:
 
@@ -94,7 +94,7 @@ First create the LUND files. Pass the completed LUND directory; use optional con
 source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
 ```
 
-This previews setup and the Slurm command. Add `--execute` to submit the selected arrays and replace simulation output directories, preserving LUND input. Preview still performs the documented server-checkout refresh and environment loading, but preserves sample outputs and farm logs. The setup checks inputs and prints the legacy report before calling `sbatch`; execution then reports the accepted `SLURM_JOB_ID` and records it in the sample's submission log. Preview and execution finish with the same shared success/stop artwork used by LUND creation. See the [submission guide](guide.md) for settings and failure behavior.
+This previews setup and the Slurm command in copyable multiline shell form. Add `--execute` to submit the selected arrays and replace simulation output directories, preserving LUND input. Preview still performs the documented server-checkout refresh and environment loading, but preserves sample outputs and farm logs. The setup checks inputs and prints the legacy report before calling `sbatch`; execution then reports the accepted `SLURM_JOB_ID` and records it in the sample's submission log. Preview and execution finish with the same shared success/stop artwork used by LUND creation. See the [submission guide](guide.md) for settings and failure behavior.
 
 ## Supporting shell files
 

@@ -97,14 +97,29 @@ RESET_COLOR = os.environ.get("RESET_COLOR", "").replace(r"\033", "\033")
 ERROR_PREFIX = f'{ERROR_COLOR}Error:{RESET_COLOR} '
 
 WORKFLOW_GUIDANCE = """Choose one of these forms:
-  source run.csh --workflow create-lund --source uniform \\
-    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
-  source run.csh --workflow create-lund --source physical \\
-    --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
-  source run.csh --workflow submit --lund-dir RUN/lundfiles
-  source run.csh --workflow create-lund --source uniform --build true --run false
-Run `source run.csh --help` for launcher options. Add `-- --help` after a selected
-create-lund source to see that executable's sample options."""
+  source run.csh \\
+    --workflow create-lund \\
+    --source uniform \\
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \\
+    --output OUTPUT_PARENT
+  source run.csh \\
+    --workflow create-lund \\
+    --source physical \\
+    --config config/samples/physical-lund-creation/genie-gst.conf \\
+    --input 'GST_GLOB' \\
+    --output OUTPUT_PARENT
+  source run.csh \\
+    --workflow submit \\
+    --lund-dir RUN/lundfiles
+  source run.csh \\
+    --workflow create-lund \\
+    --source uniform \\
+    --build true \\
+    --run false
+Run this for launcher options:
+  source run.csh \\
+    --help
+Add `-- --help` after a selected create-lund source to see that executable's sample options."""
 
 def error_message(message):
     """Return a message with one colored ``Error:`` prefix.
@@ -321,6 +336,54 @@ def settings(args):
 # execute ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region execute
+def format_command(command):
+    """Return a safely quoted command in copyable multiline shell form.
+
+    Args:
+        command: Executable followed by its arguments.
+
+    Returns:
+        Display text with the executable or ``source SCRIPT`` entry point on the first line. Each
+        option and its value or each positional argument occupies one continued, four-space-indented
+        line.
+
+    Assumptions:
+        The command is nonempty. Formatting changes only its display copy, not the executed values.
+    """
+
+    index = 1
+    first_line = shlex.quote(str(command[0]))
+
+    # Treat `source SCRIPT` as one shell entry point rather than a command plus positional argument.
+    if str(command[0]) == 'source' and len(command) > 1:
+        first_line += ' ' + shlex.quote(str(command[1]))
+        index = 2
+
+    lines = [first_line]
+
+    while index < len(command):
+        argument = str(command[index])
+        line = shlex.quote(argument)
+
+        # An option without `=` owns the following non-option token. Negative numbers remain values.
+        if argument.startswith('-') and '=' not in argument and index + 1 < len(command):
+            following = str(command[index + 1])
+
+            try:
+                float(following)
+                following_is_option = False
+            except ValueError:
+                following_is_option = following.startswith('-')
+
+            if not following_is_option:
+                line += ' ' + shlex.quote(following)
+                index += 1
+
+        lines.append(line)
+        index += 1
+
+    return " \\\n    ".join(lines)
+
 def execute(command):
     """Run one checked command from the repository root.
 
@@ -338,7 +401,8 @@ def execute(command):
         None after the child exits successfully.
 
     Outputs:
-        Prints the command. Child output remains visible in the same terminal or log.
+        Prints the command in copyable multiline shell form. Child output remains visible in the
+        same terminal or log.
 
     Assumptions:
         The list is not empty. Display quoting does not change the arguments sent to the program.
@@ -349,23 +413,8 @@ def execute(command):
         prints the shared error format and returns the child's effective failure status.
     """
 
-    # Quote a display copy without changing the real arguments.
-    lines = [shlex.quote(str(command[0]))]
-
-    for arg in command[1:]:
-        quoted_arg = shlex.quote(str(arg))
-
-        # Put each option on a new line and keep its value on that line.
-        if str(arg).startswith("-"):
-            lines.append(quoted_arg)
-        else:
-            lines[-1] += f" {quoted_arg}"
-
-    # Show a copyable multiline command. Execution still uses the original argument list.
-    formatted_command = " \\\n    ".join(lines)
-
     # Flush before child output begins.
-    print(f"{INFO_COLOR}Executing command:{RESET_COLOR}\n{formatted_command}", flush=True)
+    print(f"{INFO_COLOR}Executing command:{RESET_COLOR}\n{format_command(command)}", flush=True)
     print()
 
     # Run from the checkout and raise when the command fails.
@@ -442,7 +491,8 @@ def main():
         forwarded = forwarded[1:]
 
     if args.workflow == 'submit':
-        raise ValueError('Use source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides].')
+        raise ValueError('Use:\n' + format_command(['source', 'run.csh', '--workflow', 'submit',
+                                                    '--lund-dir', 'RUN/lundfiles']))
 
     # Check all launcher settings before running a command.
     config = settings(args)
@@ -501,7 +551,8 @@ def main():
 
             command = [str(executable)]
         else:
-            raise ValueError('Submission must be sourced through run.csh --workflow submit.')
+            raise ValueError('Submission must be sourced through:\n' +
+                             format_command(['source', 'run.csh', '--workflow', 'submit']))
 
         # Append child arguments without shell parsing.
         execute(command + arguments)
@@ -536,8 +587,8 @@ if __name__ == '__main__':
         # Keep ordinary exit codes and convert a terminating signal to the shell form 128 + signal.
         exit_status = 128-error.returncode if error.returncode < 0 else error.returncode
 
-        # Quote the failed command only for the final error message.
-        stop_with_error(f'Command failed with exit status {exit_status}: {shlex.join(map(str, error.cmd))}')
+        # Quote the failed command in the same multiline form used before execution.
+        stop_with_error(f'Command failed with exit status {exit_status}:\n{format_command(error.cmd)}')
         sys.exit(exit_status)
     except Exception as error:
         # Every remaining launcher failure uses the same diagnostic boundary and status.

@@ -57,11 +57,20 @@
 #   --fc-status 0|1                Set legacy physical report/filename label; default: 0.
 # 
 # Usage:
-#   source run.csh --workflow create-lund --source uniform \
-#     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
-#   source run.csh --workflow create-lund --source physical \
-#     --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
-#   source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
+#   source run.csh \
+#     --workflow create-lund \
+#     --source uniform \
+#     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+#     --output OUTPUT_PARENT
+#   source run.csh \
+#     --workflow create-lund \
+#     --source physical \
+#     --config config/samples/physical-lund-creation/genie-gst.conf \
+#     --input 'GST_GLOB' \
+#     --output OUTPUT_PARENT
+#   source run.csh \
+#     --workflow submit \
+#     --lund-dir RUN/lundfiles
 # 
 # Forwarded options:
 #   create-lund passes remaining options to the selected LUND program. Submit passes them to submit.py.
@@ -131,20 +140,35 @@ if ($#argv == 0) then
     echo "${ERROR_COLOR}Error:${RESET_COLOR} source run.csh requires an explicit workflow."
     echo ""
     echo "Create a uniform LUND sample:"
-    echo '  source run.csh --workflow create-lund --source uniform \'
-    echo "    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT"
+    echo '  source run.csh \'
+    echo '    --workflow create-lund \'
+    echo '    --source uniform \'
+    echo '    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \'
+    echo "    --output OUTPUT_PARENT"
     echo ""
     echo "Convert physical generator output:"
-    echo '  source run.csh --workflow create-lund --source physical \'
-    echo "    --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT"
+    echo '  source run.csh \'
+    echo '    --workflow create-lund \'
+    echo '    --source physical \'
+    echo '    --config config/samples/physical-lund-creation/genie-gst.conf \'
+    printf "%s%s\n" "    --input 'GST_GLOB' " '\'
+    echo "    --output OUTPUT_PARENT"
     echo ""
     echo "Submit completed LUND files:"
-    echo "  source run.csh --workflow submit --lund-dir RUN/lundfiles"
+    echo '  source run.csh \'
+    echo '    --workflow submit \'
+    echo "    --lund-dir RUN/lundfiles"
     echo ""
     echo "Build without running a workflow program:"
-    echo "  source run.csh --workflow create-lund --source uniform --build true --run false"
+    echo '  source run.csh \'
+    echo '    --workflow create-lund \'
+    echo '    --source uniform \'
+    echo '    --build true \'
+    echo "    --run false"
     echo ""
-    echo "Run 'source run.csh --help' for launcher options."
+    echo "Run this for launcher options:"
+    echo '  source run.csh \'
+    echo "    --help"
     echo "After selecting a create-lund source, add '-- --help' for its sample options."
     set CLAS12_SAMPLE_STATUS = 2
     goto clas12_launcher_finish

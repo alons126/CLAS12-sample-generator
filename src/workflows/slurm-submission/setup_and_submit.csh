@@ -12,7 +12,9 @@
 #     Keep the sourced run.csh interface and shared terminal colors.
 #
 # Usage:
-#     source run.csh --workflow submit --lund-dir RUN/lundfiles [options].
+#     source run.csh \
+#         --workflow submit \
+#         --lund-dir RUN/lundfiles
 #
 # CLI options (forwarded unchanged to submit.py and parsed by resolve_inputs.py):
 #     --lund-dir DIRECTORY          Completed RUN/lundfiles; repeat for multiple samples.
@@ -49,9 +51,10 @@
 #     quoted CLI arguments and the ifarm module/reconstruction environment.
 #
 # Outputs:
-#     Preview prints the checks and Slurm command. With --execute, Python replaces only mchipo and
-#     reconhipo, submits the arrays, prints each job ID, and saves each ID in the submission log.
-#     Changes made for sbatch stay inside Python and do not change the user's shell.
+#     Preview prints the checks and Slurm command in copyable multiline shell form. With --execute,
+#     Python replaces only mchipo and reconhipo, submits the arrays, prints each job ID, and saves each
+#     ID in the submission log. Changes made for sbatch stay inside Python and do not change the
+#     user's shell.
 #
 # Failure:
 #     Return Python's exit status without closing the user's shell.

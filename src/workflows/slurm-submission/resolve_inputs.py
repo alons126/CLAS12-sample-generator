@@ -154,9 +154,13 @@ def parser():
 
     # Help explains setting priority and what execution changes.
     p = SubmissionArgumentParser(description='Resolve LUND inputs and preview or submit one Slurm array per sample.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
                'With --execute, submission replaces mchipo/reconhipo while preserving lundfiles. '
-               'GEMC defaults to 5.14. Use source run.csh --workflow submit --lund-dir RUN/lundfiles.')
+               'GEMC defaults to 5.14. Use:\n'
+               '  source run.csh \\\n'
+               '    --workflow submit \\\n'
+               '    --lund-dir RUN/lundfiles')
 
     # Preview is the default. Repeat --lund-dir to select several samples.
     p.add_argument('--execute', action='store_true', help='Submit jobs and replace simulation outputs; default: preview only')
@@ -675,7 +679,7 @@ def main():
         p.error('provide --lund-dir RUN/lundfiles or --config FILE')
 
     if not args.check_arguments:
-        p.error('use source run.csh --workflow submit to preview or submit')
+        p.error('use:\n  source run.csh \\\n    --workflow submit')
 
     return 0
 

@@ -22,8 +22,9 @@ Inputs:
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
 
 Outputs:
-    Preview prints checks and commands without changing output. --execute replaces simulation output,
-    calls Slurm, reports its accepted job ID, and writes the submission log while preserving lundfiles.
+    Preview prints checks and commands in copyable multiline shell form without changing output.
+    --execute replaces simulation output, calls Slurm, reports its accepted job ID, and writes the
+    submission log while preserving lundfiles.
 
 CLI options (parsed by resolve_inputs.py):
     --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
@@ -64,6 +65,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -409,6 +411,55 @@ class Report:
 
         if directory:
             self.text()
+
+def format_command(command):
+    """Return a safely quoted command in copyable multiline shell form.
+
+    Args:
+        command: Executable followed by its arguments.
+
+    Returns:
+        Display text with the executable or ``source SCRIPT`` entry point on the first line. Each
+        option and its value or each positional argument occupies one continued, four-space-indented
+        line.
+
+    Assumptions:
+        The command is nonempty. Formatting changes only its display copy, not the values passed to
+        the scheduler.
+    """
+
+    index = 1
+    first_line = shlex.quote(str(command[0]))
+
+    # Treat `source SCRIPT` as one shell entry point rather than a command plus positional argument.
+    if str(command[0]) == 'source' and len(command) > 1:
+        first_line += ' ' + shlex.quote(str(command[1]))
+        index = 2
+
+    lines = [first_line]
+
+    while index < len(command):
+        argument = str(command[index])
+        line = shlex.quote(argument)
+
+        # An option without `=` owns the following non-option token. Negative numbers remain values.
+        if argument.startswith('-') and '=' not in argument and index + 1 < len(command):
+            following = str(command[index + 1])
+
+            try:
+                float(following)
+                following_is_option = False
+            except ValueError:
+                following_is_option = following.startswith('-')
+
+            if not following_is_option:
+                line += ' ' + shlex.quote(following)
+                index += 1
+
+        lines.append(line)
+        index += 1
+
+    return ' \\\n    '.join(lines)
 # endregion Reporting
 
 # Setup and submission -------------------------------------------------------
@@ -912,16 +963,18 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     report.banner('Submitting sbatch job for ' + ('uniform' if uniform else values['SAMPLE_GENERATOR']) + ' sample')
 
+    # Build one argument list for both the multiline display and optional execution.
+    command = ['sbatch', '--job-name=' + values['SLURM_JOB_NAME'], '--array=' + environment['ARRAY'], payload]
+
     # Show the exact command in both modes and run it only with --execute.
     report.text('{SYSTEM}Submitted job with command:{RESET}' if execute else '{INFO}Preview command (not submitted):{RESET}')
-    report.text('{SYSTEM}sbatch --job-name={RESET}' + values['SLURM_JOB_NAME'] + '{SYSTEM} --array={RESET}' + environment['ARRAY'] + ' ' + payload)
+    report.text('{SYSTEM}' + format_command(command) + '{RESET}')
 
     if execute:
         # Flush report text before the captured scheduler response is reproduced.
         sys.stdout.flush()
 
         # Pass arguments directly, report the accepted ID, and save it in the submission log.
-        command = ['sbatch', '--job-name=' + values['SLURM_JOB_NAME'], '--array=' + environment['ARRAY'], payload]
         job_id = submit_array(command, environment, root)
         report.value('SLURM_JOB_ID', job_id, value_color='INFO')
         write_submission_log(values, environment, root, executables, command, job_id)
