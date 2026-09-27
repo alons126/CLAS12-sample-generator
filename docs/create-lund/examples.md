@@ -14,7 +14,9 @@ source run.csh \
   --jobs 4
 ```
 
-## Uniform 1e from a reviewed profile
+## Uniform samples
+
+### Uniform 1e from a reviewed profile
 
 ```tcsh
 source run.csh \
@@ -28,7 +30,7 @@ source run.csh \
   --output runs/uniform
 ```
 
-## Explicit electron–proton FD study
+### Explicit electron–proton FD study
 
 ```tcsh
 source run.csh \
@@ -48,7 +50,7 @@ source run.csh \
   --output runs/uniform
 ```
 
-## Fixed-momentum neutron study
+### Fixed-momentum neutron study
 
 Fixed momentum is intentionally neutron-only:
 
@@ -65,7 +67,7 @@ source run.csh \
   --output runs/uniform
 ```
 
-## Electron angular tester
+### Electron angular tester
 
 ```tcsh
 source run.csh \
@@ -79,7 +81,9 @@ source run.csh \
 
 The tester remains at beam momentum and scans 5–40° with full azimuth while sampling the configured target geometry.
 
-## GENIE conversion with explicit provenance
+## Physical samples
+
+### GENIE conversion with explicit provenance
 
 ```tcsh
 source run.csh \
