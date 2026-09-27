@@ -341,16 +341,23 @@ class Report:
         """Print a main or subsection banner.
 
         Args:
-            title: Visible heading placed between colored borders.
+            title: Heading placed between colored borders. Supported semantic color markers may be
+                embedded without affecting alignment.
             main: Use slash borders when true, equals borders otherwise.
 
         Output:
-            Three lines with 100-character top and bottom borders. Byte-length padding
-            keeps the legacy heading alignment for the titles used by this workflow.
+            Three lines with 100-character top and bottom borders. Byte-length padding uses only the
+            visible title text, so colored and uncolored headings share the same automatic centering.
         """
 
-        # Center the title and place an extra padding space on the right when needed.
-        padding = self.BANNER_WIDTH - 4 - len(title.encode())
+        # Remove nonprinting report markers before calculating the visible title width.
+        visible_title = title
+
+        for name in self.colors:
+            visible_title = visible_title.replace('{' + name + '}', '')
+
+        # Center the visible title and place an extra padding space on the right when needed.
+        padding = self.BANNER_WIDTH - 4 - len(visible_title.encode())
         left = max(0, padding // 2)
         right = max(0, padding - padding // 2)
         border, opening, closing = ('/', '//', '//') if main else ('=', '= ', ' =')

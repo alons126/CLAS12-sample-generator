@@ -54,6 +54,7 @@ output/
 # Ignore generated comparison runs and personal copies of tutorial commands.
 legacy/GENIE-GST-test-samples/*
 **copy.txt
+**copy**
 
 # Historical compatibility ----------------------------------------------------
 # Retain the old converter path rule for its generated ACLiC dependency file.
