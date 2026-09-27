@@ -23,6 +23,7 @@
  *
  * Outputs:
  *   LundWriter creates split LUND text files and the completion manifest in the final run directory.
+ *   Progress messages identify GST validation, output preparation, event conversion, and finalization.
  *   Physical conversion creates no monitoring histograms.
  *
  * Expected input:
@@ -41,10 +42,14 @@
 #include <TTreeReaderArray.h>
 #include <TTreeReaderValue.h>
 
+#include <iostream>
 #include <stdexcept>
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
+#include "support/environment.h"
+
+namespace env = environment;
 
 namespace samples {
 
@@ -56,6 +61,8 @@ void convertGenieGST(const RunConfig& c) {
     LundWriter::printWorkflowSummary(c, "physical");
 
 #pragma region /* GST input preparation */
+    std::cout << "\n" << env::SYSTEM_COLOR << "Loading and validating GENIE GST input..." << env::RESET_COLOR << "\n";
+
     // TChain reads matching files as one ordered `gst` tree. Check input before output can be replaced.
     TChain chain("gst");
     if (!chain.Add(c.get("input").c_str()) || chain.GetEntries() == 0) { throw std::runtime_error("No GST entries found for: " + c.get("input")); }
@@ -77,6 +84,7 @@ void convertGenieGST(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Resolved run state */
+    std::cout << "\n" << env::SYSTEM_COLOR << "Preparing target geometry and LUND output..." << env::RESET_COLOR << "\n";
 
     // A nonzero seed is repeatable. ROOT gives TRandom3(0) a new automatic seed, so zero is not replayable.
     // This RNG samples only vertices; input momenta are copied unchanged.
@@ -98,6 +106,8 @@ void convertGenieGST(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Event conversion */
+    std::cout << "\n" << env::SYSTEM_COLOR << "Converting GENIE GST events to LUND..." << env::RESET_COLOR << "\n";
+
     // Read GST entries in order until the writer is full, ROOT reaches the end, or the tail cutoff stops
     // a later file from starting.
     while (!writer.full() && reader.Next()) {
@@ -160,6 +170,7 @@ void convertGenieGST(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Completion and publication */
+    std::cout << "\n" << env::SYSTEM_COLOR << "Finalizing LUND output..." << env::RESET_COLOR << "\n";
 
     // When neither limit stopped the loop, require ROOT to have reached the normal end of input.
     if (!writer.full() && !stopped_at_submission_cutoff && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) {

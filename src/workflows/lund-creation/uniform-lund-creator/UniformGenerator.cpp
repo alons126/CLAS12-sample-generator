@@ -13,6 +13,7 @@
  * Workflow:
  *   Check the settings -> start separate random-number generators for motion and vertices -> create each
  *   event -> write LUND files -> fill and save the plots -> close the files and write the run log.
+ *   Progress messages identify preparation, event generation, monitoring, and finalization.
  *
  * Repeatability:
  *   Particle motion and target vertices use separate TRandom3 objects. Drawing a vertex therefore does
@@ -160,7 +161,7 @@ double triggerPhi(double phi, double offset) {
 #pragma region /* generateUniform */
 void generateUniform(const RunConfig& c) {
 #pragma region /* Run preparation */
-    std::cout << "\n" << env::SYSTEM_COLOR << "Initializing..." << env::RESET_COLOR << "\n";
+    std::cout << "\n" << env::SYSTEM_COLOR << "Validating uniform settings and preparing LUND output..." << env::RESET_COLOR << "\n";
 
     // Check and print the settings before the writer replaces an existing run.
     c.validate(true);
@@ -186,7 +187,7 @@ void generateUniform(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Event generation */
-    std::cout << "\n" << env::SYSTEM_COLOR << "Creating samples..." << env::RESET_COLOR << "\n";
+    std::cout << "\n" << env::SYSTEM_COLOR << "Generating uniform events and writing LUND output..." << env::RESET_COLOR << "\n";
 
     // Create one event per loop. writer.count() changes only after a successful write.
     while (!writer.full()) {
@@ -243,7 +244,7 @@ void generateUniform(const RunConfig& c) {
 #pragma endregion
 
 #pragma region /* Run completion */
-    std::cout << "\n" << env::SYSTEM_COLOR << "Finishing..." << env::RESET_COLOR << "\n";
+    std::cout << "\n" << env::SYSTEM_COLOR << "Saving monitoring plots and finalizing LUND output..." << env::RESET_COLOR << "\n";
 
     // Save the ROOT, PDF, and PNG plots before writing the completed run log.
     const auto output = std::filesystem::path(c.get("output"));
