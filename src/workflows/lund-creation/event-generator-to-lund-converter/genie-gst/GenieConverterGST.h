@@ -64,7 +64,7 @@ namespace samples {
  *
  * Outputs:
  *   No C++ value is returned. Success leaves split LUND files and lund-creation-log.json in the output
- *   directory, reports scanned-input progress beside written-event capacity, names the stop reason, and
+ *   directory, reports written-event progress beside the scanned-input count, names the stop reason, and
  *   prints the final scanned and written event counts.
  *
  * Expected input:

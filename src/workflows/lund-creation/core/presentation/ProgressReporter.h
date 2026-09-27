@@ -41,8 +41,9 @@ namespace samples {
  *
  * Interactive behavior:
  *   Replace one terminal line at most ten times per second. The percentage and bar describe the primary
- *   counter. An optional secondary counter reports related work without pretending it has the same
- *   denominator.
+ *   counter. Only the completed cells inside the bar use COMPLETION_COLOR; its brackets, remaining cells,
+ *   percentage, and counters retain their existing presentation. An optional secondary counter reports
+ *   related work without pretending it has the same denominator.
  *
  * Batch behavior:
  *   Write an initial line, periodic lines at ten-second intervals, and one final line. No carriage-return
@@ -58,7 +59,7 @@ class ProgressReporter {
      * @brief Start a progress display for one activity.
      * @param activity Short present-participle label, such as `Generating LUND events`.
      * @param total Known denominator for the primary percentage; must be positive.
-     * @param primary_label Optional word printed after the percentage, such as `scanned`.
+     * @param primary_label Optional label for the counter that drives the percentage and bar.
      * @param secondary_label Optional label for a second completed/total counter.
      * @throws std::invalid_argument If total is zero.
      */
@@ -99,7 +100,7 @@ class ProgressReporter {
     void render(std::uint64_t completed, std::uint64_t secondary_completed, std::uint64_t secondary_total, const std::string& outcome, bool final);
 
     std::string activity_;          ///< Stable text at the beginning of every progress update.
-    std::string primary_label_;     ///< Optional word explaining the percentage counter.
+    std::string primary_label_;     ///< Optional name for the counter that drives the bar.
     std::string secondary_label_;   ///< Optional name for the related second counter.
     std::uint64_t total_;           ///< Positive denominator used for percentage and bar width.
     bool interactive_;              ///< True when standard output is attached to a terminal.

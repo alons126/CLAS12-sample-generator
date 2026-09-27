@@ -96,11 +96,22 @@ void ProgressReporter::render(std::uint64_t completed, std::uint64_t secondary_c
     const auto filled = percentage * bar_width / 100;
 
     std::ostringstream line;
-    line << '[' << std::string(filled, '#') << std::string(bar_width - filled, '-') << "] " << std::setw(3) << percentage << '%';
+    line << '[';
 
-    if (!primary_label_.empty()) { line << ' ' << primary_label_; }
+    // Color only the completed cells. Keep brackets, remaining cells, percentage, and counters unchanged.
+    if (interactive_ && filled > 0) { line << env::COMPLETION_COLOR; }
 
-    line << ' ' << completed << '/' << total_;
+    line << std::string(filled, '#');
+
+    if (interactive_ && filled > 0) { line << env::RESET_COLOR; }
+
+    line << std::string(bar_width - filled, '-') << "] " << std::setw(3) << percentage << '%';
+
+    if (primary_label_.empty()) {
+        line << ' ' << completed << '/' << total_;
+    } else {
+        line << " | " << primary_label_ << ": " << completed << '/' << total_;
+    }
 
     if (!secondary_label_.empty() && secondary_total > 0) { line << " | " << secondary_label_ << ": " << secondary_completed << '/' << secondary_total; }
     if (!outcome.empty()) { line << " | " << outcome; }

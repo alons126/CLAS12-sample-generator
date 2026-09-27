@@ -110,8 +110,8 @@ void convertGenieGST(const RunConfig& c) {
     std::cout << "\n" << env::SYSTEM_COLOR << "Converting GENIE GST events to LUND..." << env::RESET_COLOR << "\n";
 
     const auto requested_events = static_cast<std::uint64_t>(c.integer("events"));
-    ProgressReporter progress("Converting GST", total_entries, "scanned", "Written");
-    progress.update(0, 0, requested_events);
+    ProgressReporter progress("Converting GST", requested_events, "Written", "Scanned");
+    progress.update(0, 0, total_entries);
 
     // Read GST entries in order until the writer is full, ROOT reaches the end, or the tail cutoff stops
     // a later file from starting.
@@ -131,7 +131,7 @@ void convertGenieGST(const RunConfig& c) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
         }
 
-        progress.update(scanned, writer.count(), requested_events);
+        progress.update(writer.count(), scanned, total_entries);
 
         // Map QE, MEC, RES, and DIS to codes 1 through 4. Skip other reactions before sampling a vertex.
         // If bad input sets several flags, the written order here gives the first one priority.
@@ -173,7 +173,7 @@ void convertGenieGST(const RunConfig& c) {
         // LundWriter calculates particle energies, writes the event, starts a new file at the configured
         // split size, and increases its event count only after success.
         writer.write(event);
-        progress.update(scanned, writer.count(), requested_events);
+        progress.update(writer.count(), scanned, total_entries);
     }
 #pragma endregion
 
@@ -187,7 +187,7 @@ void convertGenieGST(const RunConfig& c) {
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
 
     const std::string stop_reason = writer.full() ? "requested event capacity reached" : stopped_at_submission_cutoff ? "submission-tail cutoff reached" : "input exhausted";
-    progress.finish(scanned, writer.count(), requested_events, stop_reason);
+    progress.finish(writer.count(), scanned, total_entries, stop_reason);
 
     std::cout << "\n" << env::SYSTEM_COLOR << "Finalizing LUND output..." << env::RESET_COLOR << "\n";
 

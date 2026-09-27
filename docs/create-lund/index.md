@@ -39,7 +39,7 @@ Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src
 
 Both sources share validated configuration, target sampling, particle records, LUND serialization, output naming, file splitting, provenance, and completion behavior where their semantics agree. They do not share event-content rules: uniform mode creates particles, while a physical adapter copies supported truth and must not invent missing kinematics.
 
-During event writing, an interactive terminal shows one dynamically refreshed progress bar. Redirected output and batch logs receive occasional complete progress lines instead of carriage-return animation. Uniform progress is the exact written/requested event percentage. Physical conversion reports the percentage of GST input entries scanned alongside written/requested events, because rejected interactions and the submission-tail cutoff mean those two counts can advance differently. The final progress line states why the physical scan stopped.
+During event writing, an interactive terminal shows one dynamically refreshed progress bar. Redirected output and batch logs receive occasional complete progress lines instead of carriage-return animation. Both sources calculate completion from written/requested events. Physical conversion also reports scanned/total GST input entries because rejected interactions and the submission-tail cutoff mean those two counts can advance differently. The final progress line states why the physical scan stopped; it can finish below 100% when input exhaustion or the submission-tail cutoff prevents the requested number of events from being written.
 
 ## Pages in this section
 
