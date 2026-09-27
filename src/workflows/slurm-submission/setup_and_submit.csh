@@ -51,11 +51,12 @@
 #     quoted CLI arguments and the ifarm module/reconstruction environment.
 #
 # Outputs:
-#     Preview inspects both simulation-output paths before changing either one. It preserves existing
-#     contents, explains that execution would clear them, and creates and verifies missing directories.
-#     With --execute, Python warns before deleting each existing mchipo/reconhipo directory, recreates
-#     both empty, submits the arrays, prints each job ID, and saves each ID in the submission log.
-#     Changes made for sbatch stay inside Python and do not change the user's shell.
+#     Preview reports OUTPATH first, then groups each simulation-directory check with its planned action.
+#     It preserves existing contents, explains that execution would clear them, and creates and verifies
+#     missing directories. With --execute, Python warns before deleting each existing mchipo/reconhipo
+#     directory, recreates both empty, submits the arrays, prints each job ID, and saves each ID in the
+#     submission log. Printed command option values use normal white. Changes made for sbatch stay inside
+#     Python and do not change the user's shell.
 #
 # Failure:
 #     Return Python's exit status without closing the user's shell.

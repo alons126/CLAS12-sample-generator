@@ -22,9 +22,10 @@ Inputs:
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
 
 Outputs:
-    Preview prints checks and commands in copyable multiline shell form and creates missing empty
-    simulation directories without replacing existing contents. --execute replaces simulation output,
-    calls Slurm, reports its accepted job ID, and writes the submission log while preserving lundfiles.
+    Preview groups OUTPATH and simulation-directory checks with their planned actions, prints commands
+    in copyable multiline shell form, and creates missing empty simulation directories without replacing
+    existing contents. --execute replaces simulation output, calls Slurm, reports its accepted job ID,
+    and writes the submission log while preserving lundfiles. Displayed command values use normal white.
 
 CLI options (parsed by resolve_inputs.py):
     --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
@@ -412,54 +413,70 @@ class Report:
         if directory:
             self.text()
 
-def format_command(command):
+def format_command(command, colored=False):
     """Return a safely quoted command in copyable multiline shell form.
 
     Args:
         command: Executable followed by its arguments.
+        colored: Add report color markers so commands and option names use the system color while
+            option values and positional arguments use the normal white terminal color.
 
     Returns:
         Display text with the executable or ``source SCRIPT`` entry point on the first line. Each
         option and its value or each positional argument occupies one continued, four-space-indented
-        line.
+        line. Color markers do not change the copyable shell text shown by the terminal.
 
     Assumptions:
         The command is nonempty. Formatting changes only its display copy, not the values passed to
         the scheduler.
     """
 
+    system = '{SYSTEM}' if colored else ''
+    reset = '{RESET}' if colored else ''
     index = 1
-    first_line = shlex.quote(str(command[0]))
+    first_line = system + shlex.quote(str(command[0])) + reset
 
     # Treat `source SCRIPT` as one shell entry point rather than a command plus positional argument.
     if str(command[0]) == 'source' and len(command) > 1:
-        first_line += ' ' + shlex.quote(str(command[1]))
+        first_line += ' ' + reset + shlex.quote(str(command[1]))
         index = 2
 
     lines = [first_line]
 
     while index < len(command):
         argument = str(command[index])
-        line = shlex.quote(argument)
+        line = reset + shlex.quote(argument)
 
-        # An option without `=` owns the following non-option token. Negative numbers remain values.
-        if argument.startswith('-') and '=' not in argument and index + 1 < len(command):
-            following = str(command[index + 1])
+        if argument.startswith('-'):
+            # Keep an equals-form option in the system color and its value in normal white.
+            if '=' in argument:
+                if colored:
+                    option, value = argument.split('=', 1)
+                    line = system + shlex.quote(option + '=') + reset + shlex.quote(value)
+            # An option without `=` owns the following non-option token. Negative numbers remain values.
+            elif index + 1 < len(command):
+                following = str(command[index + 1])
 
-            try:
-                float(following)
-                following_is_option = False
-            except ValueError:
-                following_is_option = following.startswith('-')
+                try:
+                    float(following)
+                    following_is_option = False
+                except ValueError:
+                    following_is_option = following.startswith('-')
 
-            if not following_is_option:
-                line += ' ' + shlex.quote(following)
-                index += 1
+                if not following_is_option:
+                    line = system + shlex.quote(argument) + reset + ' ' + shlex.quote(following)
+                    index += 1
+                elif colored:
+                    line = system + shlex.quote(argument) + reset
+            elif colored:
+                line = system + shlex.quote(argument) + reset
 
         lines.append(line)
         index += 1
 
-    return ' \\\n    '.join(lines)
+    continuation = ' ' + system + '\\' + reset + '\n    '
+
+    return continuation.join(lines)
 # endregion Reporting
 
 # Setup and submission -------------------------------------------------------
@@ -699,20 +716,19 @@ def clear_farm(values, root, execute, report, cleared):
 
     return cleared
 
-def inspect_simulation_directory(name, path, report):
+def inspect_simulation_directory(name, path):
     """Inspect one simulation-output path without changing it.
 
     Purpose:
         Complete the safety check for one exact output child before either output directory changes.
 
     Workflow:
-        Print the exact path -> reject symbolic links and non-directory objects -> report whether the
-        directory exists -> return that state to the later apply stage.
+        Reject symbolic links and non-directory objects -> return whether the path is an existing
+        directory. Reporting is deferred so each check can be printed beside its later action.
 
     Args:
         name: Stable report label, either ``mchipo`` or ``reconhipo``.
         path: Direct child of the already validated sample run directory.
-        report: Helper that prints standardized warnings and status messages.
 
     Returns:
         True when an existing directory was found; false when the path is absent.
@@ -722,23 +738,14 @@ def inspect_simulation_directory(name, path, report):
         directory is changed.
     """
 
-    report.text('{SYSTEM}' + name + ':{RESET} ' + str(path))
-    report.text('{SYSTEM}--> Checking if {RESET}' + name + '{SYSTEM} is a directory...{RESET}')
-
     if path.is_symlink():
         raise ValueError(f'{name} must not be a symbolic link: {path}')
 
     if path.is_dir():
-        report.text('{COMPLETION}--> ' + name + ' exists.{RESET}')
-        report.text()
-
         return True
 
     if path.exists():
         raise ValueError(f'{name} exists but is not a directory: {path}')
-
-    report.warning(f'the following directory does not exist:\n{path}')
-    report.text()
 
     return False
 
@@ -766,11 +773,14 @@ def apply_simulation_directory(name, path, existed, execute, report):
         raises before submission. Preview never removes existing contents.
     """
 
-    report.text('{SYSTEM}' + name + ' action:{RESET}')
+    report.text('{SYSTEM}' + name + ':{RESET} ' + str(path))
+    report.text('{SYSTEM}--> Checking if {RESET}' + name + '{SYSTEM} is a directory...{RESET}')
 
     if existed:
         if not path.is_dir() or path.is_symlink():
             raise ValueError(f'{name} changed after inspection and is no longer a safe directory: {path}')
+
+        report.text('{SYSTEM}-->{RESET} {COMPLETION}' + name + ' exists.{RESET}')
 
         if not execute:
             report.text('{INFO}PREVIEW:{RESET} Preserving the existing directory and all contents:\n' + str(path))
@@ -783,6 +793,8 @@ def apply_simulation_directory(name, path, existed, execute, report):
         shutil.rmtree(path)
     elif path.exists() or path.is_symlink():
         raise ValueError(f'{name} appeared after inspection; refusing to change it: {path}')
+    else:
+        report.warning(f'the following directory does not exist:\n{path}')
 
     if not execute:
         report.text('{INFO}PREVIEW:{RESET} The directory is missing. Creating and verifying it now.')
@@ -990,19 +1002,18 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # verify_gemc() already proved that GEMC belongs to the requested installation.
     executables['SLURM_GEMC_EXECUTABLE'] = gemc_executable
 
-    sample_suffix = ' for ' + values['UNIFORM_SAMPLE_CHANNEL'] if uniform else ''
-    report.banner('Inspecting output directories' + sample_suffix)
-
-    # Inspect both exact child paths before either one can be created or replaced.
+    # Inspect both exact child paths before reporting or changing either one.
     output_dirs = [run / name for name in ('mchipo', 'reconhipo')]
     output_states = []
 
     for path in output_dirs:
-        output_states.append(inspect_simulation_directory(path.name, path, report))
+        output_states.append(inspect_simulation_directory(path.name, path))
 
+    sample_suffix = ' for ' + values['UNIFORM_SAMPLE_CHANNEL'] if uniform else ''
     report.banner(('Applying' if execute else 'Previewing') + ' output directory actions' + sample_suffix)
+    report.check('OUTPATH', values['OUTPATH'], directory=True)
 
-    # Both modes create missing directories. Only execution clears and recreates existing directories.
+    # Report each checked child beside its action. Only execution clears existing directories.
     for path, existed in zip(output_dirs, output_states):
         apply_simulation_directory(path.name, path, existed, execute, report)
 
@@ -1031,13 +1042,6 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     report.value('ARRAY', environment['ARRAY'])
     report.text()
 
-    report.check('OUTPATH', values['OUTPATH'], directory=True)
-
-    for name in ('mchipo', 'reconhipo'):
-        path = str(run / name)
-
-        report.check(name, path, directory=True)
-
     if not uniform:
         report.check('RUNNING_DIR', str(root), directory=True)
 
@@ -1058,7 +1062,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     # Show the exact command in both modes and run it only with --execute.
     report.text('{SYSTEM}Submitted job with command:{RESET}' if execute else '{INFO}Preview command (not submitted):{RESET}')
-    report.text('{SYSTEM}' + format_command(command) + '{RESET}')
+    report.text(format_command(command, colored=True))
 
     if execute:
         # Flush report text before the captured scheduler response is reproduced.

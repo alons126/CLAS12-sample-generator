@@ -24,7 +24,7 @@ Creation may run locally or on the server. Submission runs in a Python child of 
 source run.csh --workflow submit --lund-dir /shared/Uniform_sample_enFD_2070MeV/lundfiles
 ```
 
-Without `--execute`, this previews the resolved setup and exact `sbatch` command. At the output-directory stage it first inspects both `mchipo/` and `reconhipo/` paths before changing either one. It preserves an existing directory and all its contents, states that execution would delete and recreate it, and creates and verifies either directory when missing. It does not call `sbatch`, clear farm logs, or replace existing output. Add `--execute` to clear and recreate both simulation output directories and submit:
+Without `--execute`, this previews the resolved setup and exact `sbatch` command. The output-action report starts with the `OUTPATH` check, then places each `mchipo/` and `reconhipo/` check directly beside its planned action. Internally, both child paths are inspected before either can change. Preview preserves an existing directory and all its contents, states that execution would delete and recreate it, and creates and verifies either directory when missing. The multiline `sbatch` display uses the system color for option names and normal white for option values. Preview does not call `sbatch`, clear farm logs, or replace existing output. Add `--execute` to clear and recreate both simulation output directories and submit:
 
 ```tcsh
 source run.csh --workflow submit --lund-dir /shared/sample/lundfiles --execute
@@ -104,6 +104,40 @@ Python copies the inherited environment, loads the selected GEMC module in that 
 Submission checks `OUTPATH/mchipo` and `OUTPATH/reconhipo` for both uniform and physical samples. It completes the inspection stage for both exact paths before applying any directory action. A preview creates and verifies a missing directory, preserves every existing file, states what execution would clear, and creates no submission log. **With `--execute`, submission warns before recursively deleting each existing directory and then recreates both directories empty to clear previous-run output.** LUND inputs are preserved. Symbolic links and existing non-directory paths are rejected in both modes. After `sbatch` accepts an array, the coordinator reads the numeric ID from `Submitted batch job NUMBER`, prints it as `SLURM_JOB_ID`, and writes it to `OUTPATH/reconhipo/slurm-submission-log.json`. That log also contains every resolved parameter, the exact command, runtime Git repository/branch/commit/status/tracking information, and SHA-256 hashes for the GCARD, YAML, and worker payload. Uniform monitoring is produced during LUND creation and does not use a simulation `rootfiles` directory. Optional farm-output cleanup prints the exact resolved directory and deletes only files directly in it, once per invocation.
 
 One array is submitted per sample. A completed preview or execution prints the shared success artwork once after all samples finish. An interruption or handled failure prints one blank line, the final error, one blank line, and then the shared stop artwork; it stops later samples and returns the original nonzero `$status` without closing the sourced shell. Already submitted jobs remain submitted. If Slurm accepts an array but its response cannot be parsed or the subsequent provenance write fails, inspect the scheduler before retrying. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-`, because the external payload retains its legacy unquoted command arguments. There is no local detector-execution workflow.
+
+## Slurm command reference
+
+Run these commands on ifarm.
+
+Submit a GEMC job from a Slurm submission script:
+
+```bash
+sbatch <submit script>
+```
+
+Cancel one job:
+
+```bash
+scancel <job id>
+```
+
+Cancel all jobs owned by one user:
+
+```bash
+scancel --user=<username>
+```
+
+Check the status of one user's jobs. The [JLab active-job dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob) provides another view:
+
+```bash
+squeue -u <username>
+```
+
+Print the current priority for all pending production jobs:
+
+```bash
+squeue -t pd -p production -o "%.8Q %.10u/%10a" | uniq -c
+```
 
 ## Post-submission verification
 
