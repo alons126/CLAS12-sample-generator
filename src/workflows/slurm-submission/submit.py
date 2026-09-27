@@ -722,7 +722,8 @@ def submit_array(command, environment, root):
     """
 
     result = subprocess.run(command, env=environment, cwd=root, capture_output=True, text=True)
-
+    print('\n')
+    
     # Copy the scheduler's own notice and errors into the workflow log.
     if result.stdout:
         print(result.stdout, end='' if result.stdout.endswith('\n') else '\n')
@@ -976,6 +977,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
         # Pass arguments directly, report the accepted ID, and save it in the submission log.
         job_id = submit_array(command, environment, root)
+        report.text()
+        
         report.value('SLURM_JOB_ID', job_id, value_color='INFO')
         write_submission_log(values, environment, root, executables, command, job_id)
 
