@@ -20,7 +20,7 @@ source run.csh \
   --source physical \
   --config config/samples/physical-lund-creation/genie-gst.conf \
   --event-generator genie-gst \
-  --event-generator-version master \
+  --output-layout nested \
   --target C12 \
   --beam-energy 2.07052 \
   --q2-cut Q2_0_02 \
@@ -39,7 +39,7 @@ source run.csh \
   --source physical \
   --config config/samples/physical-lund-creation/genie-gst.conf \
   --event-generator genie-gst \
-  --event-generator-version master \
+  --output-layout nested \
   --target C12 \
   --beam-energy 4.02962 \
   --q2-cut Q2_0_25 \
@@ -58,7 +58,7 @@ source run.csh \
   --source physical \
   --config config/samples/physical-lund-creation/genie-gst.conf \
   --event-generator genie-gst \
-  --event-generator-version master \
+  --output-layout nested \
   --target C12 \
   --beam-energy 5.98636 \
   --q2-cut Q2_0_40 \
@@ -76,7 +76,7 @@ source run.csh \
   --source physical \
   --config config/samples/physical-lund-creation/genie-gst.conf \
   --event-generator genie-gst \
-  --event-generator-version master \
+  --output-layout nested \
   --target C12 \
   --beam-energy 4.02962 \
   --gemc-target-variation rgm_fall2021_C_S \

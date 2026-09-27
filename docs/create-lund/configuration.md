@@ -31,6 +31,7 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |
 | `tune` | `auto` | Read `TUNE` from `input_options.txt` beside the standard production directory; otherwise `unknown` |
 | `q2-cut` | Energy-based | Generator provenance and naming component; no cut is applied during conversion |
+| `output-layout` | `nested` | Physical only: `nested` groups target/generator/selection directories; `metadata` retains the previous single-directory name |
 
 Counts and the split threshold must be integers from 1 through 4294967295. Seeds may range from 0 through 4294967295. A nonzero seed is reproducible; `TRandom3(0)` asks ROOT to choose an automatic seed, so a manifest containing zero cannot reproduce the generated sequence. Production Ar defaults resolve to A=40/Z=18.
 

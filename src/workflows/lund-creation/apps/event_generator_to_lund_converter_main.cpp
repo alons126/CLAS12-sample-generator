@@ -30,10 +30,11 @@
  *   --event-generator-version VERSION Record the generator version (default: unknown).
  *   --tune NAME                       Override automatic input_options.txt discovery (fallback: unknown).
  *   --q2-cut NAME                     Record the input selection label (default: auto; no cut is applied here).
+ *   --output-layout MODE              Select nested output or the previous metadata name (default: nested).
  *   --help                            Print the complete runtime option summary.
  *
  * Output:
- *   A replaced metadata-named run directory containing split LUND files and a record of the settings.
+ *   A replaced nested or metadata-named run directory containing split LUND files and a settings record.
  */
 
 #include <exception>

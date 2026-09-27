@@ -19,7 +19,7 @@
  *   Uniform: channel, hadron, hadron-region, electron-theta-min/max, electron-p-min/max,
  *            electron-momentum, hadron-theta-min/max, hadron-p-min, hadron-p,
  *            hadron-momentum, trigger-theta, and trigger-phi-offset.
- *   Physical: input, event-generator, event-generator-version, tune, and q2-cut.
+ *   Physical: input, event-generator, event-generator-version, tune, q2-cut, and output-layout.
  *   Each option uses `--key value`. The application handles `--help` before parse(). A profile uses the
  *   same names without `--` and writes them as `key = value`.
  *
@@ -277,7 +277,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     } else {
         // Physical mode reads existing event-generator truth and records where it came from. It does not
         // run GENIE. The current adapter reads GENIE GST input.
-        c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "auto"}, {"q2-cut", "auto"}});
+        c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "auto"}, {"q2-cut", "auto"}, {"output-layout", "nested"}});
     }
 
     // Use the same assignment check for profiles and command-line values.
@@ -430,9 +430,14 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         std::ostringstream directory;
         directory << "Uniform_sample_" << uniformSampleLabel(c) << '_' << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
+    } else if (c.get("output-layout") == "nested") {
+        // Group physical output by target, generator/tune, and selection/beam. Keep each original value
+        // in the manifest while using a path-safe form for its directory component.
+        const auto generator_and_tune = pathToken(c.get("event-generator")) + '-' + pathToken(c.get("tune"));
+        const auto selection_and_beam = pathToken(c.get("q2-cut")) + '-' + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
+        c.values_["output"] = (std::filesystem::path(c.get("output")) / pathToken(c.get("target")) / generator_and_tune / selection_and_beam).string();
     } else {
-        // Put the physical source details in the directory name in the documented order.
-        // Make each value path-safe here, but keep its original text in values_ for the manifest.
+        // Retain the previous single-directory metadata convention when explicitly requested.
         std::ostringstream directory;
         directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << '-' << pathToken(c.get("event-generator-version")) << "__"
                   << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
@@ -531,6 +536,7 @@ void RunConfig::validate(bool uniform) const {
         // adapter opens the files and checks the tree when conversion starts.
         if (get("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
         if (get("event-generator") != "genie-gst") { throw std::runtime_error("Only --event-generator genie-gst is currently implemented"); }
+        if (get("output-layout") != "nested" && get("output-layout") != "metadata") { throw std::runtime_error("output-layout must be nested or metadata"); }
 
         // These values are used in the physical directory name and manifest. `unknown` and `none` are
         // allowed, but an empty value is not.
@@ -646,7 +652,8 @@ std::string help(bool uniform) {
     } else {
         // List the physical-only GENIE GST and source-description settings.
         result +=
-            "Physical: --event-generator genie-gst (default), --event-generator-version VERSION, --tune NAME, --q2-cut NAME.\n"
+            "Physical: --event-generator genie-gst (default), --event-generator-version VERSION, --tune NAME, --q2-cut NAME,\n"
+            "--output-layout nested|metadata (default: nested).\n"
             "Tune defaults to TUNE from the production input_options.txt and falls back to unknown.\n"
             "For physical input, --events-per-file also sets the minimum inclusive input block required before a follow-up file starts, aligned with JOB_NEVENTS.\n";
     }

@@ -7,7 +7,7 @@
 # Replace every /path/to/... placeholder before running these commands.
 #
 # These directory names assume TUNE GEM21_11a_00_000 was discovered from
-# input_options.txt and event-generator-version was explicitly set to master.
+# input_options.txt and the default nested output layout was used.
 
 #########################################################################################
 # Physical C12 GENIE GST sample at 2.07052 GeV
@@ -15,7 +15,7 @@
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/physical-genie-gst-output/rgm_fall2021_C_S__genie-gst-master__GEM21_11a_00_000__Q2_0_02__2070MeV/lundfiles \
+  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst-GEM21_11a_00_000/Q2_0_02-2070MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -25,7 +25,7 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/physical-genie-gst-output/rgm_fall2021_C_L__genie-gst-master__GEM21_11a_00_000__Q2_0_25__4029MeV/lundfiles \
+  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst-GEM21_11a_00_000/Q2_0_25-4029MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -35,7 +35,7 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/physical-genie-gst-output/rgm_fall2021_Cx4__genie-gst-master__GEM21_11a_00_000__Q2_0_40__5986MeV/lundfiles \
+  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst-GEM21_11a_00_000/Q2_0_40-5986MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -45,6 +45,6 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/run-15733-physical-genie-gst-output/rgm_fall2021_C_S__genie-gst-master__GEM21_11a_00_000__Q2_0_25__4029MeV/lundfiles \
+  --lund-dir /path/to/run-15733-physical-genie-gst-output/C12/genie-gst-GEM21_11a_00_000/Q2_0_25-4029MeV/lundfiles \
   --num-jobs 5 \
   --execute

@@ -32,4 +32,4 @@ SAMPLE_DIRECTORY/
 With `tune = auto`, LUND conversion reads the exact `TUNE` entry from
 `input_options.txt`. Replace every `/path/to/...` placeholder before running a
 GENIE command. The shown resolved output paths assume that the metadata contains
-`TUNE GEM21_11a_00_000` and that `--event-generator-version master` is retained.
+`TUNE GEM21_11a_00_000` and that the default nested output layout is used.

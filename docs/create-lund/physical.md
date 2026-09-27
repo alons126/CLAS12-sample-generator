@@ -12,7 +12,9 @@ build/debug/apps/event-generator-to-lund-converter \
 
 When `tune = auto`, an input below `master-routine_validation_01-eScattering/` makes the converter look for `input_options.txt` in that directory's parent and read the value after the exact `TUNE` key. An explicit `--tune NAME` takes precedence. Remote inputs, other directory layouts, missing or unreadable metadata, and a missing or empty `TUNE` entry resolve to `unknown` without stopping conversion.
 
-Physical runs use `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>` below the supplied output parent. For example, C12 at 5.98636 GeV with GENIE GST 3.2.2 and tune `GEM21_11a_00_000` produces `rgm_fall2021_Cx4__genie-gst-3.2.2__GEM21_11a_00_000__Q2_0_40__5986MeV`. Every component is also stored separately in the manifest. C12 selects the small foil at 2 GeV, large foil at 4 GeV, and four foils at 6 GeV. Run 15733 requires the explicit small-foil variation at 4 GeV[^sportes-2026-rgm][^rgm-analysis-note]. GEMC version is selected later by simulation submission and is not a LUND-converter option.
+The default `--output-layout nested` writes LUND files below `OUTPUT/<target>/<event-generator>-<tune>/<Q2-cut>-<beam-MeV>/lundfiles`. For example, C12 at 5.98636 GeV with tune `GEM21_11a_00_000` produces `OUTPUT/C12/genie-gst-GEM21_11a_00_000/Q2_0_40-5986MeV/lundfiles`. `--output-layout metadata` retains the previous single run-directory name: `<GEMC-target-variation>__<event-generator>-<version>__<tune>__<Q2-cut>__<beam-MeV>`.
+
+Every resolved value remains stored separately in the manifest. C12 selects the small foil at 2 GeV, large foil at 4 GeV, and four foils at 6 GeV. Because the nested path intentionally does not include target variation, an exceptional run with the same target, generator, tune, Q² label, and beam must use a different output parent to avoid replacing the standard run. The run-15733 example does this while selecting the explicit small-foil variation at 4 GeV[^sportes-2026-rgm][^rgm-analysis-note]. GEMC version is selected later by simulation submission and is not a LUND-converter option.
 
 ## Required schema
 
@@ -56,7 +58,7 @@ requirements.
 
 Once a file starts, the cutoff is not evaluated again inside it. An exact-multiple final block is therefore completed instead of being interrupted after its second event. The cutoff is deliberately based on input entries rather than accepted events; unsupported reactions inside an allowed block can still make its LUND file shorter than `JOB_NEVENTS`. The manifest records exact scanned, written, and per-file counts; no successful manifest is published after an I/O or schema error.
 
-The resolved metadata-named run directory is recreated when it already exists, following the documented replacement lifecycle. Physical conversion writes the split LUND files and `lund-creation-log.json`; it creates no ROOT monitoring file, PDF, or PNG. Monitoring is a uniform-creation responsibility.
+The resolved run directory is recreated when it already exists, following the documented replacement lifecycle. Physical conversion writes the split LUND files and `lund-creation-log.json`; it creates no ROOT monitoring file, PDF, or PNG. Monitoring is a uniform-creation responsibility.
 
 To support another input format without creating another workflow, follow [Adding another event-generator-to-LUND adapter](../development/adding-event-generator.md). Historical command mappings and compatibility profiles are isolated in the [migration guide](../history/migration.md) and [launch-chain reference](../history/legacy-workflows.md).
 
