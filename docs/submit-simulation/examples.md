@@ -10,7 +10,7 @@ source run.csh \
   --lund-dir /shared/runs/Uniform_sample_1e_5986MeV/lundfiles
 ```
 
-Preview preserves files in existing `mchipo/` and `reconhipo/` directories and creates either empty directory when it is missing. It does not call `sbatch`.
+Preview first inspects both `mchipo/` and `reconhipo/` paths. It preserves files in an existing directory and says that `--execute` would delete and recreate it. It creates and verifies either directory when missing. It does not call `sbatch`.
 
 ## Submit only the first five LUND files
 
@@ -22,7 +22,7 @@ source run.csh \
   --execute
 ```
 
-`--execute` replaces that run's `mchipo/` and `reconhipo/` directories while preserving `lundfiles/`.
+`--execute` warns before deleting an existing `mchipo/` or `reconhipo/` directory and all its contents, then recreates both directories empty while preserving `lundfiles/`.
 
 ## Override the shared per-task event limit
 

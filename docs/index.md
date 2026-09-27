@@ -41,15 +41,15 @@ flowchart TB
     subgraph PREPARE["1. Prepare and validate"]
         direction LR
         INPUTS["Completed LUND files<br/>Manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["run.csh --workflow submit<br/>Validate arguments and refresh the disposable ifarm checkout"]
-        ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate the ifarm environment"]
+        ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate ifarm and inspect both output paths"]
     end
 
     EXECUTE{"--execute?"}
-    PREVIEW["Preview, by default<br/>Report the plan and stop"]
+    PREVIEW["Preview, by default<br/>Preserve existing output, explain execution actions,<br/>create and verify missing directories"]
 
     subgraph SIMULATE["2. Submit and simulate"]
         direction RL
-        SUBMIT["Replace mchipo and reconhipo<br/>Preserve lundfiles and submit the sbatch array"] --> GEMC["GEMC<br/>Detector simulation"]
+        SUBMIT["Warn, clear, and recreate mchipo and reconhipo<br/>Preserve lundfiles and submit the sbatch array"] --> GEMC["GEMC<br/>Detector simulation"]
         GEMC --> RECON["recon-util<br/>Reconstructed HIPO"]
     end
 
@@ -92,6 +92,6 @@ The project does not run a physical event generator, derive acceptance maps, or 
 
 ## Safety and provenance
 
-LUND creation reports the fully resolved run directory, then recursively replaces that exact directory when it already exists. Both LUND sources prepare empty simulation output directories. Submission previews by default and creates either directory if it is missing while preserving existing contents; `--execute` replaces both directories while preserving LUND input. The ifarm checkout is intentionally disposable and is refreshed from Git before a real workflow. Read the relevant workflow page before using production paths.
+LUND creation reports the fully resolved run directory, then recursively replaces that exact directory when it already exists. Both LUND sources prepare empty simulation output directories. Submission previews by default: it inspects both paths before changing either one, creates and verifies missing directories, preserves existing contents, and reports what execution would clear. With `--execute`, it warns before deleting existing simulation output and recreates both directories empty while preserving LUND input. The ifarm checkout is intentionally disposable and is refreshed from Git before a real workflow. Read the relevant workflow page before using production paths.
 
 Every successful LUND run publishes `lundfiles/lund-creation-monitoring/lund-creation-log.json`. That manifest is the handoff from creation to submission and records resolved settings, software provenance, scanned/written counts, and the exact LUND file inventory.

@@ -156,7 +156,8 @@ def parser():
     p = SubmissionArgumentParser(description='Resolve LUND inputs and preview or submit one Slurm array per sample.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='Precedence: CLI > config > manifest > defaults. Conflicting truth metadata is rejected. '
-               'Preview preserves existing output and creates missing mchipo/reconhipo directories. '
+               'Preview inspects both output paths, preserves existing contents while reporting what '
+               '--execute would clear, and creates missing mchipo/reconhipo directories. '
                'With --execute, submission replaces both while preserving lundfiles. '
                'GEMC defaults to 5.14. Use:\n'
                '  source run.csh \\\n'

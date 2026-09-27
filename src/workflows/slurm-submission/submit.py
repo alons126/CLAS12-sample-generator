@@ -699,27 +699,27 @@ def clear_farm(values, root, execute, report, cleared):
 
     return cleared
 
-def prepare_simulation_directory(name, path, replace, report):
-    """Ensure one checked simulation-output directory exists.
+def inspect_simulation_directory(name, path, report):
+    """Inspect one simulation-output path without changing it.
 
     Purpose:
-        Give preview and execution the same explicit check, create, and verification lifecycle while
-        allowing only execution to replace existing simulation output.
+        Complete the safety check for one exact output child before either output directory changes.
 
     Workflow:
-        Print and check the exact path -> reject links -> replace an existing path only when requested
-        -> preserve an existing preview directory or warn and create a missing directory -> verify the
-        final directory and report success.
+        Print the exact path -> reject symbolic links and non-directory objects -> report whether the
+        directory exists -> return that state to the later apply stage.
 
     Args:
         name: Stable report label, either ``mchipo`` or ``reconhipo``.
         path: Direct child of the already validated sample run directory.
-        replace: Remove an existing directory or regular file before creation when true.
         report: Helper that prints standardized warnings and status messages.
 
+    Returns:
+        True when an existing directory was found; false when the path is absent.
+
     Failure:
-        A symbolic link, a non-directory preview path, removal failure, creation failure, or failed
-        post-creation check raises before submission. A successful preview never removes contents.
+        A symbolic link or any existing non-directory path raises before either simulation-output
+        directory is changed.
     """
 
     report.text('{SYSTEM}' + name + ':{RESET} ' + str(path))
@@ -728,23 +728,65 @@ def prepare_simulation_directory(name, path, replace, report):
     if path.is_symlink():
         raise ValueError(f'{name} must not be a symbolic link: {path}')
 
-    if replace and path.exists():
-        report.text('{INFO}--> Replacing existing ' + name + ' output at: {RESET}' + str(path))
-
-        if path.is_dir():
-            shutil.rmtree(path)
-        else:
-            path.unlink()
-
-    elif path.is_dir():
+    if path.is_dir():
         report.text('{COMPLETION}--> ' + name + ' exists.{RESET}')
         report.text()
 
-        return
-    elif path.exists():
+        return True
+
+    if path.exists():
         raise ValueError(f'{name} exists but is not a directory: {path}')
-    else:
-        report.warning(f'the following directory does not exist: {path}')
+
+    report.warning(f'the following directory does not exist: {path}')
+    report.text()
+
+    return False
+
+def apply_simulation_directory(name, path, existed, execute, report):
+    """Apply the checked preview or execution action for one output directory.
+
+    Purpose:
+        Keep preview non-destructive for existing output while making execution start with empty
+        simulation and reconstruction directories.
+
+    Workflow:
+        For an existing preview directory, report that it is preserved and explain the execution
+        action -> for an existing execution directory, warn and remove its full contents -> create
+        every missing or removed directory -> verify the result.
+
+    Args:
+        name: Stable report label, either ``mchipo`` or ``reconhipo``.
+        path: Direct child checked by ``inspect_simulation_directory``.
+        existed: Whether inspection found an existing directory.
+        execute: True to clear existing output before submission; false to preview safely.
+        report: Helper that prints standardized warnings and status messages.
+
+    Failure:
+        A path that changed after inspection, removal failure, creation failure, or failed final check
+        raises before submission. Preview never removes existing contents.
+    """
+
+    report.text('{SYSTEM}' + name + ' action:{RESET}')
+
+    if existed:
+        if not path.is_dir() or path.is_symlink():
+            raise ValueError(f'{name} changed after inspection and is no longer a safe directory: {path}')
+
+        if not execute:
+            report.text('{INFO}PREVIEW: Preserving the existing directory and all contents: {RESET}' + str(path))
+            report.text('{INFO}PREVIEW: With --execute, this directory and all contents would be deleted '
+                        'and the empty directory would be recreated.{RESET}')
+            report.text()
+
+            return
+
+        report.warning(f'clearing previous-run output by deleting and recreating the directory: {path}')
+        shutil.rmtree(path)
+    elif path.exists() or path.is_symlink():
+        raise ValueError(f'{name} appeared after inspection; refusing to change it: {path}')
+
+    if not execute:
+        report.text('{INFO}PREVIEW: The directory is missing. Creating and verifying it now.{RESET}')
 
     report.text('{SYSTEM}--> Creating ' + name + '...{RESET}')
     path.mkdir()
@@ -810,8 +852,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         3. Check standard GEMC data, load the selected module, and verify its data and program.
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output preparation.
-        6. Create missing mchipo/reconhipo directories in either mode and replace them only during
-           execution.
+        6. Inspect both mchipo/reconhipo paths before either changes, then create missing directories
+           in either mode or warn and recreate existing directories during execution.
         7. Print the array settings and call the external worker through sbatch only with --execute.
         8. Read and print the accepted job ID, then save it in the submission log.
 
@@ -831,7 +873,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     Failure:
         Missing inputs, unsafe output children, absent commands, or sbatch failure raise and stop
-        later samples. All read-only checks occur before mchipo/reconhipo preparation.
+        later samples. Both output paths are inspected before either directory is changed.
         The submission log is written after Slurm accepts the array. Already accepted Slurm arrays
         are not canceled when log publication or a later sample fails.
     """
@@ -949,21 +991,21 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     # verify_gemc() already proved that GEMC belongs to the requested installation.
     executables['SLURM_GEMC_EXECUTABLE'] = gemc_executable
 
-    report.banner('Setting output directories' + (' for ' + values['UNIFORM_SAMPLE_CHANNEL'] if uniform else ''))
+    sample_suffix = ' for ' + values['UNIFORM_SAMPLE_CHANNEL'] if uniform else ''
+    report.banner('Inspecting output directories' + sample_suffix)
 
-    # Validate both exact child paths before either one can be created or replaced.
+    # Inspect both exact child paths before either one can be created or replaced.
     output_dirs = [run / name for name in ('mchipo', 'reconhipo')]
+    output_states = []
 
     for path in output_dirs:
-        if path.is_symlink():
-            raise ValueError(f'{path.name} must not be a symbolic link: {path}')
+        output_states.append(inspect_simulation_directory(path.name, path, report))
 
-        if not execute and path.exists() and not path.is_dir():
-            raise ValueError(f'{path.name} exists but is not a directory: {path}')
+    report.banner(('Applying' if execute else 'Previewing') + ' output directory actions' + sample_suffix)
 
-    # Both modes ensure the directories exist. Only execution removes prior simulation output.
-    for path in output_dirs:
-        prepare_simulation_directory(path.name, path, execute, report)
+    # Both modes create missing directories. Only execution clears and recreates existing directories.
+    for path, existed in zip(output_dirs, output_states):
+        apply_simulation_directory(path.name, path, existed, execute, report)
 
     report.value('OUTPATH', str(run))
     report.text('{SYSTEM}Number of files in target directory (OUTPATH):{RESET}')
