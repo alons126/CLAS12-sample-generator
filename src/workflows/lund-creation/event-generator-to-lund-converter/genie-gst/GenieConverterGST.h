@@ -64,7 +64,8 @@ namespace samples {
  *
  * Outputs:
  *   No C++ value is returned. Success leaves split LUND files and lund-creation-log.json in the output
- *   directory and prints the scanned and written event counts.
+ *   directory, reports scanned-input progress beside written-event capacity, names the stop reason, and
+ *   prints the final scanned and written event counts.
  *
  * Expected input:
  *   Final-state PDG and momentum arrays have the same variable length stored in nf.

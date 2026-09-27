@@ -46,6 +46,7 @@ namespace samples {
  *               angles use degrees, and vertices use cm.
  *
  * @return Nothing. Normal return means the events, plots, and completion log were written.
+ *         Progress shows written events over the requested count while generation is active.
  *
  * @throws std::exception If checking, vertex sampling, output setup, LUND writing, or plot writing fails.
  *

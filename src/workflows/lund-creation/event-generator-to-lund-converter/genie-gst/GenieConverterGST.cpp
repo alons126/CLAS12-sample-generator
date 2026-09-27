@@ -47,6 +47,7 @@
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
+#include "core/presentation/ProgressReporter.h"
 #include "support/environment.h"
 
 namespace env = environment;
@@ -108,6 +109,10 @@ void convertGenieGST(const RunConfig& c) {
 #pragma region /* Event conversion */
     std::cout << "\n" << env::SYSTEM_COLOR << "Converting GENIE GST events to LUND..." << env::RESET_COLOR << "\n";
 
+    const auto requested_events = static_cast<std::uint64_t>(c.integer("events"));
+    ProgressReporter progress("Converting GST", total_entries, "scanned", "Written");
+    progress.update(0, 0, requested_events);
+
     // Read GST entries in order until the writer is full, ROOT reaches the end, or the tail cutoff stops
     // a later file from starting.
     while (!writer.full() && reader.Next()) {
@@ -125,6 +130,8 @@ void convertGenieGST(const RunConfig& c) {
         if (*nf < 0 || pdgf.GetSize() != static_cast<std::size_t>(*nf) || pxf.GetSize() != pdgf.GetSize() || pyf.GetSize() != pdgf.GetSize() || pzf.GetSize() != pdgf.GetSize()) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
         }
+
+        progress.update(scanned, writer.count(), requested_events);
 
         // Map QE, MEC, RES, and DIS to codes 1 through 4. Skip other reactions before sampling a vertex.
         // If bad input sets several flags, the written order here gives the first one priority.
@@ -166,12 +173,11 @@ void convertGenieGST(const RunConfig& c) {
         // LundWriter calculates particle energies, writes the event, starts a new file at the configured
         // split size, and increases its event count only after success.
         writer.write(event);
+        progress.update(scanned, writer.count(), requested_events);
     }
 #pragma endregion
 
 #pragma region /* Completion and publication */
-    std::cout << "\n" << env::SYSTEM_COLOR << "Finalizing LUND output..." << env::RESET_COLOR << "\n";
-
     // When neither limit stopped the loop, require ROOT to have reached the normal end of input.
     if (!writer.full() && !stopped_at_submission_cutoff && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) {
         throw std::runtime_error("Failed reading GST entries (check branch types and input files)");
@@ -179,6 +185,11 @@ void convertGenieGST(const RunConfig& c) {
 
     // Do not publish a completed run when no supported event was written.
     if (!writer.count()) { throw std::runtime_error("No supported QE/MEC/RES/DIS events in input"); }
+
+    const std::string stop_reason = writer.full() ? "requested event capacity reached" : stopped_at_submission_cutoff ? "submission-tail cutoff reached" : "input exhausted";
+    progress.finish(scanned, writer.count(), requested_events, stop_reason);
+
+    std::cout << "\n" << env::SYSTEM_COLOR << "Finalizing LUND output..." << env::RESET_COLOR << "\n";
 
     // Close output, publish the run log, and print final counts.
     writer.finish(scanned);

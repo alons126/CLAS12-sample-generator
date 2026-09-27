@@ -30,6 +30,7 @@
 
 #include "core/geometry/TargetGeometry.h"
 #include "core/lund/LundWriter.h"
+#include "core/presentation/ProgressReporter.h"
 #include "support/environment.h"
 #include "uniform-lund-creator/UniformConfig.h"
 #include "uniform-lund-creator/UniformMonitoring.h"
@@ -189,6 +190,9 @@ void generateUniform(const RunConfig& c) {
 #pragma region /* Event generation */
     std::cout << "\n" << env::SYSTEM_COLOR << "Generating uniform events and writing LUND output..." << env::RESET_COLOR << "\n";
 
+    ProgressReporter progress("Generating LUND events", static_cast<std::uint64_t>(c.integer("events")));
+    progress.update(0);
+
     // Create one event per loop. writer.count() changes only after a successful write.
     while (!writer.full()) {
         Event event;
@@ -240,7 +244,10 @@ void generateUniform(const RunConfig& c) {
         // Write first so monitoring never counts an event that failed to write.
         writer.write(event);
         monitoring.fill(event);
+        progress.update(writer.count());
     }
+
+    progress.finish(writer.count(), 0, 0, "requested event count reached");
 #pragma endregion
 
 #pragma region /* Run completion */
