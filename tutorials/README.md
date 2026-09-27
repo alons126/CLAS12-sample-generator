@@ -1,10 +1,9 @@
 # Workflow command examples
 
-The matched uniform-sample commands for both user-facing workflows live together in
-[`uniform-samples/`](uniform-samples):
+The matched uniform-sample commands are grouped by user-facing workflow:
 
-- [`uniform-lund-creation.txt`](uniform-samples/uniform-lund-creation.txt) creates nine uniform LUND samples: `1e`, `enFD`, and `epFD` at 2070, 4029, and 5986 MeV.
-- [`uniform-slurm-submission.txt`](uniform-samples/uniform-slurm-submission.txt) consumes those completed LUND directories and submits the corresponding GEMC and reconstruction jobs.
+- [`uniform-lund-creation.txt`](lund-creation/uniform-lund-creation.txt) creates nine uniform LUND samples: `1e`, `enFD`, and `epFD` at 2070, 4029, and 5986 MeV.
+- [`uniform-slurm-submission.txt`](slurm-submission/uniform-slurm-submission.txt) consumes those completed LUND directories and submits the corresponding GEMC and reconstruction jobs.
 
 Run the commands from the repository root in a csh/tcsh shell. LUND creation and
 simulation submission remain separate workflows. Each submission example selects

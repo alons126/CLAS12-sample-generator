@@ -106,4 +106,4 @@ hipo-utils -dump /shared/runs/physical/reconhipo/<hipo-file-name>.hipo
 
 Confirm that `hipo-utils` opens the file and displays CLAS12 data banks. Also check the remaining task states and output inventory; one valid HIPO file does not guarantee that the complete array succeeded.
 
-The repository also contains a matched [uniform submission command list](../../tutorials/uniform-samples/uniform-slurm-submission.txt) for 1e, enFD, and epFD at the three established beam energies.
+The repository also contains a matched [uniform submission command list](../../tutorials/slurm-submission/uniform-slurm-submission.txt) for 1e, enFD, and epFD at the three established beam energies.
