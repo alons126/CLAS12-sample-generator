@@ -47,8 +47,8 @@ CLI options (parsed by resolve_inputs.py):
     --events-per-job N            Set event limit; required without a manifest.
     --job-name NAME               Override the metadata-derived Slurm job name.
     --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
-    --clear-farm-out true|false   Clear direct farm log files with --execute; default: false.
-    --farm-out DIRECTORY          Set farm_out directory when clearing it.
+    --clear-farm-out true|false   Delete direct files from --farm-out with --execute; default: false.
+    --farm-out DIRECTORY          Exact cleanup directory; required with --clear-farm-out true.
     --fc-status 0|1               Set legacy physical filename/report label; default: 0.
     --help                        Print submission help before any server synchronization.
 
@@ -599,8 +599,9 @@ def clear_farm(values, root, execute, report, cleared):
 
     Workflow:
         Report a disabled or previously handled request; otherwise validate the resolved
-        farm_out directory. Preview describes the cleanup, while execution removes only
-        direct regular files and leaves subdirectories and symbolic links in place.
+        farm_out directory. Preview describes the cleanup. Execution prints the exact cleanup
+        directory, then removes only direct regular files and leaves subdirectories and symbolic
+        links in place.
 
     Args:
         values: Resolved settings containing CLEAR_FAR_OUT and farm_out.
@@ -633,6 +634,8 @@ def clear_farm(values, root, execute, report, cleared):
 
         # Remove direct regular files only. Preview reports them without deleting.
         if execute:
+            report.text('{INFO}Clearing existing farm_out files in:{RESET} ' + str(farm))
+
             for entry in farm.iterdir():
                 if not entry.is_symlink() and entry.is_file():
                     entry.unlink()

@@ -48,8 +48,8 @@ CLI options:
     --events-per-job N            Set event limit; required without a manifest.
     --job-name NAME               Override the metadata-derived Slurm job name.
     --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
-    --clear-farm-out true|false   Clear direct farm log files with --execute; default: false.
-    --farm-out DIRECTORY          Set farm_out directory when clearing it.
+    --clear-farm-out true|false   Delete direct files from --farm-out with --execute; default: false.
+    --farm-out DIRECTORY          Exact cleanup directory; required with --clear-farm-out true.
     --fc-status 0|1               Set legacy physical filename/report label; default: 0.
     --help                        Print submission help before any server synchronization.
 """
@@ -111,8 +111,8 @@ OPTIONS = {
     'events-per-job': 'Shared event limit (default: maximum selected manifest file count)',
     'job-name': 'Slurm job name (default: derived from sample metadata)',
     'clas12tags-dir': 'Custom gemc/clas12Tags checkout used as GEMC_DATA_DIR; intended for detector-development studies',
-    'clear-farm-out': 'true/false (default: false); delete files directly in farm-out once',
-    'farm-out': 'Explicit farm_out directory, required only when clearing it',
+    'clear-farm-out': 'true/false (default: false); delete direct files from --farm-out once',
+    'farm-out': 'Exact cleanup directory; required when clear-farm-out is true',
     'fc-status': '0 or 1 legacy physical filename/report label only (default: 0)',
 }
 
@@ -570,7 +570,9 @@ def resolve(lund_directory, explicit, root):
         optional_paths[key] = str(path) if path else ''
 
     if values['clear-farm-out'] == 'true' and not optional_paths['farm-out']:
-        raise ValueError('--clear-farm-out true requires --farm-out')
+        raise ValueError('--clear-farm-out true enables deletion of existing Slurm log files and requires an explicit cleanup target. '
+                         'Add --farm-out DIRECTORY (for example, --farm-out /farm_out/USERNAME), or omit '
+                         '--clear-farm-out true to keep the existing logs.')
 
     # Build readable labels and the default Slurm job name from checked values.
     target = token(values['target'], 'target')

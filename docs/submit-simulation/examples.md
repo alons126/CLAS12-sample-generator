@@ -95,6 +95,7 @@ source run.csh \
 ```
 
 Use cleanup only with an exact reviewed directory. It deletes files directly inside that directory once per invocation; it does not broaden simulation-output replacement.
+The `--farm-out DIRECTORY` option is required whenever `--clear-farm-out true` is selected. Omit both options to preserve existing Slurm logs.
 
 ## Verify reconstructed output
 

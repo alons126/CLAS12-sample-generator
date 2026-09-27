@@ -52,8 +52,8 @@
 #   --events-per-job N             Set common event limit; default: selected-file maximum.
 #   --job-name NAME                Override the metadata-derived Slurm job name.
 #   --clas12tags-dir DIRECTORY     Use a custom clas12Tags checkout as GEMC_DATA_DIR.
-#   --clear-farm-out true|false    Clear direct farm log files with --execute; default: false.
-#   --farm-out DIRECTORY           Set farm_out path when clearing it.
+#   --clear-farm-out true|false    Delete direct files from --farm-out with --execute; default: false.
+#   --farm-out DIRECTORY           Exact cleanup directory; required with --clear-farm-out true.
 #   --fc-status 0|1                Set legacy physical report/filename label; default: 0.
 # 
 # Usage:
