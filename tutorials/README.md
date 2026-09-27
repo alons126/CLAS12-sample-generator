@@ -1,9 +1,11 @@
 # Workflow command examples
 
-The matched uniform-sample commands are grouped by user-facing workflow:
+The command lists are grouped by user-facing workflow:
 
 - [`uniform-lund-creation.txt`](lund-creation/uniform-lund-creation.txt) creates nine uniform LUND samples: `1e`, `enFD`, and `epFD` at 2070, 4029, and 5986 MeV.
 - [`uniform-slurm-submission.txt`](slurm-submission/uniform-slurm-submission.txt) consumes those completed LUND directories and submits the corresponding GEMC and reconstruction jobs.
+- [`genie-gst-lund-creation.txt`](lund-creation/genie-gst-lund-creation.txt) converts physical C12 GENIE GST samples at 2070, 4029, and 5986 MeV, plus the run-15733 target-variation exception.
+- [`genie-gst-slurm-submission.txt`](slurm-submission/genie-gst-slurm-submission.txt) consumes those completed physical LUND directories and submits the corresponding GEMC and reconstruction jobs.
 
 Run the commands from the repository root in a csh/tcsh shell. LUND creation and
 simulation submission remain separate workflows. Each submission example selects
@@ -17,3 +19,17 @@ The submission workflow reads sample metadata, filename prefix, completed file
 counts, and the default event limit from the LUND manifest. GEMC defaults to 5.14.
 See the [submission guide](../docs/submit-simulation/guide.md) for
 configuration overrides, validation, output replacement, and ifarm synchronization.
+
+The GENIE examples assume each GST directory has this layout:
+
+```text
+SAMPLE_DIRECTORY/
+├── input_options.txt
+└── master-routine_validation_01-eScattering/
+    └── *.root
+```
+
+With `tune = auto`, LUND conversion reads the exact `TUNE` entry from
+`input_options.txt`. Replace every `/path/to/...` placeholder before running a
+GENIE command. The shown resolved output paths assume that the metadata contains
+`TUNE GEM21_11a_00_000` and that `--event-generator-version master` is retained.

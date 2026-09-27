@@ -53,8 +53,7 @@ output/
 # Local samples and tutorial working copies ----------------------------------
 # Ignore generated comparison runs and personal copies of tutorial commands.
 legacy/GENIE-GST-test-samples/*
-tutorials/uniform-samples/uniform-lund-creation copy.txt
-tutorials/uniform-samples/uniform-slurm-submission copy.txt
+**copy.txt
 
 # Historical compatibility ----------------------------------------------------
 # Retain the old converter path rule for its generated ACLiC dependency file.
