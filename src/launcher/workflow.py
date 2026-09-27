@@ -126,6 +126,26 @@ def print_error(message):
 
     print(error_message(message), file=sys.stderr)
 
+def stop_with_error(message):
+    """Print the final failure sequence and shared stop artwork.
+
+    Args:
+        message: Prefix-free final diagnostic text.
+
+    Outputs:
+        One blank line, the error, one blank line, and then ``print_stop.csh`` output.
+
+    Failure behavior:
+        Banner failure does not replace the workflow's original status.
+    """
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+    print(file=sys.stderr)
+    print_error(message)
+    print(file=sys.stderr, flush=True)
+    banner('stop')
+
 class LauncherArgumentParser(argparse.ArgumentParser):
     """Argument parser that uses the shared launcher error format.
 
@@ -499,8 +519,8 @@ def main():
 #     Return stable process statuses to run.csh while keeping imports free of side effects.
 #
 # Workflow:
-#     Direct execution calls main(). Success returns zero. Interruptions and errors print the stop
-#     banner and return a nonzero status.
+#     Direct execution calls main(). Success returns zero. Interruptions and errors print a spaced
+#     final diagnostic followed by the stop banner, then return a nonzero status.
 #
 # Outputs:
 #     Prints status and error messages. run.csh receives the final process status.
@@ -510,21 +530,17 @@ if __name__ == '__main__':
         sys.exit(main())
     except KeyboardInterrupt:
         # Ctrl-C returns the standard shell status 130.
-        banner('stop')
-        print_error('Interrupted.')
+        stop_with_error('Interrupted.')
         sys.exit(130)
     except subprocess.CalledProcessError as error:
         # Keep ordinary exit codes and convert a terminating signal to the shell form 128 + signal.
-        banner('stop')
-
         exit_status = 128-error.returncode if error.returncode < 0 else error.returncode
 
-        # Quote the failed command only for the error message.
-        print_error(f'Command failed with exit status {exit_status}: {shlex.join(map(str, error.cmd))}')
+        # Quote the failed command only for the final error message.
+        stop_with_error(f'Command failed with exit status {exit_status}: {shlex.join(map(str, error.cmd))}')
         sys.exit(exit_status)
     except Exception as error:
         # Every remaining launcher failure uses the same diagnostic boundary and status.
-        banner('stop')
-        print_error(error)
+        stop_with_error(error)
         sys.exit(1)
 # endregion

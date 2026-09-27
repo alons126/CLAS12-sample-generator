@@ -23,8 +23,8 @@
 #   Prints the colored banner. It creates no files and keeps no shell changes.
 # 
 # Usage:
-#   A workflow calls this script before printing its final error. The workflow keeps the original
-#   failure status.
+#   A workflow prints one blank line, its final error, and one blank line before calling this script.
+#   The workflow keeps the original failure status.
 # 
 # Failure behavior:
 #   This helper does not handle the error or choose an exit status.
@@ -40,7 +40,6 @@ printf "$STOP_COLOR"
 
 # Keep the artwork literal and use `@` as a safe placeholder for a dollar sign.
 cat << \EOF | sed 's/@/\$/g'
-
 ####################################################################################################
 ####################################################################################################
 

@@ -234,6 +234,35 @@ def status_banner(name, root):
         subprocess.run(['tcsh', '-f', str(printer)], cwd=root, check=False)
     except OSError:
         print(f'CLAS12 samples: {name}', flush=True)
+
+def stop_with_error(message, report, root):
+    """Print the final submission failure sequence and shared stop artwork.
+
+    Args:
+        message: Prefix-free final diagnostic text.
+        report: Active colored report, or ``None`` before report setup succeeds.
+        root: Verified checkout containing the shared stop printer.
+
+    Outputs:
+        One blank line, the error, one blank line, and then ``print_stop.csh`` output.
+
+    Failure:
+        Printer failure does not replace the submission failure status.
+    """
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    if report:
+        report.text()
+        report.error(message)
+        report.text()
+    else:
+        print(file=sys.stderr)
+        print_error(message)
+        print(file=sys.stderr, flush=True)
+
+    status_banner('stop', root)
 # endregion Status presentation
 
 # Reporting ------------------------------------------------------------------
@@ -363,8 +392,8 @@ class Report:
             failure result. Successful directory checks add one blank separator line.
 
         Failure:
-            Print the specific missing-path message, then raise RuntimeError so no dependent
-            cleanup or Slurm submission can proceed.
+            Raise RuntimeError with the specific missing-path message so the final failure boundary
+            can print it immediately before the stop artwork.
         """
 
         kind = 'directory' if directory else 'file'
@@ -374,9 +403,7 @@ class Report:
         self.text('{SYSTEM}--> Checking if {RESET}' + name + '{SYSTEM} is a ' + kind + '...{RESET}')
 
         if not (Path(path).is_dir() if directory else Path(path).is_file()):
-            self.error('the following ' + kind + ' does not exist: ' + path)
-
-            raise RuntimeError()  # The precise failure has already been printed.
+            raise RuntimeError('the following ' + kind + ' does not exist: ' + path)
 
         self.text('{SYSTEM}-->{RESET} {COMPLETION}' + name + ' exists.{RESET}')
 
@@ -914,8 +941,8 @@ def main():
     Workflow:
         Copy the shell environment -> prepare the report -> read the command line -> check every sample
         before processing the first -> check the checkout and worker script -> process samples in order
-        while reusing the copied module environment and cleanup state -> print the shared success or
-        stop banner.
+        while reusing the copied module environment and cleanup state -> print the shared success
+        artwork, or print the spaced final error followed by the stop artwork.
 
     Inputs:
         Process arguments and the ifarm environment, including the shared colors and
@@ -934,9 +961,9 @@ def main():
 
     Failure:
         A failed sample stops later samples. Slurm arrays accepted earlier in the same
-        command remain submitted. The shared stop banner appears before the error. Errors are
-        printed through Report when available; failures before colors are ready use a plain
-        standard-error fallback.
+        command remain submitted. One blank line, the final error, one blank line, and the shared
+        stop artwork are printed in that order. Errors use Report when available; failures before
+        colors are ready use a plain standard-error fallback.
     """
 
     # The source location is stable even when configuration fails before checkout validation.
@@ -974,23 +1001,12 @@ def main():
         return 0
 
     except KeyboardInterrupt:
-        status_banner('stop', root)
-
-        if report:
-            report.error('Interrupted.')
-        else:
-            print_error('Interrupted.')
+        stop_with_error('Interrupted.', report, root)
 
         return 130
     except Exception as error:
         # Convert every remaining submission failure to one shell-visible diagnostic and status.
-        status_banner('stop', root)
-
-        if str(error):
-            if report:
-                report.error(error)
-            else:
-                print_error(error)
+        stop_with_error(error, report, root)
 
         return 1
 

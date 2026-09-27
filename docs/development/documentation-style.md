@@ -16,6 +16,8 @@ The shared runtime palette is defined only in `src/launcher/presentation/set_col
 
 Every project-owned terminal error uses `ERROR_COLOR + "Error:" + RESET_COLOR + " " + message`, and every project-owned warning uses `WARNING_COLOR + "Warning:" + RESET_COLOR + " " + message`. Exception text and validation messages do not include their own label; the final output boundary adds exactly one colored prefix. Output copied from an external command is left unchanged, followed by the standardized project error when that command stops the workflow.
 
+When a workflow uses `print_stop.csh`, its final failure output is always one blank line, the error diagnostic, one blank line, and then the stop artwork. The coordinator flushes output before invoking the printer and retains the original failure status. The stop printer begins with artwork rather than adding another leading blank line, so the coordinator owns the spacing.
+
 External and archived files are excluded from edits: `legacy/`, `src/workflows/lund-creation/external/targets.h`, `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Repository instructions are recorded in `AGENTS.md`.
 
 ## Citations and references
