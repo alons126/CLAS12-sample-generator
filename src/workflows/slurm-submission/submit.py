@@ -737,7 +737,7 @@ def inspect_simulation_directory(name, path, report):
     if path.exists():
         raise ValueError(f'{name} exists but is not a directory: {path}')
 
-    report.warning(f'the following directory does not exist: {path}')
+    report.warning(f'the following directory does not exist:\n{path}')
     report.text()
 
     return False
@@ -786,7 +786,7 @@ def apply_simulation_directory(name, path, existed, execute, report):
         raise ValueError(f'{name} appeared after inspection; refusing to change it: {path}')
 
     if not execute:
-        report.text('{INFO}PREVIEW: The directory is missing. Creating and verifying it now.{RESET}')
+        report.text('{INFO}PREVIEW:{RESET} The directory is missing. Creating and verifying it now.')
 
     report.text('{SYSTEM}--> Creating ' + name + '...{RESET}')
     path.mkdir()
@@ -795,7 +795,7 @@ def apply_simulation_directory(name, path, existed, execute, report):
     if not path.is_dir():
         raise RuntimeError(f'failed to create {name} directory: {path}')
 
-    report.text('{COMPLETION}----> ' + name + ' was created successfully.{RESET}')
+    report.text('{SYSTEM}---->{COMPLETION} ' + name + ' was created successfully.{RESET}')
     report.text()
 
 def submit_array(command, environment, root):
@@ -1052,7 +1052,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     report.check('SUBMIT_SCRIPT_FILE', payload)
     report.text()
 
-    report.banner('Submitting sbatch job for ' + ('uniform' if uniform else values['SAMPLE_GENERATOR']) + ' sample')
+    report.banner("Submitting sbatch job for '" + ("uniform" if uniform else values['SAMPLE_GENERATOR']) + "' sample")
 
     # Build one argument list for both the multiline display and optional execution.
     command = ['sbatch', '--job-name=' + values['SLURM_JOB_NAME'], '--array=' + environment['ARRAY'], payload]
