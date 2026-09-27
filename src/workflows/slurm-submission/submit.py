@@ -1051,7 +1051,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     report.check('SUBMIT_SCRIPT_FILE', payload)
     report.text()
 
-    report.banner("Submitting sbatch job for '" + ("uniform" if uniform else values['SAMPLE_GENERATOR']) + "' sample")
+    report.banner("Submitting sbatch job for '{INFO}" + ("uniform" if uniform else values['SAMPLE_GENERATOR']) + "{RESET}' sample")
 
     # Build one argument list for both the multiline display and optional execution.
     command = ['sbatch', '--job-name=' + values['SLURM_JOB_NAME'], '--array=' + environment['ARRAY'], payload]
