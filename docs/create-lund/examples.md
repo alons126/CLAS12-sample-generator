@@ -40,7 +40,7 @@ source run.csh \
   --hadron proton \
   --hadron-region FD \
   --beam-energy 5.98636 \
-  --rgm-target Ar40 \
+  --target Ar40 \
   --hadron-momentum mixed \
   --hadron-p-min 0.3 \
   --hadron-theta-min 5 \
@@ -93,8 +93,7 @@ source run.csh \
   --event-generator-version 3.2.2 \
   --tune GEM21_11a_00_000 \
   --q2-cut Q2_0_40 \
-  --gemc-version 5.14 \
-  --rgm-target C12-four-foil \
+  --target C12 \
   --beam-energy 5.98636 \
   --input '/shared/truth/C12/GEM21_11a_00_000/*.root' \
   --events 50000 \

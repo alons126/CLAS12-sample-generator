@@ -19,8 +19,8 @@
  *   --hadron proton|neutron|pip|pim  Select the hadron when `--channel eh` (default: proton).
  *   --hadron-region FD|CD            Select the hadron detector region (default: FD).
  *   --beam-energy GeV                Set beam energy (default: 5.98636 GeV).
- *   --rgm-target ID                  Select nuclear metadata and automatic geometry (default: Ar40).
- *   --target GEOMETRY                Override the target-geometry key (default: auto).
+ *   --target ID                      Select the target nucleus/material (default: Ar40).
+ *   --gemc-target-variation NAME     Override its beam-dependent GEMC variation (default: auto).
  *   --A N / --Z N                    Override LUND target metadata (default: auto).
  *   --output DIRECTORY               Required parent directory for the resolved run directory.
  *   --events N                       Required total generated-event count.

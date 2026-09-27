@@ -36,7 +36,7 @@
 #   --execute                      Replace simulation outputs and submit; default is preview.
 #   --source uniform|physical      Override source metadata when no manifest supplies it.
 #   --beam-energy GeV              Set truth beam energy; normally read from the manifest.
-#   --rgm-target ID                Set truth target identity; normally read from the manifest.
+#   --target ID                    Set truth target identity; normally read from the manifest.
 #   --channel NAME                 Set uniform channel; normally read from the manifest.
 #   --hadron NAME                  Set uniform hadron when channel=eh.
 #   --hadron-region FD|CD          Set uniform hadron region when channel=eh.

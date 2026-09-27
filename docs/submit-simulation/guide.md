@@ -47,7 +47,7 @@ The resolver reads `lund-creation-monitoring/lund-creation-log.json` under the s
 
 The array size is the number of completed files, not the requested generation capacity. The default `JOB_NEVENTS` is the largest event count among the selected files. Physical LUND conversion uses `events-per-file` as both its rollover size and its remaining-input cutoff scale, keeping generation aligned with the intended per-task limit. The cutoff is evaluated before starting a follow-up file and never interrupts a file already in progress. Because it counts input entries rather than accepted reactions, unsupported reactions inside an allowed block can still leave that file shorter than `JOB_NEVENTS`; that task reaches input EOF before the limit. Confirm EOF behavior with the selected detector versions during server validation.
 
-**GEMC defaults to 5.14.** A concrete manifest version supplies the generation-time plan; `unknown`, `none` or `auto` fall back to 5.14. A config or `--gemc-version` overrides either. The default GCARD uses the explicit detector target variation, beam and resolved GEMC version. Default YAML and torus settings preserve the established 2070/4029/5986 MeV conventions: +0.5 at 2 GeV and −1.0 at 4/6 GeV. Other beam energies require explicit `--gcard`, `--yaml` and `--torus`. The payload retains fixed solenoid −1.0.
+**GEMC defaults to 5.14.** Set another version in the submission config or with `--gemc-version`; LUND creation does not select or record it. The default GCARD uses the manifest's detector target variation together with the beam and submission-time GEMC version. Default YAML and torus settings preserve the established 2070/4029/5986 MeV conventions: +0.5 at 2 GeV and −1.0 at 4/6 GeV. Other beam energies require explicit `--gcard`, `--yaml` and `--torus`. The payload retains fixed solenoid −1.0.
 
 The resolver automatically derives two deliberately distinct labels from `beam-energy`: `BEAM_ENERGY_LABEL` identifies the sample as `2070MeV`, `4029MeV`, or `5986MeV`, while `DETECTOR_ENERGY_GROUP` selects the corresponding `2GeV`, `4GeV`, or `6GeV` detector-resource directory. For other energies, both use the nearest-MeV label and explicit detector inputs are required.
 
@@ -83,7 +83,7 @@ Supply missing metadata through a config or CLI. For uniform input, for example:
 
 ```tcsh
 source run.csh --workflow submit --lund-dir /shared/archive/lundfiles \
-  --source uniform --beam-energy 2.07052 --rgm-target Ar40 \
+  --source uniform --beam-energy 2.07052 --target Ar40 \
   --channel eh --hadron neutron --hadron-region FD \
   --prefix Uniform_en_sample_2070MeV --events-per-job 10000 \
   --gemc-target-variation rgm_fall2021_Ar

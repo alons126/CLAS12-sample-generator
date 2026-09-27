@@ -20,7 +20,7 @@
 #     --execute                     Submit and replace simulation output; default: preview.
 #     --source uniform|physical     Source when no manifest supplies it.
 #     --beam-energy GeV             Truth beam energy when no manifest supplies it.
-#     --rgm-target ID               Truth target identity when no manifest supplies it.
+#     --target ID                   Truth target identity when no manifest supplies it.
 #     --channel NAME                Uniform 1e, eh, electron-tester, or a legacy label.
 #     --hadron NAME                 Proton, neutron, pip, or pim for eh.
 #     --hadron-region FD|CD         Eh hadron detector region.

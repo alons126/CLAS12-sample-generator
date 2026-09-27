@@ -141,7 +141,7 @@ If the adapter needs a new optional build switch, document its interaction with 
 
 `LundWriter` owns successful-event capacity, file rotation, serialization, guarded output replacement, and manifest publication. The adapter owns input traversal and rejection counts. If the input has a finite entry inventory and must align follow-up files with `JOB_NEVENTS`, implement and validate the documented inclusive remaining-input cutoff or extract the common policy without changing GENIE behavior.
 
-Physical output naming already includes event-generator name/version, tune, Q²/input-selection label, beam energy, target variation, and GEMC version. Use explicit `none` or `unknown` tokens when a field does not apply; preserve the original unsanitized values in the manifest.
+Physical output naming includes event-generator name/version, tune, Q²/input-selection label, beam energy, and target variation. Use explicit `none` or `unknown` tokens when a field does not apply; preserve the original unsanitized values in the manifest. GEMC version is selected later by simulation submission.
 
 ## 8. Test the adapter
 

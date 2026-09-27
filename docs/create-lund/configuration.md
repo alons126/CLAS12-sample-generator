@@ -4,7 +4,7 @@ Sample settings use UTF-8 text with one `key = value` per line. Blank lines and 
 
 The two C++ LUND applications pass these settings through the shared `RunConfig` layer. It installs common and source-specific defaults, applies the optional profile and CLI overrides, resolves every `auto` value, validates the complete result, and constructs normalized paths before event processing starts. Uniform-only keys are unavailable to physical conversion and physical-only keys are unavailable to uniform generation.
 
-Target resolution has one deliberate order. `rgm-target` first selects the catalog default geometry, A, Z, and GEMC target variation. Explicit `target`, `A`, `Z`, or `gemc-target-variation` values are then applied as independent overrides. Normal profiles therefore specify only `rgm-target`; derived values still appear in the completed manifest. Compatibility profiles retain an override only when they intentionally differ from the catalog, such as the archived uniform A=1/Z=1 header.
+Target resolution has one deliberate order. `target` selects the nucleus or material and its default A/Z metadata. Beam energy plus that target selects the standard GEMC target variation; the variation supplies the matching vertex geometry. An explicit `gemc-target-variation` replaces the automatic variation and geometry together, as needed for run 15733. Explicit `A` and `Z` values are applied last as independent LUND-header overrides.
 
 `RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `lundfiles/lund-creation-monitoring/lund-creation-log.json`.
 
@@ -18,10 +18,9 @@ Relative paths are interpreted from the caller's working directory. The output p
 | --- | --- | --- |
 | `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
-| `rgm-target` | `Ar40` | Catalog identity that first supplies geometry, A/Z, and GEMC-variation defaults |
-| `target` | `auto` | Optional override of the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) geometry selected by `rgm-target` |
+| `target` | `Ar40` | Target nucleus/material; together with beam energy selects A/Z, GEMC variation, and vertex geometry |
 | `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
-| `gemc-target-variation` | `auto` | Optional GCARD target-variation override applied after the catalog default |
+| `gemc-target-variation` | `auto` | Optional compatible override of the beam-dependent variation and its vertex geometry |
 | `events` | Required | Total number of accepted events to write |
 | `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold; before each physical follow-up file it also sets the minimum remaining-input block aligned with submission `JOB_NEVENTS` |
 | `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused in physical conversion |
@@ -31,7 +30,6 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `event-generator` | `genie-gst` | Physical adapter name; generator and input format are explicit |
 | `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |
 | `tune`, `q2-cut` | `unknown` / energy-based | Generator provenance and naming components |
-| `gemc-version` | `unknown` | Planned detector-simulation version and naming component |
 
 Counts and the split threshold must be integers from 1 through 4294967295. Seeds may range from 0 through 4294967295. A nonzero seed is reproducible; `TRandom3(0)` asks ROOT to choose an automatic seed, so a manifest containing zero cannot reproduce the generated sequence. Production Ar defaults resolve to A=40/Z=18.
 
@@ -70,27 +68,27 @@ All positions below are in cm in the imported GEMC coordinate convention. Target
 | `1-foil-large` | −2.32 |
 | `Ca` | −3.0 |
 
-Unknown geometries fail instead of writing sentinel coordinates. Geometry does not automatically select a matching detector card.
+Geometry is an internal resolved manifest value named `target-geometry`; it is not a command-line option. Unknown geometries fail instead of writing sentinel coordinates.
 
 ## RG-M target catalog
 
-The maintained catalog centralizes the same kind of selection that the legacy submission script performed with target/beam conditionals. Each identity supplies the external geometry key, nuclear metadata, and official default GEMC variation. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
+The maintained catalog centralizes the selection that the legacy conversion wrapper performed with target/beam conditionals. Each target supplies nuclear metadata. The resolved GEMC variation supplies its external geometry key. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
 
-For RG-M production, `Ar40` is valid at the nominal 2, 4, and 6 GeV beam energies. Use `C12-small`, the small 4 mm one-foil target, at 2 GeV; use `C12-large`, the large 6 mm one-foil target, at 4 GeV; and use `C12-four-foil` at 6 GeV. Run 15733 is the exception: it used the small 4 mm one-foil C12 target at 4 GeV. The target note documents the foil sizes, beam use, and corresponding GEMC variations, while the RG-M analysis note records the target cells and beam energies[^sportes-2026-rgm][^rgm-analysis-note]. The catalog does not block an explicit nonproduction pairing, but such a choice must be treated as a controlled study rather than an RG-M production setting.
+For C12, 2.07052 GeV automatically selects the small 4 mm foil, 4.02962 GeV selects the large 6 mm foil, and 5.98636 GeV selects four foils. Run 15733 is the exception: use `--gemc-target-variation rgm_fall2021_C_S` with C12 at 4.02962 GeV. The target note documents the foil sizes, beam use, and corresponding GEMC variations, while the RG-M analysis note records the target cells and beam energies[^sportes-2026-rgm][^rgm-analysis-note].
 
-| Identifier | A | Z | Vertex geometry | GEMC target variation | RG-M beam use |
+| Target | A | Z | Vertex geometry | GEMC target variation | Automatic selection |
 | --- | --- | --- | --- | --- | --- |
-| `H1` | 1 | 1 | `liquid` | `rga_spring2019` | See campaign metadata |
-| `D2` | 2 | 1 | `liquid` | `rgb_fall2019` | See campaign metadata |
-| `He4` | 4 | 2 | `liquid` | `rgm_fall2021_He` | See campaign metadata |
-| `C12-four-foil` | 12 | 6 | `4-foil` | `rgm_fall2021_Cx4` | 6 GeV |
-| `Sn-nat-four-foil` | 119 | 50 | `4-foil` | `rgm_fall2021_Snx4` | See campaign metadata |
-| `Ca40` | 40 | 20 | `Ca` | `rgm_fall2021_Ca` | See campaign metadata |
-| `Ca48` | 48 | 20 | `Ca` | `rgm_fall2021_Ca` | See campaign metadata |
-| `C12-small` | 12 | 6 | `1-foil-small` | `rgm_fall2021_C_S` | 2 GeV; also 4 GeV for run 15733 |
-| `C12-large` | 12 | 6 | `1-foil-large` | `rgm_fall2021_C_L` | 4 GeV except run 15733 |
-| `Ar40` | 40 | 18 | `Ar` | `rgm_fall2021_Ar` | 2, 4, and 6 GeV |
-| `Sn120-large` | 120 | 50 | `1-foil-large` | `rgm_fall2021_Sn_L` | See campaign metadata |
+| `H1` | 1 | 1 | `liquid` | `rga_spring2019` | Any beam energy |
+| `D2` | 2 | 1 | `liquid` | `rgb_fall2019` | Any beam energy |
+| `He4` | 4 | 2 | `liquid` | `rgm_fall2021_He` | Any beam energy |
+| `C12` | 12 | 6 | `1-foil-small` | `rgm_fall2021_C_S` | 2.07052 GeV |
+| `C12` | 12 | 6 | `1-foil-large` | `rgm_fall2021_C_L` | 4.02962 GeV |
+| `C12` | 12 | 6 | `4-foil` | `rgm_fall2021_Cx4` | 5.98636 GeV |
+| `Sn-nat` | 119 | 50 | `4-foil` | `rgm_fall2021_Snx4` | Any beam energy |
+| `Ca40` | 40 | 20 | `Ca` | `rgm_fall2021_Ca` | Any beam energy |
+| `Ca48` | 48 | 20 | `Ca` | `rgm_fall2021_Ca` | Any beam energy |
+| `Ar40` | 40 | 18 | `Ar` | `rgm_fall2021_Ar` | Any beam energy |
+| `Sn120` | 120 | 50 | `1-foil-large` | `rgm_fall2021_Sn_L` | Any beam energy |
 
 ## Manifest
 

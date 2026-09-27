@@ -31,7 +31,7 @@
 add_library(
     LundCore STATIC
     core/config/RunConfig.cpp
-    core/config/RgmTarget.cpp
+    core/config/TargetCatalog.cpp
     core/geometry/TargetGeometry.cpp
     core/lund/Particle.cpp
     core/lund/LundWriter.cpp)

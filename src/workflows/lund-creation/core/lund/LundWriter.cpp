@@ -100,8 +100,9 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     // Beam and target settings control event headers and vertex sampling. Geometry and A/Z stay separate.
     std::cout << env::SYSTEM_COLOR << "\n- Beam and target ----------------------------------------------------------------------------------\n" << env::RESET_COLOR;
     print_value("Beam energy [GeV]", config.get("beam-energy"));
-    print_value("RG-M target", config.get("rgm-target"));
-    print_value("Target geometry", config.get("target"));
+    print_value("Target", config.get("target"));
+    print_value("GEMC target variation", config.get("gemc-target-variation"));
+    print_value("Target geometry", config.get("target-geometry"));
     print_value("Target A", config.get("A"));
     print_value("Target Z", config.get("Z"));
     print_value("Vertex seed", config.get("vertex-seed") + (config.get("vertex-seed") == "0" ? " (ROOT automatic; nonrepeatable)" : ""));
@@ -150,8 +151,6 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         print_value("Input files", config.get("input"));
         print_value("Generator tune", config.get("tune"));
         print_value("Q2-cut label", config.get("q2-cut"));
-        print_value("GEMC version", config.get("gemc-version"));
-        print_value("GEMC target variation", config.get("gemc-target-variation"));
     }
 
     // Print only paths that the selected workflow actually creates or consumes.

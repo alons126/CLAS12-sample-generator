@@ -175,7 +175,7 @@ void generateUniform(const RunConfig& c) {
     TRandom3 random(c.integer("seed")), vertex_random(c.integer("vertex-seed"));
 
     // Use the selected targets.h geometry for every event vertex.
-    TargetGeometry geometry(c.get("target"));
+    TargetGeometry geometry(c.get("target-geometry"));
 
     // The writer safely replaces the chosen run directory, creates it, and stores the file limits.
     LundWriter writer(c, "uniform");

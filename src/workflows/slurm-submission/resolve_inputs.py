@@ -32,7 +32,7 @@ CLI options:
     --execute                     Replace simulation outputs and submit; default: preview.
     --source uniform|physical     Set source when no completed manifest supplies it.
     --beam-energy GeV             Set truth beam energy when no manifest supplies it.
-    --rgm-target ID               Set truth target identity when no manifest supplies it.
+    --target ID                   Set truth target identity when no manifest supplies it.
     --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy channel label.
     --hadron NAME                 Set proton, neutron, pip, or pim for an eh channel.
     --hadron-region FD|CD         Select the eh hadron detector region.
@@ -94,7 +94,7 @@ OPTIONS = {
     'lund-dir': 'Completed RUN/lundfiles directory (repeat on CLI for several samples)',
     'source': 'uniform or physical; normally read from the manifest',
     'beam-energy': 'Truth beam energy in GeV',
-    'rgm-target': 'Truth target identity, independently of detector target variation',
+    'target': 'Truth target identity, independently of detector target variation',
     'channel': 'Uniform 1e, eh, electron-tester, or an explicit legacy/regional label',
     'hadron': 'proton, neutron, pip or pim when channel=eh',
     'hadron-region': 'FD or CD when channel=eh',
@@ -418,20 +418,19 @@ def resolve(lund_directory, explicit, root):
         if run == protected or protected in run.parents:
             raise ValueError(f'Protected output directory: {run}')
 
-    # Read only known settings from the run log. Let submission replace an unknown GEMC version.
+    # Read only sample settings from the run log. GEMC version belongs to submission and is never
+    # inherited from LUND creation, including from older manifests that recorded it.
     manifest = read_manifest(lund_dir)
     inherited = {}
 
     if manifest:
         # Ignore unrelated run-log keys and keep its recorded source type.
         inherited = {key: value for key, value in manifest['config'].items() if key in OPTIONS}
+        inherited.pop('gemc-version', None)
         inherited['source'] = manifest['workflow']
 
-        if inherited.get('gemc-version') in ('unknown', 'none', 'auto', ''):
-            inherited.pop('gemc-version', None)
-
         # Overrides may change simulation choices but cannot relabel existing truth.
-        for key in ('source', 'beam-energy', 'rgm-target', 'prefix', 'event-generator', 'tune', 'q2-cut', 'hadron', 'hadron-region'):
+        for key in ('source', 'beam-energy', 'target', 'prefix', 'event-generator', 'tune', 'q2-cut', 'hadron', 'hadron-region'):
             if key in explicit and key in inherited:
                 same = number(explicit[key], key) == number(inherited[key], key) if key == 'beam-energy' else explicit[key] == inherited[key]
 
@@ -441,7 +440,7 @@ def resolve(lund_directory, explicit, root):
     # Apply setting priority, then require the main sample identity fields.
     values = {'gemc-version': '5.14', 'clear-farm-out': 'false', 'fc-status': '0', **inherited, **explicit}
 
-    for key in ('source', 'beam-energy', 'rgm-target', 'prefix'):
+    for key in ('source', 'beam-energy', 'target', 'prefix'):
         if not values.get(key):
             raise ValueError(f'Missing --{key}; supply it through the manifest, config or CLI')
 
@@ -574,7 +573,7 @@ def resolve(lund_directory, explicit, root):
         raise ValueError('--clear-farm-out true requires --farm-out')
 
     # Build readable labels and the default Slurm job name from checked values.
-    target = token(values['rgm-target'], 'rgm-target')
+    target = token(values['target'], 'target')
     generator = token(values.get('event-generator', 'genie-gst') if source == 'physical' else 'uniform', 'event-generator')
     tune = token(values.get('tune', 'unknown' if source == 'physical' else 'none'), 'tune')
     q2 = token(values.get('q2-cut', 'unknown' if source == 'physical' else 'none'), 'q2-cut')

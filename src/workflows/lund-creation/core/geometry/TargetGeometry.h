@@ -11,13 +11,13 @@
  *   supplies its own random-number generator for vertex sampling.
  *
  * Workflow:
- *   RunConfig chooses a geometry name -> TargetGeometry checks the name without sampling -> sample()
+ *   RunConfig resolves a target variation to a geometry name -> TargetGeometry checks it without sampling -> sample()
  *   uses the run's TRandom3 once per event -> every particle in that event receives the returned vertex.
  *   The mass() function reads supported particle masses from the same external file.
  *
  * Scope:
- *   The geometry name controls only where vertices are sampled. RG-M target identity, A and Z header
- *   values, and the GEMC target variation are separate settings.
+ *   The geometry name controls only where vertices are sampled. RunConfig keeps it consistent with the
+ *   resolved GEMC target variation; A and Z remain separate LUND header metadata.
  */
 
 #pragma once

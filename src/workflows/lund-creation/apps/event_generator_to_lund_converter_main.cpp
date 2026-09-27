@@ -18,8 +18,8 @@
  *   --event-generator genie-gst       Select the GENIE GST input converter (default/currently supported: genie-gst).
  *   --input GST_GLOB                  Required GENIE GST ROOT input file or glob.
  *   --beam-energy GeV                 Set beam energy metadata (default: 5.98636 GeV).
- *   --rgm-target ID                   Select nuclear metadata and automatic geometry (default: Ar40).
- *   --target GEOMETRY                 Override the target-geometry key (default: auto).
+ *   --target ID                       Select the target nucleus/material (default: Ar40).
+ *   --gemc-target-variation NAME      Override its beam-dependent GEMC variation (default: auto).
  *   --A N / --Z N                     Override LUND target metadata (default: auto).
  *   --output DIRECTORY                Required parent directory for the resolved run directory.
  *   --events N                        Required maximum number of accepted events to write.
@@ -30,8 +30,6 @@
  *   --event-generator-version VERSION Record the generator version (default: unknown).
  *   --tune NAME                       Record the generator tune (default: unknown).
  *   --q2-cut NAME                     Record the input selection label (default: auto; no cut is applied here).
- *   --gemc-version VERSION            Record the intended GEMC version (default: unknown).
- *   --gemc-target-variation NAME      Record detector target variation (default: auto).
  *   --help                            Print the complete runtime option summary.
  *
  * Output:

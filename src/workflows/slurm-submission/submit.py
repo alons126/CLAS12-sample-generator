@@ -31,7 +31,7 @@ CLI options (parsed by resolve_inputs.py):
     --execute                     Replace simulation outputs and submit; default: preview.
     --source uniform|physical     Set source when no manifest supplies it.
     --beam-energy GeV             Set truth beam energy when no manifest supplies it.
-    --rgm-target ID               Set truth target identity when no manifest supplies it.
+    --target ID                   Set truth target identity when no manifest supplies it.
     --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy label.
     --hadron NAME                 Set proton, neutron, pip, or pim for eh.
     --hadron-region FD|CD         Select the eh hadron detector region.

@@ -14,12 +14,12 @@
  *   Defaults -> profile -> CLI overrides -> automatic values -> validation -> absolute paths.
  *
  * Accepted options:
- *   Shared: config, beam-energy, rgm-target, target, A, Z, output, events, events-per-file,
- *           seed, vertex-seed, prefix, and gemc-target-variation.
+ *   Shared: config, beam-energy, target, gemc-target-variation, A, Z, output, events,
+ *           events-per-file, seed, vertex-seed, and prefix.
  *   Uniform: channel, hadron, hadron-region, electron-theta-min/max, electron-p-min/max,
  *            electron-momentum, hadron-theta-min/max, hadron-p-min, hadron-p,
  *            hadron-momentum, trigger-theta, and trigger-phi-offset.
- *   Physical: input, event-generator, event-generator-version, tune, q2-cut, and gemc-version.
+ *   Physical: input, event-generator, event-generator-version, tune, and q2-cut.
  *   Each option uses `--key value`. The application handles `--help` before parse(). A profile uses the
  *   same names without `--` and writes them as `key = value`.
  *
@@ -42,7 +42,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "core/config/RgmTarget.h"
+#include "core/config/TargetCatalog.h"
 #include "core/geometry/TargetGeometry.h"
 
 namespace samples {
@@ -179,8 +179,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // masses come from targets.h and cannot be set here.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
-                 {"rgm-target", "Ar40"},
-                 {"target", "auto"},
+                 {"target", "Ar40"},
                  {"A", "auto"},
                  {"Z", "auto"},
                  {"gemc-target-variation", "auto"},
@@ -214,7 +213,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     } else {
         // Physical mode reads existing event-generator truth and records where it came from. It does not
         // run GENIE. The current adapter reads GENIE GST input.
-        c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "unknown"}, {"q2-cut", "auto"}, {"gemc-version", "unknown"}});
+        c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "unknown"}, {"q2-cut", "auto"}});
     }
 
     // Use the same assignment check for profiles and command-line values.
@@ -287,24 +286,22 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // Apply command-line values last. A command-line value of `auto` asks the code below to calculate it.
     for (const auto& [k, v] : overrides) { assign(k, v); }
 
-    // Start with all defaults for the selected RG-M target. Save any explicit geometry, A, Z, or GEMC
-    // variation first so each one can replace its catalog default afterward.
-    const std::string target_override = c.get("target");
+    // Resolve one target identity into nuclear metadata, the standard detector variation for this beam,
+    // and the matching protected targets.h geometry. An explicit detector variation handles exceptional
+    // configurations such as run 15733 and changes the vertex geometry with it.
     const std::string A_override = c.get("A");
     const std::string Z_override = c.get("Z");
     const std::string variation_override = c.get("gemc-target-variation");
-    const auto& rgm_target = findRgmTarget(c.get("rgm-target"));
-    c.values_["target"] = rgm_target.geometry;
-    c.values_["A"] = std::to_string(rgm_target.A);
-    c.values_["Z"] = std::to_string(rgm_target.Z);
-    c.values_["gemc-target-variation"] = rgm_target.gemc_variation;
+    const auto& target = findTarget(c.get("target"));
+    const auto& variation = resolveTargetVariation(target, c.number("beam-energy"), variation_override);
+    c.values_["A"] = std::to_string(target.A);
+    c.values_["Z"] = std::to_string(target.Z);
+    c.values_["gemc-target-variation"] = variation.identifier;
+    c.values_["target-geometry"] = variation.geometry;
 
-    // Apply these four overrides separately. A normal profile needs only `rgm-target`, while a special
-    // study can replace one field without changing the others.
-    if (target_override != "auto") { c.values_["target"] = target_override; }
+    // Nuclear header overrides remain independent because physical input can require unusual metadata.
     if (A_override != "auto") { c.values_["A"] = A_override; }
     if (Z_override != "auto") { c.values_["Z"] = Z_override; }
-    if (variation_override != "auto") { c.values_["gemc-target-variation"] = variation_override; }
 
     if (uniform) {
         // Set the default angle limits for the particle and detector region. CD pions stop at 140
@@ -337,7 +334,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
             prefix << "Uniform_sample_" << uniformSampleLabel(c) << '_' << beamMeV(c.number("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         } else {
-            c.values_["prefix"] = pathToken(c.get("rgm-target")) + '_' + pathToken(c.get("event-generator")) + '_' + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
+            c.values_["prefix"] = pathToken(c.get("target")) + '_' + pathToken(c.get("event-generator")) + '_' + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
         }
     }
 
@@ -366,11 +363,11 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         directory << "Uniform_sample_" << uniformSampleLabel(c) << '_' << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     } else {
-        // Put the physical source and simulation details in the directory name in the documented order.
+        // Put the physical source details in the directory name in the documented order.
         // Make each value path-safe here, but keep its original text in values_ for the manifest.
         std::ostringstream directory;
         directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << '-' << pathToken(c.get("event-generator-version")) << "__"
-                  << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV_GEMC-" << pathToken(c.get("gemc-version"));
+                  << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     }
 
@@ -457,7 +454,7 @@ void RunConfig::validate(bool uniform) const {
 
 #pragma region /* Vertex contract */
     // Every event samples the selected target geometry. There is no fixed-vertex mode.
-    TargetGeometry::validate(get("target"));
+    TargetGeometry::validate(get("target-geometry"));
 #pragma endregion
 
 #pragma region /* Source-specific contract */
@@ -469,7 +466,7 @@ void RunConfig::validate(bool uniform) const {
 
         // These values are used in the physical directory name and manifest. `unknown` and `none` are
         // allowed, but an empty value is not.
-        for (auto k : {"event-generator-version", "tune", "q2-cut", "gemc-version", "gemc-target-variation"}) {
+        for (auto k : {"event-generator-version", "tune", "q2-cut", "gemc-target-variation"}) {
             if (get(k).empty()) { throw std::runtime_error(std::string(k) + " must not be empty"); }
         }
 
@@ -561,7 +558,7 @@ std::string help(bool uniform) {
 
     // List the settings shared by both LUND sources.
     result +=
-        "Settings: --config FILE, --beam-energy GeV, --rgm-target ID, --target GEOMETRY, --A N, --Z N,\n"
+        "Settings: --config FILE, --beam-energy GeV, --target ID, --gemc-target-variation NAME, --A N, --Z N,\n"
         "--events N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
         "Every event samples the selected target geometry.\n"
         "Files use key = value; CLI values override file settings. Seed 0 requests ROOT automatic, nonrepeatable seeding.\n"
@@ -582,12 +579,12 @@ std::string help(bool uniform) {
         // List the physical-only GENIE GST and source-description settings.
         result +=
             "Physical: --event-generator genie-gst (default), --event-generator-version VERSION, --tune NAME,\n"
-            "--q2-cut NAME, --gemc-version VERSION, --gemc-target-variation NAME.\n"
+            "--q2-cut NAME.\n"
             "For physical input, --events-per-file also sets the minimum inclusive input block required before a follow-up file starts, aligned with JOB_NEVENTS.\n";
     }
 
     // Read supported names from the target catalog instead of copying the list here.
-    result += "RG-M targets: " + rgmTargetNames() + "\n";
+    result += "Targets: " + targetNames() + "\n";
 
     return result;
 }

@@ -84,7 +84,7 @@ void convertGenieGST(const RunConfig& c) {
 
     // Geometry controls only the vertex position. A and Z are separate LUND header values. Construct the
     // writer only after the GST checks pass.
-    TargetGeometry geometry(c.get("target"));
+    TargetGeometry geometry(c.get("target-geometry"));
     const double beam = c.number("beam-energy");
     const int A = static_cast<int>(c.integer("A")), Z = static_cast<int>(c.integer("Z"));
     LundWriter writer(c, "physical");
