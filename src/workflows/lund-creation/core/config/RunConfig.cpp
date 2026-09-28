@@ -396,7 +396,8 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     if (!uniform && c.get("tune") == "auto") { c.values_["tune"] = discoverGenieTune(c.get("input")); }
 
     // Separate each major identity group with a double underscore. Uniform labels already contain the
-    // complete particle/region identity. Physical prefixes include a known generator version and always
+    // complete particle/region identity. A known generator version joins the generator with a hyphen
+    // because both values describe the same generator identity. Physical prefixes always
     // retain the generator tune and Q2-cut label so copied LUND files remain identifiable outside their
     // provenance directory. The run log records the version even when its value is `unknown`.
     if (c.get("prefix") == "auto") {
@@ -407,7 +408,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         } else {
             std::ostringstream prefix;
             prefix << pathToken(c.get("target")) << "__" << pathToken(c.get("event-generator"));
-            if (c.get("event-generator-version") != "unknown") { prefix << "__" << pathToken(c.get("event-generator-version")); }
+            if (c.get("event-generator-version") != "unknown") { prefix << "-" << pathToken(c.get("event-generator-version")); }
             prefix << "__" << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         }
@@ -444,9 +445,10 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         const auto selection_and_beam = pathToken(c.get("q2-cut")) + "__" + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / pathToken(c.get("target")) / generator_and_tune / selection_and_beam).string();
     } else {
-        // Put every physical metadata value in one directory, separated by double underscores.
+        // Put every physical metadata group in one directory. Join generator and version with a hyphen,
+        // then separate that combined identity from the other groups with double underscores.
         std::ostringstream directory;
-        directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << "__" << pathToken(c.get("event-generator-version")) << "__"
+        directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << "-" << pathToken(c.get("event-generator-version")) << "__"
                   << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     }

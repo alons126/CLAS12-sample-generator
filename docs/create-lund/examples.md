@@ -90,7 +90,7 @@ source run.csh \
   --workflow create-lund \
   --source physical \
   --event-generator genie-gst \
-  --event-generator-version 3.2.2 \
+  --event-generator-version 3.6.2 \
   --tune GEM21_11a_00_000 \
   --q2-cut Q2_0.40 \
   --target C12 \
