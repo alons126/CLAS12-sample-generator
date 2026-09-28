@@ -385,10 +385,19 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         }
     }
 
-    // Use the established Q2-cut label for each known RG-M beam. Other energies use `none`.
-    if (!uniform && c.get("q2-cut") == "auto") {
-        const double e = c.number("beam-energy");
-        c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2_0.02" : std::abs(e - 4.02962) < 1e-6 ? "Q2_0.25" : std::abs(e - 5.98636) < 1e-6 ? "Q2_0.40" : "none";
+    // Use the established Q2-cut label for each known RG-M beam. Other energies use `none`. Normalize
+    // the retired underscore spellings so an older profile cannot recreate obsolete output names.
+    if (!uniform) {
+        if (c.get("q2-cut") == "auto") {
+            const double e = c.number("beam-energy");
+            c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2-0.02" : std::abs(e - 4.02962) < 1e-6 ? "Q2-0.25" : std::abs(e - 5.98636) < 1e-6 ? "Q2-0.40" : "none";
+        } else if (c.get("q2-cut") == "Q2_0_02" || c.get("q2-cut") == "Q2_0.02") {
+            c.values_["q2-cut"] = "Q2-0.02";
+        } else if (c.get("q2-cut") == "Q2_0_25" || c.get("q2-cut") == "Q2_0.25") {
+            c.values_["q2-cut"] = "Q2-0.25";
+        } else if (c.get("q2-cut") == "Q2_0_40" || c.get("q2-cut") == "Q2_0.40") {
+            c.values_["q2-cut"] = "Q2-0.40";
+        }
     }
 
     // Standard GENIE productions record their tune beside the master-routine directory. Missing or

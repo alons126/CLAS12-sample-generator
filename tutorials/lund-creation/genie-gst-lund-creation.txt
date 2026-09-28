@@ -23,8 +23,8 @@ source run.csh \
   --output-layout nested \
   --target C12 \
   --beam-energy 2.07052 \
-  --q2-cut Q2_0.02 \
-  --input '/path/to/C12/2070MeV_Q2_0.02/master-routine_validation_01-eScattering/*.root' \
+  --q2-cut Q2-0.02 \
+  --input '/path/to/C12/2070MeV_Q2-0.02/master-routine_validation_01-eScattering/*.root' \
   --events 1000000 \
   --output /path/to/physical-genie-gst-output
 
@@ -41,8 +41,8 @@ source run.csh \
   --output-layout nested \
   --target C12 \
   --beam-energy 4.02962 \
-  --q2-cut Q2_0.25 \
-  --input '/path/to/C12/4029MeV_Q2_0.25/master-routine_validation_01-eScattering/*.root' \
+  --q2-cut Q2-0.25 \
+  --input '/path/to/C12/4029MeV_Q2-0.25/master-routine_validation_01-eScattering/*.root' \
   --events 1000000 \
   --output /path/to/physical-genie-gst-output
 
@@ -59,8 +59,8 @@ source run.csh \
   --output-layout nested \
   --target C12 \
   --beam-energy 5.98636 \
-  --q2-cut Q2_0.40 \
-  --input '/path/to/C12/5986MeV_Q2_0.40/master-routine_validation_01-eScattering/*.root' \
+  --q2-cut Q2-0.40 \
+  --input '/path/to/C12/5986MeV_Q2-0.40/master-routine_validation_01-eScattering/*.root' \
   --events 1000000 \
   --output /path/to/physical-genie-gst-output
 
@@ -77,7 +77,7 @@ source run.csh \
   --target C12 \
   --beam-energy 4.02962 \
   --gemc-target-variation rgm_fall2021_C_S \
-  --q2-cut Q2_0.25 \
+  --q2-cut Q2-0.25 \
   --input '/path/to/C12/run-15733/master-routine_validation_01-eScattering/*.root' \
   --events 1000000 \
   --output /path/to/run-15733-physical-genie-gst-output
