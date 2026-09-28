@@ -587,7 +587,8 @@ def resolve(lund_directory, explicit, root):
     q2 = token(values.get('q2-cut', 'unknown' if source == 'physical' else 'none'), 'q2-cut')
     beam = f'{mev}MeV'
     fc = '_wFC' if values['fc-status'] == '1' else ''
-    default_job = f'Uniform_{channel}_sample_{beam}' if source == 'uniform' else f'{target}_{generator}_{tune}_{beam}_{q2}{fc}_GEMC{version}'
+    job_fc = '__wFC' if values['fc-status'] == '1' else ''
+    default_job = f'Uniform__{channel}__{beam}' if source == 'uniform' else f'{target}__{generator}__{tune}__{q2}__{beam}{job_fc}__GEMC{version}'
     job = token(values.get('job-name', default_job), 'job-name')
 
     # Return only values used by submit.py and the external worker. OUTPATH always uses the local run.

@@ -13,7 +13,7 @@ Only the sample monitoring and filename-prefix sections differ:
 - `SAMPLE_FILE_PREFIX` supplies the complete prefix instead of hardcoding either the uniform or GENIE naming formula.
 - Target, Q², beam, GEMC data directory and uniform channel monitoring are retained together. Unset optional labels print empty values, as in the originals.
 
-For uniform samples, a prefix can be `Uniform_sample__enFD__2070MeV`. For physical samples, it can be `C12__genie-gst__GEM21_11a_00_000__Q2_0_02__2070MeV`. Other generators supply their own prefix without adding branches to the script.
+For uniform samples, a prefix can be `Uniform__enFD__2070MeV`. For physical samples, it can be `C12__genie-gst__GEM21_11a_00_000__Q2_0_02__2070MeV`. Double underscores separate metadata values; hyphens inside one value, such as `genie-gst`, remain unchanged. Other generators supply their own prefix without adding branches to the script.
 
 ## What remains the same
 

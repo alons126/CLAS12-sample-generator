@@ -8,7 +8,7 @@ build/debug/apps/uniform-lund-creator \
   --events 100 --output runs
 ```
 
-Uniform generation uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. A run is written below the supplied parent as `Uniform_sample_<label>_<beam MeV>MeV/`; its automatic LUND filename prefix is `Uniform_sample__<label>__<beam-MeV>MeV`.
+Uniform generation uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. Both the run-directory name and automatic LUND filename prefix use `Uniform__<label>__<beam-MeV>MeV`.
 
 For example, a central-detector pi+ sample is:
 

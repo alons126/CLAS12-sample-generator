@@ -20,7 +20,7 @@ source run.csh \
   --output runs/quickstart
 ```
 
-The completed run is `runs/quickstart/Uniform_sample_1e_5986MeV/`. Generation replaces that resolved run directory if it already exists.
+The completed run is `runs/quickstart/Uniform__1e__5986MeV/`. Generation replaces that resolved run directory if it already exists.
 
 ## Convert existing physical truth
 

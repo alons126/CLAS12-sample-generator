@@ -45,7 +45,7 @@ source run.csh --workflow create-lund --source uniform \
   --output OUTPUT_PARENT
 ```
 
-The three commands can share one output parent because the maintained writer creates distinct `Uniform_sample_1e_2070MeV/`, `Uniform_sample_epFD_2070MeV/`, and `Uniform_sample_enFD_2070MeV/` run directories below it. The old launcher instead rewrote `OutPut/` to sibling `OutPut_1e/`, `OutPut_ep/`, and `OutPut_en/` directories. The LUND filename prefixes above retain the archived names. Use a smaller explicit `--events` value for a smoke test.
+The three commands can share one output parent because the maintained writer creates distinct `Uniform__1e__2070MeV/`, `Uniform__epFD__2070MeV/`, and `Uniform__enFD__2070MeV/` run directories below it. The old launcher instead rewrote `OutPut/` to sibling `OutPut_1e/`, `OutPut_ep/`, and `OutPut_en/` directories. The explicit LUND filename prefixes above retain the archived names only for historical comparison. Use a smaller explicit `--events` value for a smoke test.
 
 The commented 4.02962 and 5.98636 GeV calls use the same commands with `--beam-energy 4.02962` or `5.98636`, the hadron upper bound following beam energy automatically, and prefixes ending in `4029MeV` or `5986MeV`. Automatic trigger offsets resolve to the same legacy 7° and 5° prescriptions; the active 2.07052 GeV commands resolve to 16°.
 

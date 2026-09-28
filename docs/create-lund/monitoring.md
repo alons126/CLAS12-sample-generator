@@ -53,7 +53,7 @@ Every uniform generation run renders the same histograms stored in the ROOT file
 
 ```text
 lundfiles/lund-creation-monitoring/MonitoringPlotsPath/
-├── Uniform_<sample-label>_plots_<beam>MeV.pdf
+├── Uniform__<sample-label>__<beam>MeV_plots.pdf
 ├── 1_<histogram-name>.png
 ├── 2_<histogram-name>.png
 └── ...

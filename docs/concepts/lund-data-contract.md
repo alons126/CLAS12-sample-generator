@@ -49,7 +49,7 @@ The writer rejects empty events and non-finite particle energy/vertex data. GENI
 
 The single maintained format uses established whitespace and five decimal places for particle momenta, energy, mass, and vertices. Uniform event IDs start at zero and remain continuous across split files, matching the physical converter's use of one input-wide index rather than restarting at each file. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
 
-Uniform prefixes are derived as `Uniform_sample__<resolved-label>__<beam-MeV>MeV`. Physical prefixes are derived as `<target>__<event-generator>__<tune>__<Q2-cut>__<beam-MeV>MeV`. `--prefix` remains an explicit override for a downstream naming requirement. Output directories are explicit and never inferred from the current machine.
+Uniform prefixes and run-directory names are derived as `Uniform__<resolved-label>__<beam-MeV>MeV`. Physical prefixes are derived as `<target>__<event-generator>__<tune>__<Q2-cut>__<beam-MeV>MeV`. Nested physical directories use `OUTPUT/<target>/<event-generator>__<tune>/<Q2-cut>__<beam-MeV>MeV`; the metadata layout also uses `__` between every metadata value. Hyphens remain valid inside one value, as in `genie-gst`. `--prefix` remains an explicit override for a downstream naming requirement. Output paths are explicit and never inferred from the current machine.
 
 ## 6. Mass convention
 

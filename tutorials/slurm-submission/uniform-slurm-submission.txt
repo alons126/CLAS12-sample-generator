@@ -13,19 +13,19 @@
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_1e_2070MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__1e__2070MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_1e_4029MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__1e__4029MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_1e_5986MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__1e__5986MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -35,19 +35,19 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_enFD_2070MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__enFD__2070MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_enFD_4029MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__enFD__4029MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_enFD_5986MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__enFD__5986MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -57,18 +57,18 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_epFD_2070MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__epFD__2070MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_epFD_4029MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__epFD__4029MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
 source run.csh \
   --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform_sample_epFD_5986MeV/lundfiles \
+  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__epFD__5986MeV/lundfiles \
   --num-jobs 5 \
   --execute

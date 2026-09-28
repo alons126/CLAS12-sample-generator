@@ -66,23 +66,6 @@ std::string sampleLabel(const RunConfig& c) {
 }
 #pragma endregion
 
-// legacyBeamLabel -------------------------------------------------------------------------------------------------------------------------------------------------------
-
-#pragma region /* legacyBeamLabel */
-/**
- * @brief Return the established monitoring filename text for one beam energy.
- * @param beam Configured beam energy in GeV.
- * @return The usual MeV label for known RG-M energies, or a rounded MeV label otherwise.
- */
-std::string legacyBeamLabel(double beam) {
-    if (std::abs(beam - 2.07052) < 1e-6) { return "2070MeV"; }
-    if (std::abs(beam - 4.02962) < 1e-6) { return "4029MeV"; }
-    if (std::abs(beam - 5.98636) < 1e-6) { return "5986MeV"; }
-
-    return std::to_string(static_cast<long long>(std::llround(beam * 1000))) + "MeV";
-}
-#pragma endregion
-
 // momentum --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma region /* momentum */
@@ -258,8 +241,7 @@ void generateUniform(const RunConfig& c) {
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
     const auto monitoring_root = diagnostics / (c.get("prefix") + "_monitoring_plots.root");
     const auto plot_directory = diagnostics / "MonitoringPlotsPath";
-    const auto plot_channel = sampleLabel(c);
-    const auto pdf_name = "Uniform_" + plot_channel + "_plots_" + legacyBeamLabel(beam) + ".pdf";
+    const auto pdf_name = c.get("prefix") + "_plots.pdf";
     monitoring.save(monitoring_root, plot_directory, pdf_name);
 
     // Uniform generation creates and writes the same number of events. finish() closes the files and

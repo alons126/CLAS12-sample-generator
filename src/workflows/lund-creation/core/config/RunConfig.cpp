@@ -401,7 +401,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     if (c.get("prefix") == "auto") {
         if (uniform) {
             std::ostringstream prefix;
-            prefix << "Uniform_sample__" << uniformSampleLabel(c) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
+            prefix << "Uniform__" << uniformSampleLabel(c) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         } else {
             c.values_["prefix"] = pathToken(c.get("target")) + "__" + pathToken(c.get("event-generator")) + "__" + pathToken(c.get("tune")) + "__" + pathToken(c.get("q2-cut")) + "__" +
@@ -428,21 +428,21 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     if (!uniform && c.get("input").find("://") == std::string::npos) { c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string(); }
 
     if (uniform) {
-        // Put uniform output in a channel-and-beam directory below the selected parent. A width of four
-        // produces labels such as 2070, 4029, and 5986 without cutting off larger values.
+        // Put uniform output in a channel-and-beam directory below the selected parent. Use the same
+        // metadata convention as the automatic prefix so copied files and their run directory agree.
         std::ostringstream directory;
-        directory << "Uniform_sample_" << uniformSampleLabel(c) << '_' << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
+        directory << "Uniform__" << uniformSampleLabel(c) << "__" << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     } else if (c.get("output-layout") == "nested") {
-        // Group physical output by target, generator/tune, and selection/beam. Keep each original value
-        // in the manifest while using a path-safe form for its directory component.
-        const auto generator_and_tune = pathToken(c.get("event-generator")) + '-' + pathToken(c.get("tune"));
-        const auto selection_and_beam = pathToken(c.get("q2-cut")) + '-' + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
+        // Group physical output by target, generator/tune, and selection/beam. Double underscores
+        // separate metadata values; hyphens remain valid inside values such as `genie-gst`.
+        const auto generator_and_tune = pathToken(c.get("event-generator")) + "__" + pathToken(c.get("tune"));
+        const auto selection_and_beam = pathToken(c.get("q2-cut")) + "__" + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / pathToken(c.get("target")) / generator_and_tune / selection_and_beam).string();
     } else {
-        // Retain the previous single-directory metadata convention when explicitly requested.
+        // Put every physical metadata value in one directory, separated by double underscores.
         std::ostringstream directory;
-        directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << '-' << pathToken(c.get("event-generator-version")) << "__"
+        directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << "__" << pathToken(c.get("event-generator-version")) << "__"
                   << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
         c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
     }

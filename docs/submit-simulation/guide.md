@@ -21,7 +21,7 @@ Creation may run locally or on the server. Submission runs in a Python child of 
 ## Submit workflow-1 output
 
 ```tcsh
-source run.csh --workflow submit --lund-dir /shared/Uniform_sample_enFD_2070MeV/lundfiles
+source run.csh --workflow submit --lund-dir /shared/Uniform__enFD__2070MeV/lundfiles
 ```
 
 Without `--execute`, this previews the resolved setup and exact `sbatch` command. The output-action report starts with the `OUTPATH` check, then places each `mchipo/` and `reconhipo/` check directly beside its planned action. Internally, both child paths are inspected before either can change. Preview preserves an existing directory and all its contents, states that execution would delete and recreate it, and creates and verifies either directory when missing. The multiline `sbatch` display uses the system color for option names and normal white for option values. Preview does not call `sbatch`, clear farm logs, or replace existing output. Add `--execute` to clear and recreate both simulation output directories and submit:
@@ -75,6 +75,8 @@ source run.csh --workflow submit --lund-dir /shared/sample/lundfiles \
 | `--clear-farm-out true|false`, `--farm-out DIRECTORY` | Optional log cleanup, off by default. Setting it to `true` requires the exact cleanup directory; omit it to preserve existing logs. |
 | `--fc-status 0|1` | Legacy physical naming/report label only; applies no cut |
 
+Default uniform job names use `Uniform__<label>__<beam-MeV>MeV`. Default physical job names use `<target>__<event-generator>__<tune>__<Q2-cut>__<beam-MeV>MeV__GEMC<version>`. Hyphens remain valid inside one metadata value.
+
 Truth metadata overrides must agree with the manifest: source, beam, target identity, particle content, prefix and physical provenance cannot silently be relabeled. Detector variation and simulation policy may be changed independently. File paths, counts and totals are validated; incomplete `.json.tmp` output is rejected. No manifest is rewritten. Each selected sample must have a distinct output directory, and resolution of all samples finishes before any setup/submission begins.
 
 ## LUND without a manifest
@@ -85,7 +87,7 @@ Supply missing metadata through a config or CLI. For uniform input, for example:
 source run.csh --workflow submit --lund-dir /shared/archive/lundfiles \
   --source uniform --beam-energy 2.07052 --target Ar40 \
   --channel eh --hadron neutron --hadron-region FD \
-  --prefix Uniform_en_sample_2070MeV --events-per-job 10000 \
+  --prefix Uniform__enFD__2070MeV --events-per-job 10000 \
   --gemc-target-variation rgm_fall2021_Ar
 ```
 

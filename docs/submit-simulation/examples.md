@@ -7,7 +7,7 @@ Run these commands on ifarm from a csh/tcsh login shell. Preview is the default 
 ```tcsh
 source run.csh \
   --workflow submit \
-  --lund-dir /shared/runs/Uniform_sample_1e_5986MeV/lundfiles
+  --lund-dir /shared/runs/Uniform__1e__5986MeV/lundfiles
 ```
 
 Preview first inspects both `mchipo/` and `reconhipo/` paths. It preserves files in an existing directory and says that `--execute` would delete and recreate it. It creates and verifies either directory when missing. It does not call `sbatch`.
@@ -17,7 +17,7 @@ Preview first inspects both `mchipo/` and `reconhipo/` paths. It preserves files
 ```tcsh
 source run.csh \
   --workflow submit \
-  --lund-dir /shared/runs/Uniform_sample_1e_5986MeV/lundfiles \
+  --lund-dir /shared/runs/Uniform__1e__5986MeV/lundfiles \
   --num-jobs 5 \
   --execute
 ```
@@ -29,7 +29,7 @@ source run.csh \
 ```tcsh
 source run.csh \
   --workflow submit \
-  --lund-dir /shared/runs/Uniform_sample_enFD_4029MeV/lundfiles \
+  --lund-dir /shared/runs/Uniform__enFD__4029MeV/lundfiles \
   --num-jobs 3 \
   --events-per-job 5000
 ```
@@ -41,9 +41,9 @@ Without the override, the largest selected manifest file count becomes the share
 ```tcsh
 source run.csh \
   --workflow submit \
-  --lund-dir /shared/runs/Uniform_sample_1e_2070MeV/lundfiles \
-  --lund-dir /shared/runs/Uniform_sample_epFD_2070MeV/lundfiles \
-  --lund-dir /shared/runs/Uniform_sample_enFD_2070MeV/lundfiles \
+  --lund-dir /shared/runs/Uniform__1e__2070MeV/lundfiles \
+  --lund-dir /shared/runs/Uniform__epFD__2070MeV/lundfiles \
+  --lund-dir /shared/runs/Uniform__enFD__2070MeV/lundfiles \
   --num-jobs 2
 ```
 
