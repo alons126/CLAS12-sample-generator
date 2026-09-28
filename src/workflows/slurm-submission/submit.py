@@ -715,7 +715,8 @@ def clear_farm(values, root, execute, report, cleared):
                 if not entry.is_symlink() and entry.is_file():
                     entry.unlink()
         else:
-            report.text(f'PREVIEW: would clear files in {farm}')
+            report.text('{INFO}PREVIEW:{RESET} would clear files in:')
+            report.text(f'{farm}')
 
         cleared = True
 
