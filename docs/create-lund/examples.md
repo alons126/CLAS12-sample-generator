@@ -92,7 +92,7 @@ source run.csh \
   --event-generator genie-gst \
   --event-generator-version 3.2.2 \
   --tune GEM21_11a_00_000 \
-  --q2-cut Q2_0_40 \
+  --q2-cut Q2_0.40 \
   --target C12 \
   --beam-energy 5.98636 \
   --input '/shared/truth/C12/GEM21_11a_00_000/*.root' \

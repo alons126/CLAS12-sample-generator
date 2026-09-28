@@ -69,7 +69,7 @@ class UniformMonitoring {
 
     /**
      * @brief Write one ROOT file and render the same histograms for the completed uniform run.
-     * @param path Destination `<prefix>_monitoring_plots.root` file.
+     * @param path Destination `<prefix>__monitoring_plots.root` file.
      * @param plot_directory Destination directory for rendered files.
      * @param pdf_name Multipage PDF filename inside plot_directory.
      * @throws std::runtime_error If ROOT cannot create or write an output. Directory errors also propagate.

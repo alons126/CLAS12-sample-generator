@@ -388,7 +388,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     // Use the established Q2-cut label for each known RG-M beam. Other energies use `none`.
     if (!uniform && c.get("q2-cut") == "auto") {
         const double e = c.number("beam-energy");
-        c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2_0_02" : std::abs(e - 4.02962) < 1e-6 ? "Q2_0_25" : std::abs(e - 5.98636) < 1e-6 ? "Q2_0_40" : "none";
+        c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2_0.02" : std::abs(e - 4.02962) < 1e-6 ? "Q2_0.25" : std::abs(e - 5.98636) < 1e-6 ? "Q2_0.40" : "none";
     }
 
     // Standard GENIE productions record their tune beside the master-routine directory. Missing or
@@ -396,16 +396,20 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     if (!uniform && c.get("tune") == "auto") { c.values_["tune"] = discoverGenieTune(c.get("input")); }
 
     // Separate each major identity group with a double underscore. Uniform labels already contain the
-    // complete particle/region identity. Physical prefixes retain the generator tune and Q2-cut label so
-    // copied LUND files remain identifiable outside their provenance directory.
+    // complete particle/region identity. Physical prefixes include a known generator version and always
+    // retain the generator tune and Q2-cut label so copied LUND files remain identifiable outside their
+    // provenance directory. The run log records the version even when its value is `unknown`.
     if (c.get("prefix") == "auto") {
         if (uniform) {
             std::ostringstream prefix;
             prefix << "Uniform__" << uniformSampleLabel(c) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         } else {
-            c.values_["prefix"] = pathToken(c.get("target")) + "__" + pathToken(c.get("event-generator")) + "__" + pathToken(c.get("tune")) + "__" + pathToken(c.get("q2-cut")) + "__" +
-                                  std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
+            std::ostringstream prefix;
+            prefix << pathToken(c.get("target")) << "__" << pathToken(c.get("event-generator"));
+            if (c.get("event-generator-version") != "unknown") { prefix << "__" << pathToken(c.get("event-generator-version")); }
+            prefix << "__" << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
+            c.values_["prefix"] = prefix.str();
         }
     }
 

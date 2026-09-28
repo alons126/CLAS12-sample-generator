@@ -9,7 +9,7 @@ Software behavior and detector-level scientific validation are separate responsi
 - **Mass source:** electron, proton, neutron, and charged-pion masses come from external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); photons use exact zero.
 - **Neutral pions:** the maintained converter requires neutral pions to be decayed during upstream GENIE production and consumes the resulting photons. Residual PDG 111 entries are skipped because the converter does not invent missing decay kinematics.
 - **Production sampling:** the 1e and charged-hadron mixtures use the configured uniform-p/uniform-1/p prescription. Neutrons use uniform momentum, including the configured zero-to-beam range.
-- **Diagnostics:** monitoring is uniform-only and is stored once in `<prefix>_monitoring_plots.root`. Physical conversion creates no monitoring histograms.
+- **Diagnostics:** monitoring is uniform-only and is stored once in `<prefix>__monitoring_plots.root`; its combined PDF is `<prefix>__plots.pdf`. Physical conversion creates no monitoring histograms.
 - **Metadata:** checked-in Ar profiles use A=40 and Z=18. Geometry, A, and Z remain independently configurable for unusual studies.
 
 ## Production validation

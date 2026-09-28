@@ -15,7 +15,7 @@
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0_02__2070MeV/lundfiles \
+  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0.02__2070MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -25,7 +25,7 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0_25__4029MeV/lundfiles \
+  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0.25__4029MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -35,7 +35,7 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0_40__5986MeV/lundfiles \
+  --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0.40__5986MeV/lundfiles \
   --num-jobs 5 \
   --execute
 
@@ -45,6 +45,6 @@ source run.csh \
 
 source run.csh \
   --workflow submit \
-  --lund-dir /path/to/run-15733-physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0_25__4029MeV/lundfiles \
+  --lund-dir /path/to/run-15733-physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2_0.25__4029MeV/lundfiles \
   --num-jobs 5 \
   --execute

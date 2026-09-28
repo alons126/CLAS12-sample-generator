@@ -239,9 +239,9 @@ void generateUniform(const RunConfig& c) {
     // Save the ROOT, PDF, and PNG plots before writing the completed run log.
     const auto output = std::filesystem::path(c.get("output"));
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
-    const auto monitoring_root = diagnostics / (c.get("prefix") + "_monitoring_plots.root");
+    const auto monitoring_root = diagnostics / (c.get("prefix") + "__monitoring_plots.root");
     const auto plot_directory = diagnostics / "MonitoringPlotsPath";
-    const auto pdf_name = c.get("prefix") + "_plots.pdf";
+    const auto pdf_name = c.get("prefix") + "__plots.pdf";
     monitoring.save(monitoring_root, plot_directory, pdf_name);
 
     // Uniform generation creates and writes the same number of events. finish() closes the files and

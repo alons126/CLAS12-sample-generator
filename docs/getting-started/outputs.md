@@ -9,8 +9,10 @@ RUN/
 │   ├── PREFIX_2.txt
 │   └── lund-creation-monitoring/
 │       ├── lund-creation-log.json
-│       ├── PREFIX_monitoring_plots.root   # uniform only
+│       ├── PREFIX__monitoring_plots.root  # uniform only
 │       └── MonitoringPlotsPath/           # uniform only
+│           ├── PREFIX__plots.pdf
+│           └── INDEX_HISTOGRAM.png
 ├── mchipo/                                # prepared by either LUND source or submission
 └── reconhipo/                             # prepared by either LUND source or submission
     ├── slurm-submission-log.json          # resolved submission, Git, and input provenance

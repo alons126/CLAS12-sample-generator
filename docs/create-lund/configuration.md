@@ -28,9 +28,9 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
 | `event-generator` | `genie-gst` | Physical adapter name; generator and input format are explicit |
-| `event-generator-version` | `unknown` | Explicit provenance and physical-run naming component |
+| `event-generator-version` | `unknown` | Always-recorded provenance; included in an automatic physical filename prefix only when known |
 | `tune` | `auto` | Read `TUNE` from `input_options.txt` beside the standard production directory; otherwise `unknown` |
-| `q2-cut` | Energy-based | Generator provenance and naming component; no cut is applied during conversion |
+| `q2-cut` | Energy-based | Generator provenance and naming component: `Q2_0.02`, `Q2_0.25`, or `Q2_0.40` for the three RG-M beams; no cut is applied during conversion |
 | `output-layout` | `nested` | Physical only: `nested` groups target, generator/tune, and selection/beam directories; `metadata` uses one directory; both use `__` between metadata values |
 
 Counts and the split threshold must be integers from 1 through 4294967295. Seeds may range from 0 through 4294967295. A nonzero seed is reproducible; `TRandom3(0)` asks ROOT to choose an automatic seed, so a manifest containing zero cannot reproduce the generated sequence. Production Ar defaults resolve to A=40/Z=18.

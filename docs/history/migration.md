@@ -33,7 +33,7 @@ All production channels keep the original flat-theta and azimuth prescriptions, 
 
 ## Diagnostics
 
-Uniform LUND creation writes one `lundfiles/lund-creation-monitoring/<prefix>_monitoring_plots.root` file. It merges the former general and compatibility monitors, preserves the archived plot organization and rendering style, sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets[^sportes-2026-rgm][^rgm-analysis-note], and extends regional hadron notation for protons, neutrons, pip, and pim. Every uniform channel fills `MonitoringPlotsPath/` with PDF/PNG renderings of the same objects. Physical conversion creates no monitoring histograms. Both LUND sources prepare the `mchipo/` and `reconhipo/` directories for later simulation and reconstruction.
+Uniform LUND creation writes one `lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root` file. It merges the former general and compatibility monitors, preserves the archived plot organization and rendering style, sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets[^sportes-2026-rgm][^rgm-analysis-note], and extends regional hadron notation for protons, neutrons, pip, and pim. Every uniform channel fills `MonitoringPlotsPath/` with PDF/PNG renderings of the same objects, including `<prefix>__plots.pdf`. Physical conversion creates no monitoring histograms. Both LUND sources prepare the `mchipo/` and `reconhipo/` directories for later simulation and reconstruction.
 
 ## Retained corrections
 

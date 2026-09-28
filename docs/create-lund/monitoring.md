@@ -7,7 +7,7 @@ Monitoring is produced only by uniform LUND creation. Physical event-generator c
 Each uniform run stores every monitoring histogram exactly once in:
 
 ```text
-lundfiles/lund-creation-monitoring/<prefix>_monitoring_plots.root
+lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root
 ```
 
 `UniformMonitoring` is implemented beside the generator in [`src/workflows/lund-creation/uniform-lund-creator/`](../../src/workflows/lund-creation/uniform-lund-creator). There is no separate shared monitoring layer because physical conversion does not consume it.
@@ -53,7 +53,7 @@ Every uniform generation run renders the same histograms stored in the ROOT file
 
 ```text
 lundfiles/lund-creation-monitoring/MonitoringPlotsPath/
-├── Uniform__<sample-label>__<beam>MeV_plots.pdf
+├── Uniform__<sample-label>__<beam>MeV__plots.pdf
 ├── 1_<histogram-name>.png
 ├── 2_<histogram-name>.png
 └── ...

@@ -165,7 +165,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     print_path("Reconstructed HIPO directory", output / "reconhipo");
 
     if (uniform) {
-        print_path("Monitoring ROOT file", diagnostics / (config.get("prefix") + "_monitoring_plots.root"));
+        print_path("Monitoring ROOT file", diagnostics / (config.get("prefix") + "__monitoring_plots.root"));
         print_path("Monitoring plot directory", diagnostics / "MonitoringPlotsPath");
     }
 
