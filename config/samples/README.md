@@ -18,7 +18,7 @@ Profiles normally specify `target`; beam energy plus that target selects the sta
 
 ## Uniform production matrix
 
-Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, the angular and momentum ranges listed below, rounded PDG-based masses, and 25,000 events per file. Production profiles request 50,000,000 events, while tester profiles request 1,000,000 events. Override `--events` for smaller studies.
+Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each supported RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, the angular and momentum ranges listed below, rounded PDG-based masses, and 25,000 events per file. Production profiles request 50,000,000 events, while tester profiles request 1,000,000 events. Override `--events` for smaller studies.
 
 | Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
 | --- | --- | --- | --- |

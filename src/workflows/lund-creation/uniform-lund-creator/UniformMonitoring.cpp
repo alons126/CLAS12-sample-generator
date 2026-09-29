@@ -7,7 +7,7 @@
  * @brief Creates and saves monitoring plots for uniform samples.
  *
  * Purpose:
- *   Keep the established plot order and style. Add clear FD/CD names for each supported hadron, and
+ *   Keep the documented plot order and style. Add clear FD/CD names for each supported hadron, and
  *   store every histogram once. Use -8 to 5 cm for every Vz plot so all RG-M target positions fit.
  *
  * Workflow:

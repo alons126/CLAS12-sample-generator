@@ -245,9 +245,9 @@ void LundWriter::write(const Event& e) {
     // zero across split files; physical conversion retains the GST input-entry index.
     const auto id = static_cast<unsigned long long>(e.id);
 
-    // electron–hadron samples and the beam-momentum electron tester historically wrote beam energy with one decimal;
-    // ordinary 1e and physical conversion used six decimals. Other header fields retain their
-    // Keep the required precision and field meanings, including physical process tags in e.weight.
+    // Electron-hadron samples and the beam-momentum electron tester write beam energy with one decimal.
+    // Ordinary 1e and physical conversion write six decimals. Keep all other field meanings fixed,
+    // including the physical process tag in e.weight.
     const bool electron_hadron = workflow_ == "uniform" && config_.get("channel") == "eh";
     const bool tester = workflow_ == "uniform" && config_.get("channel") == "electron-tester";
     const char* format =

@@ -7,7 +7,7 @@
  * @brief Declares the plots created for uniform samples.
  *
  * Purpose:
- *   Store uniform monitoring histograms in one ROOT file and draw them with the established layout.
+ *   Store uniform monitoring histograms in one ROOT file and draw them with the documented layout.
  *   Every Vz histogram uses -8 to 5 cm to cover the target positions of all RG-M targets. Physical
  *   conversion does not use this class.
  *

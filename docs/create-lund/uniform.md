@@ -22,7 +22,7 @@ build/debug/apps/uniform-lund-creator \
 
 ## Reviewed profiles
 
-Every supported mode has an explicit profile at each established beam energy:
+Every supported mode has an explicit profile at each supported beam energy:
 
 | Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
 | --- | --- | --- | --- |
@@ -54,7 +54,7 @@ Every maximum momentum defaults to the beam energy. θ is uniform in theta and �
 
 > **Validation status:** uniform FD pion samples (`epipFD` and `epimFD`) and every uniform CD particle sample (`epCD`, `enCD`, `epipCD`, and `epimCD`) have not yet been tested as production samples. Automated integration checks exercise their labels, particle IDs, configured bounds, and output structure, but their complete generated distributions and detector workflow have not been validated. Do not treat them as validated production modes until those checks are complete. Production validation currently covers `1e`, `epFD`, `enFD`, and the electron tester.
 
-The `1e` electron has θ 5–40°, full φ, and a 50/50 uniform-p/uniform-1/p mixture from 0.7 GeV/c to beam momentum. In `eh`, the trigger electron has beam momentum and θ=25°. Its φ is the CLAS12 sector center closest to the direction opposite the hadron, plus the beam-dependent offset: 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° otherwise. This opposite-sector constraint is not required for a CD hadron, but it is retained deliberately to be sure the trigger electron is separated in the established way.
+The `1e` electron has θ 5–40°, full φ, and a 50/50 uniform-p/uniform-1/p mixture from 0.7 GeV/c to beam momentum. In `eh`, the trigger electron has beam momentum and θ=25°. Its φ is the CLAS12 sector center closest to the direction opposite the hadron, plus the beam-dependent offset: 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° otherwise. This opposite-sector constraint is not required for a CD hadron, but it is retained deliberately to keep the trigger electron separated from the hadron.
 
 The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a neutron, in either FD or CD. Hadron theta and phi are always sampled uniformly inside the configured detector ranges so equal-width angular bins receive comparable generated statistics for acceptance mapping.
 

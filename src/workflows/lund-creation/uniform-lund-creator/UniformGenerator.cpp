@@ -99,7 +99,7 @@ TVector3 momentum(double p, double theta, double phi) {
 
 #pragma region /* triggerPhi */
 /**
- * @brief Choose the established trigger-electron azimuth.
+ * @brief Choose the trigger-electron azimuth nearest the opposite CLAS12 sector.
  *
  * Purpose:
  *   Place the trigger electron near the CLAS12 sector opposite the sampled hadron.
@@ -165,7 +165,7 @@ void generateUniform(const RunConfig& c) {
     // The writer safely replaces the chosen run directory, creates it, and stores the file limits.
     LundWriter writer(c, "uniform");
 
-    // Monitoring keeps the established plots and adds FD/CD to hadron names.
+    // Monitoring keeps the documented plots and adds FD/CD to hadron names.
     const double beam = settings.beam;
     UniformMonitoring monitoring(sampleLabel(c), settings.hadron_pid, beam);
 #pragma endregion

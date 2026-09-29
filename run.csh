@@ -7,7 +7,7 @@
 # run.csh --------------------------------------------------------------------
 # Description:
 #   Main ifarm entry point.
-# 
+#
 # Purpose:
 #   Update the disposable server checkout, load its environment, and run one workflow.
 #
@@ -17,7 +17,7 @@
 #   3. Load the needed software environment.
 #   4. Create LUND files or submit simulation jobs.
 #   5. Restore the caller's directory and return the workflow status without closing the shell.
-# 
+#
 # CLI options (launcher-owned for create-lund):
 #   --workflow create-lund|submit  Select one of the two user-facing workflows (required).
 #   --source uniform|physical      Select event content for create-lund; submit has its own
@@ -54,7 +54,7 @@
 #   --clas12tags-dir DIRECTORY     Use a custom clas12Tags checkout as GEMC_DATA_DIR.
 #   --clear-farm-out true|false    Delete direct files from --farm-out with --execute; default: false.
 #   --farm-out DIRECTORY           Exact cleanup directory; required with --clear-farm-out true.
-# 
+#
 # Usage:
 #   source run.csh \
 #     --workflow create-lund \
@@ -70,16 +70,16 @@
 #   source run.csh \
 #     --workflow submit \
 #     --lund-dir RUN/lundfiles
-# 
+#
 # Forwarded options:
 #   create-lund passes remaining options to the selected LUND program. Submit passes them to submit.py.
-# 
+#
 # Inputs:
 #   $argv contains launcher and workflow options. An optional CLAS12_SAMPLES_DIR value sets the checkout.
-# 
+#
 # Outputs:
 #   CLAS12_SAMPLE_STATUS and $status contain the final result.
-# 
+#
 # Notes:
 #   The ifarm checkout is disposable. Commit and push valuable changes from the local development
 #   clone before sourcing this file. The updater resets tracked changes and cleans untracked files.

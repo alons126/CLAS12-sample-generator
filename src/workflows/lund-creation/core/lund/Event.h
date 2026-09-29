@@ -88,7 +88,7 @@ struct Particle {
  *
  * Header semantics:
  *   A and Z describe the target nucleus but do not choose the vertex shape. Physical conversion stores
- *   GST `resid` in the old target-polarization field; uniform events store zero there. Uniform events
+ *   GST `resid` in header field 4; uniform events store zero there. Uniform events
  *   use weight 1. Physical conversion uses that field for process codes 1 through 4, not as a physics
  *   weight. LundWriter also writes zero beam polarization, electron beam PID 11, and one interaction.
  *
@@ -101,7 +101,7 @@ struct Event {
     int A = 1;                        ///< Target mass number written in the LUND header.
     int Z = 1;                        ///< Target charge number, configured separately from the vertex geometry.
     double beam_energy = 0;           ///< Incident-electron energy in GeV.
-    double resonance_id = 0;          ///< Old target-polarization field; stores GST `resid` for physical events.
+    double resonance_id = 0;          ///< Header field 4; stores GST `resid` for physical events.
     double weight = 1;                ///< Uniform value 1 or physical process code; not a cross-section weight.
     std::vector<Particle> particles;  ///< Particles in output order; the writer rejects an empty list.
 };

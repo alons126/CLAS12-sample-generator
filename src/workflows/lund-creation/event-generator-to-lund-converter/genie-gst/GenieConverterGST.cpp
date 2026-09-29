@@ -69,8 +69,8 @@ void convertGenieGST(const RunConfig& c) {
     if (!chain.Add(c.get("input").c_str()) || chain.GetEntries() == 0) { throw std::runtime_error("No GST entries found for: " + c.get("input")); }
     if (chain.LoadTree(0) < 0) { throw std::runtime_error("Cannot load GST tree"); }
 
-    // Interaction flags decide whether an entry is kept and which code is written. resid goes in the
-    // old target-polarization field. nf counts final particles; pxl/pyl/pzl describe the first electron.
+    // Interaction flags decide whether an entry is kept and which code is written in header field 10.
+    // resid goes in header field 4. nf counts final particles; pxl/pyl/pzl describe the first electron.
     for (const char* branch : {"qel", "mec", "res", "dis", "resid", "nf", "pdgf", "pxf", "pyf", "pzf", "pxl", "pyl", "pzl"}) {
         if (!chain.GetBranch(branch)) { throw std::runtime_error(std::string("Missing GST branch: ") + branch); }
     }

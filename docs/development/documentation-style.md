@@ -18,7 +18,7 @@ Every project-owned terminal error uses `ERROR_COLOR + "Error:" + RESET_COLOR + 
 
 When a workflow uses `print_stop.csh`, its final failure output is always one blank line, the error diagnostic, one blank line, and then the stop artwork. The coordinator flushes output before invoking the printer and retains the original failure status. The stop printer begins with artwork rather than adding another leading blank line, so the coordinator owns the spacing.
 
-Development comparison files and protected external inputs are excluded from routine edits: `legacy/`, `src/workflows/lund-creation/external/targets.h`, `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Repository instructions are recorded in `AGENTS.md`.
+Protected external inputs are excluded from routine edits: `src/workflows/lund-creation/external/targets.h`, `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Complete repository instructions are recorded in `AGENTS.md`.
 
 ## Citations and references
 

@@ -71,14 +71,14 @@ The reader arrays have no fixed-size particle buffer. ROOT reports each current-
 | `src/launcher/workflow.py` | LUND configuration, build stages and application dispatch |
 | `src/workflows/slurm-submission/resolve_inputs.py` | Manifest/config/CLI precedence, truth validation, portable file inventory and in-memory resolved settings |
 | `src/workflows/slurm-submission/setup_and_submit.csh` | Small sourced bridge: shared palette, quoted arguments and Python exit status |
-| `src/workflows/slurm-submission/submit.py` | Preloaded environment, established report/checks, guarded output reset and one array per sample |
+| `src/workflows/slurm-submission/submit.py` | Preloaded environment, shared reporting/checks, guarded output reset and one array per sample |
 | `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` | External Slurm task payload; GEMC followed by reconstruction |
 
 The resolver obtains the prefix and task count from the completed manifest or explicit input, then the setup script consumes the validated LUND files. It exports a shared event limit for the array, defaulting to the largest selected manifest file count. The coordinator silently inspects both simulation-output children before reporting any action, then prints the `OUTPATH` check and groups each child check with its preview or execution action. Its multiline `sbatch` display distinguishes option names from their normal-white values without changing the submitted argument list. Before handoff, it writes `reconhipo/slurm-submission-log.json` with resolved settings, runtime Git identity, the exact `sbatch` command, and detector-input/payload hashes. The payload retains its original scheduler defaults. See the [submission guide](../submit-simulation/guide.md).
 
 ## 6. Configuration and resources
 
-- `config/samples/uniform-lund-creation/uniform-<label>-{2070,4029,5986}MeV.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each established beam energy; pion and CD files are explicitly marked unvalidated for production.
+- `config/samples/uniform-lund-creation/uniform-<label>-{2070,4029,5986}MeV.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each supported beam energy; pion and CD files are explicitly marked unvalidated for production.
 - `config/samples/uniform-lund-creation/electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and target-sampled vertices.
 - `config/samples/physical-lund-creation/genie-gst.conf`: an explicit Ar conversion example.
 - `config/detector/Generation_files_*`: fixed 2/4/6 GeV cards and reconstruction YAML. They are resources, not generated models. Matching detector/data dependencies are external.

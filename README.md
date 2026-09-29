@@ -52,7 +52,7 @@ Start at the [documentation home](docs/index.md). It presents the currently impl
 | [Concepts and contracts](docs/concepts/index.md) | Architecture, sampling, LUND records, provenance, and scientific scope |
 | [Development](docs/development/index.md) | Source reference, documentation, wiki publishing, and [adding an event-generator adapter](docs/development/adding-event-generator.md) |
 
-Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) remain available for the established production matrix.
+Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) cover the documented production matrix.
 
 Workflow implementations are peers under `src/workflows/`; shared C++ workflow support is under `src/workflows/support/`, and the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
 

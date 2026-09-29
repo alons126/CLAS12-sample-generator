@@ -192,7 +192,7 @@ std::string pathToken(std::string value) {
  * @brief Convert beam energy in GeV to the integer MeV label used in names.
  *
  * Purpose:
- *   Keep the established 2070, 4029, and 5986 MeV labels and provide a rounded label for other energies.
+ *   Keep the 2070, 4029, and 5986 MeV labels and provide a rounded label for other energies.
  *
  * Steps:
  *   Return the fixed label when the energy is within `1e-6` GeV of a known setting. Otherwise multiply
@@ -378,15 +378,15 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         if (c.get("electron-p-max") == "auto") { c.values_["electron-p-max"] = c.get("beam-energy"); }
         if (c.get("hadron-p-min") == "auto") { c.values_["hadron-p-min"] = neutron ? "0" : c.get("hadron") == "proton" ? (central ? "0.2" : "0.3") : (central ? "0.1" : "0.2"); }
 
-        // Use the established trigger-electron offsets for known beam energies. Other energies use zero.
+        // Use the configured trigger-electron offset for each known beam energy. Other energies use zero.
         if (c.get("trigger-phi-offset") == "auto") {
             double e = c.number("beam-energy");
             c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
         }
     }
 
-    // Use the established Q2-cut label for each known RG-M beam. Other energies use `none`. Normalize
-    // the retired underscore spellings so an older profile cannot recreate obsolete output names.
+    // Use the configured Q2-cut label for each known RG-M beam. Other energies use `none`. Normalize
+    // accepted underscore spellings so equivalent values always produce the same output name.
     if (!uniform) {
         if (c.get("q2-cut") == "auto") {
             const double e = c.number("beam-energy");

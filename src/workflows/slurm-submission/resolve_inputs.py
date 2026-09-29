@@ -423,7 +423,7 @@ def resolve(lund_directory, explicit, root):
             raise ValueError(f'Protected output directory: {run}')
 
     # Read only sample settings from the run log. GEMC version belongs to submission and is never
-    # inherited from LUND creation, including from older manifests that recorded it.
+    # inherited from LUND creation, including manifests that record it.
     manifest = read_manifest(lund_dir)
     inherited = {}
 

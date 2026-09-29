@@ -10,7 +10,7 @@ The GEMC submission payload was also obtained from RG-M code, but unlike `target
 
 The two RG-M files and detector cards/YAML under `config/detector/` are external inputs kept in the repository so workflows remain reproducible. Project code uses them through small interfaces so an upstream replacement can be reviewed and validated in one place.
 
-Both uniform generation and physical conversion call this header's `randomVertex()` through `TargetGeometry`. The target catalog selects valid map keys and supplies nucleus and GEMC metadata without changing the external header. The adapter transfers the caller's complete vertex RNG state into and out of the header's `ran` generator under a mutex. This keeps the vertex and kinematic random streams separate and keeps the established order of random draws. The header's particle formatter and mass globals are not used. Every mode, including the electron tester, samples its selected target geometry.
+Both uniform generation and physical conversion call this header's `randomVertex()` through `TargetGeometry`. The target catalog selects valid map keys and supplies nucleus and GEMC metadata without changing the external header. The adapter transfers the caller's complete vertex RNG state into and out of the header's `ran` generator under a mutex. This keeps the vertex and kinematic random streams separate without changing the order of random draws. The header's particle formatter and mass globals are not used. Every mode, including the electron tester, samples its selected target geometry.
 
 To update geometry:
 

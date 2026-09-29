@@ -41,7 +41,7 @@ Even event indices use \(p_U\); odd indices use \(p_I\). The alternation continu
 
 ## Trigger electron
 
-The `eh` trigger electron has beam momentum and θ=25°. Its φ is the closest center in {−120,−60,0,60,120,180} degrees to the direction opposite the hadron, followed by the configured beam offset. The opposite-sector correlation is not obligatory for CD hadrons; it is retained deliberately to be sure the trigger electron follows the established separated placement. All particles in an event share one sampled vertex.
+The `eh` trigger electron has beam momentum and θ=25°. Its φ is the closest center in {−120,−60,0,60,120,180} degrees to the direction opposite the hadron, followed by the configured beam offset. The opposite-sector correlation is not obligatory for CD hadrons; it is retained deliberately to keep the trigger electron separated from the hadron. All particles in an event share one sampled vertex.
 
 ## RNG ownership
 

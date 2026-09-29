@@ -94,7 +94,7 @@ This boundary is intentionally side-effect-free with respect to run products: pa
 2. `generateUniform()` receives the resolved `1e` or `eh` channel, selected hadron, and FD/CD region, then owns separate kinematic and vertex random streams. `TargetGeometry` samples a common interaction vertex for all particles in the event.
 3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
-5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It groups electron, hadron, vertex, single-particle correlation, and electron–hadron correlation plots, uses the established canvas style, sets every vertex-z axis to −8–5 cm to cover all RG-M target positions[^sportes-2026-rgm][^rgm-analysis-note], and labels protons, neutrons, pip, and pim by FD or CD.
+5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It groups electron, hadron, vertex, single-particle correlation, and electron–hadron correlation plots, uses the documented canvas style, sets every vertex-z axis to −8–5 cm to cover all RG-M target positions[^sportes-2026-rgm][^rgm-analysis-note], and labels protons, neutrons, pip, and pim by FD or CD.
 6. It writes every histogram once to `<prefix>__monitoring_plots.root` and renders the same objects to `<prefix>__plots.pdf` and individual PNG files for every uniform channel.
 7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
 

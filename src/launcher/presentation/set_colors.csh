@@ -12,19 +12,19 @@
 # region Terminal color environment
 # Purpose:
 #   Keep terminal color values in one shell file.
-# 
+#
 # Workflow:
 #   Remove old color values -> export the current colors -> let child programs use them.
 #
 # Inputs:
 #   None. Re-sourcing always replaces stale values.
-# 
+#
 # Outputs:
 #   Exported `*_COLOR` variables remain available to run.csh, shared printer helpers, and child processes.
 #
 # Usage:
 #   Source this file before printing with a `*_COLOR` variable.
-# 
+#
 # Notes:
 #   SYSTEM_COLOR is the normal heading color. RESET_COLOR stops color from leaking into later output.
 #   The file prints nothing.

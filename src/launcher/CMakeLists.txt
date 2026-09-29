@@ -5,19 +5,19 @@
 # src/launcher/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Build boundary for the shared local and ifarm launcher.
-# 
+#
 # Purpose:
 #   Keep launcher-specific optional development integration separate from production targets.
-# 
+#
 # Workflow:
 #   run.csh -> launcher/workflow.py -> selected LUND source; submission is sourced directly.
-# 
+#
 # Inputs:
 #   The configured source and build trees.
-# 
+#
 # Outputs:
 #   No installed target; runtime launcher files are used directly from the checkout.
-# 
+#
 # Failure behavior:
 #   Optional local development integration is skipped when its files or tools are unavailable.
 

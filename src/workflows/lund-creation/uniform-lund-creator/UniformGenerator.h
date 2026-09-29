@@ -54,9 +54,9 @@ namespace samples {
  *       changing the particle-motion sequence.
  *
  * @note Uniform files default to 25,000 events each. `events-per-file` remains configurable, and the
- *       the completion log supplies each actual file count to job submission.
+ *       completion log supplies each actual file count to job submission.
  *
- * @note Production uses the established flat-theta ranges. The 1e electron and charged hadrons alternate
+ * @note Production uses the configured flat-theta ranges. The 1e electron and charged hadrons alternate
  *       uniform-p and uniform-1/p events. Neutrons use uniform p; only neutrons may use fixed 1 GeV/c.
  */
 void generateUniform(const RunConfig& config);

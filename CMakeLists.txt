@@ -5,26 +5,27 @@
 # CMakeLists.txt ---------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Top-level project build settings.
-# 
+#
 # Purpose:
 #   Select workflows, find dependencies, record build details, and add the production source targets.
-# 
+#
 # Workflow:
 #   CMake configure -> dependencies -> provenance header -> source targets -> install rules.
-# 
+#
 # Inputs:
 #   CMake 3.20+, compatible ROOT, Threads, Git when available; BUILD_UNIFORM and BUILD_GENIE cache options.
-# 
+#
 # Outputs:
 #   Build targets, generated/Version.h, compile_commands.json and installation rules.
-# 
+#
 # Notes:
 #   ROOT must declare a C++ standard of at least 17. Configuration fails when required dependencies are unavailable.
 
 # Project and workflow options -------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Project and workflow options
-# Purpose: Select which compiled sample workflows are available.
+# Purpose:
+#   Select which compiled sample workflows are available.
 cmake_minimum_required(VERSION 3.20)
 project(CLAS12SampleGenerator VERSION 1.0 LANGUAGES CXX)
 option(BUILD_UNIFORM "Build uniform sample generation" ON)
@@ -70,7 +71,8 @@ endfunction()
 # Compiler and dependency requirements -----------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiler and dependency requirements
-# Purpose: Use the C++ standard required by ROOT and load the needed ROOT libraries.
+# Purpose:
+#   Use the C++ standard required by ROOT and load the needed ROOT libraries.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -93,7 +95,8 @@ set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 # Compiled provenance ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Compiled provenance
-# Purpose: Read Git/build details and the target-header hash, then write the generated version header.
+# Purpose:
+#   Read Git/build details and the target-header hash, then write the generated version header.
 # read_git_value:
 #   Read one Git value from the source checkout and escape it for a generated C++ string literal.
 #
@@ -173,7 +176,8 @@ configure_file(cmake/Version.h.in generated/Version.h @ONLY)
 # Build graph ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Build graph
-# Purpose: Add the workflow registry and launcher integration without an extra pass-through directory.
+# Purpose:
+#   Add the workflow registry and launcher integration without an extra pass-through directory.
 include(CTest)
 add_subdirectory(src/workflows)
 add_subdirectory(src/launcher)
@@ -182,6 +186,7 @@ add_subdirectory(src/launcher)
 # Installation -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Installation
-# Purpose: Install shared configuration resources; each workflow source tree installs its own programs.
+# Purpose:
+#   Install shared configuration resources; each workflow source tree installs its own programs.
 install(DIRECTORY config/ DESTINATION share/clas12-samples/config)
 # endregion
