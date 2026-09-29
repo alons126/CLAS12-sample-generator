@@ -62,7 +62,7 @@ Once a file starts, the cutoff is not evaluated again inside it. An exact-multip
 
 The resolved run directory is recreated when it already exists, following the documented replacement lifecycle. Physical conversion writes the split LUND files and `lund-creation-log.json`; it creates no ROOT monitoring file, PDF, or PNG. Monitoring is a uniform-creation responsibility.
 
-To support another input format without creating another workflow, follow [Adding another event-generator-to-LUND adapter](../development/adding-event-generator.md). Historical command mappings and compatibility profiles are isolated in the [migration guide](../history/migration.md) and [launch-chain reference](../history/legacy-workflows.md).
+To support another input format without creating another workflow, follow [Adding another event-generator-to-LUND adapter](../development/adding-event-generator.md).
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
 

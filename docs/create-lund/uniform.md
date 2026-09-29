@@ -52,7 +52,7 @@ Each file contains the relevant scientific definition: beam energy, target ident
 
 Every maximum momentum defaults to the beam energy. θ is uniform in theta and φ is uniform from −180° to 180°. These deliberately unphysical samples map acceptance; they do not enforce exclusive energy or momentum conservation.
 
-> **Validation status:** uniform FD pion samples (`epipFD` and `epimFD`) and every uniform CD particle sample (`epCD`, `enCD`, `epipCD`, and `epimCD`) have not yet been tested as production samples. Automated integration checks exercise their labels, particle IDs, configured bounds, and output structure, but their complete generated distributions and detector workflow have not been validated. Do not treat them as validated production modes until those checks are complete. The established physics and legacy validation currently covers `1e`, `epFD`, `enFD`, and the electron tester.
+> **Validation status:** uniform FD pion samples (`epipFD` and `epimFD`) and every uniform CD particle sample (`epCD`, `enCD`, `epipCD`, and `epimCD`) have not yet been tested as production samples. Automated integration checks exercise their labels, particle IDs, configured bounds, and output structure, but their complete generated distributions and detector workflow have not been validated. Do not treat them as validated production modes until those checks are complete. Production validation currently covers `1e`, `epFD`, `enFD`, and the electron tester.
 
 The `1e` electron has θ 5–40°, full φ, and a 50/50 uniform-p/uniform-1/p mixture from 0.7 GeV/c to beam momentum. In `eh`, the trigger electron has beam momentum and θ=25°. Its φ is the CLAS12 sector center closest to the direction opposite the hadron, plus the beam-dependent offset: 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° otherwise. This opposite-sector constraint is not required for a CD hadron, but it is retained deliberately to be sure the trigger electron is separated in the established way.
 
@@ -66,7 +66,7 @@ build/debug/apps/uniform-lund-creator \
   --output runs
 ```
 
-The tester always scans electron θ from 5–40° and all φ at beam momentum, and samples the selected target geometry. It provides a rough estimate of where the trigger electron in electron–hadron samples should be thrown. The maintained 25° trigger prescription was selected from this scan.
+The tester always scans electron θ from 5–40° and all φ at beam momentum, and samples the selected target geometry. It provides a rough estimate of where the trigger electron in electron–hadron samples should be thrown. The 25° trigger setting was selected from this scan.
 
 ## Targets, reproducibility, and masses
 
@@ -78,4 +78,4 @@ Electron, proton, neutron, and charged-pion masses come directly from the extern
 
 ## Output and diagnostics
 
-`lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root` contains the complete monitoring set. Its legacy-style definitions cover 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel with region-bearing hadron labels. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms, including `<prefix>__plots.pdf`. Like physical conversion, uniform creation prepares empty `mchipo/` and `reconhipo/` directories for later simulation and reconstruction. See [diagnostics](monitoring.md) and [sampling equations](../concepts/sampling-models.md).
+`lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root` contains the complete monitoring set for 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel. Hadron labels include the detector region. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms, including `<prefix>__plots.pdf`. Like physical conversion, uniform creation prepares empty `mchipo/` and `reconhipo/` directories for later simulation and reconstruction. See [diagnostics](monitoring.md) and [sampling equations](../concepts/sampling-models.md).

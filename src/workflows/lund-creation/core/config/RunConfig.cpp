@@ -313,7 +313,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     }
 
     // Read at most one profile and reject repeated keys. Relative profile paths start from the current
-    // working directory; workflow.py uses the repository root for maintained launches.
+    // working directory; workflow.py uses the repository root for project launches.
     if (!config.empty()) {
         std::ifstream in(config);
 

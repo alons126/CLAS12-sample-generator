@@ -1,13 +1,13 @@
 # Scientific validation boundaries
 
-Software behavior and detector-level scientific validation are separate responsibilities. The maintained implementation defines record formats, supported particle content, sampling prescriptions, file splitting, configuration validation, provenance, and submission handoff. A production campaign must additionally establish that its detector and reconstruction settings are suitable for the intended analysis.
+Software behavior and detector-level scientific validation are separate responsibilities. The implementation defines record formats, supported particle content, sampling prescriptions, file splitting, configuration validation, provenance, and submission handoff. A production campaign must also establish that its detector and reconstruction settings are suitable for the intended analysis.
 
-## Intentional maintained behavior
+## Defined software behavior
 
 - **Physical-input cutoff:** before starting a follow-up file, conversion requires at least `events-per-file` inclusive input entries beginning with the current accepted entry. The first file is allowed through input exhaustion, and an exact final block is never interrupted after it starts. This is an input-entry cutoff, not an accepted-event calculation.
-- **Random state:** archived `TRandom3(0)` runs cannot be reconstructed from a seed that was never recorded. Use explicit nonzero seeds when repeatability is required.
+- **Random state:** ROOT treats `TRandom3(0)` as automatic seeding, so a run cannot be reconstructed from the configured zero alone. Use explicit nonzero seeds when repeatability is required.
 - **Mass source:** electron, proton, neutron, and charged-pion masses come from external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); photons use exact zero.
-- **Neutral pions:** the maintained converter requires neutral pions to be decayed during upstream GENIE production and consumes the resulting photons. Residual PDG 111 entries are skipped because the converter does not invent missing decay kinematics.
+- **Neutral pions:** the converter requires neutral pions to be decayed during upstream GENIE production and consumes the resulting photons. Residual PDG 111 entries are skipped because the converter does not invent missing decay kinematics.
 - **Production sampling:** the 1e and charged-hadron mixtures use the configured uniform-p/uniform-1/p prescription. Neutrons use uniform momentum, including the configured zero-to-beam range.
 - **Diagnostics:** monitoring is uniform-only and is stored once in `<prefix>__monitoring_plots.root`; its combined PDF is `<prefix>__plots.pdf`. Physical conversion creates no monitoring histograms.
 - **Metadata:** checked-in Ar profiles use A=40 and Z=18. Geometry, A, and Z remain independently configurable for unusual studies.

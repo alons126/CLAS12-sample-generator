@@ -2,7 +2,7 @@
 
 ## Source layout
 
-Maintained code is grouped under `src/workflows/`, with one peer directory for each implemented user-facing workflow. `src/workflows/lund-creation/` owns LUND creation, while `src/workflows/slurm-submission/` owns ifarm job submission. Shared C++ workflow infrastructure belongs in `src/workflows/support/`. `src/launcher/` owns selection, checkout synchronization, environment setup, and terminal presentation; build-system templates belong in `cmake/`. Inside LUND creation, responsibility folders remain ownership boundaries while `LundCore` compiles the small shared layers together.
+Project code is grouped under `src/workflows/`, with one peer directory for each user-facing workflow. `src/workflows/lund-creation/` owns LUND creation, while `src/workflows/slurm-submission/` owns ifarm job submission. Shared C++ workflow support belongs in `src/workflows/support/`. `src/launcher/` owns workflow selection, checkout synchronization, environment setup, and terminal output; build-system templates belong in `cmake/`. Inside LUND creation, folders separate the main responsibilities while `LundCore` compiles the small shared layers together.
 
 | Directory | Responsibility |
 | --- | --- |
@@ -25,7 +25,7 @@ The two implementation directories intentionally match their installed executabl
 
 Future workflows receive another peer directory under `src/workflows/` when their implementation begins. Planned workflows do not have empty placeholder directories. Code moves into `src/workflows/support/` only after multiple workflow implementations share the same concrete contract.
 
-The architecture is intentionally modestly modular around two files obtained from RG-M code. [`targets.h`](../../src/workflows/lund-creation/external/targets.h) is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted; `TargetGeometry` supplies the maintained interface around it. [`submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) is a modified RG-M-derived payload that retains the original structure and usage pattern; the maintained submission coordinator supplies its validated environment. These boundaries are kept narrow so future RG-M updates can be reviewed and incorporated without duplicating geometry or GEMC/reconstruction commands elsewhere.
+Two small boundaries contain code obtained from RG-M. [`targets.h`](../../src/workflows/lund-creation/external/targets.h) is an exact RG-M copy containing the target implementations available with GEMC 5.14 when it was added; `TargetGeometry` gives the rest of the project a small interface to it. [`submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) adapts the RG-M job payload, and the submission coordinator supplies its checked environment. These narrow boundaries allow future RG-M updates without copying geometry or GEMC/reconstruction commands elsewhere.
 
 ## Build targets
 
@@ -38,7 +38,7 @@ The architecture is intentionally modestly modular around two files obtained fro
 | `uniform-lund-creator` | `src/workflows/lund-creation/apps/uniform_lund_creator_main.cpp` | Parse CLI, call generator, report errors |
 | `event-generator-to-lund-converter` | `src/workflows/lund-creation/apps/event_generator_to_lund_converter_main.cpp` | Parse physical input settings and dispatch an adapter |
 
-The root CMake file discovers ROOT, adds the workflow registry, and adds launcher integration directly. `src/workflows/CMakeLists.txt` adds only workflows that currently exist. The LUND workflow's CMake file defines its libraries and links the two entry points stored in `apps/`; production libraries do not include archived implementations. Every implementation is compiled once; implementation files are never included from another implementation. ROOT macros and archived analysis helpers are excluded from production targets.
+The root CMake file discovers ROOT, adds the workflow registry, and adds launcher integration directly. `src/workflows/CMakeLists.txt` adds only workflows that currently exist. The LUND workflow's CMake file defines its libraries and links the two entry points stored in `apps/`. Every implementation is compiled once; implementation files are never included from another implementation. Development comparison code is not part of the project build.
 
 ## Workflow dispatcher
 
@@ -94,7 +94,7 @@ This boundary is intentionally side-effect-free with respect to run products: pa
 2. `generateUniform()` receives the resolved `1e` or `eh` channel, selected hadron, and FD/CD region, then owns separate kinematic and vertex random streams. `TargetGeometry` samples a common interaction vertex for all particles in the event.
 3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
-5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It preserves the archived organization and rendering style, sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets[^sportes-2026-rgm][^rgm-analysis-note], and generalizes hadron labels to proton, neutron, pip, and pim in FD or CD.
+5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It groups electron, hadron, vertex, single-particle correlation, and electron–hadron correlation plots, uses the established canvas style, sets every vertex-z axis to −8–5 cm to cover all RG-M target positions[^sportes-2026-rgm][^rgm-analysis-note], and labels protons, neutrons, pip, and pim by FD or CD.
 6. It writes every histogram once to `<prefix>__monitoring_plots.root` and renders the same objects to `<prefix>__plots.pdf` and individual PNG files for every uniform channel.
 7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
 
@@ -106,7 +106,7 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 
 ## Simulation boundary
 
-`src/workflows/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python checks the requested shared GEMC version, loads it in an invocation-owned environment, verifies the resulting data directory and executable, checks remaining inputs, and inspects both simulation-output paths before changing either one. Preview creates only missing directories, preserves existing contents, and reports what execution would clear. `--execute` warns, recursively deletes existing simulation-output directories, recreates both empty, and submits one array per sample. The external payload owns all GEMC/reconstruction commands. No Python process runs inside the array and no maintained local-simulation workflow is provided.
+`src/workflows/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python checks the requested shared GEMC version, loads it in an invocation-owned environment, verifies the resulting data directory and executable, checks remaining inputs, and inspects both simulation-output paths before changing either one. Preview creates only missing directories, preserves existing contents, and reports what execution would clear. `--execute` warns, recursively deletes existing simulation-output directories, recreates both empty, and submits one array per sample. The external payload owns all GEMC/reconstruction commands. No Python process runs inside the array, and the project does not run detector simulation locally.
 
 ## Adding functionality
 
@@ -118,7 +118,7 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 
 Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 
-The complete [source/API inventory](../development/source-reference.md) also covers examples, error paths, and archived supporting utilities.
+The complete [source/API inventory](../development/source-reference.md) also covers examples and error paths.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
 

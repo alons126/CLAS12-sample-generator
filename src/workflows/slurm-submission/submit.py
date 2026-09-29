@@ -34,7 +34,7 @@ CLI options (parsed by resolve_inputs.py):
     --source uniform|physical     Set source when no manifest supplies it.
     --beam-energy GeV             Set truth beam energy when no manifest supplies it.
     --target ID                   Set truth target identity when no manifest supplies it.
-    --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy label.
+    --channel NAME                Set uniform 1e, eh, electron-tester, or a complete FD/CD label.
     --hadron NAME                 Set proton, neutron, pip, or pim for eh.
     --hadron-region FD|CD         Select the eh hadron detector region.
     --event-generator NAME        Set physical input adapter; default: genie-gst without a manifest.
@@ -51,7 +51,6 @@ CLI options (parsed by resolve_inputs.py):
     --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
     --clear-farm-out true|false   Delete direct files from --farm-out with --execute; default: false.
     --farm-out DIRECTORY          Exact cleanup directory; required with --clear-farm-out true.
-    --fc-status 0|1               Set legacy physical filename/report label; default: 0.
     --help                        Print submission help before any server synchronization.
 
 Failure:
@@ -669,7 +668,7 @@ def clear_farm(values, root, execute, report, cleared):
     """Handle optional farm_out cleanup once for the full command.
 
     Purpose:
-        Preserve the legacy ability to clear old ifarm log files without touching LUND or
+        Clear old ifarm log files when requested without touching LUND or
         simulation output directories.
 
     Workflow:
@@ -962,11 +961,11 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     report.text()
 
-    # Keep sample identity together. The field-cage flag changes names, not event selection.
+    # Keep sample identity together.
     if uniform:
         report.value('UNIFORM_SAMPLE_CHANNEL', values['UNIFORM_SAMPLE_CHANNEL'], color='INFO')
     else:
-        for key in ('GENERATOR_TUNE', 'Q2_CUT', 'FC_STATUS', 'FC_STATUS_ENABLED'):
+        for key in ('GENERATOR_TUNE', 'Q2_CUT'):
             report.value(key, values[key], color='INFO')
 
     report.text()

@@ -7,7 +7,7 @@
  * @brief Implements the supported LUND particle-mass lookup.
  *
  * Purpose:
- *   Return particle masses from the external targets.h file without copying those values into maintained
+ *   Return particle masses from the external targets.h file without copying those values into project
  *   code. This file does not choose particles or change their momenta.
  *
  * Workflow:

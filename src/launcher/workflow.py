@@ -429,7 +429,7 @@ def banner(name):
     """Print a workflow status banner.
 
     Purpose:
-        Show the maintained success or stop artwork without changing the workflow result.
+        Show the shared success or stop artwork without changing the workflow result.
 
     Workflow:
         Build the printer path -> run it with tcsh -> print plain text if tcsh cannot start.

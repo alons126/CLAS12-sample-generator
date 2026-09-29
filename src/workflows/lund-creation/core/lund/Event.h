@@ -32,7 +32,7 @@ namespace samples {
 #pragma region /* Supported particle identities */
 /**
  * @namespace constants
- * @brief PDG identifiers supported by maintained LUND event producers.
+ * @brief PDG identifiers supported by the LUND event producers.
  *
  * Purpose:
  *   Keep the supported particle numbers in one place. particleMass() gets nonzero masses from the

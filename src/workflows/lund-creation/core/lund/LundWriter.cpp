@@ -247,7 +247,7 @@ void LundWriter::write(const Event& e) {
 
     // electron–hadron samples and the beam-momentum electron tester historically wrote beam energy with one decimal;
     // ordinary 1e and physical conversion used six decimals. Other header fields retain their
-    // archived precision and meanings, including physical process tags in e.weight.
+    // Keep the required precision and field meanings, including physical process tags in e.weight.
     const bool electron_hadron = workflow_ == "uniform" && config_.get("channel") == "eh";
     const bool tester = workflow_ == "uniform" && config_.get("channel") == "electron-tester";
     const char* format =

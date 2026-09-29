@@ -18,12 +18,10 @@ This repository does not run the physical event generator or calculate final acc
 
 Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, Python 3.9+ for the workflow drivers, and csh/tcsh for the sourced ifarm launcher. Submission preview and execution require the ifarm module command, the requested shared GEMC version, and the COATJAVA 10.0.7 `recon-util` supplied by the documented login environment; only execution requires `sbatch`.
 
-Clone with the pinned legacy reference submodule, or initialize it after an existing clone:
+Clone the repository:
 
 ```bash
-git clone --recurse-submodules REPOSITORY_URL
-# Existing clone:
-git submodule update --init --recursive
+git clone REPOSITORY_URL
 ```
 
 ```bash
@@ -38,7 +36,7 @@ build/debug/apps/uniform-lund-creator \
 
 The resolved uniform run is written below `runs/first-electron/Uniform__1e__5986MeV`. If that directory already exists, generation prints a warning, removes its previous contents and recreates it. Building and generation do not run `git clean` or submit jobs.
 
-LUND output always preserves the established text conventions. Electron, proton, neutron, and charged-pion masses come from the external target source; photons are massless. Production momentum defaults are mixed p/1-p for the 1e electron and charged hadrons, and uniform p for neutrons. Sampled hadron momentum always extends to the beam energy; fixed 1 GeV/c momentum is a neutron-only option. Select electron–hadron samples with `--channel eh --hadron proton|neutron|pip|pim --hadron-region FD|CD`.
+LUND output uses one space between fields and writes particle momentum, energy, mass, and vertex values with five digits after the decimal point. Electron, proton, neutron, and charged-pion masses come from the external target source; photons are massless. Production momentum defaults are mixed p/1-p for the 1e electron and charged hadrons, and uniform p for neutrons. Sampled hadron momentum always extends to the beam energy; fixed 1 GeV/c momentum is a neutron-only option. Select electron–hadron samples with `--channel eh --hadron proton|neutron|pip|pim --hadron-region FD|CD`.
 
 Open `runs/first-electron/Uniform__1e__5986MeV/lundfiles/lund-creation-monitoring/lund-creation-log.json` to see the resolved settings, output counts, and full configure-time Git information. LUND text is under `lundfiles/`; uniform diagnostics are stored once in `lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root`. Physical conversion does not create monitoring histograms.
 
@@ -53,15 +51,12 @@ Start at the [documentation home](docs/index.md). It presents the currently impl
 | [Submit simulation](docs/submit-simulation/index.md) | Preview and submit ifarm GEMC/reconstruction jobs |
 | [Concepts and contracts](docs/concepts/index.md) | Architecture, sampling, LUND records, provenance, and scientific scope |
 | [Development](docs/development/index.md) | Source reference, documentation, wiki publishing, and [adding an event-generator adapter](docs/development/adding-event-generator.md) |
-| [History and migration](docs/history/index.md) | Archived behavior, parity, and migration context |
 
 Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) remain available for the established production matrix.
 
-Maintained workflow implementations are peers under `src/workflows/`; shared C++ workflow support is under `src/workflows/support/`, and the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
+Workflow implementations are peers under `src/workflows/`; shared C++ workflow support is under `src/workflows/support/`, and the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
 
-The project keeps two narrow, RG-M-derived update boundaries. `src/workflows/lund-creation/external/targets.h` is an exact RG-M copy containing the latest target implementations available with GEMC 5.14 when adopted[^sportes-2026-rgm]. `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived payload that keeps the source structure and usage pattern. Maintained adapters surround both files so later RG-M updates can be reviewed and incorporated without duplicating their geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
-
-The original source trees are retained in `legacy/` for historical comparison. Their public repository baseline is the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0), which records the archived tree and the pinned Uniform submodule revision. `legacy/Uniform-sample-generator` remains a submodule of its independent upstream repository. The legacy sources are retired from production use. Detector cards and reconstruction YAML are retained in `config/detector/`.
+The project has two narrow update boundaries for code obtained from RG-M. `src/workflows/lund-creation/external/targets.h` is an exact RG-M copy containing the target implementations available with GEMC 5.14 when it was added[^sportes-2026-rgm]. `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` adapts the RG-M job payload to the project’s generator-independent settings. Small adapters around these files allow later RG-M updates without copying target geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
 
 For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/submit-simulation/ifarm-environment.md). When sourcing from outside the checkout, the user may set the optional `CLAS12_SAMPLES_DIR` environment variable to its absolute path; the project does not define it automatically. Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/concepts/external-inputs.md).
 

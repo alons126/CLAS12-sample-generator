@@ -1,6 +1,6 @@
 // settings.json ---------------------------------------------------------------
 // Description: Workspace editor presentation, language detection and highlighting.
-// Purpose: Make the maintained source and its named regions easier to read in VS Code.
+// Purpose: Make the project source and its named regions easier to read in VS Code.
 // Workflow: VS Code opens the workspace and applies these settings locally.
 // Inputs: Filename patterns, language identifiers and installed editor extensions.
 // Outputs: Editor behavior only; these values do not configure CMake targets or sample physics.

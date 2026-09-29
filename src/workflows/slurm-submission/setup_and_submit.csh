@@ -23,7 +23,7 @@
 #     --source uniform|physical     Source when no manifest supplies it.
 #     --beam-energy GeV             Truth beam energy when no manifest supplies it.
 #     --target ID                   Truth target identity when no manifest supplies it.
-#     --channel NAME                Uniform 1e, eh, electron-tester, or a legacy label.
+#     --channel NAME                Uniform 1e, eh, electron-tester, or a complete FD/CD label.
 #     --hadron NAME                 Proton, neutron, pip, or pim for eh.
 #     --hadron-region FD|CD         Eh hadron detector region.
 #     --event-generator NAME        Physical input adapter; default: genie-gst without a manifest.
@@ -40,7 +40,6 @@
 #     --clas12tags-dir DIRECTORY    Custom clas12Tags checkout as GEMC_DATA_DIR.
 #     --clear-farm-out true|false   Delete direct files from --farm-out with --execute; default: false.
 #     --farm-out DIRECTORY          Exact cleanup directory; required with --clear-farm-out true.
-#     --fc-status 0|1               Legacy physical filename/report label; default: 0.
 #     --help                        Print submission help before synchronization.
 #
 # Workflow:

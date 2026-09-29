@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out maintained documentation
+      - name: Check out project documentation
         uses: actions/checkout@v4
 
       - name: Build wiki pages

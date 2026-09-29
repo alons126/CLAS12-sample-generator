@@ -21,7 +21,7 @@
  *
  * External-source rule:
  *   This file reads the external header without changing it. Updating target definitions means replacing
- *   that external file; this maintained adapter changes only if the external interface changes.
+ *   that external file; this adapter changes only if the external interface changes.
  */
 
 #include "core/geometry/TargetGeometry.h"
@@ -56,7 +56,7 @@ namespace {
  * @brief Holds the unchanged names defined by external targets.h.
  *
  * The using declarations provide standard-library names that targets.h expects. They stay inside this
- * private namespace and do not become part of the maintained API.
+ * private namespace and do not become part of the project API.
  */
 namespace external_targets {
 using std::cout;

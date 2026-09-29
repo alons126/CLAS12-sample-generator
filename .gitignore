@@ -1,6 +1,6 @@
 # Repository ignore rules -----------------------------------------------------
 # Purpose:
-#   Keep maintained source and shared configuration under version control while
+#   Keep project source and shared configuration under version control while
 #   excluding generated, machine-local, and disposable files.
 #
 # How these rules are used:
@@ -56,6 +56,6 @@ legacy/GENIE-GST-test-samples/*
 **copy.txt
 **copy**
 
-# Historical compatibility ----------------------------------------------------
+# Retired-path compatibility --------------------------------------------------
 # Retain the old converter path rule for its generated ACLiC dependency file.
 GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d

@@ -73,7 +73,6 @@ source run.csh --workflow submit --lund-dir /shared/sample/lundfiles \
 | `--clas12tags-dir` | Use a custom checkout or fork of [gemc/clas12Tags](https://github.com/gemc/clas12Tags) as `GEMC_DATA_DIR` |
 | `--job-name` | Override the metadata-derived Slurm name |
 | `--clear-farm-out true|false`, `--farm-out DIRECTORY` | Optional log cleanup, off by default. Setting it to `true` requires the exact cleanup directory; omit it to preserve existing logs. |
-| `--fc-status 0|1` | Legacy physical naming/report label only; applies no cut |
 
 Default uniform job names use `Uniform__<label>__<beam-MeV>MeV`. Default physical job names use `<target>__<event-generator>__<tune>__<Q2-cut>__<beam-MeV>MeV__GEMC<version>`. Hyphens remain valid inside one metadata value.
 
@@ -91,7 +90,7 @@ source run.csh --workflow submit --lund-dir /shared/archive/lundfiles \
   --gemc-target-variation rgm_fall2021_Ar
 ```
 
-Without a manifest, source, beam energy in GeV, target identity and prefix are required. Uniform input also needs its channel (`1e`, `eh`, `electron-tester`, or an explicit legacy/regional label). `eh` requires hadron and region. Physical input accepts `--event-generator` (default `genie-gst`), `--tune` and `--q2-cut` (default unknown). Supply a detector target variation or explicit GCARD. The file inventory must be contiguous `PREFIX_1.txt` through `PREFIX_N.txt`. The resolver discovers the job count, but requires `events-per-job` because it does not scan whole LUND files to count events.
+Without a manifest, source, beam energy in GeV, target identity and prefix are required. Uniform input also needs its channel (`1e`, `electron-tester`, `eh`, or a complete label such as `epFD` or `enCD`). `eh` requires hadron and region. Physical input accepts `--event-generator` (default `genie-gst`), `--tune` and `--q2-cut` (default unknown). Supply a detector target variation or explicit GCARD. The file inventory must be contiguous `PREFIX_1.txt` through `PREFIX_N.txt`. The resolver discovers the job count, but requires `events-per-job` because it does not scan whole LUND files to count events.
 
 ## Server execution and output replacement
 
@@ -105,7 +104,7 @@ Python copies the inherited environment, loads the selected GEMC module in that 
 
 Submission checks `OUTPATH/mchipo` and `OUTPATH/reconhipo` for both uniform and physical samples. It completes the inspection stage for both exact paths before applying any directory action. A preview creates and verifies a missing directory, preserves every existing file, states what execution would clear, and creates no submission log. **With `--execute`, submission warns before recursively deleting each existing directory and then recreates both directories empty to clear previous-run output.** LUND inputs are preserved. Symbolic links and existing non-directory paths are rejected in both modes. After `sbatch` accepts an array, the coordinator reads the numeric ID from `Submitted batch job NUMBER`, prints it as `SLURM_JOB_ID`, and writes it to `OUTPATH/reconhipo/slurm-submission-log.json`. That log also contains every resolved parameter, the exact command, runtime Git repository/branch/commit/status/tracking information, and SHA-256 hashes for the GCARD, YAML, and worker payload. Uniform monitoring is produced during LUND creation and does not use a simulation `rootfiles` directory. Optional farm-output cleanup prints the exact resolved directory and deletes only files directly in it, once per invocation.
 
-One array is submitted per sample. A completed preview or execution prints the shared success artwork once after all samples finish. An interruption or handled failure prints one blank line, the final error, one blank line, and then the shared stop artwork; it stops later samples and returns the original nonzero `$status` without closing the sourced shell. Already submitted jobs remain submitted. If Slurm accepts an array but its response cannot be parsed or the subsequent provenance write fails, inspect the scheduler before retrying. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-`, because the external payload retains its legacy unquoted command arguments. There is no local detector-execution workflow.
+One array is submitted per sample. A completed preview or execution prints the shared success artwork once after all samples finish. An interruption or handled failure prints one blank line, the final error, one blank line, and then the shared stop artwork; it stops later samples and returns the original nonzero `$status` without closing the sourced shell. Already submitted jobs remain submitted. If Slurm accepts an array but its response cannot be parsed or the subsequent provenance write fails, inspect the scheduler before retrying. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-` because the external payload passes these paths as unquoted command arguments. There is no local detector-execution workflow.
 
 ## Slurm command reference
 

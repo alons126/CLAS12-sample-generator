@@ -80,7 +80,6 @@ The project does not run a physical event generator, derive acceptance maps, or 
 | Submit completed LUND files to ifarm | [Submit simulation](submit-simulation/index.md) |
 | Understand sampling, records, architecture, or provenance | [Concepts and data contracts](concepts/index.md) |
 | Modify or extend the software | [Development guide](development/index.md) |
-| Understand compatibility and archived behavior | [History and migration](history/index.md) |
 
 ## Common reader paths
 

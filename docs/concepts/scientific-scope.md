@@ -1,17 +1,16 @@
 # CLAS12 sample generation: technical-note outline
 
-**Document status:** maintained software/methods reference, structured for later assembly into a technical note. The implementation and archived reference sources are the authority for the conventions described here. Local validation establishes generator and command compatibility; it does not establish detector-level acceptance equivalence.
+**Document status:** software and methods reference, structured for later assembly into a technical note. The implementation and its tests define the software conventions described here. Local validation checks generator and command behavior; it does not establish detector-level acceptance equivalence.
 
 ## Abstract
 
-The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A small sourced bridge invokes Python setup with the login shell's CLAS12/COATJAVA environment, loads and verifies the selected GEMC module in a child environment, and submits Slurm arrays whose external payload runs GEMC and reconstruction. Legacy-compatible output is tested against external reference implementations. Production uniform sampling balances momentum and inverse-momentum coverage for 1e electrons and charged hadrons, while neutrons cover zero to beam momentum; hadron region selects the documented FD or CD flat-theta window.
+The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A small sourced bridge invokes Python setup with the login shell's CLAS12/COATJAVA environment, loads and verifies the selected GEMC module in a child environment, and submits Slurm arrays whose external payload runs GEMC and reconstruction. Production uniform sampling balances momentum and inverse-momentum coverage for 1e electrons and charged hadrons, while neutrons cover zero to beam momentum; hadron region selects the documented FD or CD flat-theta window.
 
 ## Reading and assembly order
 
 | Section | Material | Purpose |
 | --- | --- | --- |
 | 1. Scope and terminology | [Newcomer guide](../index.md) | Physical samples, acceptance samples, GST, LUND, HIPO |
-| 2. Provenance and legacy workflows | [Launch-chain reference](../history/legacy-workflows.md) | Exact old entry points, selections, configuration mappings |
 | 3. Software architecture | [Architecture](architecture.md), [source reference](../development/source-reference.md) | Modules, data flow, APIs, ownership, build dependencies |
 | 4. Generation methods | [Sampling models](sampling-models.md), [uniform guide](../create-lund/uniform.md) | Equations, support, RNG streams, trigger electron |
 | 5. Physical-event conversion | [GENIE guide](../create-lund/physical.md) | GST schema, process/species selection, splitting |
@@ -19,7 +18,7 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 | 7. Data products and provenance | [Data contracts](lund-data-contract.md), [diagnostics](../create-lund/monitoring.md) | Field definitions, mass conventions, histograms, manifests |
 | 8. Detector processing | [Simulation and Slurm](../submit-simulation/guide.md) | Runtime environment, filenames, arguments, failure handling |
 | 9. Verification and limitations | [Scientific validation boundaries](../development/validation.md) | Intentional behavior, production evidence, and known limits |
-| Appendices | [Build guide](../getting-started/installation.md), [SSH workflow](../submit-simulation/ifarm-environment.md), [migration](../history/migration.md) | Reproducible build/run recipes and compatibility options |
+| Appendices | [Build guide](../getting-started/installation.md), [SSH workflow](../submit-simulation/ifarm-environment.md) | Reproducible build and run recipes |
 
 ## Boundaries and assumptions
 
@@ -27,7 +26,7 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 - Uniform electron–hadron events are artificial acceptance probes. The trigger electron and hadron need not satisfy exclusive scattering energy/momentum conservation.
 - Hadron theta and phi are always uniform inside the configured detector window for acceptance-map coverage.
 - GENIE header field 10 retains a process code, not a physical event weight.
-- Compatibility requires matching beam energy, geometry, A/Z, seeds, selected mode and file settings. The archived launch scripts contain independent manual selections; they must not be assumed to describe one consistent campaign.
+- Reproducing a run requires matching beam energy, geometry, A/Z, seeds, selected mode, and file settings. Record these values together because independently selected settings do not necessarily describe one consistent campaign.
 - LUND precision, target-source masses, neutral-pion handling, and the physical-input cutoff are explicit in the data/validation chapters.
 
 ## Material still needed for a publication

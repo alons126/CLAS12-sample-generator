@@ -18,7 +18,7 @@ Profiles normally specify `target`; beam energy plus that target selects the sta
 
 ## Uniform production matrix
 
-Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, legacy-derived angular conventions, rounded PDG-based masses, and 25,000 events per file. Uniform profiles request 50,000,000 events, following the legacy production scale; tester profiles request 1,000,000 events, following its server default. Override `--events` for smaller studies.
+Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each established RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, the angular and momentum ranges listed below, rounded PDG-based masses, and 25,000 events per file. Production profiles request 50,000,000 events, while tester profiles request 1,000,000 events. Override `--events` for smaller studies.
 
 | Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
 | --- | --- | --- | --- |
@@ -39,7 +39,7 @@ FD pion and all CD profiles are marked experimental inside the files. They encod
 
 The electron tester profiles sample the selected target geometry and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
 
-The same directory contains `legacy-coderun.conf`, which preserves the archived uniform `CodeRun.cpp` launch settings.
+The directory also contains the development-only comparison profile `legacy-coderun.conf`. It is kept until implementation work finishes and is not a recommended production profile.
 
 ## Physical-input profiles
 
@@ -48,7 +48,7 @@ Physical profiles are stored in `physical-lund-creation/`.
 | Profile | Purpose |
 | --- | --- |
 | `genie-gst.conf` | Physical GENIE GST conversion example |
-| `legacy-genie-wrapper.conf` | Archived GENIE wrapper compatibility settings |
+| `legacy-genie-wrapper.conf` | Development-only comparison settings; not a production example |
 
 ## Available common options
 

@@ -52,7 +52,7 @@ Counts and the split threshold must be integers from 1 through 4294967295. Seeds
 | `trigger-theta` | `25` | Trigger electron theta in eh, degrees |
 | `trigger-phi-offset` | energy-based | Offset from sector closest to opposite hadron direction |
 
-Every event samples exactly one vertex from the selected target geometry and shares it among its particles; fixed coordinates are not a maintained mode. The trigger-electron opposite-sector rule is retained for CD samples even though it is not geometrically obligatory. The electron tester always scans theta 5–40° and all phi at beam momentum; its scan motivated the 25° production trigger setting. Mixed sampling requires a positive lower bound. Resolved labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`; they control output directory and automatic prefix names. Resolved values are recorded in the manifest.
+Every event samples exactly one vertex from the selected target geometry and shares it among its particles; the workflow does not support fixed coordinates. The trigger electron is placed near the sector opposite the hadron for both FD and CD samples. The electron tester scans theta from 5° to 40° and full phi at beam momentum; this scan motivated the 25° production trigger setting. Mixed sampling requires a positive lower bound. Resolved labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`; they control output directory and automatic prefix names. Resolved values are recorded in the manifest.
 
 ## Target geometry
 
@@ -74,7 +74,7 @@ Geometry is an internal resolved manifest value named `target-geometry`; it is n
 
 ## RG-M target catalog
 
-The maintained catalog centralizes the selection that the legacy conversion wrapper performed with target/beam conditionals. Each target supplies nuclear metadata. The resolved GEMC variation supplies its external geometry key. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
+The target catalog selects nuclear metadata and the beam-dependent GEMC target variation in one place. The resolved GEMC variation supplies its external geometry key. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
 
 For C12, 2.07052 GeV automatically selects the small 4 mm foil, 4.02962 GeV selects the large 6 mm foil, and 5.98636 GeV selects four foils. Run 15733 is the exception: use `--gemc-target-variation rgm_fall2021_C_S` with C12 at 4.02962 GeV. The target note documents the foil sizes, beam use, and corresponding GEMC variations, while the RG-M analysis note records the target cells and beam energies[^sportes-2026-rgm][^rgm-analysis-note].
 

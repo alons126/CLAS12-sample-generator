@@ -81,7 +81,6 @@ SIDEBAR_SECTIONS = (
     ("SUBMIT SIMULATION", "submit-simulation"),
     ("CONCEPTS", "concepts"),
     ("DEVELOPMENT", "development"),
-    ("HISTORY", "history"),
 )
 
 LINK = re.compile(r"(?P<prefix>!?\[[^\]]*\]\()(?P<target><[^>]+>|[^)\s]+)(?P<suffix>[^)]*\))")
@@ -107,7 +106,7 @@ IGNORED_REFERENCE_PARTS = {".git", "build", "test-runs", "__pycache__"}
 
 # region Page discovery
 def source_pages():
-    """Map each maintained Markdown source to its wiki filename.
+    """Map each project Markdown source to its wiki filename.
 
     Workflow:
         Add the pages with fixed names, then add every remaining documentation page. Give each page a
@@ -133,9 +132,13 @@ def source_pages():
 
     for source in sorted((ROOT / "docs").rglob("*.md")):
         resolved = source.resolve()
+        relative = source.relative_to(ROOT / "docs")
+
+        # Development comparison notes stay in the repository but are not part of the reader wiki.
+        if relative.parts[0] == "history":
+            continue
 
         if resolved not in pages:
-            relative = source.relative_to(ROOT / "docs")
             parts = list(relative.with_suffix("").parts)
 
             if parts[-1] == "index":
@@ -168,7 +171,7 @@ def repository_url(repository, branch, relative, fragment="", image=False):
 
     Args:
         repository: GitHub repository written as OWNER/NAME.
-        branch: Branch containing the maintained source.
+        branch: Branch containing the project source.
         relative: Repository-relative path to link.
         fragment: Optional existing Markdown anchor, including its leading hash.
         image: Use raw.githubusercontent.com for an embedded image when true.
@@ -367,7 +370,7 @@ def rewrite_links(text, source, pages, repository, branch):
     Inputs:
         text: Complete Markdown page text.
         source: Absolute source file owning relative links.
-        pages: Absolute maintained-source to wiki-filename mapping.
+        pages: Absolute project-source to wiki-filename mapping.
         repository: Public GitHub repository written as OWNER/NAME.
         branch: Public source branch.
 

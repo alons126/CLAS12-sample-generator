@@ -15,7 +15,7 @@
  *   RG-M target/beam mapping -> return the matching geometry record.
  *
  * Selection rules:
- *   H1, D2, He4, Ar40, calcium, and tin have one maintained variation. C12 uses the small foil at
+ *   H1, D2, He4, Ar40, calcium, and tin have one supported variation. C12 uses the small foil at
  *   2.07052 GeV, the large foil at 4.02962 GeV, and four foils at 5.98636 GeV. An explicit compatible
  *   variation handles exceptions such as run 15733, which used the small C12 foil at 4.02962 GeV.
  *
@@ -49,7 +49,7 @@ const std::vector<TargetVariation>& targetVariations() {
         {"rgm_fall2021_C_L", "C12", "1-foil-large"},
         {"rgm_fall2021_Cx4", "C12", "4-foil"},
 
-        // The remaining solid targets each have one maintained detector assembly.
+        // The remaining solid targets each have one supported detector assembly.
         {"rgm_fall2021_Snx4", "Sn-nat", "4-foil"},
         {"rgm_fall2021_Ca", "Ca40", "Ca"},
         {"rgm_fall2021_Ca", "Ca48", "Ca"},

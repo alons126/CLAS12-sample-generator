@@ -7,7 +7,7 @@
  * @brief Public access to target vertices and particle masses from targets.h.
  *
  * Purpose:
- *   Let maintained code use the external targets.h file without exposing its global variables. Each run
+ *   Let the LUND workflows use the external targets.h file without exposing its global variables. Each run
  *   supplies its own random-number generator for vertex sampling.
  *
  * Workflow:
@@ -42,7 +42,7 @@ namespace samples {
  *
  * Purpose:
  *   Provide checked vertex sampling and mass lookup while keeping the targets.h map and global TRandom3
- *   out of the rest of the maintained code.
+ *   out of the rest of the project code.
  *
  * Creation and lifecycle:
  *   The constructor stores and checks the geometry name without drawing a random value. Each sample()
@@ -89,7 +89,7 @@ class TargetGeometry {
      * @return Mass in GeV/c². Electron, nucleon, and charged-pion values are read from targets.h;
      *         photon mass is exactly zero.
      *
-     * @throws std::runtime_error If pid is not part of the maintained LUND particle contract.
+     * @throws std::runtime_error If pid is not part of the supported LUND particle contract.
      *
      * @note This function does not draw random numbers or keep a second mass table.
      */

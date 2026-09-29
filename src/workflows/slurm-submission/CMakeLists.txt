@@ -38,7 +38,7 @@ if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/resolution.py"
     endif()
     find_program(TCSH_EXECUTABLE NAMES tcsh csh)
     if(TCSH_EXECUTABLE)
-        add_test(NAME submission-legacy-parity COMMAND ${Python3_EXECUTABLE}
+        add_test(NAME submission-workflow-validation COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/submission_parity.py ${PROJECT_SOURCE_DIR} ${TCSH_EXECUTABLE})
     endif()
 endif()

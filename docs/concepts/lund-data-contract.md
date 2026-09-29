@@ -10,7 +10,7 @@ These types are defined in [Event.h](../../src/workflows/lund-creation/core/lund
 
 Particle momenta are in GeV/c, masses are in GeV/c², beam and particle energies are in GeV, vertex coordinates are in centimeters, and configured sampling angles are in degrees. The writer uses natural units with c=1 and calculates particle energy as `sqrt(p²+m²)`. Uniform sampling uses ROOT's `TVector3` spherical-coordinate convention, and every particle in an event receives the same sampled interaction vertex. Written particles are active; reserved status, parent, and daughter fields are zero except for the fixed active-particle field described below.
 
-Electron, proton, neutron, and charged-pion masses come from the external target source through the maintained adapter; the photon mass is exactly zero. Physical inputs must provide upstream-generated neutral-pion decay photons because the converter skips residual PDG 111 entries rather than inventing missing decay kinematics.
+Electron, proton, neutron, and charged-pion masses come from the external target source through `TargetGeometry`; the photon mass is exactly zero. Physical inputs must provide upstream-generated neutral-pion decay photons because the converter skips residual PDG 111 entries rather than inventing missing decay kinematics.
 
 ## 3. LUND header: ten fields
 
@@ -19,7 +19,7 @@ Electron, proton, neutron, and charged-pion masses come from the external target
 | 1 | Number of written particles | Number of retained particles including electron |
 | 2 | Configured A (default `Ar40` target resolves to 40) | Configured A |
 | 3 | Configured Z (default `Ar40` target resolves to 18) | Configured Z |
-| 4 | 0 | GST `resid` (historical resonance metadata use) |
+| 4 | 0 | GST `resid`, the GENIE resonance identifier |
 | 5 | 0 | 0 |
 | 6 | 11 (electron beam) | 11 |
 | 7 | Configured beam energy, with output-mode rounding | Same |
@@ -27,7 +27,7 @@ Electron, proton, neutron, and charged-pion masses come from the external target
 | 9 | Global generated-event index, starting at zero | Global input entry index, including skipped entries |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
 
-The GENIE process tag and resonance metadata are historical application conventions, not a claim that field 10 is a physical cross-section weight. We produce LUND files following the format in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
+The GENIE process tag and resonance identifier are project-specific uses of user fields. Field 10 is not a physical cross-section weight. We produce LUND files following the format in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
 
 ## 4. Particle record: fourteen fields
 
@@ -45,15 +45,15 @@ The GENIE process tag and resonance metadata are historical application conventi
 
 The writer rejects empty events and non-finite particle energy/vertex data. GENIE `El` and `Ef` are not used to override the mass-shell energy calculation.
 
-## 5. Output precision and compatibility
+## 5. Output precision and layout
 
-The single maintained format uses established whitespace and five decimal places for particle momenta, energy, mass, and vertices. Uniform event IDs start at zero and remain continuous across split files, matching the physical converter's use of one input-wide index rather than restarting at each file. Ordinary 1e and GENIE headers write beam energy with six decimals. Electron–hadron and angular-tester headers write it with one decimal (for example, 5.98636 is serialized as 6.0). Internal momentum calculations still use the full configured beam value.
+The writer uses one space between fields and writes particle momenta, energy, mass, and vertices with five digits after the decimal point. Uniform event IDs start at zero and remain continuous across split files. Physical conversion uses the input entry index. Ordinary 1e and GENIE headers write beam energy with six digits after the decimal point. Electron–hadron and angular-tester headers write it with one digit after the decimal point, so 5.98636 is written as 6.0. Momentum calculations still use the full configured beam value.
 
 Uniform prefixes and run-directory names are derived as `Uniform__<resolved-label>__<beam-MeV>MeV`. Physical prefixes are derived as `<target>__<event-generator>[-<version>]__<tune>__<Q2-cut>__<beam-MeV>MeV`; a known version joins the generator with a hyphen, while `unknown` is omitted. The manifest always records `event-generator-version`, including `unknown`. Nested physical directories use `OUTPUT/<target>/<event-generator>__<tune>/<Q2-cut>__<beam-MeV>MeV`. The metadata layout joins generator and version with a hyphen and uses `__` between the resulting metadata groups. Hyphens and decimal points remain valid inside one value, as in `genie-gst`, `3.6.2`, and `Q2-0.40`. `--prefix` remains an explicit override for a downstream naming requirement. Output paths are explicit and never inferred from the current machine.
 
 ## 6. Mass convention
 
-Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/workflows/lund-creation/core/lund/Event.h). `particleMass()` delegates to the target-source adapter, whose implementation is the only maintained translation unit that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and serializes both energy and mass to five decimal places.
+Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/workflows/lund-creation/core/lund/Event.h). `particleMass()` delegates to `TargetGeometry.cpp`, the only project source file that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and writes both energy and mass with five digits after the decimal point.
 
 | Species (PDG) | LUND mass (GeV/c²) |
 | --- | ---: |
@@ -64,7 +64,7 @@ Supported PDG identifiers are declared with the particle record in [`Event.h`](.
 | photon (22) | 0 |
 
 The table shows five-decimal serialized values. Internally, [`targets.h`](../../src/workflows/lund-creation/external/targets.h) supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
-Neutral-pion mass is deliberately absent from the maintained table because PDG 111 is not a supported LUND output species. CLAS12 reconstructs neutral pions from their two-photon decays, so physical GST input must already contain the daughter photons generated upstream.
+Neutral-pion mass is absent because PDG 111 is not a supported LUND output species. CLAS12 reconstructs neutral pions from their two-photon decays, so physical GST input must already contain the daughter photons generated upstream.
 
 ## 7. File splitting and completion
 

@@ -12,9 +12,9 @@ lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root
 
 `UniformMonitoring` is implemented beside the generator in [`src/workflows/lund-creation/uniform-lund-creator/`](../../src/workflows/lund-creation/uniform-lund-creator). There is no separate shared monitoring layer because physical conversion does not consume it.
 
-## 2. Legacy plot contract
+## 2. Plot groups
 
-The maintained definitions preserve the archived plot organization:
+The monitoring file contains these plot groups:
 
 - 100 bins per axis.
 - Momentum range 0 to 1.1 times the beam energy and axis unit `[GeV]`.
@@ -27,7 +27,7 @@ The maintained definitions preserve the archived plot organization:
 - A 1000×750 grid canvas with bottom/left/right margins 0.14/0.16/0.12.
 - One-dimensional plots drawn normally and two-dimensional plots drawn with `colz`.
 
-The 1e and electron-tester histogram names and definitions remain the archived ones. Electron-hadron monitoring retains the archived electron, hadron, vertex, single-particle correlation, and electron-hadron correlation families while adding particle and detector-region labels.
+The 1e and electron-tester histograms cover electron momentum, angles, and vertices. Electron–hadron monitoring adds hadron momentum, angles, vertices, single-particle correlations, and electron–hadron correlations. Histogram names include the particle and detector-region labels.
 
 ## 3. Hadron and region notation
 

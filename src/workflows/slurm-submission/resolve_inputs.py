@@ -33,7 +33,7 @@ CLI options:
     --source uniform|physical     Set source when no completed manifest supplies it.
     --beam-energy GeV             Set truth beam energy when no manifest supplies it.
     --target ID                   Set truth target identity when no manifest supplies it.
-    --channel NAME                Set uniform 1e, eh, electron-tester, or a legacy channel label.
+    --channel NAME                Set uniform 1e, eh, electron-tester, or a complete FD/CD label.
     --hadron NAME                 Set proton, neutron, pip, or pim for an eh channel.
     --hadron-region FD|CD         Select the eh hadron detector region.
     --event-generator NAME        Set physical input adapter; default: genie-gst without a manifest.
@@ -50,7 +50,6 @@ CLI options:
     --clas12tags-dir DIRECTORY    Use a custom clas12Tags checkout as GEMC_DATA_DIR.
     --clear-farm-out true|false   Delete direct files from --farm-out with --execute; default: false.
     --farm-out DIRECTORY          Exact cleanup directory; required with --clear-farm-out true.
-    --fc-status 0|1               Set legacy physical filename/report label; default: 0.
     --help                        Print submission help before any server synchronization.
 """
 
@@ -95,7 +94,7 @@ OPTIONS = {
     'source': 'uniform or physical; normally read from the manifest',
     'beam-energy': 'Truth beam energy in GeV',
     'target': 'Truth target identity, independently of detector target variation',
-    'channel': 'Uniform 1e, eh, electron-tester, or an explicit legacy/regional label',
+    'channel': 'Uniform 1e, eh, electron-tester, or a complete FD/CD sample label',
     'hadron': 'proton, neutron, pip or pim when channel=eh',
     'hadron-region': 'FD or CD when channel=eh',
     'event-generator': 'Physical input adapter label (default: genie-gst for physical input)',
@@ -113,7 +112,6 @@ OPTIONS = {
     'clas12tags-dir': 'Custom gemc/clas12Tags checkout used as GEMC_DATA_DIR; intended for detector-development studies',
     'clear-farm-out': 'true/false (default: false); delete direct files from --farm-out once',
     'farm-out': 'Exact cleanup directory; required when clear-farm-out is true',
-    'fc-status': '0 or 1 legacy physical filename/report label only (default: 0)',
 }
 
 # Resolve these path settings from the config file before applying command-line values.
@@ -130,7 +128,7 @@ BEAMS = {2070: ('2GeV', '0.5', 'rgm_fall2021-cv.yaml'),
 
 # Map hadron choices to filename labels and accept completed runs that already use FD/CD labels.
 HADRONS = {'proton': 'ep', 'neutron': 'en', 'pip': 'epip', 'pim': 'epim'}
-LABELS = {'1e', 'electron-tester', 'ep', 'en'} | {label + region for label in HADRONS.values() for region in ('FD', 'CD')}
+LABELS = {'1e', 'electron-tester'} | {label + region for label in HADRONS.values() for region in ('FD', 'CD')}
 # endregion Accepted settings
 
 # Parsing and validation ------------------------------------------------------
@@ -317,7 +315,7 @@ def channel_label(values):
         values: Merged settings containing channel and, for eh, hadron and hadron-region.
 
     Returns:
-        The corresponding 1e, electron-tester, legacy, or species-plus-region label.
+        The corresponding 1e, electron-tester, or species-plus-region label.
 
     Failure:
         Unknown channels or incomplete eh selections raise ValueError. Filenames are never
@@ -333,9 +331,9 @@ def channel_label(values):
 
         return HADRONS[values['hadron']] + values['hadron-region']
 
-    # Existing runs may already contain a complete channel label. Never guess it from a path.
+    # A caller may provide the complete species-plus-region label. Never guess it from a path.
     if channel not in LABELS:
-        raise ValueError('Specify --channel 1e|eh|electron-tester or an explicit legacy/regional label')
+        raise ValueError('--channel must be 1e, electron-tester, eh, or a complete label such as epFD or enCD')
 
     return channel
 
@@ -394,7 +392,7 @@ def resolve(lund_directory, explicit, root):
 
     Args:
         lund_directory: Selected RUN/lundfiles path. The run is derived from this location, never
-            from the manifest's historical config.output value.
+            from the schema-1 manifest's config.output value.
         explicit: Config and CLI overrides, already combined with CLI precedence.
         root: Checkout root used to find detector defaults and reject unsafe output paths.
 
@@ -444,7 +442,7 @@ def resolve(lund_directory, explicit, root):
                     raise ValueError(f'--{key} conflicts with manifest value {inherited[key]!r}')
 
     # Apply setting priority, then require the main sample identity fields.
-    values = {'gemc-version': '5.14', 'clear-farm-out': 'false', 'fc-status': '0', **inherited, **explicit}
+    values = {'gemc-version': '5.14', 'clear-farm-out': 'false', **inherited, **explicit}
 
     for key in ('source', 'beam-energy', 'target', 'prefix'):
         if not values.get(key):
@@ -556,13 +554,10 @@ def resolve(lund_directory, explicit, root):
         if not path.is_file():
             raise ValueError(f'{name} does not exist: {path}; supply an explicit path if needed')
 
-    # Check optional run controls separately. fc-status changes names only; it is not an event cut.
+    # Check optional run controls separately.
     for key in ('clear-farm-out',):
         if values[key] not in ('true', 'false'):
             raise ValueError(f'--{key} must be true or false')
-
-    if values['fc-status'] not in ('0', '1'):
-        raise ValueError('--fc-status must be 0 or 1 (legacy naming only)')
 
     optional_paths = {}
 
@@ -586,9 +581,7 @@ def resolve(lund_directory, explicit, root):
     tune = token(values.get('tune', 'unknown' if source == 'physical' else 'none'), 'tune')
     q2 = token(values.get('q2-cut', 'unknown' if source == 'physical' else 'none'), 'q2-cut')
     beam = f'{mev}MeV'
-    fc = '_wFC' if values['fc-status'] == '1' else ''
-    job_fc = '__wFC' if values['fc-status'] == '1' else ''
-    default_job = f'Uniform__{channel}__{beam}' if source == 'uniform' else f'{target}__{generator}__{tune}__{q2}__{beam}{job_fc}__GEMC{version}'
+    default_job = f'Uniform__{channel}__{beam}' if source == 'uniform' else f'{target}__{generator}__{tune}__{q2}__{beam}__GEMC{version}'
     job = token(values.get('job-name', default_job), 'job-name')
 
     # Return only values used by submit.py and the external worker. OUTPATH always uses the local run.
@@ -599,8 +592,7 @@ def resolve(lund_directory, explicit, root):
                 GEMC_VERSION=version, CLEAR_FAR_OUT=values['clear-farm-out'],
                 CLAS12TAGS_DIR=optional_paths['clas12tags-dir'], farm_out=optional_paths['farm-out'],
                 TORUS_FIELD=torus_text,
-                REQUIREMENTS_DIR=str(card.parent), GCARD_FILE=str(card), YAML_FILE=str(yaml),
-                FC_STATUS_ENABLED=values['fc-status'], FC_STATUS=fc)
+                REQUIREMENTS_DIR=str(card.parent), GCARD_FILE=str(card), YAML_FILE=str(yaml))
 # endregion Resolution
 
 # Command resolution ----------------------------------------------------------

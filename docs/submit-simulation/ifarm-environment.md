@@ -34,7 +34,7 @@ source run.csh --workflow create-lund --source uniform \
   --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output runs/electron-001
 ```
 
-The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, pulls the remote revision, and runs `git submodule sync --recursive` followed by `git submodule update --init --recursive`. The latter checks out `legacy/Uniform-sample-generator` at the exact revision pinned by the main repository. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads build defaults from `config/run.json` and dispatches the action written in the command. Existing resolved run directories are recreated as in the legacy generators.
+The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, pulls the remote revision, and initializes configured submodules at their pinned revisions. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads build defaults from `config/run.json` and dispatches the action written in the command. Existing resolved run directories are removed and recreated after the safety checks described in the workflow guide.
 
 ```tcsh
 source run.csh --workflow create-lund --source uniform --config config/samples/uniform-lund-creation/uniform-enFD-5986MeV.conf --output runs/en-001
@@ -79,7 +79,7 @@ A failed command stops subsequent stages and returns a nonzero `$status` without
 
 Tcsh maintains local variables created by `set` separately from exported environment variables created by `setenv`. Both may have the same name, and `$NAME` expands the local value even after `setenv NAME ...` replaces the exported value. A stale local value can therefore make a freshly sourced workflow appear to ignore its configuration until a new terminal session is opened.
 
-Every maintained project-owned environment assignment clears both namespaces immediately before setting its authoritative value: `unset NAME`, then `unsetenv NAME`, then `setenv NAME VALUE`. This applies to the shared color and project environment. Submission settings are now resolved in Python, which overwrites its child-process environment directly before calling `sbatch`; stale shell locals cannot shadow them. User-owned inputs such as `CLAS12_SAMPLES_DIR`, values established by external site modules, external payloads, and archived sources are not rewritten unless a maintained workflow explicitly owns an override. Per-sample submission values are no longer written back into the login shell.
+Every project-owned environment assignment clears both shell namespaces immediately before setting its value: `unset NAME`, then `unsetenv NAME`, then `setenv NAME VALUE`. This applies to the shared color and project environment. Submission settings are resolved in Python, which overwrites its child-process environment directly before calling `sbatch`; stale shell locals cannot shadow them. User inputs such as `CLAS12_SAMPLES_DIR` and values established by external site modules are not rewritten unless a workflow explicitly owns an override. Per-sample submission values are not written back into the login shell.
 
 ## Run settings and build controls
 

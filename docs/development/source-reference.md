@@ -1,6 +1,6 @@
 # Source and API reference
 
-This chapter inventories the supported code and the archived support code so a future technical note can distinguish the implemented methods from historical dependencies.
+This chapter explains the project source, its public interfaces, and how data moves through each workflow.
 
 ## 1. Build and application layer
 
@@ -15,9 +15,9 @@ This chapter inventories the supported code and the archived support code so a f
 | `src/workflows/lund-creation/apps/event_generator_to_lund_converter_main.cpp` | Generator-independent physical entry point and error reporting |
 | `.vscode/c_cpp_properties.json` | Uses Debug compile_commands.json for editor compiler/include settings |
 
-Production sources compile once into conventional targets. Archived implementation files are not linked into production targets.
+Each project source file is compiled once into a conventional target. Development comparison files are not part of the build.
 
-## 2. Shared maintained layers
+## 2. Shared LUND layers
 
 The shared LUND pipeline is organized by responsibility inside `src/workflows/lund-creation/`. These directories compile into the single `LundCore` target because they are small and always used together. External target geometry is isolated under `src/workflows/lund-creation/external/`; the external simulation payload belongs separately to `src/workflows/slurm-submission/external/`.
 
@@ -29,15 +29,15 @@ Configuration is parsed once; `UniformConfig` converts frequently used settings 
 
 ### LUND records and serialization (`src/workflows/lund-creation/core/lund/`)
 
-[Event.h](../../src/workflows/lund-creation/core/lund/Event.h) declares supported PDG identifiers, `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../../src/workflows/lund-creation/core/lund/Particle.cpp) delegates mass lookup to the target-source adapter. [TargetGeometry.cpp](../../src/workflows/lund-creation/core/geometry/TargetGeometry.cpp) is the only maintained translation unit that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); it returns that source's electron, proton, neutron, and charged-pion masses, returns zero for photons, and rejects unsupported species.
+[Event.h](../../src/workflows/lund-creation/core/lund/Event.h) declares supported PDG identifiers, `Particle`, `Event`, and `particleMass(pid)`. [Particle.cpp](../../src/workflows/lund-creation/core/lund/Particle.cpp) delegates mass lookup to the target-source adapter. [TargetGeometry.cpp](../../src/workflows/lund-creation/core/geometry/TargetGeometry.cpp) is the only project source file that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); it returns that source's electron, proton, neutron, and charged-pion masses, returns zero for photons, and rejects unsupported species.
 
 [LundWriter.h](../../src/workflows/lund-creation/core/lund/LundWriter.h) / [LundWriter.cpp](../../src/workflows/lund-creation/core/lund/LundWriter.cpp): constructor validates and recreates the resolved run directory and prepares `mchipo/` and `reconhipo/` for either source; `LundWriter::full()` checks event capacity; `LundWriter::write()` serializes an event and rotates files at the resolved `events-per-file` threshold; `LundWriter::finish(scanned)` publishes the manifest. Setup reporting groups run limits, beam/target values, active source settings, and real output paths with one resolved value per line; completion reporting contains only counters and status. Fixed serialization constants and inactive channel settings are omitted. Only uniform construction prepares monitoring plot output. Output-stream exceptions propagate; failed runs may leave partial output without a manifest.
 
 ### Geometry (`src/workflows/lund-creation/core/geometry/`)
 
-[TargetCatalog.h](../../src/workflows/lund-creation/core/config/TargetCatalog.h) / [TargetCatalog.cpp](../../src/workflows/lund-creation/core/config/TargetCatalog.cpp) map target identities to A/Z and resolve beam-dependent GEMC variations with their external geometry keys. [TargetGeometry.h](../../src/workflows/lund-creation/core/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../../src/workflows/lund-creation/core/geometry/TargetGeometry.cpp) validate and sample the resolved geometry under an isolated RNG lock and expose the same external source's particle masses through a read-only lookup. Every maintained mode, including the electron tester, samples its selected geometry. The adapter is the only maintained translation unit that includes `src/workflows/lund-creation/external/targets.h`; that imported header remains in place so replacing it does not mix external ownership with maintained code.
+[TargetCatalog.h](../../src/workflows/lund-creation/core/config/TargetCatalog.h) / [TargetCatalog.cpp](../../src/workflows/lund-creation/core/config/TargetCatalog.cpp) map target identities to A/Z and resolve beam-dependent GEMC variations with their external geometry keys. [TargetGeometry.h](../../src/workflows/lund-creation/core/geometry/TargetGeometry.h) / [TargetGeometry.cpp](../../src/workflows/lund-creation/core/geometry/TargetGeometry.cpp) validate and sample the resolved geometry under an isolated RNG lock and expose the same external source's particle masses through a read-only lookup. Every mode, including the electron tester, samples its selected geometry. The adapter is the only project source file that includes `src/workflows/lund-creation/external/targets.h`; keeping that include in one place makes target-source updates easier to review.
 
-The imported header is kept as an exact RG-M copy, while `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` is a modified RG-M-derived script that retains its source structure and usage pattern. The maintained adapters around both files provide narrow update points for later RG-M releases; detailed provenance and replacement guidance are in [external inputs](../concepts/external-inputs.md) and the [worker reference](../submit-simulation/worker-reference.md).
+The imported header is kept as an exact RG-M copy, while `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` adapts an RG-M script to generator-independent inputs. Their small interfaces provide clear update points for later RG-M releases; detailed provenance and replacement guidance are in [external inputs](../concepts/external-inputs.md) and the [worker reference](../submit-simulation/worker-reference.md).
 
 ### Shared workflow support (`src/workflows/support/`)
 
@@ -49,9 +49,9 @@ The imported header is kept as an exact RG-M copy, while `src/workflows/slurm-su
 
 [UniformConfig.h](../../src/workflows/lund-creation/uniform-lund-creator/UniformConfig.h) defines the `UniformChannel` and `HadronSpecies` enums and the typed configuration used by the hot loop. It includes angular/momentum bounds, resolved mode booleans, trigger parameters and A/Z.
 
-[UniformGenerator.h](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.h) / [UniformGenerator.cpp](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, one `UniformMonitoring` object and a writer. Internal `momentum()` constructs Cartesian vectors; `triggerPhi()` retains the archived sector/tie convention. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves one ROOT product, the required rendered plots, and the creation log.
+[UniformGenerator.h](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.h) / [UniformGenerator.cpp](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp) expose `generateUniform(const RunConfig&)`. The function owns RNGs, geometry, one `UniformMonitoring` object and a writer. Internal `momentum()` constructs Cartesian vectors; `triggerPhi()` places the electron near the sector opposite the hadron and resolves boundary ties in a fixed direction. Each loop iteration samples a vertex and the configured particles, writes the event, then fills diagnostics. After completion it saves one ROOT product, the required rendered plots, and the creation log.
 
-[UniformMonitoring.h](../../src/workflows/lund-creation/uniform-lund-creator/UniformMonitoring.h) / [UniformMonitoring.cpp](../../src/workflows/lund-creation/uniform-lund-creator/UniformMonitoring.cpp) own the complete uniform-only monitoring contract. The implementation preserves the legacy organization, titles, correlations, axis text settings and canvas layout, sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets[^sportes-2026-rgm][^rgm-analysis-note], and generalizes hadron tokens to `pFD`, `pCD`, `nFD`, `nCD`, `pipFD`, `pipCD`, `pimFD`, and `pimCD`. `UniformMonitoring::save()` writes all histograms once to `<prefix>__monitoring_plots.root` and always renders those same objects into `MonitoringPlotsPath`, including `<prefix>__plots.pdf`.
+[UniformMonitoring.h](../../src/workflows/lund-creation/uniform-lund-creator/UniformMonitoring.h) / [UniformMonitoring.cpp](../../src/workflows/lund-creation/uniform-lund-creator/UniformMonitoring.cpp) own the complete uniform-only monitoring contract. The implementation groups electron, hadron, vertex, and correlation histograms, uses consistent titles, axis text, and canvas layout, and sets every vertex-z axis to −8–5 cm to cover the target positions of all RG-M targets[^sportes-2026-rgm][^rgm-analysis-note]. Hadron tokens are `pFD`, `pCD`, `nFD`, `nCD`, `pipFD`, `pipCD`, `pimFD`, and `pimCD`. `UniformMonitoring::save()` writes all histograms once to `<prefix>__monitoring_plots.root` and renders those same objects into `MonitoringPlotsPath`, including `<prefix>__plots.pdf`.
 
 The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p components using the run-global index. Neutrons use uniform momentum unless their optional fixed mode is selected. Hadron species and FD/CD region resolve the documented angular and threshold defaults. Mathematical definitions are in [sampling models](../concepts/sampling-models.md).
 
@@ -61,7 +61,7 @@ The 1e electron and charged-hadron branches alternate uniform-p and uniform-1/p 
 
 [GenieConverterGST.h](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.h) / [GenieConverterGST.cpp](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp) are nested below the physical dispatcher because GENIE GST is one adapter of the `event-generator-to-lund-converter` executable. They expose `convertGenieGST(const RunConfig&)`. A `TChain("gst")` feeds typed `TTreeReaderValue`/`TTreeReaderArray` objects. The function checks branches/types/array lengths, selects process/species, and writes an `Event`. Physical conversion creates no monitoring histograms.
 
-The reader arrays have no maintained fixed-size particle buffer. ROOT reports each current-entry length through `TTreeReaderArray::GetSize()` from the branch's leaf-count metadata. Conversion requires every reported length to equal nonnegative `nf` before accessing index zero, and a 300-supported-particle fixture verifies traversal through the final element. Protons, neutrons, charged pions and photons are copied in input order. Residual neutral pions are skipped because their two-photon decay must be generated upstream. Only QE, MEC, RES, and DIS reactions are supported; adding another reaction requires updating the adapter. Input errors, unsupported-only input and output failures do not publish a manifest. Before a follow-up file starts, the physical-input cutoff requires at least `events-per-file` inclusive input entries; it never interrupts a file already in progress. Capacity still counts accepted events. Schema and process conventions are in the [GENIE guide](../create-lund/physical.md).
+The reader arrays have no fixed-size particle buffer. ROOT reports each current-entry length through `TTreeReaderArray::GetSize()` from the branch's leaf-count metadata. Conversion requires every reported length to equal nonnegative `nf` before accessing index zero, and a 300-supported-particle fixture verifies traversal through the final element. Protons, neutrons, charged pions and photons are copied in input order. Residual neutral pions are skipped because their two-photon decay must be generated upstream. Only QE, MEC, RES, and DIS reactions are supported; adding another reaction requires updating the adapter. Input errors, unsupported-only input and output failures do not publish a manifest. Before a follow-up file starts, the physical-input cutoff requires at least `events-per-file` inclusive input entries; it never interrupts a file already in progress. Capacity still counts accepted events. Schema and process conventions are in the [GENIE guide](../create-lund/physical.md).
 
 ## 5. Execution scripts
 
@@ -81,24 +81,13 @@ The resolver obtains the prefix and task count from the completed manifest or ex
 - `config/samples/uniform-lund-creation/uniform-<label>-{2070,4029,5986}MeV.conf`: complete Ar40 profiles for every supported 1e/FD/CD label at each established beam energy; pion and CD files are explicitly marked unvalidated for production.
 - `config/samples/uniform-lund-creation/electron-tester-{2070,4029,5986}MeV.conf`: beam-specific tester profiles with fixed beam momentum and target-sampled vertices.
 - `config/samples/physical-lund-creation/genie-gst.conf`: an explicit Ar conversion example.
-- `config/samples/uniform-lund-creation/legacy-coderun.conf` and `config/samples/physical-lund-creation/legacy-genie-wrapper.conf`: active archived launch settings; override their production-sized counts for smoke tests.
-- `config/detector/Generation_files_*`: unchanged 2/4/6 GeV cards and reconstruction YAML for the archived versions. They are resources, not generated models. Matching detector/data dependencies are external.
+- `config/detector/Generation_files_*`: fixed 2/4/6 GeV cards and reconstruction YAML. They are resources, not generated models. Matching detector/data dependencies are external.
 
-## 7. Archived supporting code
-
-The public repository baseline for the archived sources is the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0). Use that tag when comparing maintained code with the historical tree described below.
-
-`legacy/Uniform-sample-generator/` is a Git submodule pinned to the independent `alons126/Uniform-sample-generator` repository. It retains the configuration/path helpers, text printing, particle formatter, angle calculation, target globals, histogram globals, main/ROOT launchers, tester and upstream historical material. Production targets do not link the submodule.
-
-`legacy/GEMC-samples/` retains the converter, geometry helper, shell setup/submission chains and resource snapshots. Its `framework/classes/AMaps` implements historical acceptance-map lookup, `hPlots` implements plotting containers, and `DSCuts` stores cut parameters. `framework/namespaces/general_utilities` holds environment/text/ROOT helpers and the restored converter mass constants. The acceptance-map/fiducial application is commented out in the archived converter; these classes are not active new generation dependencies. They are not a supported replacement for downstream acceptance analysis.
-
-The archived root [`genie_job_submission_script.csh`](../../legacy/genie_job_submission_script.csh) is another historical submission copy. There is one supported new Slurm runner. Do not infer which historical copy was last used from its location alone.
-
-## 8. SSH checkout orchestration
+## 7. SSH checkout orchestration
 
 [SSH workflow](../submit-simulation/ifarm-environment.md) documents the disposable ifarm checkout refresh and `config/run.json`. `src/launcher/workflow.py` reads build defaults, requires an explicit workflow and LUND source, builds when requested, and dispatches LUND creation. Submission is sourced directly by `run.csh`; the external Bash payload is the array worker. Subprocess arguments are passed as lists and sourced wrappers preserve failure status.
 
-See [source documentation conventions](documentation-style.md) for the banners, region markers and explanations embedded in maintained code. External and archived source files are excluded from edits.
+See [source documentation conventions](documentation-style.md) for the banners, region markers, and explanations embedded in project code.
 
 The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.
 

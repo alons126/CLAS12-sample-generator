@@ -16,7 +16,7 @@
  *   stop conditions, output files, and success or failure decisions.
  *
  * Assumptions:
- *   Maintained execution platforms provide the POSIX isatty() interface. A carriage return refreshes an
+ *   Supported execution platforms provide the POSIX isatty() interface. A carriage return refreshes an
  *   interactive line; no locally defined ANSI cursor-control sequence is needed.
  */
 
