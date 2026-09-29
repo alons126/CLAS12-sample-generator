@@ -42,7 +42,7 @@
 #     --farm-out DIRECTORY          Exact cleanup directory; required with --clear-farm-out true.
 #     --help                        Print submission help before synchronization.
 #
-# Workflow:
+# Execution flow:
 #     Load colors -> check settings -> load the selected GEMC module -> call sbatch -> read the accepted
 #     job ID -> write the submission log -> print the shared final status.
 #

@@ -12,7 +12,7 @@
 #   Make the beginning of a long ifarm log easy to find. This script does not change settings or decide
 #   whether the workflow succeeds.
 #
-# Workflow:
+# Execution flow:
 #   1. Load the shared palette and select its blue logo color.
 #   2. Print the banner and replace each `@` placeholder with a dollar sign.
 #   3. Reset terminal formatting after the final separator.

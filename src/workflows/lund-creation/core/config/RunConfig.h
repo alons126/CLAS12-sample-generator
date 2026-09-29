@@ -11,7 +11,7 @@
  *   combines those sources into one result. For example, `--events 1000` on the command line replaces an
  *   `events` value in the configuration file, which would otherwise replace the built-in default.
  *
- * Workflow:
+ * Execution flow:
  *   Call createFromCommandLine() once before creating output. It reads every setting, fills values marked
  *   `auto`, checks the result, and prepares absolute paths. Event-producing code then reads the settings,
  *   and the writer records the same final values in the run manifest.
@@ -68,7 +68,7 @@ enum class LundSource {
  *   RunConfig only prepares settings. It does not create events, choose random values, write output, make
  *   plots, or submit simulation jobs.
  *
- * Workflow:
+ * Execution flow:
  *   Start with built-in defaults. Read one optional configuration file. Apply command-line values last.
  *   Calculate automatic values, check the complete result, and make it available to the workflow.
  *

@@ -11,7 +11,7 @@
  *   This file copies the supported events and particles into LUND. It never recalculates their momenta.
  *   It only chooses one position inside the target for each written event.
  *
- * Workflow:
+ * Execution flow:
  *   Open the matching GST files as one ordered input -> check every required field -> scan entries in
  *   order -> keep QE, MEC, RES, and DIS events -> copy their supported particles -> stop before a later
  *   output file when too few input entries remain -> close the files and write the run log.

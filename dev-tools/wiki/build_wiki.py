@@ -9,7 +9,7 @@
 Purpose:
     Keep one editable documentation source and publish a linked copy to the GitHub Wiki.
 
-Workflow:
+Execution flow:
     Find source pages -> collect file and function locations -> choose unique wiki names -> rewrite
     links -> write pages, sidebar, and footer -> remove old generated Markdown pages.
 
@@ -108,7 +108,7 @@ IGNORED_REFERENCE_PARTS = {".git", "build", "test-runs", "__pycache__"}
 def source_pages():
     """Map each project Markdown source to its wiki filename.
 
-    Workflow:
+    Execution flow:
         Add the pages with fixed names, then add every remaining documentation page. Give each page a
         unique filename because a GitHub Wiki keeps all pages in one directory.
 
@@ -310,7 +310,7 @@ def resolve_function(code, definitions):
 def link_code_references(text, source, repository, branch, paths, suffixes, definitions):
     """Link file and function names to their repository locations.
 
-    Workflow:
+    Execution flow:
         Keep code blocks and existing links unchanged -> try a repository path -> try a unique function
         name -> write a GitHub link when one match exists.
 
@@ -442,7 +442,7 @@ def validate_output(output):
 def build(output, repository, branch):
     """Generate all pages in the flat wiki directory.
 
-    Workflow:
+    Execution flow:
         Check the output path -> collect source references -> convert pages -> write navigation ->
         delete old generated Markdown pages.
 

@@ -10,7 +10,7 @@
 #   Keep each current and future workflow as a peer beneath one source boundary while allowing shared
 #   workflow support to remain outside any individual workflow.
 #
-# Workflow:
+# Execution flow:
 #   Root CMakeLists.txt -> current workflow directories -> workflow-owned libraries and programs.
 #
 # Inputs:

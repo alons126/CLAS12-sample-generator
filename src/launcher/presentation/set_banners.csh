@@ -11,7 +11,7 @@
 # Purpose:
 #   Give launcher scripts one way to print centered, colored headings.
 #
-# Workflow:
+# Execution flow:
 #   Load the shared colors -> define aliases that calculate padding -> let callers provide a title and
 #   color before invoking an alias.
 #

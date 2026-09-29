@@ -9,7 +9,7 @@
 # Purpose:
 #   Compile the shared LUND pipeline once and link source-specific generation or conversion code against it.
 #
-# Workflow:
+# Execution flow:
 #   The root discovers ROOT/Threads first; this directory creates libraries consumed by the applications.
 #
 # Inputs:

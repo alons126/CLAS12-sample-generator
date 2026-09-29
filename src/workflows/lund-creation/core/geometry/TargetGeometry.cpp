@@ -11,7 +11,7 @@
  *   shapes, the code that chooses a position, and the particle masses. This file gives TargetGeometry
  *   access to those features while keeping the shared targets.h variables out of the rest of the project.
  *
- * Workflow:
+ * Execution flow:
  *   validateGeometryName() checks that targets.h contains the requested geometry. The uniform LUND creator
  *   and physical LUND converter call sampleVertexPosition() from one thread, so no competing thread exists
  *   today. The function still locks access to the shared targets.h random-number generator so this boundary

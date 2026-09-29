@@ -11,7 +11,7 @@
  *   The physical LUND converter reads existing event-generator events and converts them to LUND. Both paths
  *   receive one checked configuration, and the run manifest records its final values.
  *
- * Workflow:
+ * Execution flow:
  *   Begin with built-in defaults. Replace them with values from one optional configuration file. Replace
  *   those with command-line values. Calculate settings marked `auto`, check the complete result, and make
  *   local input and output paths absolute.
@@ -121,7 +121,7 @@ std::string trim(std::string s) {
 /**
  * @brief Try to read the GENIE tune recorded beside the input files.
  *
- * Workflow:
+ * Execution flow:
  *   Start from the input file's directory. For an input pattern such as `gst*.root`, start from the fixed
  *   directory before the wildcard. Move upward until finding a directory named
  *   `master-routine_validation_01-eScattering`. Open `input_options.txt` in its parent directory and

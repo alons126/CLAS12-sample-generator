@@ -10,7 +10,7 @@
  *   Different event-generator file formats store data differently. This interface selects the reader for
  *   the requested format, so the shared LUND code does not need format-specific checks.
  *
- * Workflow:
+ * Call path:
  *   The `create-lund` command checks RunConfig -> convertPhysical reads `event-generator` -> the matching
  *   reader copies supported input events into Event objects -> shared code writes the LUND files.
  *
@@ -52,7 +52,7 @@ namespace samples {
  *   For example, `event-generator = genie-gst` selects the code that understands a GENIE GST ROOT tree.
  *   Callers can start physical LUND conversion without knowing that tree's fields or ROOT types.
  *
- * Workflow:
+ * Execution flow:
  *   Read the selected name, call its matching reader, and return when that reader finishes. Reject a name
  *   that has no matching reader.
  *

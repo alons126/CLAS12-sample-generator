@@ -11,7 +11,7 @@
  *   particles CLAS12 detects. These events are deliberately random and do not represent a physical
  *   interaction. The code uses the shared target-position, LUND-writing, progress, and monitoring tools.
  *
- * Workflow:
+ * Execution flow:
  *   Check and print the settings. Start separate random-number generators for particle motion and target
  *   positions. Prepare the run directory and monitoring plots. Create each event, write it to LUND, and
  *   add its values to the plots. Finally, save the plots and publish the completion manifest. Stage

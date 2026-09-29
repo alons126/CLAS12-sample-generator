@@ -15,7 +15,7 @@
  *   LUND event-header and particle-record fields written here. For more information, see:
  *   https://gemc.jlab.org/gemc/html/documentation/generator/lund.html
  *
- * Workflow:
+ * Execution flow:
  *   Create the writer from a checked RunConfig. The constructor checks the exact run-directory path,
  *   replaces that directory if it already exists, and creates the required folders. Call writeEvent() for
  *   each event in order. After the uniform LUND creator saves its monitoring output, call finalizeRun().

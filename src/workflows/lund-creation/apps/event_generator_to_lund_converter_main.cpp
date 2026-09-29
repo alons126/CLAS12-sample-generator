@@ -10,7 +10,7 @@
  *   Turn command-line options into checked settings, then copy supported events from an existing
  *   event-generator file into LUND files. This program does not run the event generator itself.
  *
- * Workflow:
+ * Execution flow:
  *   If `--help` is the only option, print the help text and stop successfully. Otherwise, read and check
  *   every option before any output directory can be replaced. Select the input-format reader and run the
  *   physical LUND converter. Return success when it finishes, or print one standard error and return
@@ -62,7 +62,7 @@ namespace env = environment;
  *   Keep command-line help and final error printing in one place. The physical LUND converter handles the
  *   event data and output files.
  *
- * Workflow:
+ * Execution flow:
  *   Show help when requested. Otherwise, read and check the settings, call the physical LUND converter,
  *   return 0 after success, or print the caught error and return 1.
  *

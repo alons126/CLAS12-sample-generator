@@ -9,7 +9,7 @@
 # Purpose:
 #     Publish the protected detector worker without duplicating its commands.
 #
-# Workflow:
+# Execution flow:
 #     run.csh -> setup_and_submit.csh -> submit.py -> sbatch array -> external payload.
 #
 # Inputs:

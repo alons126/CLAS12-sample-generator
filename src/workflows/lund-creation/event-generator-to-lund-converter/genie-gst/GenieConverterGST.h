@@ -10,7 +10,7 @@
  *   A GST file stores a table in which each row describes one GENIE event before detector simulation.
  *   This reader copies the parts that LUND needs. It does not run GENIE or calculate new particle momenta.
  *
- * Workflow:
+ * Call path:
  *   convertPhysical selects `genie-gst` -> convertGenieGST checks the GST data -> supported events are
  *   copied into Event objects -> LundWriter writes and splits the LUND files and records the run settings.
  *
@@ -54,7 +54,7 @@ namespace samples {
  *   Keep the details of reading ROOT GST files in one place. The rest of the LUND code receives ordinary
  *   Event objects and does not need to know how GST branches are stored.
  *
- * Workflow:
+ * Execution flow:
  *   Check the settings and required GST fields, read input entries in order, and keep only QE, MEC, RES,
  *   and DIS events. Copy the scattered electron first, then supported final-state particles in their GST
  *   order. Stop at the requested event count, the end of the input, or the input-tail rule described

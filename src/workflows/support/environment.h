@@ -9,7 +9,7 @@
  * Purpose:
  *   Give C++ output clear color names while keeping the actual color values in set_colors.csh.
  *
- * Workflow:
+ * Execution flow:
  *   set_colors.csh stores colors as text. For example, `\033[31m` means "make the following text red."
  *   C++ reads that environment value as the ordinary characters `\`, `0`, `3`, `3`, `[`, `3`, `1`, and
  *   `m`. A terminal does not recognize those ordinary characters as a color instruction. It expects the

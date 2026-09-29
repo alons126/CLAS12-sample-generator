@@ -11,7 +11,7 @@
 # Purpose:
 #   Give users one command that safely updates the ifarm checkout.
 #
-# Workflow:
+# Call path:
 #   Run the shared updater -> show its output -> return its status to the calling C shell.
 #
 # Inputs:

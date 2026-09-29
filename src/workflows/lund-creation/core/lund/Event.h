@@ -10,7 +10,7 @@
  *   Define the Event and Particle values shared by the uniform LUND creator, physical LUND converter,
  *   LUND writer, and monitoring. These records hold event data but do not read input or write files.
  *
- * Workflow:
+ * Execution flow:
  *   The uniform LUND creator or physical LUND converter creates an Event -> fills its header values ->
  *   adds particles in output order with one shared vertex -> LundWriter writes it -> monitoring may read
  *   the written event.

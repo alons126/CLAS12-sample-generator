@@ -11,7 +11,7 @@
  *   the resolved settings, safely replaces the exact run directory, writes events in the LUND text format,
  *   creates empty directories for later simulation output, and records what the completed run produced.
  *
- * Workflow:
+ * Execution flow:
  *   printWorkflowSummary() shows the setup. The constructor checks and replaces the exact run directory.
  *   writeEvent() opens file 1 when the first event arrives, opens later numbered files as each file fills,
  *   and writes every event header followed by its particles. After any required monitoring output is

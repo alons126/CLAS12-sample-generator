@@ -11,7 +11,7 @@
 # Purpose:
 #   Update the disposable server checkout, load its environment, and run one workflow.
 #
-# Workflow:
+# Execution flow:
 #   1. Find and verify the checkout before changing any files.
 #   2. Replace the ifarm checkout with the remote version, while keeping the build directory.
 #   3. Load the needed software environment.

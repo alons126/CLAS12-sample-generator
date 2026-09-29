@@ -12,7 +12,7 @@
  *   generateUniform() creates those events, chooses their positions inside the target, writes the LUND
  *   files, and saves plots that show the generated values.
  *
- * Workflow:
+ * Execution flow:
  *   Build and check a RunConfig for the uniform LUND creator, then pass it to generateUniform(). A normal
  *   return means the run directory contains its LUND files, monitoring output, and completion manifest.
  *
@@ -39,7 +39,7 @@ namespace samples {
  *   simulation. Use the shared target-position rules, LUND writer, output naming, manifest, and completion
  *   marker.
  *
- * Workflow:
+ * Execution flow:
  *   1. Check the final settings and convert them to event-loop values.
  *   2. Start one random-number generator for particle motion and another for target positions.
  *   3. Replace and prepare the exact run directory, then create the monitoring plots.

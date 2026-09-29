@@ -11,7 +11,7 @@
  *   options into a checked RunConfig, runs uniform LUND creation, and tells the calling shell whether the
  *   operation succeeded.
  *
- * Workflow:
+ * Execution flow:
  *   If `--help` is the only option, print the help text and stop successfully. Otherwise, read and check
  *   every option before any output directory can be replaced. Run the uniform LUND creator. Return success
  *   when it finishes, or print one standard error and return failure when an exception is reported.
@@ -71,7 +71,7 @@ namespace env = environment;
  *   Keep command-line help, process return values, and the final error message at the program boundary.
  *   RunConfig prepares the settings, and generateUniform() creates the complete sample.
  *
- * Workflow:
+ * Execution flow:
  *   Select the uniform LUND source. Print help when requested. Otherwise, create a checked RunConfig and
  *   pass it to generateUniform(). Return 0 after success. If either stage reports an error, print it with
  *   the standard project prefix and return 1.

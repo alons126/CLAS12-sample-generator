@@ -10,7 +10,7 @@ Purpose:
     Turn a completed run log and optional user settings into checked values for submission. This file
     does not submit jobs.
 
-Workflow:
+Execution flow:
     Merge command line, config, run log, and defaults -> reject settings that disagree with the LUND
     sample -> check LUND and detector files -> return one settings dictionary per sample.
 
@@ -140,7 +140,7 @@ def parser():
     Purpose:
         Give run.csh and submit.py the same option names.
 
-    Workflow:
+    Execution flow:
         Add execution, config, public settings, and the hidden early syntax check.
 
     Inputs:
@@ -386,7 +386,7 @@ def resolve(lund_directory, explicit, root):
     Purpose:
         Prepare detector submission without changing the truth stored with the LUND files.
 
-    Workflow:
+    Execution flow:
         Check the run path -> merge settings -> resolve labels -> check LUND and detector files ->
         return worker values.
 
@@ -604,7 +604,7 @@ def resolve_samples(args, root):
     Purpose:
         Check every sample before any one of them can change output or submit jobs.
 
-    Workflow:
+    Execution flow:
         Read config -> apply command-line values -> resolve samples in order -> reject repeated output
         paths -> add preview or execute mode.
 
@@ -656,7 +656,7 @@ def main():
     Purpose:
         Stop malformed commands before run.csh updates the ifarm checkout.
 
-    Workflow:
+    Execution flow:
         Parse arguments, require --lund-dir or --config, and accept only the internal
         --check-arguments mode. submit.py performs the full checks and submission later.
 

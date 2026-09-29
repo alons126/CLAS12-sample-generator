@@ -12,7 +12,7 @@
  *   histograms in one ROOT file, and draws them as a PDF and separate PNG images. The physical LUND
  *   converter does not create these plots.
  *
- * Workflow:
+ * Execution flow:
  *   Create one object for the selected sample. After each event is written successfully, call
  *   addEventToHistograms() with that event. After the event loop ends, call
  *   saveHistogramsAndRenderPlots(). It writes the histograms to one ROOT file and draws the same plots, in

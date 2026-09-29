@@ -15,7 +15,7 @@
  *   tells the external targets.h where inside that target to place each event. The user may select a
  *   different, compatible GEMC target variation when needed.
  *
- * Workflow:
+ * Execution flow:
  *   RunConfig reads the requested target and beam energy. findTarget() checks that the target is supported.
  *   resolveTargetVariation() selects the usual GEMC target variation or checks the one supplied by the
  *   user. The selected variation provides the vertex-geometry name used by targets.h. User-supplied A or

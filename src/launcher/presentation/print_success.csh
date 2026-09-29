@@ -11,7 +11,7 @@
 # Purpose:
 #   Clearly mark the end of a successful terminal or ifarm log.
 #
-# Workflow:
+# Execution flow:
 #   1. Load the shared colors.
 #   2. Print the artwork in the completion color.
 #   3. Restore the normal terminal color.

@@ -11,7 +11,7 @@
  *   target. TargetGeometry asks the targets.h file to choose that position. It also reads the particle
  *   masses stored in the same file.
  *
- * Workflow:
+ * Execution flow:
  *   RunConfig selects a geometry name such as `Ar`. The constructor checks that targets.h contains that
  *   geometry but does not choose a position yet. For each event, sampleVertexPosition() uses the
  *   random-number generator supplied by the caller to choose one position in centimeters. The event

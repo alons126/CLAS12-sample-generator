@@ -11,7 +11,7 @@
 # Purpose:
 #   Tell later scripts where the project is and whether they are running on Jefferson Lab ifarm.
 #
-# Workflow:
+# Execution flow:
 #   Load colors -> save the current checkout path -> read the hostname -> set IFARM_RUN from the host.
 #
 # Inputs:

@@ -12,7 +12,7 @@
  *   electron. getParticleMass() returns the matching mass from the external targets.h file. The project
  *   does not keep another copy of those mass values.
  *
- * Workflow:
+ * Execution flow:
  *   The uniform LUND creator or physical LUND converter chooses a supported particle and passes its PDG
  *   integer to getParticleMass(). The function asks TargetGeometry to read the mass from targets.h. The
  *   caller stores the returned mass in Particle, and LundWriter later uses it to calculate the particle's

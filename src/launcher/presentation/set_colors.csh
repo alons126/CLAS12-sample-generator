@@ -13,7 +13,7 @@
 # Purpose:
 #   Keep terminal color values in one shell file.
 #
-# Workflow:
+# Execution flow:
 #   Remove old color values -> export the current colors -> let child programs use them.
 #
 # Inputs:

@@ -10,7 +10,7 @@
  *   A completed run should identify the exact source code and target definitions used to create it. This
  *   template lists the values that the LUND programs write into the run manifest.
  *
- * Workflow:
+ * Execution flow:
  *   When CMake prepares the build, it replaces each placeholder between `@` characters with the value
  *   read from the project or Git. For example, `@PROJECT_VERSION@` becomes the current project version.
  *   CMake writes the completed header to `build/generated/Version.h`. The compiler includes that generated

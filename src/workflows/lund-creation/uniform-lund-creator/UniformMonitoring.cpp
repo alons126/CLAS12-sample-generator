@@ -12,7 +12,7 @@
  *   plot names include FD or CD so the detector region remains clear. Every z-position plot covers -8
  *   through 5 centimeters so all supported RG-M target positions fit.
  *
- * Workflow:
+ * Execution flow:
  *   The constructor creates the plot set for one sample. addEventToHistograms() finds the required
  *   particles in each successfully written event and adds their momentum, angles, or position to the plots.
  *   saveHistogramsAndRenderPlots() applies one axis style, writes all histograms to a ROOT file, and draws

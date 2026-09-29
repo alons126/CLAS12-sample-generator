@@ -11,7 +11,7 @@
 # Purpose:
 #   Clearly mark a stopped workflow in the terminal or ifarm log.
 #
-# Workflow:
+# Execution flow:
 #   1. Load the shared palette and select its orange stop color.
 #   2. Print the banner and replace `@` placeholders with dollar signs.
 #   3. Restore the normal terminal color.

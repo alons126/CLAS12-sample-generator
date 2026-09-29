@@ -11,7 +11,7 @@
  *   comparisons and number conversions do not belong inside the event loop. UniformConfig converts those
  *   settings once before event creation starts.
  *
- * Workflow:
+ * Execution flow:
  *   RunConfig checks and completes the text settings. The UniformConfig constructor copies them into
  *   numbers, true/false choices, and named channel and hadron values. The uniform LUND creator then reads
  *   those converted values while creating every event.

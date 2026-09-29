@@ -11,7 +11,7 @@
 # Purpose:
 #   Make the server checkout match the remote branch before a workflow starts.
 #
-# Workflow:
+# Execution flow:
 #   Load banner colors -> verify the Git checkout -> clean server-only files -> reset tracked files ->
 #   pull the branch -> update submodules -> print the selected commit and branch.
 #

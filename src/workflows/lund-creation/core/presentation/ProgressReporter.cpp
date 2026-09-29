@@ -11,7 +11,7 @@
  *   flood a saved log. This file decides when to print and builds a short line showing the completed
  *   count, percentage, and optional related information.
  *
- * Workflow:
+ * Execution flow:
  *   The constructor checks whether output is going directly to a terminal. update() prints immediately the
  *   first time, then waits at least 100 milliseconds between terminal updates or 10 seconds between saved
  *   log lines. render() builds the bar and counters. finish() prints the newest values immediately and

@@ -9,7 +9,7 @@
 Purpose:
     Keep build settings separate from sample settings and detector submission.
 
-Workflow:
+Execution flow:
     Parse launcher flags -> load config/run.json -> configure/build -> run uniform-lund-creator or
     event-generator-to-lund-converter with the original sample arguments.
 
@@ -184,7 +184,7 @@ def boolean(value):
     Purpose:
         Let build and run options accept clear text values and return a Python bool.
 
-    Workflow:
+    Execution flow:
         Ignore letter case, check the accepted true and false words, and reject anything else.
 
     Args:
@@ -221,7 +221,7 @@ def parser():
     Purpose:
         Parse build controls here and leave sample options unchanged for the selected program.
 
-    Workflow:
+    Execution flow:
         Register the build profile, workflow, source, stage switches, and build resources.
 
     Returns:
@@ -261,7 +261,7 @@ def settings(args):
     Purpose:
         Combine defaults, one JSON file, and command-line values before any command runs.
 
-    Workflow:
+    Execution flow:
         Choose the JSON file -> read it from the repository root -> apply defaults, then JSON, then
         command-line values -> add the workflow and source -> check the result.
 
@@ -390,7 +390,7 @@ def execute(command):
     Purpose:
         Print and run every child command in the same safe way.
 
-    Workflow:
+    Execution flow:
         Quote tokens for display -> split long commands across lines -> print the command -> run the
         original argument list from ``ROOT`` and require success.
 
@@ -431,7 +431,7 @@ def banner(name):
     Purpose:
         Show the shared success or stop artwork without changing the workflow result.
 
-    Workflow:
+    Execution flow:
         Build the printer path -> run it with tcsh -> print plain text if tcsh cannot start.
 
     Args:
@@ -465,7 +465,7 @@ def main():
     Purpose:
         Let the shell scripts handle checkout setup while this function builds and runs the LUND program.
 
-    Workflow:
+    Execution flow:
         Parse settings -> resolve the build path -> optionally build -> optionally run the selected
         LUND program -> print success.
 
@@ -569,7 +569,7 @@ def main():
 # Purpose:
 #     Return stable process statuses to run.csh while keeping imports free of side effects.
 #
-# Workflow:
+# Execution flow:
 #     Direct execution calls main(). Success returns zero. Interruptions and errors print a spaced
 #     final diagnostic followed by the stop banner, then return a nonzero status.
 #

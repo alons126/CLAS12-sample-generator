@@ -9,7 +9,7 @@
 # Purpose:
 #   Keep launcher-specific optional development integration separate from production targets.
 #
-# Workflow:
+# Execution flow:
 #   run.csh -> launcher/workflow.py -> selected LUND source; submission is sourced directly.
 #
 # Inputs:

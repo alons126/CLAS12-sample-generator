@@ -9,7 +9,7 @@
 # Purpose:
 #   Select workflows, find dependencies, record build details, and add the production source targets.
 #
-# Workflow:
+# Execution flow:
 #   CMake configure -> dependencies -> provenance header -> source targets -> install rules.
 #
 # Inputs:
@@ -38,7 +38,7 @@ option(BUILD_GENIE "Build GENIE GST conversion" ON)
 # Purpose:
 #   Give project-owned configure errors and warnings the same colored prefixes as runtime output.
 #
-# Workflow:
+# Execution flow:
 #   Read colors inherited from run.csh -> decode shell escape markers -> route project diagnostics
 #   through the helpers below.
 #

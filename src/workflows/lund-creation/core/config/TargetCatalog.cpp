@@ -11,7 +11,7 @@
  *   target `C12` at 2.07052 GeV selects the small carbon foil in GEMC and the matching event-position
  *   rules in the external targets.h.
  *
- * Workflow:
+ * Execution flow:
  *   findTarget() finds the requested material and its default A and Z values. resolveTargetVariation()
  *   uses a setup named by the user when one is given. Otherwise, it selects the usual GEMC target setup
  *   from the target name and beam energy. The selected record also gives the event-position rules used by

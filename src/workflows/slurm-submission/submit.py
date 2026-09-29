@@ -9,7 +9,7 @@
 Purpose:
     Pass checked LUND and detector settings to the external GEMC/reconstruction worker through Slurm.
 
-Workflow:
+Execution flow:
     Resolve inputs -> check and load GEMC -> check worker inputs -> ensure simulation output directories
     -> with --execute, submit one array per sample and record each accepted Slurm job ID.
     Python changes a separate copy of the shell environment, so the user's interactive module setup
@@ -498,7 +498,7 @@ def check_gemc_version(version, environment, report):
     Purpose:
         Check that the requested GEMC data exists before changing the loaded GEMC module.
 
-    Workflow:
+    Execution flow:
         Find the shared clas12Tags directory from GEMC_DATA_DIR. If GEMC_DATA_DIR is missing, use the
         normal ifarm location. Check the shared directory and the requested version before loading
         the module, so a missing version does not disturb the current module setup.
@@ -535,7 +535,7 @@ def load_gemc(version, environment, report):
         Reproduce ``module unload gemc`` followed by ``module load gemc/VERSION`` without
         modifying the interactive shell that sourced run.csh.
 
-    Workflow:
+    Execution flow:
         Find modulecmd in PATH -> start a small Python process with the copied environment -> ask
         modulecmd to unload and load GEMC -> apply those changes in that process -> return its final
         environment as JSON -> check the JSON and replace the copied dictionary. Module messages stay
@@ -607,7 +607,7 @@ def verify_gemc(version, expected_data, environment, report):
         Check that loading ``gemc/VERSION`` selected the matching detector data and GEMC program.
         This catches an old PATH, a broken module file, or data left from another version.
 
-    Workflow:
+    Execution flow:
         Require GEMC_DATA_DIR -> make its path absolute and resolve links -> compare it with the path
         checked before loading -> require its last directory to equal VERSION -> find ``gemc`` in the
         loaded PATH -> require that program to be inside the same GEMC directory -> print its path.
@@ -671,7 +671,7 @@ def clear_farm(values, root, execute, report, cleared):
         Clear old ifarm log files when requested without touching LUND or
         simulation output directories.
 
-    Workflow:
+    Execution flow:
         Report a disabled or previously handled request; otherwise validate the resolved
         farm_out directory. Preview describes the cleanup. Execution prints the exact cleanup
         directory, then removes only direct regular files and leaves subdirectories and symbolic
@@ -729,7 +729,7 @@ def inspect_simulation_directory(name, path):
     Purpose:
         Complete the safety check for one exact output child before either output directory changes.
 
-    Workflow:
+    Execution flow:
         Reject symbolic links and non-directory objects -> return whether the path is an existing
         directory. Reporting is deferred so each check can be printed beside its later action.
 
@@ -763,7 +763,7 @@ def apply_simulation_directory(name, path, existed, execute, report):
         Keep preview non-destructive for existing output while making execution start with empty
         simulation and reconstruction directories.
 
-    Workflow:
+    Execution flow:
         For an existing preview directory, report that it is preserved and explain the execution
         action -> for an existing execution directory, warn and remove its full contents -> create
         every missing or removed directory -> verify the result.
@@ -819,7 +819,7 @@ def apply_simulation_directory(name, path, existed, execute, report):
 def submit_array(command, environment, root):
     """Submit one Slurm array and return its numeric job identifier.
 
-    Workflow:
+    Execution flow:
         Capture the scheduler response -> reproduce its standard output and error -> require a
         successful status -> extract the ID from ``Submitted batch job NUMBER``.
 
@@ -864,7 +864,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     Purpose:
         Pass one checked sample to the external GEMC/reconstruction Slurm worker.
 
-    Workflow:
+    Execution flow:
         1. Add the checked sample settings and fixed checkout paths to the environment dictionary.
         2. Print the sample details and handle the optional one-time farm-log cleanup.
         3. Check standard GEMC data, load the selected module, and verify its data and program.
@@ -1097,7 +1097,7 @@ def main():
         Run the Python part called by run.csh after the shell environment is ready. Return one integer
         status without closing the interactive shell that sourced run.csh.
 
-    Workflow:
+    Execution flow:
         Copy the shell environment -> prepare the report -> read the command line -> check every sample
         before processing the first -> check the checkout and worker script -> process samples in order
         while reusing the copied module environment and cleanup state -> print the shared success
