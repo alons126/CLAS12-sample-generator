@@ -4,31 +4,30 @@
 
 /**
  * @file PhysicalConverter.cpp
- * @brief Selects the converter for a physical input format.
+ * @brief Selects the input reader used by the physical LUND converter.
  *
  * Purpose:
- *   Map the configured event-generator name to its converter. This file does not read generator data,
- *   build events, sample vertices, or write output.
+ *   Map the configured `event-generator` name to code that understands that input format. This file does
+ *   not read event data, choose target positions, or write output.
  *
  * Workflow:
- *   Read `event-generator` -> call exactly one matching converter -> return after it finishes, or reject
- *   an unsupported name.
+ *   Read `event-generator` -> call exactly one matching reader -> return after it finishes, or reject an
+ *   unsupported name.
  *
  * Inputs:
- *   RunConfig contains the final generator name and all settings needed by its converter. This file reads
- *   only the generator name and passes the complete object unchanged.
+ *   RunConfig contains the input-format name and all settings needed by its reader. This file reads only
+ *   that name and passes the complete object unchanged.
  *
  * Outputs:
- *   This function returns no value and creates no files itself. The selected converter and LundWriter
- *   create and report the output.
+ *   This function returns no value and creates no files itself. The selected reader and LundWriter create
+ *   and report the output.
  *
- * Adding a format:
- *   Each supported format has one visible branch. Adding a format requires its converter and one new
- *   branch here; the shared LUND workflow does not need to be copied.
+ * Adding an input format:
+ *   Give the new format its own reader and add one branch here. Do not copy the shared LUND-writing code.
  *
  * Failure:
- *   An unsupported name throws before conversion starts. Errors from the selected converter pass to the
- *   command-line program, which prints them and returns a nonzero status.
+ *   An unsupported name throws before input conversion starts. Errors from the selected reader pass to
+ *   the command-line program, which prints them and returns a nonzero status.
  */
 
 #include "event-generator-to-lund-converter/PhysicalConverter.h"
@@ -44,15 +43,15 @@ namespace samples {
 #pragma region /* convertPhysical */
 
 void convertPhysical(const RunConfig& config) {
-    // Match the exact name and pass the unchanged settings to the GENIE converter.
+    // `genie-gst` means that the input is a GENIE GST ROOT tree. Pass every setting unchanged to its reader.
     if (config.getText("event-generator") == "genie-gst") {
         convertGenieGST(config);
 
-        // Stop after the selected converter completes.
+        // The selected reader performed the complete physical LUND conversion, so there is nothing else to run.
         return;
     }
 
-    // Fail before any converter can prepare or replace an output directory.
+    // Fail before any format reader can prepare or replace an output directory.
     throw std::runtime_error("Unsupported physical event generator: " + config.getText("event-generator"));
 }
 
