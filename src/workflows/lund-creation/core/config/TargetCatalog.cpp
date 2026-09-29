@@ -35,6 +35,14 @@
 
 namespace samples {
 
+/**
+ * @namespace samples::<anonymous>
+ * @brief Keeps target-variation records and lookup helpers private to this source file.
+ *
+ * Purpose:
+ *   Store the supported GEMC target setups and find one that belongs to a requested target. These details
+ *   support the public target-selection functions but are not part of the interface in TargetCatalog.h.
+ */
 namespace {
 
 // Available GEMC target setups ------------------------------------------------------------------------------------------------------------------------------------------

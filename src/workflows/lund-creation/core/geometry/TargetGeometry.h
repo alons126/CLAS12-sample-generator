@@ -8,8 +8,8 @@
  *
  * Purpose:
  *   Every LUND event needs one vertex: the x, y, and z position where the interaction happens inside the
- *   target. TargetGeometry asks the targets.h file to choose that position. It also reads the
- *   particle masses stored in the same file.
+ *   target. TargetGeometry asks the targets.h file to choose that position. It also reads the particle
+ *   masses stored in the same file.
  *
  * Workflow:
  *   RunConfig selects a geometry name such as `Ar`. The constructor checks that targets.h contains that
@@ -19,11 +19,12 @@
  *   a supported particle.
  *
  * Scope:
- *   The geometry name controls only where an event may occur. It does not set A or Z
- *   in the LUND header. RunConfig checks that the geometry matches the selected GEMC target setup.
+ *   The geometry name controls only where an event may occur. It does not set A or Z in the LUND header.
+ *   RunConfig checks that the geometry matches the selected GEMC target setup.
  */
 
 #pragma once
+
 #include <TRandom3.h>
 #include <TVector3.h>
 

@@ -12,17 +12,18 @@
  *   access to those features while keeping the shared targets.h variables out of the rest of the project.
  *
  * Workflow:
- *   validateGeometryName() checks that targets.h contains the requested geometry. The current event loops
- *   call sampleVertexPosition() from one thread, so no competing thread exists today. The function still
- *   locks access to the shared targets.h random-number generator so this boundary remains safe if event
- *   processing becomes multithreaded later. It copies in the caller's generator, asks targets.h for a
- *   position, and copies the updated generator back. It rejects a position containing an infinite value
- *   or a value that is not a number.
+ *   validateGeometryName() checks that targets.h contains the requested geometry. The uniform LUND creator
+ *   and physical LUND converter call sampleVertexPosition() from one thread, so no competing thread exists
+ *   today. The function still locks access to the shared targets.h random-number generator so this boundary
+ *   remains safe if event processing becomes multithreaded later. It copies in the caller's generator, asks
+ *   targets.h for a position, and copies the updated generator back. It rejects a position containing an
+ *   infinite value or a value that is not a number.
  *
  * Reproducibility and units:
  *   The caller creates and seeds the generator used for target positions. This generator is separate from
- *   the one used to create particle motion in the uniform LUND creator. Copying all information that determines
- *   the next random values lets each caller continue its own sequence. Returned positions are measured in centimeters.
+ *   the one used to create particle motion in the uniform LUND creator. Copying all information that
+ *   determines the next random values lets each caller continue its own sequence. Returned positions are
+ *   measured in centimeters.
  *
  * targets.h ownership:
  *   This file uses targets.h without changing it. Target shapes and particle masses are updated in that
@@ -46,6 +47,7 @@
 
 #pragma region /* Private access to targets.h */
 /**
+ * @namespace <anonymous>
  * @brief Keeps targets.h and its thread lock available only inside this source file.
  *
  * targets.h creates shared variables and functions when it is included. Including it here, inside this
@@ -70,16 +72,19 @@ using std::cout;
 using std::endl;
 using std::sqrt;
 using std::string;
+
 #include "external/targets.h"
+
 }  // namespace external_targets
 #pragma endregion
 
 /**
  * @brief Allows only one thread at a time to use the shared random-number generator in targets.h.
  *
- * The current uniform and physical event loops are single-threaded, so this mutex has no competing caller
- * today. It is kept because targets.h exposes one shared generator. If event processing becomes
- * multithreaded later, the mutex prevents simultaneous calls from replacing each other's generator state.
+ * The uniform LUND creator and physical LUND converter currently use single-threaded event loops, so this
+ * mutex has no competing caller today. It is kept because targets.h exposes one shared generator. If event
+ * processing becomes multithreaded later, the mutex prevents simultaneous calls from replacing each other's
+ * generator state.
  *
  * Without this lock, one thread could replace the generator while another thread is still choosing a
  * position. Their random sequences would then become mixed. Checking whether a geometry name exists only

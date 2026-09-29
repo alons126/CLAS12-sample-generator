@@ -7,9 +7,9 @@
  * @brief Combines defaults, a configuration file, and command-line values into checked run settings.
  *
  * Purpose:
- *   Prepare every setting before event work begins. Uniform mode creates new random test events. Physical
- *   mode reads existing event-generator events and converts them to LUND. Both modes receive one checked
- *   configuration, and the run manifest records its final values.
+ *   Prepare every setting before event work begins. The uniform LUND creator creates new random test events.
+ *   The physical LUND converter reads existing event-generator events and converts them to LUND. Both paths
+ *   receive one checked configuration, and the run manifest records its final values.
  *
  * Workflow:
  *   Begin with built-in defaults. Replace them with values from one optional configuration file. Replace
@@ -307,9 +307,9 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
     // Add only settings used by the selected kind of event work. A setting for the other kind is reported
     // as unknown instead of being silently ignored.
     if (uniform) {
-        // Uniform mode creates random test events. Values marked `auto` are calculated after the
-        // configuration file and command line have been read. A fixed momentum of 1 GeV/c is available
-        // only for neutrons.
+        // The uniform LUND creator creates random test events. Values marked `auto` are calculated after
+        // the configuration file and command line have been read. A fixed momentum of 1 GeV/c is
+        // available only for neutrons.
         c.values_.insert({{"channel", "1e"},
                           {"hadron", "proton"},
                           {"hadron-region", "FD"},
@@ -326,8 +326,8 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
     } else {
-        // Physical mode reads particles from existing event-generator files and records their origin. It
-        // does not run GENIE. The currently supported input is a GENIE GST ROOT tree.
+        // The physical LUND converter reads particles from existing event-generator files and records
+        // their origin. It does not run GENIE. The currently supported input is a GENIE GST ROOT tree.
         c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "auto"}, {"q2-cut", "auto"}, {"output-layout", "nested"}});
     }
 
@@ -623,8 +623,9 @@ void RunConfig::validateForSource(LundSource source) const {
 
 #pragma region /* Settings for the selected event source */
     if (!uniform) {
-        // Physical mode currently reads only GENIE GST ROOT input. Require a filename or wildcard pattern
-        // now. The GENIE reader opens the matching files and checks their GST tree when conversion starts.
+        // The physical LUND converter currently reads only GENIE GST ROOT input. Require a filename or
+        // wildcard pattern now. The GENIE reader opens the matching files and checks their GST tree when
+        // conversion starts.
         if (getText("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
         if (getText("event-generator") != "genie-gst") { throw std::runtime_error("Only --event-generator genie-gst is currently implemented"); }
         if (getText("output-layout") != "nested" && getText("output-layout") != "metadata") { throw std::runtime_error("output-layout must be nested or metadata"); }
@@ -639,8 +640,9 @@ void RunConfig::validateForSource(LundSource source) const {
         return;
     }
 
-    // Uniform mode can create one electron, an electron with one hadron, or the electron test scan. These
-    // random test events measure detector acceptance; they do not describe a physical interaction.
+    // The uniform LUND creator can create one electron, an electron with one hadron, or the electron test
+    // scan. These random test events measure detector acceptance; they do not describe a physical
+    // interaction.
     if (getText("channel") != "1e" && getText("channel") != "eh" && getText("channel") != "electron-tester") { throw std::runtime_error("channel must be 1e, eh or electron-tester"); }
     if (getText("hadron") != "proton" && getText("hadron") != "neutron" && getText("hadron") != "pip" && getText("hadron") != "pim") {
         throw std::runtime_error("hadron must be proton, neutron, pip or pim");

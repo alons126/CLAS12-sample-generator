@@ -13,9 +13,9 @@
  *
  * Workflow:
  *   printWorkflowSummary() shows the setup. The constructor checks and replaces the exact run directory.
- *   writeEvent() opens file 1 when the first event arrives, opens later numbered files as each file fills, and
- *   writes every event header followed by its particles. After any required monitoring output is saved,
- *   finalizeRun() closes the active file, writes `lund-creation-log.json.tmp`, and renames it to
+ *   writeEvent() opens file 1 when the first event arrives, opens later numbered files as each file fills,
+ *   and writes every event header followed by its particles. After any required monitoring output is
+ *   saved, finalizeRun() closes the active file, writes `lund-creation-log.json.tmp`, and renames it to
  *   `lund-creation-log.json` to mark the run complete.
  *
  * Written format:
@@ -130,9 +130,9 @@ void LundWriter::writeEvent(const Event& e) {
     if (e.id > static_cast<std::uint64_t>(std::numeric_limits<int>::max())) { throw std::runtime_error("Event ID exceeds the LUND header integer range"); }
     const auto id = static_cast<int>(e.id);
 
-    // Use this one exact header format for every uniform and physical sample. `%f` writes six digits after
-    // the decimal point, so a beam energy such as 5.98636 becomes 5.986360 instead of 6.0. The last field
-    // uses two digits after the decimal point and stores the physical interaction code in e.weight.
+    // Use this one exact header format for every event. `%f` writes six digits after the decimal point, so
+    // a beam energy such as 5.98636 becomes 5.986360 instead of 6.0. The last field uses two digits after
+    // the decimal point and stores the physical interaction code in e.weight.
     stream_ << TString::Format("%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %d \t %.2f \n", static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., constants::electron_pdg,
                                e.beam_energy, 1, id, e.weight);
 
@@ -229,7 +229,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     const auto output = std::filesystem::path(config.getText("output"));
     const auto lund_dir = output / "lundfiles";
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
-    const auto summary_title = (uniform ? "Uniform sample generation" : "Physical generator to LUND conversion") + std::string(final ? " completion" : " setup");
+    const auto summary_title = (uniform ? "Uniform LUND creator" : "Physical LUND converter") + std::string(final ? " completion" : " setup");
 
     // Align normal values near the right side of the 100-character summary. Print paths immediately after
     // their labels because added spaces or quotes would make copied paths harder to use.

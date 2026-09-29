@@ -12,8 +12,8 @@
  *
  *   The selected target and beam energy also choose the usual GEMC target variation and vertex geometry.
  *   The GEMC target variation names the target setup used by detector simulation. The vertex geometry
- *   tells the external targets.h where inside that target to place each event. The user may select a different,
- *   compatible GEMC target variation when needed.
+ *   tells the external targets.h where inside that target to place each event. The user may select a
+ *   different, compatible GEMC target variation when needed.
  *
  * Workflow:
  *   RunConfig reads the requested target and beam energy. findTarget() checks that the target is supported.
@@ -27,6 +27,7 @@
  */
 
 #pragma once
+
 #include <string>
 #include <vector>
 

@@ -163,7 +163,6 @@ void ProgressReporter::render(std::uint64_t completed, std::uint64_t secondary_c
     // to the screen immediately. A saved log cannot replace a line, so give each update its own newline.
     if (interactive_) {
         std::cout << '\r' << activity_ << ' ' << line.str() << std::flush;
-        // std::cout << '\r' << env::SYSTEM_COLOR << activity_ << env::RESET_COLOR << ' ' << line.str() << std::flush;
     } else {
         std::cout << activity_ << ": " << line.str() << '\n';
     }

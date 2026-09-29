@@ -7,15 +7,17 @@
  * @brief Shared event and particle records.
  *
  * Purpose:
- *   Define the Event and Particle values shared by uniform LUND generation, physical to LUND conversion, the LUND
- *   writer, and monitoring. These records hold event data but do not read input or write files.
+ *   Define the Event and Particle values shared by the uniform LUND creator, physical LUND converter,
+ *   LUND writer, and monitoring. These records hold event data but do not read input or write files.
  *
  * Workflow:
- *   A generator or converter creates an Event -> fills its header values -> adds particles in output
- *   order with one shared vertex -> LundWriter writes it -> monitoring may read the written event.
+ *   The uniform LUND creator or physical LUND converter creates an Event -> fills its header values ->
+ *   adds particles in output order with one shared vertex -> LundWriter writes it -> monitoring may read
+ *   the written event.
  */
 
 #pragma once
+
 #include <TVector3.h>
 
 #include <cstdint>
@@ -60,8 +62,8 @@ constexpr int photon_pdg = 22;      ///< Photon identifier retained from physica
  *   monitoring code.
  *
  * Creation and use:
- *   A generator or converter fills every member and adds the Particle to Event::particles. The Event
- *   owns the stored copy. The writer and monitoring code only read it.
+ *   The uniform LUND creator or physical LUND converter fills every member and adds the Particle to
+ *   Event::particles. The Event owns the stored copy. The writer and monitoring code only read it.
  */
 struct Particle {
     int pid;            ///< Supported PDG particle number written to LUND and used by monitoring.
@@ -83,14 +85,15 @@ struct Particle {
  *   split them, record the manifest, and save monitoring data.
  *
  * Creation and workflow:
- *   The generator or converter creates and fills a new Event. LundWriter reads it without changing it.
- *   Uniform monitoring reads it only after the writer has successfully written it.
+ *   The uniform LUND creator or physical LUND converter creates and fills a new Event. LundWriter reads
+ *   it without changing it. Uniform monitoring reads it only after the writer has successfully written it.
  *
  * Header semantics:
- *   A and Z describe the target nucleus but do not choose the vertex geometry (liquid, 1-foil, 4-foil, etc). Physical conversion stores
- *   GST `resid` in header field 4; uniform events store zero there. Uniform events
- *   use weight 1. Physical conversion uses that field for process codes 1,2,3,4, for the QE,MEC,RES,DIS reaction mechanisms, respectively.
- *   LundWriter also writes zero beam polarization, electron beam PID 11, and one interaction.
+ *   A and Z describe the target nucleus but do not choose the vertex geometry (liquid, 1-foil, 4-foil,
+ *   etc.). Physical conversion stores GST `resid` in header field 4; uniform events store zero there.
+ *   Uniform events use weight 1. Physical conversion uses that field for process codes 1, 2, 3, and 4
+ *   for the QE, MEC, RES, and DIS reaction mechanisms, respectively. LundWriter also writes zero beam
+ *   polarization, electron beam PID 11, and one interaction.
  *
  * Ordering and invariants:
  *   particles must not be empty and all stored numbers must be finite. The electron comes first in the LUND format.

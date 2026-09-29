@@ -10,8 +10,8 @@
  *   Event creation may take a long time. ProgressReporter shows that work is continuing and how much has
  *   finished. For example, it can show:
  *      Generating LUND events [######------------------] 25% 250/1000
- *   The uniform generator creates new random test events. The physical converter reads existing events
- *   from an event-generator file and writes them as LUND. Both use this progress display.
+ *   The uniform LUND creator creates new random test events. The physical LUND converter reads existing
+ *   events from an event-generator file and writes them as LUND. Both use this progress display.
  *
  * Usage:
  *   Create one reporter with a short activity name and the total amount of work. Call update() with the
@@ -63,7 +63,7 @@ namespace samples {
 class ProgressReporter {
    public:
     /**
-     * @brief Create a progress display for one activity.
+     * @brief Constructor: Create a progress display for one activity.
      * @param activity Text shown at the start of each update, such as `Generating LUND events`.
      * @param total Amount of work that represents 100%; must be greater than zero.
      * @param primary_label Optional name shown before the main completed count.
@@ -73,20 +73,20 @@ class ProgressReporter {
     ProgressReporter(std::string activity, std::uint64_t total, std::string primary_label = {}, std::string secondary_label = {});
 
     /**
-     * @brief End an unfinished terminal line when the reporter goes out of use.
+     * @brief Destructor: End an unfinished terminal line when the reporter goes out of use.
      *
      * This cleanup does not change counters or mark the workflow as successful. It only makes sure the
      * next message starts on a new line.
      */
     ~ProgressReporter() noexcept;
 
-    /** @brief Copying is disabled because one reporter owns one displayed line and its print timing. */
+    /** @brief Constructor: Copying is disabled because one reporter owns one displayed line and its print timing. */
     ProgressReporter(const ProgressReporter&) = delete;
 
     /** @brief Copy assignment is disabled because one reporter owns one displayed line and its timing. */
     ProgressReporter& operator=(const ProgressReporter&) = delete;
 
-    /** @brief Moving is disabled so cleanup remains tied to the object that started the displayed line. */
+    /** @brief Constructor: Moving is disabled so cleanup remains tied to the object that started the displayed line. */
     ProgressReporter(ProgressReporter&&) = delete;
 
     /** @brief Move assignment is disabled so ownership of an active displayed line cannot change. */
@@ -115,6 +115,7 @@ class ProgressReporter {
      */
     void finish(std::uint64_t completed, std::uint64_t secondary_completed = 0, std::uint64_t secondary_total = 0, const std::string& outcome = {});
 
+    // Internal display helpers and state --------------------------------------------------------------------------------------------------------------------------------
    private:
     using Clock = std::chrono::steady_clock;  ///< Clock used to decide when another update may be printed.
 
