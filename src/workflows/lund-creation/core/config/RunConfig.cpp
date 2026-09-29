@@ -4,32 +4,68 @@
 
 /**
  * @file RunConfig.cpp
- * @brief Builds and checks final LUND run settings.
+ * @brief Combines defaults, a configuration file, and command-line values into checked run settings.
  *
  * Purpose:
- *   Build one valid configuration for uniform generation or physical conversion before either workflow
- *   starts processing events. Keep the exact final values so the manifest can record them.
+ *   Prepare every setting before event work begins. Uniform mode creates new random test events. Physical
+ *   mode reads existing event-generator events and converts them to LUND. Both modes receive one checked
+ *   configuration, and the run manifest records its final values.
  *
  * Workflow:
- *   Defaults -> profile -> CLI overrides -> automatic values -> validation -> absolute paths.
+ *   Begin with built-in defaults. Replace them with values from one optional configuration file. Replace
+ *   those with command-line values. Calculate settings marked `auto`, check the complete result, and make
+ *   local input and output paths absolute.
  *
- * Accepted options:
- *   Shared: config, beam-energy, target, gemc-target-variation, A, Z, output, events,
- *           events-per-file, seed, vertex-seed, and prefix.
- *   Uniform: channel, hadron, hadron-region, electron-theta-min/max, electron-p-min/max,
- *            electron-momentum, hadron-theta-min/max, hadron-p-min, hadron-p,
- *            hadron-momentum, trigger-theta, and trigger-phi-offset.
- *   Physical: input, event-generator, event-generator-version, tune, q2-cut, and output-layout.
- *   Each option uses `--key value`. The application handles `--help` before parse(). A profile uses the
- *   same names without `--` and writes them as `key = value`.
+ * CLI options (shared):
+ *   --config FILE                       Read `key = value` settings (default: no configuration file).
+ *   --beam-energy GeV                   Set the beam energy (default: 5.98636 GeV).
+ *   --target ID                         Select the target material (default: Ar40).
+ *   --gemc-target-variation NAME        Select a compatible GEMC target setup (default: auto).
+ *   --A N                               Set the LUND target A value (default: selected target's A).
+ *   --Z N                               Set the LUND target Z value (default: selected target's Z).
+ *   --output DIRECTORY                  Select the parent output directory (required).
+ *   --events N                          Set the number of events to write (required).
+ *   --events-per-file N                 Split output after N events (default: uniform 25000; physical 10000).
+ *   --seed N                            Set the uniform particle-motion seed (default: 67890).
+ *   --vertex-seed N                     Set the target-position seed (default: 12345).
+ *   --prefix NAME                       Set the LUND filename prefix (default: auto from run settings).
+ *
+ * CLI options (uniform LUND creator):
+ *   --channel 1e|eh|electron-tester     Select the created final state (default: 1e).
+ *   --hadron proton|neutron|pip|pim     Select the hadron for `eh` (default: proton).
+ *   --hadron-region FD|CD               Select the hadron detector region (default: FD).
+ *   --electron-theta-min DEG            Set the electron theta minimum (default: 5 degrees).
+ *   --electron-theta-max DEG            Set the electron theta maximum (default: 40 degrees).
+ *   --electron-p-min GeV/c              Set the electron momentum minimum (default: 0.7 GeV/c).
+ *   --electron-p-max GeV/c              Set the electron momentum maximum (default: beam momentum).
+ *   --electron-momentum MODE            Select uniform, mixed, or beam momentum (default: auto by channel).
+ *   --hadron-theta-min DEG              Set the hadron theta minimum (default: auto by particle and region).
+ *   --hadron-theta-max DEG              Set the hadron theta maximum (default: auto by particle and region).
+ *   --hadron-p-min GeV/c                Set the hadron momentum minimum (default: auto by particle and region).
+ *   --hadron-p GeV/c                    Set the fixed neutron momentum (default: 1 GeV/c).
+ *   --hadron-momentum MODE              Select fixed, uniform, or mixed momentum (default: auto by channel and hadron).
+ *   --trigger-theta DEG                 Set the trigger-electron theta (default: 25 degrees).
+ *   --trigger-phi-offset DEG            Set its opposite-sector offset (default: auto by beam energy).
+ *
+ * CLI options (physical LUND converter):
+ *   --input GST_GLOB                    Select GENIE GST ROOT input files (required).
+ *   --event-generator genie-gst         Select the physical-input adapter (default: genie-gst).
+ *   --event-generator-version VERSION   Record the event-generator version (default: unknown).
+ *   --tune NAME                         Record the GENIE tune (default: auto from input_options.txt, then unknown).
+ *   --q2-cut NAME                       Record the input selection label (default: auto by beam energy; no cut applied).
+ *   --output-layout nested|metadata     Select the physical run-directory layout (default: nested).
+ *
+ * Configuration-file syntax:
+ *   Use the same setting names without `--` and write each one as `key = value`. `config` is a command-line
+ *   option, not a setting inside the file. The application handles `--help` before createFromCommandLine().
  *
  * Setting priority:
- *   Command-line values replace profile values, and profile values replace defaults. The code resolves
- *   `auto` only after all explicit values are known. Each application documents its defaults and units.
+ *   A command-line value replaces the same configuration-file value. A configuration-file value replaces
+ *   the built-in default. The code calculates `auto` only after all user-supplied values are known.
  *
- * Boundary:
- *   This file only prepares settings. It does not create or convert events, read GST trees, draw random
- *   values, replace output directories, write LUND records, create monitoring, or submit jobs.
+ * Scope:
+ *   This file only prepares settings. It does not create events, read event data, choose random values,
+ *   replace output directories, write LUND records, create monitoring plots, or submit simulation jobs.
  */
 
 #include "core/config/RunConfig.h"
@@ -48,88 +84,91 @@
 
 namespace samples {
 
-// Translation-unit helpers ----------------------------------------------------------------------------------------------------------------------------------------------
+// Private configuration helpers -----------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Translation-unit helpers */
+#pragma region /* Private configuration helpers */
 /**
  * @namespace samples::<anonymous>
- * @brief Text and naming helpers used only in this file.
+ * @brief Contains small configuration functions that only this source file may call.
  *
- * These functions read profile and GENIE metadata text, resolve automatic provenance, and build output
- * names. They are not part of the public API.
+ * These functions clean text, try to find a GENIE tune, and build names for output files and directories.
+ * They are hidden from the rest of the project.
  */
 namespace {
 
-// trim ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Removing outside spaces -----------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* trim */
+#pragma region /* Removing outside spaces */
 /**
- * @brief Remove spaces around configuration text.
- *
- * Purpose:
- *   Remove whitespace around profile lines, keys, and values without changing spaces inside the text.
- *
- * Steps:
- *   Find the first and last non-space characters and return the text between them. Return an empty
- *   string when no text remains.
- *
- * @param s Copy of the configuration text to trim.
- *
- * @return Text without leading/trailing spaces, tabs, carriage returns, or newlines; empty for an
- *         empty or whitespace-only input.
- *
- * @note Spaces inside the value and all other characters stay unchanged.
+ * @brief Remove spaces and line-ending characters from both ends of text.
+ * @param s Copy of the text to clean.
+ * @return Text without spaces, tabs, carriage returns, or newlines at either end. Empty input or input
+ *         containing only those characters returns an empty string.
+ * @note Characters inside the text, including spaces, stay unchanged.
  */
 std::string trim(std::string s) {
-    // No first character means the value is empty or only spaces.
+    // If no kept character exists, the input was empty or contained only removable characters.
     auto first = s.find_first_not_of(" \t\r\n");
 
-    // Use the last non-space character as the other end.
+    // Copy from the first kept character through the last one.
     return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
 }
 #pragma endregion
 
-// discoverGenieTune -----------------------------------------------------------------------------------------------------------------------------------------------------
+// Finding the GENIE tune ------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* discoverGenieTune */
+#pragma region /* Finding the GENIE tune */
 /**
- * @brief Read the GENIE tune recorded beside a standard GST production directory.
+ * @brief Try to read the GENIE tune recorded beside the input files.
  *
  * Workflow:
- *   Resolve the fixed directory before any input glob -> find the
- *   `master-routine_validation_01-eScattering` path component -> open `input_options.txt` in its parent
- *   directory -> return the value after the exact `TUNE` key.
+ *   Start from the input file's directory. For an input pattern such as `gst*.root`, start from the fixed
+ *   directory before the wildcard. Move upward until finding a directory named
+ *   `master-routine_validation_01-eScattering`. Open `input_options.txt` in its parent directory and
+ *   return the value written after the exact `TUNE` key.
  *
- * @param input Local GST ROOT filename or quoted glob.
- *
- * @return The recorded tune, or `unknown` when the input is remote, the standard directory is absent,
- *         the metadata file cannot be read, or no nonempty `TUNE` value is present.
- *
- * @note This best-effort lookup never changes files and never turns missing provenance into a conversion
- *       failure. An explicit `--tune` value bypasses it.
+ * @param input Local GST ROOT filename or wildcard pattern.
+ * @return The recorded tune. Returns `unknown` for a remote input, an unexpected directory layout, an
+ *         unreadable metadata file, or a missing or empty `TUNE` value.
+ * @note Failure to discover the tune does not stop conversion and does not change any file. Supplying
+ *       `--tune` skips this search.
  */
 std::string discoverGenieTune(const std::string& input) {
+    // There is no local directory to search when no input was supplied. `://` identifies a remote address,
+    // such as `root://server/path/file.root`, whose surrounding files cannot be opened as local files.
     if (input.empty() || input.find("://") != std::string::npos) { return "unknown"; }
 
+    // A wildcard is a character such as `*` in `gst*.root`. It represents several possible filenames rather
+    // than one real file. Find the first wildcard so we can keep only the fixed directory before it.
     const auto wildcard = input.find_first_of("*?[");
     std::filesystem::path directory;
 
     if (wildcard == std::string::npos) {
+        // A normal filename has no wildcard, so begin in the directory that contains that file.
         directory = std::filesystem::path(input).parent_path();
     } else {
+        // For `/data/run/gst*.root`, the last slash before `*` separates the searchable directory
+        // `/data/run` from the filename pattern. A pattern without such a directory gives us nowhere to start.
         const auto separator = input.find_last_of("/\\", wildcard);
         if (separator == std::string::npos) { return "unknown"; }
 
         directory = std::filesystem::path(input.substr(0, separator));
     }
 
+    // Convert the starting directory to a complete, cleaned path. This lets the upward search compare one
+    // unambiguous directory at a time even when the user supplied `.` or `..` in the input path.
     directory = std::filesystem::absolute(directory).lexically_normal();
 
+    // Check the starting directory, then its parent, then the parent's parent, until the expected production
+    // directory is found or the top of the filesystem is reached.
     while (!directory.empty()) {
         if (directory.filename() == "master-routine_validation_01-eScattering") {
+            // GENIE production records its settings in `input_options.txt` beside this production directory.
             std::ifstream metadata(directory.parent_path() / "input_options.txt");
             std::string line;
 
+            // Read the file one line at a time. Split each line into words and use only a line whose first
+            // word is exactly `TUNE`; the following word is the tune name recorded in the run settings.
             while (std::getline(metadata, line)) {
                 std::istringstream fields(line);
                 std::string key;
@@ -141,6 +180,8 @@ std::string discoverGenieTune(const std::string& input) {
             return "unknown";
         }
 
+        // At the filesystem root, asking for the parent returns the same directory. Stop there so this loop
+        // cannot repeat forever; otherwise continue the search one directory higher.
         const auto parent = directory.parent_path();
         if (parent == directory) { break; }
 
@@ -151,96 +192,105 @@ std::string discoverGenieTune(const std::string& input) {
 }
 #pragma endregion
 
-// pathToken -------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Preparing one directory-name part -------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* pathToken */
+#pragma region /* Preparing one directory-name part */
 /**
- * @brief Make one setting safe to use inside an output-directory name.
+ * @brief Turn one setting into a single safe part of a directory name.
  *
  * Purpose:
- *   Keep target, generator, tune, cut, and GEMC text readable without allowing that text to create extra
- *   path components.
+ *   Output names include settings such as the target and tune. A slash or another special character in a
+ *   setting must not create an extra directory or change the path. This function replaces such characters
+ *   while keeping the name readable.
  *
- * Steps:
- *   Keep letters, digits, `.`, `_`, and `-`. Replace every other character with `-`. Reject an empty
- *   result and the special path names `.` and `..`.
+ * Conversion:
+ *   Keep letters, digits, `.`, `_`, and `-`. Replace every other character with `-`. Reject empty text
+ *   and the special directory names `.` and `..`.
  *
  * @param value Final setting text copied from the configuration.
- *
- * @return Text that is safe to place in one output-directory component.
- *
+ * @return Text that can be used as one directory-name part.
  * @throws std::runtime_error If the resulting component is empty, `.` or `..`.
- *
- * @note Different inputs can produce the same safe text. The run log keeps the original value.
+ * @note Two different inputs may become the same directory-name text. The manifest keeps the original
+ *       value.
  */
 std::string pathToken(std::string value) {
-    // std::isalnum needs an unsigned byte. Keep only the three allowed punctuation marks.
+    // std::isalnum requires a nonnegative byte value. Keep only the three allowed punctuation marks.
     for (char& ch : value) {
         if (!(std::isalnum(static_cast<unsigned char>(ch)) || ch == '.' || ch == '_' || ch == '-')) { ch = '-'; }
     }
 
-    // Reject empty names and the special `.` and `..` paths.
+    // `.` means the current directory and `..` means its parent, so neither is allowed as a generated
+    // name.
     if (value.empty() || value == "." || value == "..") { throw std::runtime_error("Invalid empty output-name component"); }
+
     return value;
 }
 #pragma endregion
 
-// beamMeV ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Building the beam-energy label ----------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* beamMeV */
+#pragma region /* Building the beam-energy label */
 /**
- * @brief Convert beam energy in GeV to the integer MeV label used in names.
+ * @brief Convert a beam energy in GeV to the whole-number MeV label used in output names.
  *
  * Purpose:
- *   Keep the 2070, 4029, and 5986 MeV labels and provide a rounded label for other energies.
+ *   Keep the established labels `2070`, `4029`, and `5986` for the three known beam energies. Build a
+ *   normally rounded label for any other energy.
  *
- * Steps:
- *   Return the fixed label when the energy is within `1e-6` GeV of a known setting. Otherwise multiply
- *   by 1000 and round to the nearest integer.
+ * Conversion:
+ *   Use a fixed label when the energy differs from a known value by less than `0.000001` GeV. Otherwise,
+ *   multiply by 1000 and round to the nearest whole number.
  *
  * @param energy Finite beam energy in GeV.
- *
  * @return Beam-energy label in MeV for filenames and directory names.
- *
- * @note 2.07052 GeV intentionally uses `2070`, not the normally rounded value `2071`.
+ * @note 2.07052 GeV intentionally produces `2070`, not the normally rounded value `2071`.
  */
 long long beamMeV(double energy) {
     if (std::abs(energy - 2.07052) < 1e-6) { return 2070; }
     if (std::abs(energy - 4.02962) < 1e-6) { return 4029; }
     if (std::abs(energy - 5.98636) < 1e-6) { return 5986; }
+
     return std::llround(energy * 1000.0);
 }
 #pragma endregion
 
-// uniformSampleLabel ----------------------------------------------------------------------------------------------------------------------------------------------------
+// Building the uniform-sample label -------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* uniformSampleLabel */
+#pragma region /* Building the uniform-sample label */
 /**
- * @brief Build the uniform-sample label from its particle and detector settings.
- * @param config Resolved configuration containing channel, hadron, and hadron-region.
- * @return `1e`, `electron-tester`, or one of the resolved electron-hadron FD/CD labels.
+ * @brief Build the short particle-and-detector label used in uniform output names.
+ * @param config Final configuration containing the channel, hadron, and detector region.
+ * @return `1e` for one electron, `electron-tester` for the electron test, or a label such as `epFD` for
+ *         an electron, an FD proton.
  */
 std::string uniformSampleLabel(const RunConfig& config) {
-    if (config.get("channel") == "1e") { return "1e"; }
-    if (config.get("channel") == "electron-tester") { return "electron-tester"; }
+    if (config.getText("channel") == "1e") { return "1e"; }
+    if (config.getText("channel") == "electron-tester") { return "electron-tester"; }
 
-    const auto& hadron = config.get("hadron");
+    const auto& hadron = config.getText("hadron");
+
     const std::string token = hadron == "proton" ? "p" : hadron == "neutron" ? "n" : hadron;
-    return "e" + token + config.get("hadron-region");
+
+    // Put `e` before the hadron token and the detector region after it. Proton and neutron use the shortened
+    // tokens above, producing labels such as `epFD` and `enCD`. The pion names remain `pip` and `pim`, so
+    // they produce labels such as `epipFD` and `epimCD`.
+    return "e" + token + config.getText("hadron-region");
 }
 #pragma endregion
 
 }  // namespace
 #pragma endregion
 
-// RunConfig::parse ------------------------------------------------------------------------------------------------------------------------------------------------------
+// Reading and preparing settings ----------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* RunConfig::parse */
-RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
-#pragma region /* Default settings */
-    // Keep settings as text so the run log records their exact final values. These defaults select the
-    // usual RG-M beam and argon target and keep separate seeds for kinematics and vertices. Particle
-    // masses come from targets.h and cannot be set here.
+#pragma region /* Reading and preparing settings */
+RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource source) {
+    const bool uniform = (source == LundSource::Uniform);
+
+#pragma region /* Built-in defaults */
+    // Keep settings as text so the manifest records their exact final values. These defaults select the
+    // usual RG-M beam and argon target. Particle motion and target positions use separate random seeds.
+    // Particle masses come from targets.h and are not configuration settings.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
                  {"target", "Ar40"},
@@ -254,11 +304,12 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                  {"vertex-seed", "12345"},
                  {"prefix", "auto"}};
 
-    // Add only settings used by the selected source. An option for the other source is rejected instead
-    // of being accepted and ignored.
+    // Add only settings used by the selected kind of event work. A setting for the other kind is reported
+    // as unknown instead of being silently ignored.
     if (uniform) {
-        // Angles use degrees and momenta use GeV/c. Resolve `auto` after reading the profile and command
-        // line. Fixed 1 GeV/c momentum is available only for neutrons.
+        // Uniform mode creates random test events. Values marked `auto` are calculated after the
+        // configuration file and command line have been read. A fixed momentum of 1 GeV/c is available
+        // only for neutrons.
         c.values_.insert({{"channel", "1e"},
                           {"hadron", "proton"},
                           {"hadron-region", "FD"},
@@ -275,12 +326,12 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
                           {"trigger-theta", "25"},
                           {"trigger-phi-offset", "auto"}});
     } else {
-        // Physical mode reads existing event-generator truth and records where it came from. It does not
-        // run GENIE. The current adapter reads GENIE GST input.
+        // Physical mode reads particles from existing event-generator files and records their origin. It
+        // does not run GENIE. The currently supported input is a GENIE GST ROOT tree.
         c.values_.insert({{"input", ""}, {"event-generator", "genie-gst"}, {"event-generator-version", "unknown"}, {"tune", "auto"}, {"q2-cut", "auto"}, {"output-layout", "nested"}});
     }
 
-    // Use the same assignment check for profiles and command-line values.
+    // Use one check for names read from both the configuration file and the command line.
     auto assign = [&](const std::string& k, const std::string& v) {
         if (!c.values_.count(k)) { throw std::runtime_error("Unknown setting: " + k); }
 
@@ -288,12 +339,14 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
     };
 #pragma endregion
 
-#pragma region /* Profile and CLI input */
-    // Save command-line values until the profile is read. The map also detects repeated options.
+#pragma region /* Configuration-file and command-line input */
+    // Save command-line values until after the configuration file is read, because command-line values
+    // have higher priority. The map also makes repeated command-line settings easy to detect.
     std::map<std::string, std::string> overrides;
     std::string config;
 
-    // Every option is a `--key value` pair. Negative numbers are read as values, not new options.
+    // Every command-line setting is a `--key value` pair. A negative number after a key is treated as its
+    // value and will later fail only if that setting does not allow negative numbers.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
 
@@ -302,7 +355,7 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         auto key = arg.substr(2);
         std::string value = argv[++i];
 
-        // `config` names the profile file. It is not stored as a run setting.
+        // `config` names the configuration file to read. It is not part of the final run settings.
         if (key == "config") {
             if (!config.empty()) { throw std::runtime_error("Use only one --config file"); }
 
@@ -312,8 +365,8 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         }
     }
 
-    // Read at most one profile and reject repeated keys. Relative profile paths start from the current
-    // working directory; workflow.py uses the repository root for project launches.
+    // Read at most one configuration file and report repeated names. A relative file path starts from the
+    // process's current directory. workflow.py starts project commands from the repository root.
     if (!config.empty()) {
         std::ifstream in(config);
 
@@ -325,10 +378,11 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
         while (std::getline(in, line)) {
             line = trim(line);
 
-            // Ignore blank lines and lines that start with #. A later # stays part of the value.
+            // Ignore empty lines and comment lines. A # after the first character remains part of the
+            // setting value.
             if (line.empty() || line[0] == '#') { continue; }
 
-            // Split at the first equals sign so the value may contain another equals sign.
+            // Split at the first equals sign so another equals sign may remain inside the value.
             auto eq = line.find('=');
 
             if (eq == std::string::npos) { throw std::runtime_error("Expected key = value: " + line); }
@@ -339,316 +393,343 @@ RunConfig RunConfig::parse(int argc, char** argv, bool uniform) {
 
             seen[key] = true;
 
-            // Check the setting name now. Check its value after command-line overrides and `auto`
-            // resolution are complete.
+            // Check the setting name now. Check the value later, after command-line replacement and
+            // automatic-value calculation are complete.
             assign(key, trim(line.substr(eq + 1)));
         }
     }
 #pragma endregion
 
 #pragma region /* Automatic-value resolution */
-    // Apply command-line values last. A command-line value of `auto` asks the code below to calculate it.
+    // Apply command-line values last so they replace configuration-file values. A command-line value of
+    // `auto` asks the following code to calculate that setting.
     for (const auto& [k, v] : overrides) { assign(k, v); }
 
-    // Resolve one target identity into nuclear metadata, the standard detector variation for this beam,
-    // and the matching protected targets.h geometry. An explicit detector variation handles exceptional
-    // configurations such as run 15733 and changes the vertex geometry with it.
-    const std::string A_override = c.get("A");
-    const std::string Z_override = c.get("Z");
-    const std::string variation_override = c.get("gemc-target-variation");
-    const auto& target = findTarget(c.get("target"));
-    const auto& variation = resolveTargetVariation(target, c.number("beam-energy"), variation_override);
+    // Find the selected target material. Its A value is the total number of protons and neutrons, and its
+    // Z value is the number of protons. The target and beam energy select the usual GEMC target setup. That
+    // setup also supplies the targets.h geometry used to choose event positions. The user may name a
+    // different compatible GEMC setup for an unusual run.
+    const std::string A_override = c.getText("A");
+    const std::string Z_override = c.getText("Z");
+    const std::string variation_override = c.getText("gemc-target-variation");
+    const auto& target = findTarget(c.getText("target"));
+    const auto& variation = resolveTargetVariation(target, c.getDouble("beam-energy"), variation_override);
     c.values_["A"] = std::to_string(target.A);
     c.values_["Z"] = std::to_string(target.Z);
     c.values_["gemc-target-variation"] = variation.identifier;
     c.values_["target-geometry"] = variation.geometry;
 
-    // Nuclear header overrides remain independent because physical input can require unusual metadata.
+    // A and Z describe the nucleus in the LUND header, not its shape or position. Keep explicit A and Z
+    // values even when they differ from the selected target's defaults.
     if (A_override != "auto") { c.values_["A"] = A_override; }
     if (Z_override != "auto") { c.values_["Z"] = Z_override; }
 
     if (uniform) {
-        // Set the default angle limits for the particle and detector region. CD pions stop at 140
-        // degrees, CD nucleons at 145, FD neutrons at 35, and charged FD hadrons at 45.
-        const bool neutron = c.get("hadron") == "neutron";
-        const bool pion = c.get("hadron") == "pip" || c.get("hadron") == "pim";
-        const bool central = c.get("hadron-region") == "CD";
-        if (c.get("hadron-theta-min") == "auto") { c.values_["hadron-theta-min"] = central ? "35" : "5"; }
-        if (c.get("hadron-theta-max") == "auto") { c.values_["hadron-theta-max"] = central ? (pion ? "140" : "145") : (neutron ? "35" : "45"); }
-        if (c.get("electron-p-max") == "auto") { c.values_["electron-p-max"] = c.get("beam-energy"); }
-        if (c.get("hadron-p-min") == "auto") { c.values_["hadron-p-min"] = neutron ? "0" : c.get("hadron") == "proton" ? (central ? "0.2" : "0.3") : (central ? "0.1" : "0.2"); }
+        // Fill the default hadron-angle limits for the selected particle and detector region. CD means the
+        // central detector and FD means the forward detector. CD pions stop at 140 degrees, CD protons and
+        // neutrons at 145, FD neutrons at 35, and charged FD hadrons at 45.
+        const bool neutron = (c.getText("hadron") == "neutron");
+        const bool pion = (c.getText("hadron") == "pip" || c.getText("hadron") == "pim");
+        const bool central = (c.getText("hadron-region") == "CD");
+        if (c.getText("hadron-theta-min") == "auto") { c.values_["hadron-theta-min"] = central ? "35" : "5"; }
+        if (c.getText("hadron-theta-max") == "auto") { c.values_["hadron-theta-max"] = central ? (pion ? "140" : "145") : (neutron ? "35" : "45"); }
+        if (c.getText("electron-p-max") == "auto") { c.values_["electron-p-max"] = c.getText("beam-energy"); }
+        if (c.getText("hadron-p-min") == "auto") { c.values_["hadron-p-min"] = neutron ? "0" : c.getText("hadron") == "proton" ? (central ? "0.2" : "0.3") : (central ? "0.1" : "0.2"); }
 
-        // Use the configured trigger-electron offset for each known beam energy. Other energies use zero.
-        if (c.get("trigger-phi-offset") == "auto") {
-            double e = c.number("beam-energy");
+        // Choose the usual angle between the trigger electron and the opposite detector sector for each
+        // known beam energy. Other beam energies use no offset.
+        if (c.getText("trigger-phi-offset") == "auto") {
+            double e = c.getDouble("beam-energy");
             c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
         }
     }
 
-    // Use the configured Q2-cut label for each known RG-M beam. Other energies use `none`. Normalize
-    // accepted underscore spellings so equivalent values always produce the same output name.
+    // Choose the usual Q²-cut label for each known RG-M beam energy. Q² describes the squared momentum
+    // transferred in the interaction. Other energies use `none`. Convert accepted underscore spellings
+    // to one standard spelling so equivalent values produce the same output name.
     if (!uniform) {
-        if (c.get("q2-cut") == "auto") {
-            const double e = c.number("beam-energy");
+        if (c.getText("q2-cut") == "auto") {
+            const double e = c.getDouble("beam-energy");
             c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2-0.02" : std::abs(e - 4.02962) < 1e-6 ? "Q2-0.25" : std::abs(e - 5.98636) < 1e-6 ? "Q2-0.40" : "none";
-        } else if (c.get("q2-cut") == "Q2_0_02" || c.get("q2-cut") == "Q2_0.02") {
+        } else if (c.getText("q2-cut") == "Q2_0_02" || c.getText("q2-cut") == "Q2_0.02") {
             c.values_["q2-cut"] = "Q2-0.02";
-        } else if (c.get("q2-cut") == "Q2_0_25" || c.get("q2-cut") == "Q2_0.25") {
+        } else if (c.getText("q2-cut") == "Q2_0_25" || c.getText("q2-cut") == "Q2_0.25") {
             c.values_["q2-cut"] = "Q2-0.25";
-        } else if (c.get("q2-cut") == "Q2_0_40" || c.get("q2-cut") == "Q2_0.40") {
+        } else if (c.getText("q2-cut") == "Q2_0_40" || c.getText("q2-cut") == "Q2_0.40") {
             c.values_["q2-cut"] = "Q2-0.40";
         }
     }
 
-    // Standard GENIE productions record their tune beside the master-routine directory. Missing or
-    // unreadable metadata is valid but loses that provenance, so retain the documented unknown fallback.
-    if (!uniform && c.get("tune") == "auto") { c.values_["tune"] = discoverGenieTune(c.get("input")); }
+    // A GENIE tune names the physics settings used to produce the input events. Standard productions store
+    // it in input_options.txt near the input files. If it cannot be read, record `unknown` and continue.
+    if (!uniform && c.getText("tune") == "auto") { c.values_["tune"] = discoverGenieTune(c.getText("input")); }
 
-    // Separate each major identity group with a double underscore. Uniform labels already contain the
-    // complete particle/region identity. A known generator version joins the generator with a hyphen
-    // because both values describe the same generator identity. Physical prefixes always
-    // retain the generator tune and Q2-cut label so copied LUND files remain identifiable outside their
-    // provenance directory. The run log records the version even when its value is `unknown`.
-    if (c.get("prefix") == "auto") {
+    // Build a filename prefix that still describes the sample if a LUND file is copied out of its run
+    // directory. Double underscores separate different facts. A hyphen joins an event-generator name to
+    // its version. Physical prefixes always include the tune and Q²-cut label. The manifest records the
+    // generator version even when it is `unknown`.
+    if (c.getText("prefix") == "auto") {
         if (uniform) {
             std::ostringstream prefix;
-            prefix << "Uniform__" << uniformSampleLabel(c) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
+            prefix << "Uniform__" << uniformSampleLabel(c) << "__" << beamMeV(c.getDouble("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         } else {
             std::ostringstream prefix;
-            prefix << pathToken(c.get("target")) << "__" << pathToken(c.get("event-generator"));
-            if (c.get("event-generator-version") != "unknown") { prefix << "-" << pathToken(c.get("event-generator-version")); }
-            prefix << "__" << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
+            prefix << pathToken(c.getText("target")) << "__" << pathToken(c.getText("event-generator"));
+            if (c.getText("event-generator-version") != "unknown") { prefix << "-" << pathToken(c.getText("event-generator-version")); }
+            prefix << "__" << pathToken(c.getText("tune")) << "__" << pathToken(c.getText("q2-cut")) << "__" << beamMeV(c.getDouble("beam-energy")) << "MeV";
             c.values_["prefix"] = prefix.str();
         }
     }
 
     if (uniform) {
-        // Charged hadrons use the 50/50 p and 1/p mixture. Neutrons use uniform p. The trigger electron
-        // in every eh event uses beam momentum.
-        if (c.get("electron-momentum") == "auto") { c.values_["electron-momentum"] = c.get("channel") == "1e" ? "mixed" : "beam"; }
-        if (c.get("hadron-momentum") == "auto" || c.get("hadron-momentum") == "sampled") {
-            c.values_["hadron-momentum"] = c.get("channel") == "eh" && c.get("hadron") != "neutron" ? "mixed" : "uniform";
+        // For charged hadrons, `mixed` chooses half the momenta uniformly in p and half uniformly in 1/p.
+        // Neutrons use uniform p. In an electron-hadron event, the trigger electron uses beam momentum.
+        if (c.getText("electron-momentum") == "auto") { c.values_["electron-momentum"] = c.getText("channel") == "1e" ? "mixed" : "beam"; }
+        if (c.getText("hadron-momentum") == "auto" || c.getText("hadron-momentum") == "sampled") {
+            c.values_["hadron-momentum"] = c.getText("channel") == "eh" && c.getText("hadron") != "neutron" ? "mixed" : "uniform";
         }
     }
 #pragma endregion
 
-#pragma region /* Validation and path resolution */
-    // Check settings before changing paths or adding the final run name. This creates no output.
-    c.validate(uniform);
+#pragma region /* Final checks and paths */
+    // Check the settings before changing paths or adding the final run-directory name. Validation does not
+    // create or change any file or directory.
+    c.validateForSource(source);
 
-    // Leave URI-like inputs unchanged. Make local files and glob patterns absolute so later directory
-    // changes do not change what they mean.
-    if (!uniform && c.get("input").find("://") == std::string::npos) { c.values_["input"] = std::filesystem::absolute(c.get("input")).lexically_normal().string(); }
+    // Leave remote addresses containing :// unchanged. Make local filenames and wildcard patterns absolute
+    // so they still refer to the same input if later code changes its current directory.
+    if (!uniform && c.getText("input").find("://") == std::string::npos) { c.values_["input"] = std::filesystem::absolute(c.getText("input")).lexically_normal().string(); }
 
     if (uniform) {
-        // Put uniform output in a channel-and-beam directory below the selected parent. Use the same
-        // metadata convention as the automatic prefix so copied files and their run directory agree.
+        // Add a directory name containing the uniform channel and beam energy below the parent directory
+        // supplied by the user. Use the same facts as the automatic filename prefix.
         std::ostringstream directory;
-        directory << "Uniform__" << uniformSampleLabel(c) << "__" << std::setw(4) << std::setfill('0') << beamMeV(c.number("beam-energy")) << "MeV";
-        c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
-    } else if (c.get("output-layout") == "nested") {
-        // Group physical output by target, generator/tune, and selection/beam. Double underscores
-        // separate metadata values; hyphens remain valid inside values such as `genie-gst`.
-        const auto generator_and_tune = pathToken(c.get("event-generator")) + "__" + pathToken(c.get("tune"));
-        const auto selection_and_beam = pathToken(c.get("q2-cut")) + "__" + std::to_string(beamMeV(c.number("beam-energy"))) + "MeV";
-        c.values_["output"] = (std::filesystem::path(c.get("output")) / pathToken(c.get("target")) / generator_and_tune / selection_and_beam).string();
+        directory << "Uniform__" << uniformSampleLabel(c) << "__" << std::setw(4) << std::setfill('0') << beamMeV(c.getDouble("beam-energy")) << "MeV";
+        c.values_["output"] = (std::filesystem::path(c.getText("output")) / directory.str()).string();
+    } else if (c.getText("output-layout") == "nested") {
+        // The nested layout uses three directory levels: target, event generator and tune, then Q² cut and
+        // beam energy. Double underscores separate facts within one directory name.
+        const auto generator_and_tune = pathToken(c.getText("event-generator")) + "__" + pathToken(c.getText("tune"));
+        const auto selection_and_beam = pathToken(c.getText("q2-cut")) + "__" + std::to_string(beamMeV(c.getDouble("beam-energy"))) + "MeV";
+        c.values_["output"] = (std::filesystem::path(c.getText("output")) / pathToken(c.getText("target")) / generator_and_tune / selection_and_beam).string();
     } else {
-        // Put every physical metadata group in one directory. Join generator and version with a hyphen,
-        // then separate that combined identity from the other groups with double underscores.
+        // The metadata layout puts every fact in one directory name. A hyphen joins the event generator
+        // and its version. Double underscores separate that pair from the other facts.
         std::ostringstream directory;
-        directory << pathToken(c.get("gemc-target-variation")) << "__" << pathToken(c.get("event-generator")) << "-" << pathToken(c.get("event-generator-version")) << "__"
-                  << pathToken(c.get("tune")) << "__" << pathToken(c.get("q2-cut")) << "__" << beamMeV(c.number("beam-energy")) << "MeV";
-        c.values_["output"] = (std::filesystem::path(c.get("output")) / directory.str()).string();
+        directory << pathToken(c.getText("gemc-target-variation")) << "__" << pathToken(c.getText("event-generator")) << "-" << pathToken(c.getText("event-generator-version")) << "__"
+                  << pathToken(c.getText("tune")) << "__" << pathToken(c.getText("q2-cut")) << "__" << beamMeV(c.getDouble("beam-energy")) << "MeV";
+        c.values_["output"] = (std::filesystem::path(c.getText("output")) / directory.str()).string();
     }
 
-    // Give later code one absolute run directory. The writer replaces it safely later.
-    c.values_["output"] = std::filesystem::absolute(c.get("output")).lexically_normal().string();
+    // Store one absolute run-directory path. The writer later checks that exact path before replacing it.
+    c.values_["output"] = std::filesystem::absolute(c.getText("output")).lexically_normal().string();
 #pragma endregion
 
     return c;
 }
 #pragma endregion
 
-// RunConfig::get --------------------------------------------------------------------------------------------------------------------------------------------------------
+// Reading one text setting ----------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* RunConfig::get */
-std::string RunConfig::get(const std::string& k) const {
+#pragma region /* Reading one text setting */
+std::string RunConfig::getText(const std::string& k) const {
     const auto value = values_.find(k);
+
     if (value == values_.end()) { throw std::out_of_range("Missing configuration key: " + k); }
+
     return value->second;
 }
 #pragma endregion
 
-// RunConfig::number -----------------------------------------------------------------------------------------------------------------------------------------------------
+// Reading one decimal number --------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* RunConfig::number */
-double RunConfig::number(const std::string& k) const {
-    // `used` shows whether stod read the whole value or only a numeric prefix such as "5" in "5 GeV".
+#pragma region /* Reading one decimal number */
+double RunConfig::getDouble(const std::string& k) const {
+    // stod reports how many characters it converted through `used`. This reveals extra text: for example,
+    // it can read the number 5 from `5 GeV`, but used will show that ` GeV` remains.
     std::size_t used = 0;
-    double value = std::stod(get(k), &used);
+    double value = std::stod(getText(k), &used);
 
-    // Some libraries let stod read NaN or infinity. Reject them and any text left after the number.
-    if (used != get(k).size() || !std::isfinite(value)) { throw std::runtime_error("Invalid number: " + k); }
+    // Reject extra text, infinity, and NaN, which means a value that is not a valid number.
+    if (used != getText(k).size() || !std::isfinite(value)) { throw std::runtime_error("Invalid number: " + k); }
 
     return value;
 }
 #pragma endregion
 
-// RunConfig::integer ----------------------------------------------------------------------------------------------------------------------------------------------------
+// Reading one nonnegative whole number ----------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* RunConfig::integer */
-std::uint64_t RunConfig::integer(const std::string& k) const {
-    // Require digits before conversion so stoull cannot accept a sign or surrounding whitespace.
-    const auto s = get(k);
+#pragma region /* Reading one nonnegative whole number */
+std::uint64_t RunConfig::getNonnegativeInteger(const std::string& k) const {
+    // Require digits only. This rejects a minus or plus sign, a decimal point, and surrounding spaces
+    // before conversion.
+    const auto s = getText(k);
 
     if (s.empty() || s.find_first_not_of("0123456789") != std::string::npos) { throw std::runtime_error("Expected unsigned integer: " + k); }
 
-    // stoull performs the final range check after the digits-only check.
+    // stoull converts the digits and reports an error if the value is too large for the return type.
     return std::stoull(s);
 }
 #pragma endregion
 
-// RunConfig::validate ---------------------------------------------------------------------------------------------------------------------------------------------------
+// Checking all final settings -------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* RunConfig::validate */
-void RunConfig::validate(bool uniform) const {
-#pragma region /* Shared run and output contract */
-    // At this point, output is still the parent selected by the user. parse() adds the run name after
-    // validation. Both LUND sources require an event count.
-    if (get("output").empty()) { throw std::runtime_error("--output is required; use a new run directory"); }
-    if (get("events").empty()) { throw std::runtime_error("--events is required; provide the total number of events to write"); }
+#pragma region /* Checking all final settings */
+void RunConfig::validateForSource(LundSource source) const {
+    const bool uniform = (source == LundSource::Uniform);
 
-    // Beam energy must be a finite, positive value in GeV. number() checks its text and finiteness.
-    if (number("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
+#pragma region /* Settings used by both event sources */
+    // At this point, output is still the parent directory supplied by the user. createFromCommandLine() adds the final run
+    // name after these checks. Both kinds of event work require a requested event count.
+    if (getText("output").empty()) { throw std::runtime_error("--output is required; use a new run directory"); }
+    if (getText("events").empty()) { throw std::runtime_error("--events is required; provide the total number of events to write"); }
 
-    // Event counts must be positive. Seeds may be zero because TRandom3(0) asks ROOT to choose a new,
-    // nonrepeatable seed. A run that uses zero cannot be reproduced from the recorded value alone.
+    // Beam energy is measured in GeV and must be greater than zero. getDouble() has already rejected extra
+    // text, infinity, and a value that is not a number.
+    if (getDouble("beam-energy") <= 0) { throw std::runtime_error("beam-energy must be positive"); }
+
+    // Event counts must be between 1 and the largest value accepted by the event loops. A random seed may
+    // be zero. ROOT treats TRandom3(0) as a request to choose a new seed, so a zero-seeded run cannot be
+    // repeated later from the recorded zero alone.
     for (auto k : {"events", "events-per-file"}) {
-        auto n = integer(k);
+        auto n = getNonnegativeInteger(k);
         if (!n || n > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
     }
     for (auto k : {"seed", "vertex-seed"}) {
-        if (integer(k) > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [0, 4294967295]"); }
+        if (getNonnegativeInteger(k) > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [0, 4294967295]"); }
     }
 
-    // A and Z are LUND header values and do not choose the vertex geometry. integer() already requires
-    // Z to be nonnegative; these checks keep A and Z physically ordered.
-    if (integer("A") < 1 || integer("A") > 300 || integer("Z") > integer("A")) { throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A"); }
+    // In the LUND header, A is the total number of protons and neutrons and Z is the number of protons.
+    // They do not choose the target shape or event positions. Require a possible ordering: at least one
+    // particle in the nucleus and no more protons than the total.
+    if (getNonnegativeInteger("A") < 1 || getNonnegativeInteger("A") > 300 || getNonnegativeInteger("Z") > getNonnegativeInteger("A")) {
+        throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A");
+    }
 
-    // The prefix is used in filenames, so allow only a nonempty portable name.
-    if (get("prefix").empty() || get("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos) {
+    // The prefix becomes part of each output filename. Limit it to characters that work reliably in common
+    // filesystems and command lines.
+    if (getText("prefix").empty() || getText("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos) {
         throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
     }
 
 #pragma endregion
 
-#pragma region /* Vertex contract */
-    // Every event samples the selected target geometry. There is no fixed-vertex mode.
-    TargetGeometry::validate(get("target-geometry"));
+#pragma region /* Target-position setting */
+    // Every event receives one randomly chosen position inside the selected target geometry. This workflow
+    // does not support a setting that forces every event to use one fixed position.
+    TargetGeometry::validateGeometryName(getText("target-geometry"));
 #pragma endregion
 
-#pragma region /* Source-specific contract */
+#pragma region /* Settings for the selected event source */
     if (!uniform) {
-        // Physical mode currently supports only GENIE GST ROOT input. Require a path or glob now; the
-        // adapter opens the files and checks the tree when conversion starts.
-        if (get("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
-        if (get("event-generator") != "genie-gst") { throw std::runtime_error("Only --event-generator genie-gst is currently implemented"); }
-        if (get("output-layout") != "nested" && get("output-layout") != "metadata") { throw std::runtime_error("output-layout must be nested or metadata"); }
+        // Physical mode currently reads only GENIE GST ROOT input. Require a filename or wildcard pattern
+        // now. The GENIE reader opens the matching files and checks their GST tree when conversion starts.
+        if (getText("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
+        if (getText("event-generator") != "genie-gst") { throw std::runtime_error("Only --event-generator genie-gst is currently implemented"); }
+        if (getText("output-layout") != "nested" && getText("output-layout") != "metadata") { throw std::runtime_error("output-layout must be nested or metadata"); }
 
-        // These values are used in the physical directory name and manifest. `unknown` and `none` are
-        // allowed, but an empty value is not.
+        // These values describe the physical input in the run directory and manifest. `unknown` and
+        // `none` are meaningful recorded values, but empty text is not.
         for (auto k : {"event-generator-version", "tune", "q2-cut", "gemc-target-variation"}) {
-            if (get(k).empty()) { throw std::runtime_error(std::string(k) + " must not be empty"); }
+            if (getText(k).empty()) { throw std::runtime_error(std::string(k) + " must not be empty"); }
         }
 
-        // Physical configurations have no uniform-only settings, so their checks end here.
+        // The remaining settings belong only to random uniform test events.
         return;
     }
 
-    // Uniform mode accepts one electron, an electron-hadron pair, or the electron tester. These are
-    // acceptance samples, not physical interaction models.
-    if (get("channel") != "1e" && get("channel") != "eh" && get("channel") != "electron-tester") { throw std::runtime_error("channel must be 1e, eh or electron-tester"); }
-    if (get("hadron") != "proton" && get("hadron") != "neutron" && get("hadron") != "pip" && get("hadron") != "pim") {
+    // Uniform mode can create one electron, an electron with one hadron, or the electron test scan. These
+    // random test events measure detector acceptance; they do not describe a physical interaction.
+    if (getText("channel") != "1e" && getText("channel") != "eh" && getText("channel") != "electron-tester") { throw std::runtime_error("channel must be 1e, eh or electron-tester"); }
+    if (getText("hadron") != "proton" && getText("hadron") != "neutron" && getText("hadron") != "pip" && getText("hadron") != "pim") {
         throw std::runtime_error("hadron must be proton, neutron, pip or pim");
     }
-    if (get("hadron-region") != "FD" && get("hadron-region") != "CD") { throw std::runtime_error("hadron-region must be FD or CD"); }
+    if (getText("hadron-region") != "FD" && getText("hadron-region") != "CD") { throw std::runtime_error("hadron-region must be FD or CD"); }
 
-    // Require increasing polar-angle limits between 0 and 180 degrees. A profile may narrow the defaults.
+    // Theta is the angle measured from the beam direction. Require each minimum to be smaller than its
+    // maximum and keep the full range between 0 and 180 degrees.
     for (auto stem : {"electron", "hadron"}) {
-        double lo = number(std::string(stem) + "-theta-min"), hi = number(std::string(stem) + "-theta-max");
+        double lo = getDouble(std::string(stem) + "-theta-min"), hi = getDouble(std::string(stem) + "-theta-max");
         if (!(0 <= lo && lo < hi && hi <= 180)) { throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180"); }
     }
 
-    // parse() resolves `auto` and `sampled` before this check. Mixed sampling needs a positive minimum
-    // because 1/p is undefined at zero. Fixed momentum is allowed only for neutrons.
-    if (get("hadron-momentum") != "fixed" && get("hadron-momentum") != "uniform" && get("hadron-momentum") != "mixed") {
+    // createFromCommandLine() has already replaced `auto` and the older spelling `sampled`. Mixed sampling chooses half
+    // the values uniformly in momentum p and half uniformly in 1/p. Its minimum must be greater than zero
+    // because 1/0 is undefined. Only neutron samples may use one fixed momentum.
+    if (getText("hadron-momentum") != "fixed" && getText("hadron-momentum") != "uniform" && getText("hadron-momentum") != "mixed") {
         throw std::runtime_error("hadron-momentum must be fixed, sampled, uniform or mixed");
     }
-    if (get("hadron-momentum") == "mixed" && (get("channel") != "eh" || get("hadron") == "neutron" || number("hadron-p-min") <= 0)) {
+    if (getText("hadron-momentum") == "mixed" && (getText("channel") != "eh" || getText("hadron") == "neutron" || getDouble("hadron-p-min") <= 0)) {
         throw std::runtime_error("mixed requires an eh charged hadron and strictly positive hadron-p-min");
     }
-    if (get("hadron-momentum") == "fixed" && (get("channel") != "eh" || get("hadron") != "neutron")) {
+    if (getText("hadron-momentum") == "fixed" && (getText("channel") != "eh" || getText("hadron") != "neutron")) {
         throw std::runtime_error("fixed hadron momentum is available only for eh neutron samples");
     }
 
-    if (get("electron-momentum") != "uniform" && get("electron-momentum") != "mixed" && get("electron-momentum") != "beam") {
+    if (getText("electron-momentum") != "uniform" && getText("electron-momentum") != "mixed" && getText("electron-momentum") != "beam") {
         throw std::runtime_error("electron-momentum must be auto, uniform, mixed or beam");
     }
-    if (get("electron-momentum") == "mixed" && (get("channel") != "1e" || number("electron-p-min") <= 0)) {
+    if (getText("electron-momentum") == "mixed" && (getText("channel") != "1e" || getDouble("electron-p-min") <= 0)) {
         throw std::runtime_error("mixed electron momentum requires 1e and strictly positive electron-p-min");
     }
 
-    // Fixed momentum must be positive. Uniform sampling may start at zero, but every sampled range must
-    // have a positive width. The mixed-mode checks above require a positive minimum.
-    if (number("hadron-p") <= 0 || number("hadron-p-min") < 0 || number("beam-energy") <= number("hadron-p-min")) { throw std::runtime_error("Invalid hadron momentum bounds"); }
-    if (number("electron-p-min") < 0 || number("electron-p-max") <= number("electron-p-min")) { throw std::runtime_error("Invalid electron momentum bounds"); }
+    // A fixed momentum must be greater than zero. A uniform range may begin at zero, but its maximum must
+    // be greater than its minimum. The mixed-mode checks above require a minimum greater than zero.
+    if (getDouble("hadron-p") <= 0 || getDouble("hadron-p-min") < 0 || getDouble("beam-energy") <= getDouble("hadron-p-min")) { throw std::runtime_error("Invalid hadron momentum bounds"); }
+    if (getDouble("electron-p-min") < 0 || getDouble("electron-p-max") <= getDouble("electron-p-min")) { throw std::runtime_error("Invalid electron momentum bounds"); }
 
-    // Trigger theta must be a valid polar angle, and the sector offset must stay within ±180 degrees.
-    if (number("trigger-theta") < 0 || number("trigger-theta") > 180 || std::abs(number("trigger-phi-offset")) > 180) { throw std::runtime_error("Invalid trigger angle"); }
+    // The trigger electron's theta must stay between 0 and 180 degrees. Its angle away from the opposite
+    // detector sector must stay between -180 and 180 degrees.
+    if (getDouble("trigger-theta") < 0 || getDouble("trigger-theta") > 180 || std::abs(getDouble("trigger-phi-offset")) > 180) { throw std::runtime_error("Invalid trigger angle"); }
 #pragma endregion
 }
 #pragma endregion
 
-// jsonString ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Preparing text for JSON -----------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* jsonString */
-std::string jsonString(const std::string& s) {
-    // Build a new string without changing the original setting.
+#pragma region /* Preparing text for JSON */
+std::string quoteAsJsonString(const std::string& s) {
+    // Build a new quoted string without changing the original text.
     std::ostringstream out;
     out << '"';
 
-    // Read unsigned bytes so control-character checks work the same on every platform.
+    // Read each byte as a value from 0 through 255 so checks for invisible control characters behave the
+    // same on every platform.
     for (unsigned char ch : s) {
-        // Escape quotes and backslashes because JSON uses them as syntax.
+        // JSON uses quotes to mark a string and backslashes to begin special forms. Add a backslash before
+        // either character when it is part of the text itself.
         if (ch == '"' || ch == '\\') {
             out << '\\' << ch;
         } else if (ch < 0x20) {
-            // JSON does not allow raw control bytes. Write a four-digit Unicode escape, then switch the
-            // stream back to decimal numbers.
+            // JSON does not allow invisible control characters directly inside a string. Write them as
+            // `\u` followed by four hexadecimal digits, then return number formatting to decimal.
             out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(ch) << std::dec;
         } else {
-            // Ordinary text and UTF-8 bytes need no extra escaping here.
+            // Visible text and bytes that form UTF-8 text can be copied unchanged.
             out << ch;
         }
     }
 
-    // Add the closing quote so the result is ready to use as one JSON key or value.
+    // Add the closing quote so the result is ready to insert as one JSON key or value.
     out << '"';
 
     return out.str();
 }
 #pragma endregion
 
-// help ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Building command-line help --------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* help */
-std::string help(bool uniform) {
-    // Quote the physical input glob so the shell passes the pattern to the converter unchanged.
+#pragma region /* Building command-line help */
+std::string buildHelpText(LundSource source) {
+    const bool uniform = (source == LundSource::Uniform);
+
+    // Put quotes around the physical-input wildcard example so the shell passes `gst*.root` to the
+    // program instead of replacing it before the program starts.
     std::string result = uniform ? "uniform-lund-creator --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
                                  : "event-generator-to-lund-converter --event-generator genie-gst --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
-    // List the settings shared by both LUND sources.
+    // List the settings used by both random event creation and physical-input conversion.
     result +=
         "Settings: --config FILE, --beam-energy GeV, --target ID, --gemc-target-variation NAME, --A N, --Z N,\n"
         "--events N, --events-per-file N, --seed N, --vertex-seed N, --prefix NAME,\n"
@@ -658,8 +739,8 @@ std::string help(bool uniform) {
     if (uniform) { result += "Uniform event IDs start at zero and continue across split files.\n"; }
 
     if (uniform) {
-        // List the uniform-only acceptance and sampling settings. parse() resolves automatic values
-        // before validation.
+        // List settings that control the particles and random ranges in uniform test events. createFromCommandLine()
+        // calculates automatic values before checking them.
         result +=
             "Uniform: --hadron proton|neutron|pip|pim, --hadron-region FD|CD, --electron-theta-min/max DEG, --electron-p-min/max GeV/c,\n"
             "--hadron-theta-min/max DEG, --electron-momentum auto|uniform|mixed|beam,\n"
@@ -668,7 +749,7 @@ std::string help(bool uniform) {
             "Hadron theta and phi are always sampled uniformly inside their configured ranges.\n"
             "Sampled hadron momentum extends to the beam energy. Uniform monitoring is always written and rendered.\n";
     } else {
-        // List the physical-only GENIE GST and source-description settings.
+        // List settings that describe existing GENIE input and the physical-output directory layout.
         result +=
             "Physical: --event-generator genie-gst (default), --event-generator-version VERSION, --tune NAME, --q2-cut NAME,\n"
             "--output-layout nested|metadata (default: nested).\n"
@@ -676,7 +757,7 @@ std::string help(bool uniform) {
             "For physical input, --events-per-file also sets the minimum inclusive input block required before a follow-up file starts, aligned with JOB_NEVENTS.\n";
     }
 
-    // Read supported names from the target catalog instead of copying the list here.
+    // Ask the target catalog for its current names so this help text cannot contain an outdated copy.
     result += "Targets: " + targetNames() + "\n";
 
     return result;

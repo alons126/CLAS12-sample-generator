@@ -41,7 +41,8 @@ namespace samples {
  *   4. Create events until the requested count is written. All particles in one event share one vertex.
  *   5. Save the plots, close the LUND files, and write the completion log.
  *
- * @param config Checked settings returned by RunConfig::parse(..., true). The function reads them during
+ * @param config Checked settings returned by
+ *               RunConfig::createFromCommandLine(..., LundSource::Uniform). The function reads them during
  *               the call and does not store or change them. Momentum uses GeV/c, beam energy uses GeV,
  *               angles use degrees, and vertices use cm.
  *

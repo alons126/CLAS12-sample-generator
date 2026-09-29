@@ -59,10 +59,10 @@ namespace {
  * @return `1e`, `electron-tester`, or the electron-hadron label with its FD/CD suffix.
  */
 std::string sampleLabel(const RunConfig& c) {
-    if (c.get("channel") == "1e") { return "1e"; }
-    if (c.get("channel") == "electron-tester") { return "electron-tester"; }
-    const std::string token = c.get("hadron") == "proton" ? "p" : c.get("hadron") == "neutron" ? "n" : c.get("hadron");
-    return "e" + token + c.get("hadron-region");
+    if (c.getText("channel") == "1e") { return "1e"; }
+    if (c.getText("channel") == "electron-tester") { return "electron-tester"; }
+    const std::string token = c.getText("hadron") == "proton" ? "p" : c.getText("hadron") == "neutron" ? "n" : c.getText("hadron");
+    return "e" + token + c.getText("hadron-region");
 }
 #pragma endregion
 
@@ -148,7 +148,7 @@ void generateUniform(const RunConfig& c) {
     std::cout << "\n" << env::SYSTEM_COLOR << "Validating uniform settings and preparing LUND output..." << env::RESET_COLOR << "\n";
 
     // Check and print the settings before the writer replaces an existing run.
-    c.validate(true);
+    c.validateForSource(LundSource::Uniform);
     LundWriter::printWorkflowSummary(c, "uniform");
 
     // Convert strings to typed values once before the event loop.
@@ -157,10 +157,10 @@ void generateUniform(const RunConfig& c) {
 
     // Motion and vertices use separate random streams. A nonzero seed can be repeated. ROOT gives
     // TRandom3(0) a new automatic seed, so a run with seed zero cannot be replayed from that value alone.
-    TRandom3 random(c.integer("seed")), vertex_random(c.integer("vertex-seed"));
+    TRandom3 random(c.getNonnegativeInteger("seed")), vertex_random(c.getNonnegativeInteger("vertex-seed"));
 
     // Use the selected targets.h geometry for every event vertex.
-    TargetGeometry geometry(c.get("target-geometry"));
+    TargetGeometry geometry(c.getText("target-geometry"));
 
     // The writer safely replaces the chosen run directory, creates it, and stores the file limits.
     LundWriter writer(c, "uniform");
@@ -173,15 +173,15 @@ void generateUniform(const RunConfig& c) {
 #pragma region /* Event generation */
     std::cout << "\n" << env::SYSTEM_COLOR << "Generating uniform events and writing LUND output..." << env::RESET_COLOR << "\n";
 
-    ProgressReporter progress("Generating LUND events", static_cast<std::uint64_t>(c.integer("events")));
+    ProgressReporter progress("Generating LUND events", static_cast<std::uint64_t>(c.getNonnegativeInteger("events")));
     progress.update(0);
 
-    // Create one event per loop. writer.count() changes only after a successful write.
-    while (!writer.full()) {
+    // Create one event per loop. getWrittenEventCount() changes only after a successful write.
+    while (!writer.hasReachedRunEventLimit()) {
         Event event;
 
         // The event ID also selects uniform-p or uniform-1/p sampling in mixed mode.
-        event.id = writer.count();
+        event.id = writer.getWrittenEventCount();
 
         // A and Z are LUND header values and do not choose the vertex geometry.
         event.A = settings.A;
@@ -189,7 +189,7 @@ void generateUniform(const RunConfig& c) {
         event.beam_energy = beam;
 
         // Sample exactly one target vertex with vertex_random and give it to every particle in the event.
-        const auto vertex = geometry.sample(vertex_random);
+        const auto vertex = geometry.sampleVertexPosition(vertex_random);
 
         // Electron-only events use flat theta and phi ranges. Momentum is uniform-p, alternating
         // uniform-p/uniform-1/p, or fixed at the beam value for the angular tester.
@@ -201,7 +201,7 @@ void generateUniform(const RunConfig& c) {
             if (settings.mixed_electron_momentum) {
                 p = event.id % 2 == 0 ? random.Uniform(settings.electron_p_min, settings.electron_p_max) : 1.0 / random.Uniform(1.0 / settings.electron_p_max, 1.0 / settings.electron_p_min);
             }
-            event.particles.push_back({constants::electron_pdg, particleMass(constants::electron_pdg), momentum(p, theta, phi), vertex});
+            event.particles.push_back({constants::electron_pdg, getParticleMass(constants::electron_pdg), momentum(p, theta, phi), vertex});
         } else {
             // Draw theta and phi evenly across the configured detector window.
             double theta = random.Uniform(settings.hadron_theta_min, settings.hadron_theta_max);
@@ -220,36 +220,36 @@ void generateUniform(const RunConfig& c) {
             // the sector opposite the hadron.
             const int pid = settings.hadron_pid;
             event.particles.push_back(
-                {constants::electron_pdg, particleMass(constants::electron_pdg), momentum(beam, settings.trigger_theta, triggerPhi(phi, settings.trigger_phi_offset)), vertex});
-            event.particles.push_back({pid, particleMass(pid), momentum(p, theta, phi), vertex});
+                {constants::electron_pdg, getParticleMass(constants::electron_pdg), momentum(beam, settings.trigger_theta, triggerPhi(phi, settings.trigger_phi_offset)), vertex});
+            event.particles.push_back({pid, getParticleMass(pid), momentum(p, theta, phi), vertex});
         }
 
         // Write first so monitoring never counts an event that failed to write.
-        writer.write(event);
+        writer.writeEvent(event);
         monitoring.fill(event);
-        progress.update(writer.count());
+        progress.update(writer.getWrittenEventCount());
     }
 
-    progress.finish(writer.count(), 0, 0, "requested event count reached");
+    progress.finish(writer.getWrittenEventCount(), 0, 0, "requested event count reached");
 #pragma endregion
 
 #pragma region /* Run completion */
     std::cout << "\n" << env::SYSTEM_COLOR << "Saving monitoring plots and finalizing LUND output..." << env::RESET_COLOR << "\n";
 
     // Save the ROOT, PDF, and PNG plots before writing the completed run log.
-    const auto output = std::filesystem::path(c.get("output"));
+    const auto output = std::filesystem::path(c.getText("output"));
     const auto diagnostics = output / "lundfiles" / "lund-creation-monitoring";
-    const auto monitoring_root = diagnostics / (c.get("prefix") + "__monitoring_plots.root");
+    const auto monitoring_root = diagnostics / (c.getText("prefix") + "__monitoring_plots.root");
     const auto plot_directory = diagnostics / "MonitoringPlotsPath";
-    const auto pdf_name = c.get("prefix") + "__plots.pdf";
+    const auto pdf_name = c.getText("prefix") + "__plots.pdf";
     monitoring.save(monitoring_root, plot_directory, pdf_name);
 
-    // Uniform generation creates and writes the same number of events. finish() closes the files and
+    // Uniform generation creates and writes the same number of events. finalizeRun() closes the files and
     // records that count in the run log.
-    writer.finish(writer.count());
+    writer.finalizeRun(writer.getWrittenEventCount());
 
     // Print final counts after the run log is complete. Both counts are equal for uniform runs.
-    LundWriter::printWorkflowSummary(c, "uniform", writer.count(), writer.count(), true);
+    LundWriter::printWorkflowSummary(c, "uniform", writer.getWrittenEventCount(), writer.getWrittenEventCount(), true);
 #pragma endregion
 }
 #pragma endregion

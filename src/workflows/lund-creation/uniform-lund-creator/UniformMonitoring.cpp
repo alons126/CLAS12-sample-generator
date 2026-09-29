@@ -142,8 +142,8 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
         impl_->entries.push_back({std::move(histogram), std::move(x_metric), x_pid, std::move(y_metric), y_pid});
     };
 
-    const bool tester = sample_label == "electron-tester";
-    const bool electron_only = sample_label == "1e" || tester;
+    const bool tester = (sample_label == "electron-tester");
+    const bool electron_only = (sample_label == "1e" || tester);
     const std::string suffix = tester ? "Tester_e" : sample_label;
     if (electron_only) {
         const std::string context = tester ? "Tester_e sample" : "(e,e') sample";

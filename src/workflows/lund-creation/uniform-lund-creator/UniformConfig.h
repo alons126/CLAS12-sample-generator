@@ -96,7 +96,7 @@ enum class HadronSpecies {
  *   Exactly one channel enum is selected. Electron momentum is uniform-p, mixed p and 1/p, or beam-valued.
  *   Hadron momentum is exactly one of uniform-p, mixed p and 1/p, or fixed (both flags false). Hadron
  *   theta and phi are always uniform inside their configured bounds. Target metadata and mode/channel
- *   compatibility were checked by RunConfig::validate(true).
+ *   compatibility were checked by RunConfig::validateForSource(LundSource::Uniform).
  */
 struct UniformConfig {
     // Channel and sampling choices --------------------------------------------------------------------------------------------------------------------------------------
@@ -135,35 +135,35 @@ struct UniformConfig {
      * @note After validation, the only remaining channel is `eh`, and only four hadron names are allowed.
      */
     explicit UniformConfig(const RunConfig& c)
-        : channel(c.get("channel") == "1e"                ? UniformChannel::Electron
-                  : c.get("channel") == "electron-tester" ? UniformChannel::ElectronTester
-                                                          : UniformChannel::ElectronHadron),
-          hadron(c.get("hadron") == "proton"    ? HadronSpecies::Proton
-                 : c.get("hadron") == "neutron" ? HadronSpecies::Neutron
-                 : c.get("hadron") == "pip"     ? HadronSpecies::PiPlus
-                                                : HadronSpecies::PiMinus),
-          hadron_pid(c.get("hadron") == "proton"    ? constants::proton_pdg
-                     : c.get("hadron") == "neutron" ? constants::neutron_pdg
-                     : c.get("hadron") == "pip"     ? constants::pi_plus_pdg
-                                                    : constants::pi_minus_pdg),
-          uniform_electron_momentum(c.get("electron-momentum") == "uniform"),
-          mixed_electron_momentum(c.get("electron-momentum") == "mixed"),
-          uniform_hadron_momentum(c.get("hadron-momentum") == "uniform"),
-          mixed_hadron_momentum(c.get("hadron-momentum") == "mixed"),
-          beam(c.number("beam-energy")),
-          electron_theta_min(c.number("electron-theta-min")),
-          electron_theta_max(c.number("electron-theta-max")),
-          electron_p_min(c.number("electron-p-min")),
-          electron_p_max(c.number("electron-p-max")),
-          hadron_theta_min(c.number("hadron-theta-min")),
-          hadron_theta_max(c.number("hadron-theta-max")),
-          hadron_p(c.number("hadron-p")),
-          hadron_p_min(c.number("hadron-p-min")),
-          hadron_p_max(c.number("beam-energy")),
-          trigger_theta(c.number("trigger-theta")),
-          trigger_phi_offset(c.number("trigger-phi-offset")),
-          A(static_cast<int>(c.integer("A"))),
-          Z(static_cast<int>(c.integer("Z"))) {}
+        : channel(c.getText("channel") == "1e"                ? UniformChannel::Electron
+                  : c.getText("channel") == "electron-tester" ? UniformChannel::ElectronTester
+                                                              : UniformChannel::ElectronHadron),
+          hadron(c.getText("hadron") == "proton"    ? HadronSpecies::Proton
+                 : c.getText("hadron") == "neutron" ? HadronSpecies::Neutron
+                 : c.getText("hadron") == "pip"     ? HadronSpecies::PiPlus
+                                                    : HadronSpecies::PiMinus),
+          hadron_pid(c.getText("hadron") == "proton"    ? constants::proton_pdg
+                     : c.getText("hadron") == "neutron" ? constants::neutron_pdg
+                     : c.getText("hadron") == "pip"     ? constants::pi_plus_pdg
+                                                        : constants::pi_minus_pdg),
+          uniform_electron_momentum(c.getText("electron-momentum") == "uniform"),
+          mixed_electron_momentum(c.getText("electron-momentum") == "mixed"),
+          uniform_hadron_momentum(c.getText("hadron-momentum") == "uniform"),
+          mixed_hadron_momentum(c.getText("hadron-momentum") == "mixed"),
+          beam(c.getDouble("beam-energy")),
+          electron_theta_min(c.getDouble("electron-theta-min")),
+          electron_theta_max(c.getDouble("electron-theta-max")),
+          electron_p_min(c.getDouble("electron-p-min")),
+          electron_p_max(c.getDouble("electron-p-max")),
+          hadron_theta_min(c.getDouble("hadron-theta-min")),
+          hadron_theta_max(c.getDouble("hadron-theta-max")),
+          hadron_p(c.getDouble("hadron-p")),
+          hadron_p_min(c.getDouble("hadron-p-min")),
+          hadron_p_max(c.getDouble("beam-energy")),
+          trigger_theta(c.getDouble("trigger-theta")),
+          trigger_phi_offset(c.getDouble("trigger-phi-offset")),
+          A(static_cast<int>(c.getNonnegativeInteger("A"))),
+          Z(static_cast<int>(c.getNonnegativeInteger("Z"))) {}
 };
 #pragma endregion
 

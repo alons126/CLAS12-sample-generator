@@ -51,8 +51,8 @@ flowchart TB
 
     W -->|create-lund| L["workflow.py<br/>Optionally configure and build"]
     L --> S{"--source"}
-    S -->|uniform| U["uniform-lund-creator<br/>RunConfig::parse then generateUniform"]
-    S -->|physical| P["event-generator-to-lund-converter<br/>RunConfig::parse then convertPhysical"]
+    S -->|uniform| U["uniform-lund-creator<br/>RunConfig::createFromCommandLine then generateUniform"]
+    S -->|physical| P["event-generator-to-lund-converter<br/>RunConfig::createFromCommandLine then convertPhysical"]
     U --> LW["Shared event model, target geometry, and LundWriter"]
     P --> LW
     LW --> F["Completed LUND files and manifest"]
@@ -71,7 +71,7 @@ The Python driver owns LUND build staging and forwards sample arguments unchange
 
 ## Sample configuration boundary
 
-`RunConfig.h` declares the read-only configuration object shared by uniform generation, physical conversion, and `LundWriter`; `RunConfig.cpp` implements its construction and validation. Each LUND executable calls `RunConfig::parse(argc, argv, uniform)` exactly once. The boolean selects the accepted source-specific vocabulary: uniform sampling keys when true, or physical-input provenance keys when false.
+`RunConfig.h` declares the read-only configuration object shared by the uniform LUND creator, physical LUND converter, and `LundWriter`; `RunConfig.cpp` implements its construction and validation. Each LUND executable calls `RunConfig::createFromCommandLine()` exactly once with either `LundSource::Uniform` or `LundSource::Physical`. The named source selects the accepted settings and validation rules without an unclear true or false argument.
 
 Resolution follows one fixed sequence:
 
@@ -84,19 +84,19 @@ shared + source-specific built-in defaults
     -> normalized input path and final absolute run-directory path
 ```
 
-The object retains values as strings so the spelling actually used by the run can be written to `lundfiles/lund-creation-monitoring/lund-creation-log.json`. Consumers use `RunConfig::get()`, `RunConfig::number()`, and `RunConfig::integer()` for checked access; the writer uses `RunConfig::values()` to serialize the full resolved configuration. Target identity may supply automatic geometry, A/Z, and GEMC variation values, but explicit overrides remain independent. Source-specific options are rejected in the wrong mode rather than accepted and ignored.
+The object retains values as strings so the spelling actually used by the run can be written to `lundfiles/lund-creation-monitoring/lund-creation-log.json`. Consumers use `RunConfig::getText()`, `RunConfig::getDouble()`, and `RunConfig::getNonnegativeInteger()` for checked access; the writer uses `RunConfig::getAllSettings()` to serialize the full resolved configuration. Target identity may supply automatic geometry, A/Z, and GEMC variation values, but explicit overrides remain independent. Source-specific options are rejected in the wrong mode rather than accepted and ignored.
 
-This boundary is intentionally side-effect-free with respect to run products: parsing may read the selected profile, but it does not inspect GST event contents, sample kinematics or vertices, create or replace the run directory, write LUND or monitoring files, or submit simulation. Those responsibilities begin only after parsing succeeds and remain with the uniform generator, physical adapter, writer, and submission workflow respectively.
+This boundary is intentionally side-effect-free with respect to run products: configuration preparation may read the selected profile, but it does not inspect GST event contents, sample kinematics or vertices, create or replace the run directory, write LUND or monitoring files, or submit simulation. Those responsibilities begin only after configuration preparation succeeds and remain with the uniform LUND creator, physical input adapter, writer, and submission workflow respectively.
 
 ## Following a uniform run
 
-1. The application calls `RunConfig::parse`. Built-in defaults are merged with a `key = value` file and then command-line overrides. Unknown, repeated and invalid settings fail before opening an output directory.
+1. The application calls `RunConfig::createFromCommandLine`. Built-in defaults are merged with a `key = value` file and then command-line overrides. Unknown, repeated and invalid settings fail before opening an output directory.
 2. `generateUniform()` receives the resolved `1e` or `eh` channel, selected hadron, and FD/CD region, then owns separate kinematic and vertex random streams. `TargetGeometry` samples a common interaction vertex for all particles in the event.
 3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
 5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It groups electron, hadron, vertex, single-particle correlation, and electron–hadron correlation plots, uses the documented canvas style, sets every vertex-z axis to −8–5 cm to cover all RG-M target positions[^sportes-2026-rgm][^rgm-analysis-note], and labels protons, neutrons, pip, and pim by FD or CD.
 6. It writes every histogram once to `<prefix>__monitoring_plots.root` and renders the same objects to `<prefix>__plots.pdf` and individual PNG files for every uniform channel.
-7. After output and monitoring finish successfully, `LundWriter::finish` atomically renames the completed manifest into place.
+7. After output and monitoring finish successfully, `LundWriter::finalizeRun` atomically renames the completed manifest into place.
 
 ## Following a physical run
 

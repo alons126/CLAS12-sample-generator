@@ -45,7 +45,7 @@ namespace samples {
 
 void convertPhysical(const RunConfig& config) {
     // Match the exact name and pass the unchanged settings to the GENIE converter.
-    if (config.get("event-generator") == "genie-gst") {
+    if (config.getText("event-generator") == "genie-gst") {
         convertGenieGST(config);
 
         // Stop after the selected converter completes.
@@ -53,7 +53,7 @@ void convertPhysical(const RunConfig& config) {
     }
 
     // Fail before any converter can prepare or replace an output directory.
-    throw std::runtime_error("Unsupported physical event generator: " + config.get("event-generator"));
+    throw std::runtime_error("Unsupported physical event generator: " + config.getText("event-generator"));
 }
 
 #pragma endregion

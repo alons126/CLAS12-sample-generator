@@ -4,22 +4,29 @@
 
 /**
  * @file LundWriter.h
- * @brief Writes split LUND files and the completed-run log.
+ * @brief Writes events to numbered LUND files and records the completed run.
  *
  * Purpose:
- *   Give uniform generation and physical conversion the same file format, splitting, naming, settings
- *   record, downstream simulation directories, and completion marker. The writer does not create or
- *   select event content.
+ *   The uniform LUND creator makes random test events. The physical LUND converter reads existing
+ *   event-generator events. Both pass completed Event objects to LundWriter so their output uses the same
+ *   LUND text format, filename rules, file splitting, internal output folders, and completion manifest.
+ *   RunConfig chooses the final run-directory path. LundWriter does not choose particles or generate their
+ *   motion; it prepares that directory and writes the completed events and run manifest. GEMC defines the
+ *   LUND event-header and particle-record fields written here. For more information, see:
+ *   https://gemc.jlab.org/gemc/html/documentation/generator/lund.html
  *
  * Workflow:
- *   Construct from a checked RunConfig -> safely replace the exact run directory -> create its folders
- *   -> write nonempty Event records into split LUND files -> let the caller save monitoring -> finish()
- *   closes the files and renames the temporary manifest to lund-creation-log.json.
+ *   Create the writer from a checked RunConfig. The constructor checks the exact run-directory path,
+ *   replaces that directory if it already exists, and creates the required folders. Call writeEvent() for
+ *   each event in order. After the uniform LUND creator saves its monitoring output, call finalizeRun().
+ *   finalizeRun() closes the LUND file and publishes `lund-creation-log.json`, which marks the run as complete.
  *
  * Written data:
- *   Particle momentum is in GeV/c, mass is in GeV/c², derived energy and beam energy are in GeV, and
- *   vertices are in cm. The event source supplies header values and particle order. The writer keeps
- *   them in that order and applies the project's fixed text format.
+ *   Particle momentum is measured in GeV/c, mass in GeV/c², energy and beam energy in GeV, and vertex
+ *   positions in centimeters. The uniform LUND creator or physical LUND converter supplies the event
+ *   header values and particle order. The writer keeps that order, calculates each particle's energy from
+ *   its mass and momentum, and writes the fixed LUND text format. Every channel uses the physical-sample
+ *   decimal precision for its event header.
  */
 
 #pragma once
@@ -32,134 +39,144 @@
 
 namespace samples {
 
-// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
+// LUND output interface -------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Public interface */
+#pragma region /* LUND output interface */
 
-// LundWriter object -----------------------------------------------------------------------------------------------------------------------------------------------------
+// LundWriter class ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* LundWriter object */
+#pragma region /* LundWriter class */
 /**
  * @class LundWriter
- * @brief Own split LUND files and the completed-run log.
+ * @brief Owns the numbered LUND files and completed-run manifest for one run.
  *
  * Purpose:
- *   Prepare the run directory safely, enforce the event limit, write split files, count written events,
- *   and publish the final settings and file list for both LUND sources.
+ *   Prepare the run directory safely, stop writes at the requested event limit, open a new numbered file
+ *   when the current file reaches its limit, count successful writes, and record the settings and output
+ *   files when the run finishes.
  *
  * Use:
- *   Construct it with checked settings -> call write() for events in order -> save monitoring outside
- *   this class -> call finish() once to publish `lund-creation-log.json`.
+ *   Create one writer with checked settings. Call writeEvent() for each event in order. Save any required
+ *   monitoring output outside this class. Call finalizeRun() once to publish `lund-creation-log.json`.
  *
  * Ownership and lifetime:
- *   The caller owns RunConfig and must keep it alive longer than the writer. This object owns its label,
- *   output path, stream, file list, counters, and limits. write() only reads each Event during the call.
+ *   The caller owns RunConfig and must keep it alive until the writer is destroyed. LundWriter owns its
+ *   workflow name, output path, open file, list of created files, counters, and limits. writeEvent() reads
+ *   an Event only during that call and does not keep a reference to it.
  *
  * Rules:
- *   count_ is the number of events written successfully. The sum of all per-file counts equals count_.
- *   files_ stays in creation order, and no event is accepted after count_ reaches capacity_.
+ *   count_ equals the number of completely written events. Adding the event counts from every file gives
+ *   the same number. files_ remains in file-creation order. writeEvent() rejects another event after count_
+ *   reaches capacity_.
  *
  * Failure:
- *   Construction or I/O failures throw. A failed run may intentionally leave its partial directory and
- *   LUND files for inspection, but the run is incomplete because only finish() creates lund-creation-log.json.
+ *   An unsafe directory path or a file-writing problem reports an error. A failed run may leave its
+ *   partial directory and LUND files for inspection. It is still clearly incomplete because only
+ *   finalizeRun() creates `lund-creation-log.json`.
  */
 class LundWriter {
    public:
     /**
-     * @brief Safely replace and initialize the exact configured run directory.
+     * @brief Constructor: Check, replace, and prepare the exact configured run directory.
      * @param config Checked settings owned by the caller. They must outlive this writer.
-     * @param workflow Manifest/summary label, expected to be `uniform` or `physical`; copied into the
-     *                 writer without changing source-specific event semantics. Both values create empty
-     *                 `mchipo` and `reconhipo` directories; only uniform creates monitoring plot paths.
-     * @throws std::exception If the path is unsafe, replacement/creation fails, or required limits and
-     *         settings cannot be read.
+     * @param workflow Exact manifest value `uniform` for the uniform LUND creator or `physical` for the
+     *                 physical LUND converter. Both create empty `mchipo` and `reconhipo` directories.
+     *                 Only `uniform` creates the directory for rendered monitoring plots.
+     * @throws std::exception If the path could delete an unsafe location, a directory cannot be replaced
+     *                        or created, or a required setting cannot be read.
      */
     LundWriter(const RunConfig& config, std::string workflow);
 
     /**
-     * @brief Test whether the requested total written-event capacity has been reached.
-     * @return True when count() is greater than or equal to capacity_ and write() must not be called.
+     * @brief Check whether the requested number of events has already been written.
+     * @return true when getWrittenEventCount() has reached the configured event limit; otherwise false.
      */
-    bool full() const;
+    bool hasReachedRunEventLimit() const { return count_ >= capacity_; }
 
     /**
-     * @brief Write one nonempty event and then update the file and run counts.
-     * @param event Event to read. Its particle order, header values, and vertices are kept unchanged.
-     *              The writer calculates particle energy from momentum and mass.
-     * @throws std::exception If capacity is exhausted, the event is empty or non-finite, or file output
-     *         fails. Counters advance only after the complete event is written.
-     * @note Opens the first file lazily and rotates after RunConfig::events-per-file events. The event
-     *       ID is serialized unchanged, so file rotation does not restart numbering.
+     * @brief Write one event and increase the counts after the complete event is written.
+     * @param event Event to write. Particle order, header values, and event positions stay unchanged. The
+     *              writer calculates each particle's energy from its momentum and mass.
+     * @throws std::exception If the run has reached its event limit, the event contains no particles or
+     *                        invalid numeric values, its ID does not fit the LUND header integer field, or
+     *                        file output fails.
+     * @note The first call opens file 1. A new file opens after the configured events-per-file limit. The
+     *       event ID is written unchanged, so starting a new file does not restart event numbering.
      */
-    void write(const Event& event);
+    void writeEvent(const Event& event);
 
     /**
-     * @brief Close LUND output and publish the completed-run log with one final rename.
-     * @param scanned Number of source events examined. It equals count() for uniform generation and may
-     *                exceed count() when physical conversion rejects unsupported input interactions.
-     * @throws std::exception If manifest writing, stream closure, or final rename fails.
-     * @note Call only after required monitoring is saved; lund-creation-log.json marks the run as complete.
+     * @brief Close the LUND file and publish the manifest that marks the run complete.
+     * @param scannedEventCount Number of possible source events examined. For the uniform LUND creator,
+     *                          this equals getWrittenEventCount(). For the physical LUND converter, it may
+     *                          be larger because some input events are not supported and are skipped.
+     * @throws std::exception If the LUND file cannot close, the manifest cannot be written, or its final
+     *                        rename fails.
+     * @note Call this only after required monitoring output has been saved.
      */
-    void finish(std::uint64_t scanned);
+    void finalizeRun(std::uint64_t scannedEventCount);
 
     /**
-     * @brief Return the total number of events written so far.
-     * @return Written-event count; this is also the next uniform event ID.
+     * @brief Get the number of events written completely so far.
+     * @return Written-event count. The uniform LUND creator also uses this as the next event ID.
      */
-    std::uint64_t count() const { return count_; }
+    std::uint64_t getWrittenEventCount() const { return count_; }
 
     /**
-     * @brief Print the setup or completion values, grouped by topic.
+     * @brief Print either the checked setup or the final event counts.
      * @param config Final settings used to choose displayed fields and paths.
-     * @param workflow `uniform` or `physical`, selecting only values used by that source.
-     * @param scanned Source entries examined; ignored by setup and printed by completion.
-     * @param written Events written successfully; ignored by setup and printed by completion.
-     * @param final Print only completion counters when true or only resolved setup fields when false.
-     * @note Presentation only: this function creates no output files and does not determine run status.
-     *       Fixed output constants and settings unused by the selected channel are omitted. Ordinary
-     *       values end one column before the banner edge; filesystem paths stay left-aligned and unquoted.
+     * @param workflow `uniform` for the uniform LUND creator or `physical` for the physical LUND
+     *                 converter. Only settings used by that workflow are shown.
+     * @param scanned Possible source events examined. Used only in the final report.
+     * @param written Events written completely. Used only in the final report.
+     * @param final true to print final counts; false to print the setup.
+     * @note This function only prints information. It does not create files or decide whether the run
+     *       succeeded. It omits settings unused by the selected channel. Normal values are aligned against
+     *       the right side of the summary; paths remain left-aligned and are not surrounded by quotes.
      */
     static void printWorkflowSummary(const RunConfig& config, const std::string& workflow, std::uint64_t scanned = 0, std::uint64_t written = 0, bool final = false);
 
-    // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Stored writer state -----------------------------------------------------------------------------------------------------------------------------------------------
    private:
-    // Output object -----------------------------------------------------------------------------------------------------------------------------------------------------
+    // One output-file record --------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Output object */
+#pragma region /* One output-file record */
     /**
      * @struct Output
-     * @brief Path and event count for one LUND file in the run log.
+     * @brief Stores the path and event count for one created LUND file.
      *
      * Purpose:
-     *   Store the path relative to the run directory and the number of events written to that file.
+     *   Keep the information needed to list this file in the completed-run manifest.
      *
      * Use and ownership:
-     *   write() adds a record when it opens a file and increases events after each successful write.
-     *   finish() writes the records in order. Output owns its path and count; LundWriter owns the stream.
+     *   writeEvent() adds a record when it opens a file and increases events after each complete event.
+     *   finalizeRun() writes the records in the same order. Output owns its path and count. LundWriter
+     *   separately owns the open file.
      *
      * Rules:
-     *   path is relative to the run directory and lies under `lundfiles/`; events never exceeds the
-     *   writer's per-file limit; and only the final record may be partially filled during a full run.
+     *   path starts below the run directory and points inside `lundfiles/`. events cannot exceed the
+     *   per-file limit. In a run that reaches its requested total, only the last file may contain fewer
+     *   events than that limit.
      */
     struct Output {
-        std::string path;          ///< Run-relative lundfiles path written to the run log.
-        std::uint64_t events = 0;  ///< Events written successfully to this file.
+        std::string path;          ///< Path below the run directory, beginning with `lundfiles/`.
+        std::uint64_t events = 0;  ///< Number of complete events written to this file.
     };
 #pragma endregion
 
     // Settings owned by the caller --------------------------------------------------------------------------------------------------------------------------------------
-    const RunConfig& config_;  ///< Final settings owned by the caller and written to the run log.
+    const RunConfig& config_;  ///< Final settings written to the manifest; the caller owns this object.
 
-    // Owned run identity and filesystem state ---------------------------------------------------------------------------------------------------------------------------
-    std::string workflow_;             ///< Run-log and summary source label: uniform or physical.
-    std::filesystem::path directory_;  ///< Absolute final run directory with `.` and `..` removed.
-    std::ofstream stream_;             ///< Active LUND stream; opened lazily and closed by finish().
-    std::vector<Output> files_;        ///< Ordered run-log records; the last matches stream_.
+    // Run name and files ------------------------------------------------------------------------------------------------------------------------------------------------
+    std::string workflow_;             ///< Manifest and summary value: `uniform` or `physical`.
+    std::filesystem::path directory_;  ///< Absolute run directory after removing `.` and `..` parts.
+    std::ofstream stream_;             ///< Currently open LUND file; writeEvent() opens it and finalizeRun() closes it.
+    std::vector<Output> files_;        ///< Created files in order; the last record matches stream_.
 
-    // Owned counters and file-splitting rules ---------------------------------------------------------------------------------------------------------------------------
-    std::uint64_t count_ = 0;        ///< Total number of events written successfully.
-    std::uint64_t events_per_file_;  ///< Positive source-specific split threshold from RunConfig.
-    std::uint64_t capacity_;         ///< Maximum written events requested by RunConfig::events.
+    // Event counts and limits -------------------------------------------------------------------------------------------------------------------------------------------
+    std::uint64_t count_ = 0;        ///< Total number of completely written events.
+    std::uint64_t events_per_file_;  ///< Number of events allowed in each LUND file.
+    std::uint64_t capacity_;         ///< Maximum number of events allowed in the complete run.
 };
 #pragma endregion
 

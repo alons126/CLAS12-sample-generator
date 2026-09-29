@@ -7,7 +7,7 @@
  * @brief Starts physical-event conversion from the command line.
  *
  * Purpose:
- *   Read the selected physical input, run its converter, and return success or failure.
+ *   Read the selected physical input, run the physical LUND converter, and return success or failure.
  *
  * Workflow:
  *   Print help when requested -> read and check the options -> convert the events -> return success or
@@ -53,29 +53,30 @@ namespace env = environment;
  * @brief Run physical-event conversion from command-line arguments.
  *
  * Purpose:
- *   Handle help and errors here while the selected converter handles event data.
+ *   Handle help and errors here while the physical LUND converter handles event data.
  *
  * Workflow:
- *   Read and check the settings, call the selected converter, and return status 1 when a standard
+ *   Read and check the settings, call the physical LUND converter, and return status 1 when a standard
  *   exception is caught.
  *
  * @param argc Number of executable arguments.
  * @param argv Paths and options supplied by the caller.
  *
- * @return `0` after help or successful conversion; `1` when parsing or conversion throws a
- *         `std::exception`.
+ * @return `0` after help or successful conversion; `1` when configuration preparation or physical LUND
+ *         conversion throws a `std::exception`.
  *
- * @throws Nothing for standard parser/converter failures because they are caught here. Non-standard
- *         exceptions are outside this boundary.
+ * @throws Nothing for standard configuration or physical LUND converter failures because they are caught
+ *         here. Non-standard exceptions are outside this boundary.
  */
 int main(int argc, char** argv) {
-    constexpr bool uniform = false;
+    // Select the physical LUND converter's settings and help text.
+    constexpr auto source = samples::LundSource::Physical;
     try {
         if (argc == 2 && std::string(argv[1]) == "--help") {
-            std::cout << samples::help(uniform);
+            std::cout << samples::buildHelpText(source);
             return 0;
         }
-        samples::convertPhysical(samples::RunConfig::parse(argc, argv, uniform));
+        samples::convertPhysical(samples::RunConfig::createFromCommandLine(argc, argv, source));
         return 0;
     } catch (const std::exception& error) {
         std::cerr << env::ERROR_COLOR << "Error:" << env::RESET_COLOR << ' ' << error.what() << '\n';

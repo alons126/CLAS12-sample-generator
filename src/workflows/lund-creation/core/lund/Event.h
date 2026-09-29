@@ -7,7 +7,7 @@
  * @brief Shared event and particle records.
  *
  * Purpose:
- *   Define the Event and Particle values shared by uniform generation, physical conversion, the LUND
+ *   Define the Event and Particle values shared by uniform LUND generation, physical to LUND conversion, the LUND
  *   writer, and monitoring. These records hold event data but do not read input or write files.
  *
  * Workflow:
@@ -35,16 +35,16 @@ namespace samples {
  * @brief PDG identifiers supported by the LUND event producers.
  *
  * Purpose:
- *   Keep the supported particle numbers in one place. particleMass() gets nonzero masses from the
+ *   Keep the supported particle numbers in one place. getParticleMass() gets nonzero masses from the
  *   external target file, so these constants do not create another mass table.
  */
 namespace constants {
 constexpr int electron_pdg = 11;    ///< Electron identifier used for the beam and scattered electron.
-constexpr int photon_pdg = 22;      ///< Photon identifier retained from physical GST truth.
+constexpr int proton_pdg = 2212;    ///< Proton identifier.
+constexpr int neutron_pdg = 2112;   ///< Neutron identifier.
 constexpr int pi_plus_pdg = 211;    ///< Positive charged-pion identifier.
 constexpr int pi_minus_pdg = -211;  ///< Negative charged-pion identifier.
-constexpr int neutron_pdg = 2112;   ///< Neutron identifier.
-constexpr int proton_pdg = 2212;    ///< Proton identifier.
+constexpr int photon_pdg = 22;      ///< Photon identifier retained from physical GST truth.
 }  // namespace constants
 #pragma endregion
 
@@ -65,7 +65,7 @@ constexpr int proton_pdg = 2212;    ///< Proton identifier.
  */
 struct Particle {
     int pid;            ///< Supported PDG particle number written to LUND and used by monitoring.
-    double mass;        ///< Rest mass in GeV/c², normally returned by particleMass().
+    double mass;        ///< Rest mass in GeV/c², normally returned by getParticleMass().
     TVector3 momentum;  ///< Generated or input Cartesian momentum in GeV/c; the writer does not change it.
     TVector3 vertex;    ///< Interaction position in cm; every particle in one event uses the same value.
 };
@@ -87,14 +87,13 @@ struct Particle {
  *   Uniform monitoring reads it only after the writer has successfully written it.
  *
  * Header semantics:
- *   A and Z describe the target nucleus but do not choose the vertex shape. Physical conversion stores
+ *   A and Z describe the target nucleus but do not choose the vertex geometry (liquid, 1-foil, 4-foil, etc). Physical conversion stores
  *   GST `resid` in header field 4; uniform events store zero there. Uniform events
- *   use weight 1. Physical conversion uses that field for process codes 1 through 4, not as a physics
- *   weight. LundWriter also writes zero beam polarization, electron beam PID 11, and one interaction.
+ *   use weight 1. Physical conversion uses that field for process codes 1,2,3,4, for the QE,MEC,RES,DIS reaction mechanisms, respectively.
+ *   LundWriter also writes zero beam polarization, electron beam PID 11, and one interaction.
  *
  * Ordering and invariants:
- *   particles must not be empty and all stored numbers must be finite. The electron comes first. A
- *   uniform hadron comes second, while physical conversion keeps supported final-state input order.
+ *   particles must not be empty and all stored numbers must be finite. The electron comes first in the LUND format.
  */
 struct Event {
     std::uint64_t id = 0;             ///< Run-global uniform event index or scanned GST input-entry index written unchanged to LUND.
@@ -102,14 +101,14 @@ struct Event {
     int Z = 1;                        ///< Target charge number, configured separately from the vertex geometry.
     double beam_energy = 0;           ///< Incident-electron energy in GeV.
     double resonance_id = 0;          ///< Header field 4; stores GST `resid` for physical events.
-    double weight = 1;                ///< Uniform value 1 or physical process code; not a cross-section weight.
+    double weight = 1;                ///< Uniform value 1 or physical process code.
     std::vector<Particle> particles;  ///< Particles in output order; the writer rejects an empty list.
 };
 #pragma endregion
 
-// particleMass ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// getParticleMass -------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* particleMass */
+#pragma region /* getParticleMass */
 /**
  * @brief Return the mass used for one supported output particle.
  * @param pid PDG code for electron, proton, neutron, charged pion, or photon. Neutral pions are not
@@ -119,7 +118,7 @@ struct Event {
  * @note Nonzero masses come from external targets.h. The generator or converter decides which particles
  *       belong in an event before calling this function.
  */
-double particleMass(int pid);
+double getParticleMass(int pid);
 #pragma endregion
 
 #pragma endregion

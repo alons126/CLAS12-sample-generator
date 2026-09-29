@@ -22,7 +22,7 @@ Electron, proton, neutron, and charged-pion masses come from the external target
 | 4 | 0 | GST `resid`, the GENIE resonance identifier |
 | 5 | 0 | 0 |
 | 6 | 11 (electron beam) | 11 |
-| 7 | Configured beam energy, with output-mode rounding | Same |
+| 7 | Configured beam energy | Same |
 | 8 | 1 | 1 |
 | 9 | Global generated-event index, starting at zero | Global input entry index, including skipped entries |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
@@ -47,13 +47,13 @@ The writer rejects empty events and non-finite particle energy/vertex data. GENI
 
 ## 5. Output precision and layout
 
-The writer uses one space between fields and writes particle momenta, energy, mass, and vertices with five digits after the decimal point. Uniform event IDs start at zero and remain continuous across split files. Physical conversion uses the input entry index. Ordinary 1e and GENIE headers write beam energy with six digits after the decimal point. Electron–hadron and angular-tester headers write it with one digit after the decimal point, so 5.98636 is written as 6.0. Momentum calculations still use the full configured beam value.
+Every uniform and physical event header uses the exact format string `"%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %d \t %.2f \n"`. Therefore, fields 4, 5, and 7 have six digits after the decimal point, while field 10 has two. A configured beam energy of 5.98636 is written as `5.986360`, including for electron–hadron and electron-tester samples. Uniform event IDs start at zero and remain continuous across split files; physical conversion uses the input entry index. Particle momenta, energy, mass, and vertices use five digits after the decimal point.
 
 Uniform prefixes and run-directory names are derived as `Uniform__<resolved-label>__<beam-MeV>MeV`. Physical prefixes are derived as `<target>__<event-generator>[-<version>]__<tune>__<Q2-cut>__<beam-MeV>MeV`; a known version joins the generator with a hyphen, while `unknown` is omitted. The manifest always records `event-generator-version`, including `unknown`. Nested physical directories use `OUTPUT/<target>/<event-generator>__<tune>/<Q2-cut>__<beam-MeV>MeV`. The metadata layout joins generator and version with a hyphen and uses `__` between the resulting metadata groups. Hyphens and decimal points remain valid inside one value, as in `genie-gst`, `3.6.2`, and `Q2-0.40`. `--prefix` remains an explicit override for a downstream naming requirement. Output paths are explicit and never inferred from the current machine.
 
 ## 6. Mass convention
 
-Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/workflows/lund-creation/core/lund/Event.h). `particleMass()` delegates to `TargetGeometry.cpp`, the only project source file that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and writes both energy and mass with five digits after the decimal point.
+Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/workflows/lund-creation/core/lund/Event.h). `getParticleMass()` delegates to `TargetGeometry.cpp`, the only project source file that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and writes both energy and mass with five digits after the decimal point.
 
 | Species (PDG) | LUND mass (GeV/c²) |
 | --- | ---: |

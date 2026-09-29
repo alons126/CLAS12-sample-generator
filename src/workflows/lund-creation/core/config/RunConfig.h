@@ -4,14 +4,17 @@
 
 /**
  * @file RunConfig.h
- * @brief Public interface for reading and checking run settings.
+ * @brief Reads run settings, checks them, and makes their final values available to the LUND workflow.
  *
  * Purpose:
- *   Combine defaults, an optional profile, and command-line values into one checked configuration.
+ *   A setting may come from a built-in default, a configuration file, or the command line. RunConfig
+ *   combines those sources into one result. For example, `--events 1000` on the command line replaces an
+ *   `events` value in the configuration file, which would otherwise replace the built-in default.
  *
  * Workflow:
- *   Call parse() once -> generators read strings or converted numbers -> the writer records every final
- *   value in the manifest.
+ *   Call createFromCommandLine() once before creating output. It reads every setting, fills values marked
+ *   `auto`, checks the result, and prepares absolute paths. Event-producing code then reads the settings,
+ *   and the writer records the same final values in the run manifest.
  */
 
 #pragma once
@@ -22,126 +25,154 @@
 
 namespace samples {
 
-// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
+// Run configuration interface -------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Public interface */
+#pragma region /* Run configuration interface */
 
-// RunConfig object ------------------------------------------------------------------------------------------------------------------------------------------------------
+// LUND source -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* RunConfig object */
+#pragma region /* LUND source */
+/**
+ * @enum LundSource
+ * @brief Identifies which LUND-creation path owns a set of settings.
+ *
+ * createFromCommandLine(), validateForSource(), and buildHelpText() use this value to choose the accepted
+ * settings and rules. A named value makes each call state its purpose instead of using an unclear true or
+ * false argument.
+ */
+enum class LundSource {
+    Uniform,  ///< Settings for the uniform LUND creator.
+    Physical  ///< Settings for the physical LUND converter.
+};
+#pragma endregion
+
+// RunConfig class -------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#pragma region /* RunConfig class */
 /**
  * @class RunConfig
- * @brief Stores checked settings shared by LUND creation code.
+ * @brief Stores the final checked settings for one LUND-creation run.
  *
  * Purpose:
- *   Store every final key/value setting in one object. Generators can read numbers through checked
- *   conversion functions, and the manifest can record the same final text values.
+ *   Keep every setting in one object so all workflow parts use the same values. Settings remain stored as
+ *   text for the manifest. getDouble() and getNonnegativeInteger() check and convert text when code needs a
+ *   numeric value.
  *
  * Use:
- *   RunConfig reads command-line and profile settings, applies their priority, replaces `auto`, checks
- *   values, and builds final paths. Other code reads the finished result.
+ *   Use createFromCommandLine() to create the object. It applies command-line values over
+ *   configuration-file values and configuration-file values over defaults. It then replaces `auto`,
+ *   checks every setting, and builds the final paths. Other code only reads the completed object.
  *
  * Scope:
- *   This object only prepares settings. It does not create events, sample values, write files, draw
- *   plots, or submit jobs.
+ *   RunConfig only prepares settings. It does not create events, choose random values, write output, make
+ *   plots, or submit simulation jobs.
  *
  * Workflow:
- *   Add defaults -> read one profile -> apply command-line values -> replace `auto` -> check the full
- *   result -> let generators read values and the writer save them.
+ *   Start with built-in defaults. Read one optional configuration file. Apply command-line values last.
+ *   Calculate automatic values, check the complete result, and make it available to the workflow.
  *
  * Stored values:
- *   Values stay as strings so the manifest can record their exact final spelling. Momentum uses GeV/c,
- *   beam energy uses GeV, angles use degrees, vertices use cm, and counts, seeds, A, and Z are unsigned
- *   integers.
+ *   Values stay as strings so the manifest records their exact final spelling. Beam energy is measured in GeV,
+ *   momentum in GeV/c, angles in degrees, and target positions in centimeters. Counts, random seeds, A, and Z
+ *   are whole numbers that cannot be negative.
  *
  * Ownership and lifetime:
- *   Each RunConfig owns its map and can be copied or moved. Public functions do not change it after
- *   construction. A reference returned by values() is valid only while that RunConfig still exists.
+ *   Each RunConfig owns its settings and may be copied or moved. Its public functions do not change those
+ *   settings after createFromCommandLine() returns. The map returned by getAllSettings() belongs to the
+ *   RunConfig and must not be used after that object is destroyed.
  *
  * Rules:
- *   parse() returns all required keys, no unknown keys, no remaining `auto` values, and an absolute
- *   output path. Do not pass an empty default-constructed object to a generator.
+ *   A RunConfig returned by createFromCommandLine() contains every required setting, contains no unknown
+ *   settings or remaining `auto` values, and has an absolute output path. Event-producing code must use
+ *   this completed object rather than an empty default-constructed one.
  */
 class RunConfig {
    public:
     /**
-     * @brief Build one complete and checked run configuration.
-     *
+     * @brief Read all setting sources and return one complete, checked configuration.
      * @param argc Number of argv entries, including the executable name.
-     * @param argv Process arguments read during this call. The object does not store argv.
-     * @param uniform Select uniform-generation keys and defaults when true, or physical-conversion
-     *                keys and defaults when false.
-     *
-     * @return Configuration ready for the generator, converter, and writer. All `auto` values are
-     *         resolved and local paths are normalized.
-     *
-     * @throws std::exception For malformed, repeated, or unknown options; unreadable profiles; invalid
-     *         values; unsupported modes; or path errors.
+     * @param argv Command-line arguments read during this call. The returned object does not store argv.
+     * @param source LundSource::Uniform for the uniform LUND creator or LundSource::Physical for the
+     *               physical LUND converter.
+     * @return Configuration ready for event creation and LUND writing. Every `auto` value has been
+     *         replaced, and local paths have been made absolute and cleaned of `.` and `..` parts.
+     * @throws std::exception If an option is malformed, repeated, or unknown; the configuration file
+     *                        cannot be read; a value or mode is invalid; or a path cannot be prepared.
      */
-    static RunConfig parse(int argc, char** argv, bool uniform);
+    static RunConfig createFromCommandLine(int argc, char** argv, LundSource source);
 
     /**
-     * @brief Return one final setting as text.
-     * @param key Known source-specific or shared configuration key.
-     * @return A copy of the stored value.
-     * @throws std::out_of_range If the key is absent.
+     * @brief Get one final setting without converting its text.
+     * @param key Exact setting name.
+     * @return A copy of the setting's stored text.
+     * @throws std::out_of_range If the configuration does not contain this name.
      */
-    std::string get(const std::string& key) const;
+    std::string getText(const std::string& key) const;
 
     /**
-     * @brief Read one setting as a finite double.
-     * @param key Key whose documented unit remains the unit of the returned value.
-     * @return The finite numeric value.
-     * @throws std::exception If the key is absent or its complete value is not a finite number.
+     * @brief Convert one setting to a number that may contain a decimal point.
+     * @param key Exact setting name. The result keeps the unit documented for that setting.
+     * @return The converted value.
+     * @throws std::exception If the setting is missing, contains extra text, or is infinite or not a
+     *                        number.
      */
-    double number(const std::string& key) const;
+    double getDouble(const std::string& key) const;
 
     /**
-     * @brief Read a digits-only setting as an unsigned 64-bit value.
-     * @param key Total count, per-file count, seed, or nuclear-metadata key to read.
-     * @return The parsed unsigned value.
-     * @throws std::exception If the key is absent, malformed, negative, or out of range.
+     * @brief Convert one setting made only of digits to a nonnegative whole number.
+     * @param key Exact setting name, normally a count, seed, A, or Z.
+     * @return The converted whole number.
+     * @throws std::exception If the setting is missing, empty, contains anything except digits, or is too
+     *                        large for a 64-bit unsigned integer.
      */
-    std::uint64_t integer(const std::string& key) const;
+    std::uint64_t getNonnegativeInteger(const std::string& key) const;
 
     /**
-     * @brief Return all final settings for the manifest.
-     * @return Read-only reference owned by this RunConfig. Do not keep it after the object is destroyed.
+     * @brief Get every final setting so the writer can record the run manifest.
+     * @return The complete key/value map. The caller may read it but not change it. The map remains valid
+     *         only while this RunConfig exists.
      */
-    const std::map<std::string, std::string>& values() const { return values_; }
+    const std::map<std::string, std::string>& getAllSettings() const { return values_; }
 
     /**
-     * @brief Check shared settings and the selected source mode before output creation.
-     * @param uniform Check uniform rules when true or physical-conversion rules when false. This must
-     *                match the mode used by parse().
-     * @throws std::exception If a required value, range, relationship, target, or mode is invalid.
+     * @brief Check every setting needed by the selected kind of event source.
+     * @param source LundSource::Uniform to check the uniform LUND creator's rules or LundSource::Physical
+     *               to check the physical LUND converter's rules. Use the same value passed to
+     *               createFromCommandLine().
+     * @throws std::exception If a required setting is missing or any value, range, target, or combination
+     *                        of settings is invalid.
      */
-    void validate(bool uniform) const;
+    void validateForSource(LundSource source) const;
 
-    // Owned state -------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Stored settings ---------------------------------------------------------------------------------------------------------------------------------------------------
    private:
     /**
-     * @brief All final key/value settings owned by this object.
+     * @brief Complete setting names and their final text values.
      *
-     * parse() sets the allowed keys. Values stay as text for conversion and the run log.
+     * createFromCommandLine() decides which names are allowed for the selected LUND source. Text is kept
+     * unchanged after automatic values and paths are resolved so the same values can be converted for code
+     * and written to the manifest.
      */
     std::map<std::string, std::string> values_;
 };
 #pragma endregion
 
 /**
- * @brief Build help text for one LUND application without running it.
- * @param uniform Select uniform-generator help when true or physical-converter help when false.
- * @return Shared options, source-specific options, units, and supported RG-M target names.
+ * @brief Build the command-line help text for one kind of LUND creation.
+ * @param source LundSource::Uniform for uniform LUND creator help or LundSource::Physical for physical
+ *               LUND converter help.
+ * @return Text listing the command, shared settings, source-specific settings, units, and supported
+ *         target names.
  */
-std::string help(bool uniform);
+std::string buildHelpText(LundSource source);
 
 /**
- * @brief Escape text and wrap it as one JSON string.
- * @param text Unescaped source text.
- * @return Escaped text including surrounding double quotes.
+ * @brief Prepare text for safe use as one quoted JSON value.
+ * @param text Original text.
+ * @return A JSON string including its surrounding double quotes. Quotes, backslashes, and invisible
+ *         control characters inside the text are written in JSON's escaped form.
  */
-std::string jsonString(const std::string& text);
+std::string quoteAsJsonString(const std::string& text);
 #pragma endregion
 
 }  // namespace samples

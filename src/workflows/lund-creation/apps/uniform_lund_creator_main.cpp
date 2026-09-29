@@ -7,11 +7,11 @@
  * @brief Starts uniform LUND creation from the command line.
  *
  * Purpose:
- *   Read command-line settings, run uniform generation, and return a process status.
+ *   Read command-line settings, run the uniform LUND creator, and return a process status.
  *
  * Workflow:
- *   Print help when requested -> read and check the options -> generate the sample -> return success or
- *   print a caught error.
+ *   Print help when requested -> read and check the options -> create the uniform LUND sample -> return
+ *   success or print a caught error.
  *
  * CLI options:
  *   --config FILE                    Read `key = value` settings; CLI values take precedence.
@@ -56,7 +56,7 @@ namespace env = environment;
 
 #pragma region /* main */
 /**
- * @brief Run uniform generation from command-line arguments.
+ * @brief Run the uniform LUND creator from command-line arguments.
  *
  * Purpose:
  *   Handle help and errors here. RunConfig checks settings, and generateUniform() creates the sample.
@@ -68,28 +68,28 @@ namespace env = environment;
  * @param argc Number of argv entries, including the executable name.
  * @param argv Process arguments read during this call. This function does not change or store them.
  *
- * @return `0` after help or successful generation; `1` when parsing or generation throws a
- *         `std::exception`.
+ * @return `0` after help or successful LUND creation; `1` when configuration preparation or event
+ *         creation throws a `std::exception`.
  *
  * @note This executable creates deliberately unphysical uniform acceptance samples. It does not
  *       convert physical event-generator input or submit GEMC jobs.
  *
- * @throws Nothing for standard parser/generator failures: they are caught here and rendered to
- *         standard error. Non-standard exceptions are outside this boundary.
+ * @throws Nothing for standard configuration or uniform LUND creator failures: they are caught here and
+ *         rendered to standard error. Non-standard exceptions are outside this boundary.
  */
 int main(int argc, char** argv) {
-    // Select the uniform branch of the shared parser.
-    constexpr bool uniform = true;
+    // Select the uniform LUND creator's settings and help text.
+    constexpr auto source = samples::LundSource::Uniform;
 
     try {
         // Print help only when it is the sole user argument.
         if (argc == 2 && std::string(argv[1]) == "--help") {
-            std::cout << samples::help(uniform);
+            std::cout << samples::buildHelpText(source);
             return 0;
         }
 
         // Check every option before output can be replaced.
-        samples::generateUniform(samples::RunConfig::parse(argc, argv, uniform));
+        samples::generateUniform(samples::RunConfig::createFromCommandLine(argc, argv, source));
 
         // Generation finished successfully.
         return 0;
