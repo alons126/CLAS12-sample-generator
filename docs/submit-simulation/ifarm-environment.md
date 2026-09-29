@@ -1,6 +1,29 @@
 # Local editing and SSH execution
 
-Edit and validate the checkout locally, commit the changes, then transfer them through your normal Git remote or file-copy workflow. On the SSH server, load the site's compiler, ROOT, CMake and Python 3.9+ environment. For submission, preload GEMC and reconstruction in the login shell and use shared storage visible to workers. Submission inherits that environment without loading modules. The launcher does not SSH or install software.
+Edit and validate the checkout locally, commit the changes, then transfer them through your normal Git remote or file-copy workflow. On the SSH server, load the site's compiler, ROOT, CMake and Python 3.9+ environment. For submission, initialize the CLAS12 reconstruction environment in the login shell and use shared storage visible to workers. The submission coordinator then selects and verifies the requested GEMC module in its child environment. The launcher does not SSH or install software.
+
+## Ifarm login environment
+
+When logging in to Jefferson Lab's ifarm, keep the following file at `~/environment.csh`:
+
+```tcsh
+#!/bin/csh
+module use /scigroup/cvmfs/hallb/clas12/sw/modulefiles
+module purge
+module load sqlite/dev
+module load clas12
+module switch coatjava/10.0.7
+```
+
+Always source this file from `~/.cshrc` so every ifarm shell receives the required CLAS12 environment:
+
+```tcsh
+source ~/environment.csh
+```
+
+This setup provides the CLAS12 reconstruction command used by the Slurm worker and selects COATJAVA 10.0.7. That release is close to the COATJAVA version used to cook RG-M data and is the reconstruction version currently used by this project. An [`environment.csh` copy is available in the RG-M repository](https://github.com/awild7/rgm/blob/main/environment.csh); access to that repository must be granted by RG-M.
+
+The login setup selects COATJAVA, while the submission workflow separately loads the requested GEMC version. GEMC defaults to 5.14; an explicit `--gemc-version` override is resolved and verified before `sbatch` receives the environment.
 
 ## Sourced entry point
 

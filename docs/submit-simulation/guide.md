@@ -11,7 +11,7 @@ source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
   -> source src/workflows/slurm-submission/setup_and_submit.csh
      -> submit.py
         -> resolve_inputs.py: manifest + configuration + CLI -> validated settings
-        -> preloaded GEMC checks, setup report, output preparation
+        -> COATJAVA environment and selected GEMC checks, setup report, output preparation
         -> sbatch --job-name=NAME --array=1-N <external payload>
   -> Slurm task: GEMC -> recon-util
 ```
@@ -47,7 +47,7 @@ The resolver reads `lund-creation-monitoring/lund-creation-log.json` under the s
 
 The array size is the number of completed files, not the requested generation capacity. The default `JOB_NEVENTS` is the largest event count among the selected files. Physical LUND conversion uses `events-per-file` as both its rollover size and its remaining-input cutoff scale, keeping generation aligned with the intended per-task limit. The cutoff is evaluated before starting a follow-up file and never interrupts a file already in progress. Because it counts input entries rather than accepted reactions, unsupported reactions inside an allowed block can still leave that file shorter than `JOB_NEVENTS`; that task reaches input EOF before the limit. Confirm EOF behavior with the selected detector versions during server validation.
 
-**GEMC defaults to 5.14.** Set another version in the submission config or with `--gemc-version`; LUND creation does not select or record it. The default GCARD uses the manifest's detector target variation together with the beam and submission-time GEMC version. Default YAML and torus settings preserve the established 2070/4029/5986 MeV conventions: +0.5 at 2 GeV and −1.0 at 4/6 GeV. Other beam energies require explicit `--gcard`, `--yaml` and `--torus`. The payload retains fixed solenoid −1.0.
+**GEMC defaults to 5.14** because that release includes the new RG-M Ar target implementation and the corrected one-foil C12 target[^sportes-2026-rgm]. Set another version in the submission config or with `--gemc-version`; LUND creation does not select or record it. GEMC 6.x is compatible with COATJAVA 11, but that detector/reconstruction combination needs further testing to determine whether it changes analysis results and is therefore not the project default. The default GCARD uses the manifest's detector target variation together with the beam and submission-time GEMC version. Default YAML and torus settings preserve the established 2070/4029/5986 MeV conventions: +0.5 at 2 GeV and −1.0 at 4/6 GeV. Other beam energies require explicit `--gcard`, `--yaml` and `--torus`. The payload retains fixed solenoid −1.0.
 
 The resolver automatically derives two deliberately distinct labels from `beam-energy`: `BEAM_ENERGY_LABEL` identifies the sample as `2070MeV`, `4029MeV`, or `5986MeV`, while `DETECTOR_ENERGY_GROUP` selects the corresponding `2GeV`, `4GeV`, or `6GeV` detector-resource directory. For other energies, both use the nearest-MeV label and explicit detector inputs are required.
 
@@ -95,7 +95,7 @@ Without a manifest, source, beam energy in GeV, target identity and prefix are r
 
 ## Server execution and output replacement
 
-Use a csh/tcsh login shell with the ifarm module command and reconstruction available. When `CLAS12TAGS_DIR` is empty, submission derives the shared clas12Tags parent from the inherited `GEMC_DATA_DIR` (or uses `/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags` when none is inherited), checks the parent and requested-version directory, and only then loads `gemc/<version>` in the Python child environment. Informational output produced by both module operations streams directly to the terminal, preserving the module system's original colors; only its generated Python environment code stays internal. The workflow verifies that the resulting `GEMC_DATA_DIR` is the requested version and that the resolved `gemc` executable is inside that directory. The report prints `SLURM_GEMC_EXECUTABLE`, which is the executable inherited by `sbatch`.
+Use a csh/tcsh login shell with the ifarm module command and reconstruction available. The required login setup is documented in the [ifarm environment guide](ifarm-environment.md): `~/.cshrc` must source `~/environment.csh`, which loads the CLAS12 environment and selects COATJAVA 10.0.7. When `CLAS12TAGS_DIR` is empty, submission derives the shared clas12Tags parent from the inherited `GEMC_DATA_DIR` (or uses `/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags` when none is inherited), checks the parent and requested-version directory, and only then loads `gemc/<version>` in the Python child environment. Informational output produced by both module operations streams directly to the terminal, preserving the module system's original colors; only its generated Python environment code stays internal. The workflow verifies that the resulting `GEMC_DATA_DIR` is the requested version and that the resolved `gemc` executable is inside that directory. The report prints `SLURM_GEMC_EXECUTABLE`, which is the executable inherited by `sbatch`.
 
 For a custom GEMC detector implementation, such as testing target geometry, clone or fork [gemc/clas12Tags](https://github.com/gemc/clas12Tags) on shared storage and pass its checkout with `--clas12tags-dir DIRECTORY`. The selected GEMC module and executable are still loaded and verified, while the standard shared-version directory precheck is skipped. The setup validates `CLAS12TAGS_DIR` and then exports `GEMC_DATA_DIR=$CLAS12TAGS_DIR` before submission. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the selected directory in every Slurm task. Scheduler/log defaults remain in the external payload's `#SBATCH` directives.
 
@@ -156,3 +156,5 @@ After the array finishes:
    ```
 
 The dump must open successfully and display CLAS12 data banks. Treat this as a minimum smoke test only: one readable file does not prove that the remaining tasks or files succeeded.
+
+[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
