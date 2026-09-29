@@ -73,10 +73,10 @@ LundWriter::LundWriter(const RunConfig& c, std::string workflow)
     // The added separator makes a text-prefix check distinguish a true child path such as
     // `/work/run/source` from an unrelated path such as `/work/run-old`.
     const auto directory_text = directory_.string() + std::filesystem::path::preferred_separator;
-    const bool contains_checkout = (source == directory_ || source.string().rfind(directory_text, 0) == 0);
+    const bool contains_checkout = ((source == directory_) || (source.string().rfind(directory_text, 0) == 0));
 
     // Stop before deletion if the run path is empty, too broad, or contains the source checkout.
-    if (directory_.empty() || directory_ == root || (!home.empty() && directory_ == home) || directory_.filename().empty() || directory_ == std::filesystem::current_path() ||
+    if (directory_.empty() || (directory_ == root) || (!home.empty() && (directory_ == home)) || directory_.filename().empty() || (directory_ == std::filesystem::current_path()) ||
         contains_checkout) {
         throw std::runtime_error("Refusing unsafe output-directory replacement: " + directory_.string());
     }
@@ -110,7 +110,7 @@ void LundWriter::writeEvent(const Event& e) {
     if (e.particles.empty()) { throw std::runtime_error("Cannot write an empty event"); }
 
     // Open a file only when an event is ready for it. This prevents an empty file at the end of a run.
-    if (files_.empty() || files_.back().events == events_per_file_) {
+    if (files_.empty() || (files_.back().events == events_per_file_)) {
         // Close the previous file first so all of its buffered text reaches storage before the next file
         // opens.
         if (stream_.is_open()) { stream_.close(); }
@@ -239,7 +239,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
 
         const auto text = rendered_value.str();
         const auto label_width = label.size() + 1;
-        const auto padding = label_width + text.size() < 99 ? 99 - label_width - text.size() : 1;
+        const auto padding = (label_width + text.size() < 99) ? 99 - label_width - text.size() : 1;
 
         std::cout << env::SYSTEM_COLOR << label << ":" << env::RESET_COLOR << std::string(padding, ' ') << text << "\n";
     };
@@ -282,7 +282,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     print_value("Target geometry", config.getText("target-geometry"));
     print_value("Target A", config.getText("A"));
     print_value("Target Z", config.getText("Z"));
-    print_value("Vertex seed", config.getText("vertex-seed") + (config.getText("vertex-seed") == "0" ? " (ROOT automatic; nonrepeatable)" : ""));
+    print_value("Vertex seed", config.getText("vertex-seed") + ((config.getText("vertex-seed") == "0") ? " (ROOT automatic; nonrepeatable)" : ""));
 
     if (uniform) {
         const auto channel = config.getText("channel");
@@ -292,7 +292,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
         // Show only the particle-motion settings used by the selected uniform channel.
         std::cout << env::SYSTEM_COLOR << "\n- Uniform event content ----------------------------------------------------------------------------\n" << env::RESET_COLOR;
         print_value("Channel", channel);
-        print_value("Kinematic seed", config.getText("seed") + (config.getText("seed") == "0" ? " (ROOT automatic; nonrepeatable)" : ""));
+        print_value("Kinematic seed", config.getText("seed") + ((config.getText("seed") == "0") ? " (ROOT automatic; nonrepeatable)" : ""));
 
         if (electron_hadron) {
             print_value("Hadron", config.getText("hadron"));

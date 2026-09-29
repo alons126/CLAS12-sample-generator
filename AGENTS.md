@@ -52,7 +52,7 @@ Apply these rules to maintained C++ source and header files. Do not apply them t
 - Leave exactly one blank line before every named separator banner.
 - Make every separator-banner line, including its label and repeated `-` characters, exactly 170 columns wide.
 - Always enclose the body of every C++ `if`, `else if`, `else`, `for`, range-based `for`, `while`, and `do while` statement in braces, even when the body contains only one statement.
-- When a C++ `bool` variable is initialized from a comparison, enclose the complete comparison expression in parentheses. Apply the same rule when comparisons are joined by logical operators. For example, write `const bool matches = (left == right);` and `const bool in_range = (value >= minimum && value <= maximum);`.
+- Enclose every C++ comparison in parentheses when it is part of a larger expression. This includes a comparison used as a ternary condition or joined to another condition with `&&` or `||`. For example, write `value = (event.id % 2 == 0) ? evenValue : oddValue;` and `if ((value >= minimum) && (value <= maximum))`. A comparison that is already the complete condition of `if`, `else if`, `while`, or `do while`, such as `if (left == right)`, does not need a redundant second pair of parentheses. Apply the same rule when initializing a `bool` variable from comparisons.
 
 ### Formatter-overriding exceptions
 

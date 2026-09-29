@@ -111,7 +111,7 @@ std::string trim(std::string s) {
     auto first = s.find_first_not_of(" \t\r\n");
 
     // Copy from the first kept character through the last one.
-    return first == std::string::npos ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
+    return (first == std::string::npos) ? "" : s.substr(first, s.find_last_not_of(" \t\r\n") - first + 1);
 }
 #pragma endregion
 
@@ -136,7 +136,7 @@ std::string trim(std::string s) {
 std::string discoverGenieTune(const std::string& input) {
     // There is no local directory to search when no input was supplied. `://` identifies a remote address,
     // such as `root://server/path/file.root`, whose surrounding files cannot be opened as local files.
-    if (input.empty() || input.find("://") != std::string::npos) { return "unknown"; }
+    if (input.empty() || (input.find("://") != std::string::npos)) { return "unknown"; }
 
     // A wildcard is a character such as `*` in `gst*.root`. It represents several possible filenames rather
     // than one real file. Find the first wildcard so we can keep only the fixed directory before it.
@@ -174,7 +174,7 @@ std::string discoverGenieTune(const std::string& input) {
                 std::string key;
                 std::string value;
 
-                if (fields >> key && key == "TUNE") { return fields >> value && !value.empty() ? value : "unknown"; }
+                if ((fields >> key) && (key == "TUNE")) { return (fields >> value) && !value.empty() ? value : "unknown"; }
             }
 
             return "unknown";
@@ -216,12 +216,12 @@ std::string discoverGenieTune(const std::string& input) {
 std::string pathToken(std::string value) {
     // std::isalnum requires a nonnegative byte value. Keep only the three allowed punctuation marks.
     for (char& ch : value) {
-        if (!(std::isalnum(static_cast<unsigned char>(ch)) || ch == '.' || ch == '_' || ch == '-')) { ch = '-'; }
+        if (!(std::isalnum(static_cast<unsigned char>(ch)) || (ch == '.') || (ch == '_') || (ch == '-'))) { ch = '-'; }
     }
 
     // `.` means the current directory and `..` means its parent, so neither is allowed as a generated
     // name.
-    if (value.empty() || value == "." || value == "..") { throw std::runtime_error("Invalid empty output-name component"); }
+    if (value.empty() || (value == ".") || (value == "..")) { throw std::runtime_error("Invalid empty output-name component"); }
 
     return value;
 }
@@ -269,7 +269,7 @@ std::string uniformSampleLabel(const RunConfig& config) {
 
     const auto& hadron = config.getText("hadron");
 
-    const std::string token = hadron == "proton" ? "p" : hadron == "neutron" ? "n" : hadron;
+    const std::string token = (hadron == "proton") ? "p" : (hadron == "neutron") ? "n" : hadron;
 
     // Put `e` before the hadron token and the detector region after it. Proton and neutron use the shortened
     // tokens above, producing labels such as `epFD` and `enCD`. The pion names remain `pip` and `pim`, so
@@ -350,7 +350,7 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
 
-        if (arg.rfind("--", 0) != 0 || i + 1 == argc) { throw std::runtime_error("Expected --key value: " + arg); }
+        if ((arg.rfind("--", 0) != 0) || (i + 1 == argc)) { throw std::runtime_error("Expected --key value: " + arg); }
 
         auto key = arg.substr(2);
         std::string value = argv[++i];
@@ -380,7 +380,7 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
 
             // Ignore empty lines and comment lines. A # after the first character remains part of the
             // setting value.
-            if (line.empty() || line[0] == '#') { continue; }
+            if (line.empty() || (line[0] == '#')) { continue; }
 
             // Split at the first equals sign so another equals sign may remain inside the value.
             auto eq = line.find('=');
@@ -429,18 +429,18 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
         // central detector and FD means the forward detector. CD pions stop at 140 degrees, CD protons and
         // neutrons at 145, FD neutrons at 35, and charged FD hadrons at 45.
         const bool neutron = (c.getText("hadron") == "neutron");
-        const bool pion = (c.getText("hadron") == "pip" || c.getText("hadron") == "pim");
+        const bool pion = ((c.getText("hadron") == "pip") || (c.getText("hadron") == "pim"));
         const bool central = (c.getText("hadron-region") == "CD");
         if (c.getText("hadron-theta-min") == "auto") { c.values_["hadron-theta-min"] = central ? "35" : "5"; }
         if (c.getText("hadron-theta-max") == "auto") { c.values_["hadron-theta-max"] = central ? (pion ? "140" : "145") : (neutron ? "35" : "45"); }
         if (c.getText("electron-p-max") == "auto") { c.values_["electron-p-max"] = c.getText("beam-energy"); }
-        if (c.getText("hadron-p-min") == "auto") { c.values_["hadron-p-min"] = neutron ? "0" : c.getText("hadron") == "proton" ? (central ? "0.2" : "0.3") : (central ? "0.1" : "0.2"); }
+        if (c.getText("hadron-p-min") == "auto") { c.values_["hadron-p-min"] = neutron ? "0" : (c.getText("hadron") == "proton") ? (central ? "0.2" : "0.3") : (central ? "0.1" : "0.2"); }
 
         // Choose the usual angle between the trigger electron and the opposite detector sector for each
         // known beam energy. Other beam energies use no offset.
         if (c.getText("trigger-phi-offset") == "auto") {
             double e = c.getDouble("beam-energy");
-            c.values_["trigger-phi-offset"] = std::abs(e - 2.07052) < 1e-6 ? "16" : std::abs(e - 4.02962) < 1e-6 ? "7" : std::abs(e - 5.98636) < 1e-6 ? "5" : "0";
+            c.values_["trigger-phi-offset"] = (std::abs(e - 2.07052) < 1e-6) ? "16" : (std::abs(e - 4.02962) < 1e-6) ? "7" : (std::abs(e - 5.98636) < 1e-6) ? "5" : "0";
         }
     }
 
@@ -450,19 +450,19 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
     if (!uniform) {
         if (c.getText("q2-cut") == "auto") {
             const double e = c.getDouble("beam-energy");
-            c.values_["q2-cut"] = std::abs(e - 2.07052) < 1e-6 ? "Q2-0.02" : std::abs(e - 4.02962) < 1e-6 ? "Q2-0.25" : std::abs(e - 5.98636) < 1e-6 ? "Q2-0.40" : "none";
-        } else if (c.getText("q2-cut") == "Q2_0_02" || c.getText("q2-cut") == "Q2_0.02") {
+            c.values_["q2-cut"] = (std::abs(e - 2.07052) < 1e-6) ? "Q2-0.02" : (std::abs(e - 4.02962) < 1e-6) ? "Q2-0.25" : (std::abs(e - 5.98636) < 1e-6) ? "Q2-0.40" : "none";
+        } else if ((c.getText("q2-cut") == "Q2_0_02") || (c.getText("q2-cut") == "Q2_0.02")) {
             c.values_["q2-cut"] = "Q2-0.02";
-        } else if (c.getText("q2-cut") == "Q2_0_25" || c.getText("q2-cut") == "Q2_0.25") {
+        } else if ((c.getText("q2-cut") == "Q2_0_25") || (c.getText("q2-cut") == "Q2_0.25")) {
             c.values_["q2-cut"] = "Q2-0.25";
-        } else if (c.getText("q2-cut") == "Q2_0_40" || c.getText("q2-cut") == "Q2_0.40") {
+        } else if ((c.getText("q2-cut") == "Q2_0_40") || (c.getText("q2-cut") == "Q2_0.40")) {
             c.values_["q2-cut"] = "Q2-0.40";
         }
     }
 
     // A GENIE tune names the physics settings used to produce the input events. Standard productions store
     // it in input_options.txt near the input files. If it cannot be read, record `unknown` and continue.
-    if (!uniform && c.getText("tune") == "auto") { c.values_["tune"] = discoverGenieTune(c.getText("input")); }
+    if (!uniform && (c.getText("tune") == "auto")) { c.values_["tune"] = discoverGenieTune(c.getText("input")); }
 
     // Build a filename prefix that still describes the sample if a LUND file is copied out of its run
     // directory. Double underscores separate different facts. A hyphen joins an event-generator name to
@@ -485,9 +485,9 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
     if (uniform) {
         // For charged hadrons, `mixed` chooses half the momenta uniformly in p and half uniformly in 1/p.
         // Neutrons use uniform p. In an electron-hadron event, the trigger electron uses beam momentum.
-        if (c.getText("electron-momentum") == "auto") { c.values_["electron-momentum"] = c.getText("channel") == "1e" ? "mixed" : "beam"; }
-        if (c.getText("hadron-momentum") == "auto" || c.getText("hadron-momentum") == "sampled") {
-            c.values_["hadron-momentum"] = c.getText("channel") == "eh" && c.getText("hadron") != "neutron" ? "mixed" : "uniform";
+        if (c.getText("electron-momentum") == "auto") { c.values_["electron-momentum"] = (c.getText("channel") == "1e") ? "mixed" : "beam"; }
+        if ((c.getText("hadron-momentum") == "auto") || (c.getText("hadron-momentum") == "sampled")) {
+            c.values_["hadron-momentum"] = ((c.getText("channel") == "eh") && (c.getText("hadron") != "neutron")) ? "mixed" : "uniform";
         }
     }
 #pragma endregion
@@ -499,7 +499,7 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
 
     // Leave remote addresses containing :// unchanged. Make local filenames and wildcard patterns absolute
     // so they still refer to the same input if later code changes its current directory.
-    if (!uniform && c.getText("input").find("://") == std::string::npos) { c.values_["input"] = std::filesystem::absolute(c.getText("input")).lexically_normal().string(); }
+    if (!uniform && (c.getText("input").find("://") == std::string::npos)) { c.values_["input"] = std::filesystem::absolute(c.getText("input")).lexically_normal().string(); }
 
     if (uniform) {
         // Add a directory name containing the uniform channel and beam energy below the parent directory
@@ -552,7 +552,7 @@ double RunConfig::getDouble(const std::string& k) const {
     double value = std::stod(getText(k), &used);
 
     // Reject extra text, infinity, and NaN, which means a value that is not a valid number.
-    if (used != getText(k).size() || !std::isfinite(value)) { throw std::runtime_error("Invalid number: " + k); }
+    if ((used != getText(k).size()) || !std::isfinite(value)) { throw std::runtime_error("Invalid number: " + k); }
 
     return value;
 }
@@ -566,7 +566,7 @@ std::uint64_t RunConfig::getNonnegativeInteger(const std::string& k) const {
     // before conversion.
     const auto s = getText(k);
 
-    if (s.empty() || s.find_first_not_of("0123456789") != std::string::npos) { throw std::runtime_error("Expected unsigned integer: " + k); }
+    if (s.empty() || (s.find_first_not_of("0123456789") != std::string::npos)) { throw std::runtime_error("Expected unsigned integer: " + k); }
 
     // stoull converts the digits and reports an error if the value is too large for the return type.
     return std::stoull(s);
@@ -594,7 +594,7 @@ void RunConfig::validateForSource(LundSource source) const {
     // repeated later from the recorded zero alone.
     for (auto k : {"events", "events-per-file"}) {
         auto n = getNonnegativeInteger(k);
-        if (!n || n > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
+        if (!n || (n > std::numeric_limits<unsigned int>::max())) { throw std::runtime_error(std::string(k) + " must be in [1, 4294967295]"); }
     }
     for (auto k : {"seed", "vertex-seed"}) {
         if (getNonnegativeInteger(k) > std::numeric_limits<unsigned int>::max()) { throw std::runtime_error(std::string(k) + " must be in [0, 4294967295]"); }
@@ -603,13 +603,13 @@ void RunConfig::validateForSource(LundSource source) const {
     // In the LUND header, A is the total number of protons and neutrons and Z is the number of protons.
     // They do not choose the target shape or event positions. Require a possible ordering: at least one
     // particle in the nucleus and no more protons than the total.
-    if (getNonnegativeInteger("A") < 1 || getNonnegativeInteger("A") > 300 || getNonnegativeInteger("Z") > getNonnegativeInteger("A")) {
+    if ((getNonnegativeInteger("A") < 1) || (getNonnegativeInteger("A") > 300) || (getNonnegativeInteger("Z") > getNonnegativeInteger("A"))) {
         throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A");
     }
 
     // The prefix becomes part of each output filename. Limit it to characters that work reliably in common
     // filesystems and command lines.
-    if (getText("prefix").empty() || getText("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos) {
+    if (getText("prefix").empty() || (getText("prefix").find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") != std::string::npos)) {
         throw std::runtime_error("prefix must contain only letters, numbers, _, . or -");
     }
 
@@ -628,7 +628,7 @@ void RunConfig::validateForSource(LundSource source) const {
         // conversion starts.
         if (getText("input").empty()) { throw std::runtime_error("--input GST ROOT file or glob is required"); }
         if (getText("event-generator") != "genie-gst") { throw std::runtime_error("Only --event-generator genie-gst is currently implemented"); }
-        if (getText("output-layout") != "nested" && getText("output-layout") != "metadata") { throw std::runtime_error("output-layout must be nested or metadata"); }
+        if ((getText("output-layout") != "nested") && (getText("output-layout") != "metadata")) { throw std::runtime_error("output-layout must be nested or metadata"); }
 
         // These values describe the physical input in the run directory and manifest. `unknown` and
         // `none` are meaningful recorded values, but empty text is not.
@@ -643,47 +643,49 @@ void RunConfig::validateForSource(LundSource source) const {
     // The uniform LUND creator can create one electron, an electron with one hadron, or the electron test
     // scan. These random test events measure detector acceptance; they do not describe a physical
     // interaction.
-    if (getText("channel") != "1e" && getText("channel") != "eh" && getText("channel") != "electron-tester") { throw std::runtime_error("channel must be 1e, eh or electron-tester"); }
-    if (getText("hadron") != "proton" && getText("hadron") != "neutron" && getText("hadron") != "pip" && getText("hadron") != "pim") {
+    if ((getText("channel") != "1e") && (getText("channel") != "eh") && (getText("channel") != "electron-tester")) { throw std::runtime_error("channel must be 1e, eh or electron-tester"); }
+    if ((getText("hadron") != "proton") && (getText("hadron") != "neutron") && (getText("hadron") != "pip") && (getText("hadron") != "pim")) {
         throw std::runtime_error("hadron must be proton, neutron, pip or pim");
     }
-    if (getText("hadron-region") != "FD" && getText("hadron-region") != "CD") { throw std::runtime_error("hadron-region must be FD or CD"); }
+    if ((getText("hadron-region") != "FD") && (getText("hadron-region") != "CD")) { throw std::runtime_error("hadron-region must be FD or CD"); }
 
     // Theta is the angle measured from the beam direction. Require each minimum to be smaller than its
     // maximum and keep the full range between 0 and 180 degrees.
     for (auto stem : {"electron", "hadron"}) {
         double lo = getDouble(std::string(stem) + "-theta-min"), hi = getDouble(std::string(stem) + "-theta-max");
-        if (!(0 <= lo && lo < hi && hi <= 180)) { throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180"); }
+        if (!((0 <= lo) && (lo < hi) && (hi <= 180))) { throw std::runtime_error("Require 0 <= theta-min < theta-max <= 180"); }
     }
 
     // createFromCommandLine() has already replaced `auto` and the older spelling `sampled`. Mixed sampling chooses half
     // the values uniformly in momentum p and half uniformly in 1/p. Its minimum must be greater than zero
     // because 1/0 is undefined. Only neutron samples may use one fixed momentum.
-    if (getText("hadron-momentum") != "fixed" && getText("hadron-momentum") != "uniform" && getText("hadron-momentum") != "mixed") {
+    if ((getText("hadron-momentum") != "fixed") && (getText("hadron-momentum") != "uniform") && (getText("hadron-momentum") != "mixed")) {
         throw std::runtime_error("hadron-momentum must be fixed, sampled, uniform or mixed");
     }
-    if (getText("hadron-momentum") == "mixed" && (getText("channel") != "eh" || getText("hadron") == "neutron" || getDouble("hadron-p-min") <= 0)) {
+    if ((getText("hadron-momentum") == "mixed") && ((getText("channel") != "eh") || (getText("hadron") == "neutron") || (getDouble("hadron-p-min") <= 0))) {
         throw std::runtime_error("mixed requires an eh charged hadron and strictly positive hadron-p-min");
     }
-    if (getText("hadron-momentum") == "fixed" && (getText("channel") != "eh" || getText("hadron") != "neutron")) {
+    if ((getText("hadron-momentum") == "fixed") && ((getText("channel") != "eh") || (getText("hadron") != "neutron"))) {
         throw std::runtime_error("fixed hadron momentum is available only for eh neutron samples");
     }
 
-    if (getText("electron-momentum") != "uniform" && getText("electron-momentum") != "mixed" && getText("electron-momentum") != "beam") {
+    if ((getText("electron-momentum") != "uniform") && (getText("electron-momentum") != "mixed") && (getText("electron-momentum") != "beam")) {
         throw std::runtime_error("electron-momentum must be auto, uniform, mixed or beam");
     }
-    if (getText("electron-momentum") == "mixed" && (getText("channel") != "1e" || getDouble("electron-p-min") <= 0)) {
+    if ((getText("electron-momentum") == "mixed") && ((getText("channel") != "1e") || (getDouble("electron-p-min") <= 0))) {
         throw std::runtime_error("mixed electron momentum requires 1e and strictly positive electron-p-min");
     }
 
     // A fixed momentum must be greater than zero. A uniform range may begin at zero, but its maximum must
     // be greater than its minimum. The mixed-mode checks above require a minimum greater than zero.
-    if (getDouble("hadron-p") <= 0 || getDouble("hadron-p-min") < 0 || getDouble("beam-energy") <= getDouble("hadron-p-min")) { throw std::runtime_error("Invalid hadron momentum bounds"); }
-    if (getDouble("electron-p-min") < 0 || getDouble("electron-p-max") <= getDouble("electron-p-min")) { throw std::runtime_error("Invalid electron momentum bounds"); }
+    if ((getDouble("hadron-p") <= 0) || (getDouble("hadron-p-min") < 0) || (getDouble("beam-energy") <= getDouble("hadron-p-min"))) {
+        throw std::runtime_error("Invalid hadron momentum bounds");
+    }
+    if ((getDouble("electron-p-min") < 0) || (getDouble("electron-p-max") <= getDouble("electron-p-min"))) { throw std::runtime_error("Invalid electron momentum bounds"); }
 
     // The trigger electron's theta must stay between 0 and 180 degrees. Its angle away from the opposite
     // detector sector must stay between -180 and 180 degrees.
-    if (getDouble("trigger-theta") < 0 || getDouble("trigger-theta") > 180 || std::abs(getDouble("trigger-phi-offset")) > 180) { throw std::runtime_error("Invalid trigger angle"); }
+    if ((getDouble("trigger-theta") < 0) || (getDouble("trigger-theta") > 180) || (std::abs(getDouble("trigger-phi-offset")) > 180)) { throw std::runtime_error("Invalid trigger angle"); }
 #pragma endregion
 }
 #pragma endregion
@@ -701,7 +703,7 @@ std::string quoteAsJsonString(const std::string& s) {
     for (unsigned char ch : s) {
         // JSON uses quotes to mark a string and backslashes to begin special forms. Add a backslash before
         // either character when it is part of the text itself.
-        if (ch == '"' || ch == '\\') {
+        if ((ch == '"') || (ch == '\\')) {
             out << '\\' << ch;
         } else if (ch < 0x20) {
             // JSON does not allow invisible control characters directly inside a string. Write them as

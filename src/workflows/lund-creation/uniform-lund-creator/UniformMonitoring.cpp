@@ -4,19 +4,24 @@
 
 /**
  * @file UniformMonitoring.cpp
- * @brief Creates and saves monitoring plots for uniform samples.
+ * @brief Builds, fills, saves, and draws the plots used to check uniform LUND events.
  *
  * Purpose:
- *   Keep the documented plot order and style. Add clear FD/CD names for each supported hadron, and
- *   store every histogram once. Use -8 to 5 cm for every Vz plot so all RG-M target positions fit.
+ *   Show the particle values produced by the uniform LUND creator so the user can spot an incorrect range,
+ *   missing particle, or unexpected relationship. Each quantity is stored in one ROOT histogram. Hadron
+ *   plot names include FD or CD so the detector region remains clear. Every z-position plot covers -8
+ *   through 5 centimeters so all supported RG-M target positions fit.
  *
  * Workflow:
- *   Create the histograms for one uniform channel -> fill them after each event is written -> apply the
- *   saved axis style -> write one ROOT file -> render the same plots as PDF and PNG files.
+ *   The constructor creates the plot set for one sample. addEventToHistograms() finds the required
+ *   particles in each successfully written event and adds their momentum, angles, or position to the plots.
+ *   saveHistogramsAndRenderPlots() applies one axis style, writes all histograms to a ROOT file, and draws
+ *   the same plots in the same order as a multipage PDF and numbered PNG images.
  *
  * Failure behavior:
- *   Missing particles, unknown labels, ROOT file errors, and directory errors throw exceptions.
- *   The caller saves the plots before writing the completed LUND run log.
+ *   A missing required particle, unsupported hadron, ROOT output problem, or directory problem reports an
+ *   error. The uniform LUND creator saves these plots before publishing the manifest that marks the run
+ *   complete.
  */
 
 #include "uniform-lund-creator/UniformMonitoring.h"
@@ -35,50 +40,67 @@
 
 namespace samples {
 
-// UniformMonitoring::Impl object ----------------------------------------------------------------------------------------------------------------------------------------
+// Stored histograms and fill instructions -------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* UniformMonitoring::Impl object */
+#pragma region /* Stored histograms and fill instructions */
 
 /**
  * @struct UniformMonitoring::Impl
- * @brief Stores the plots in fill and output order.
+ * @brief Owns every histogram and records which particle value fills each axis.
  *
- * Each Entry stores one histogram and the particle values used for its axes. An empty y_metric means a
- * one-dimensional histogram. Entry order is also the output order.
+ * Each Entry connects one histogram axis to a particle and quantity. For example, an entry can fill its
+ * x-axis with electron momentum or hadron phi. An empty y_metric means the plot has one value axis.
+ * Otherwise, it is a two-value plot. The order of entries is also the order used in the ROOT file, PDF,
+ * and numbered PNG filenames.
  */
 struct UniformMonitoring::Impl {
-    /** @struct Entry @brief One histogram and the particle values used to fill it. */
+    /**
+     * @struct Entry
+     * @brief Stores one histogram and identifies the value used for each axis.
+     *
+     * x_metric and y_metric name a momentum, angle, or position coordinate. x_pid and y_pid identify the
+     * particles that supply those values. Entry owns its histogram for the complete monitoring lifetime.
+     */
     struct Entry {
-        std::unique_ptr<TH1> histogram;  ///< ROOT histogram owned only by this Entry.
-        std::string x_metric;            ///< `P`, `Theta`, `Phi`, `Vx`, `Vy`, or `Vz`.
-        int x_pid;                       ///< PDG identity supplying the x quantity.
-        std::string y_metric;            ///< Empty for TH1; otherwise the y-axis metric.
-        int y_pid;                       ///< PDG identity supplying the y quantity.
+        std::unique_ptr<TH1> histogram;  ///< ROOT histogram owned by this entry.
+        std::string x_metric;            ///< X value: `P`, `Theta`, `Phi`, `Vx`, `Vy`, or `Vz`.
+        int x_pid;                       ///< Standard PDG integer for the particle supplying the x value.
+        std::string y_metric;            ///< Empty for a one-value plot; otherwise the y value name.
+        int y_pid;                       ///< Standard PDG integer for the particle supplying the y value.
     };
 
-    std::vector<Entry> entries;  ///< Stable fill/write/render order.
+    std::vector<Entry> entries;  ///< Plot records in their fixed fill, save, and drawing order.
 };
 
 #pragma endregion
 
-// Private definition helpers --------------------------------------------------------------------------------------------------------------------------------------------
+// Private plot helpers --------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Private definition helpers */
+#pragma region /* Private plot helpers */
 
+/**
+ * @namespace samples::<anonymous>
+ * @brief Keeps plot-building helpers available only inside this source file.
+ */
 namespace {
 
-/** @struct HadronLabel @brief Stores the ROOT name and displayed title for one regional hadron. */
+/**
+ * @struct HadronLabel
+ * @brief Stores the plain object name and formatted plot title for one hadron and detector region.
+ *
+ * ROOT object names use text such as `pipFD`. Displayed titles use ROOT's math-like form, such as
+ * `#pi^{+}FD`, so the drawn plot shows the pion symbol and charge.
+ */
 struct HadronLabel {
-    std::string name;   ///< `pFD`, `nCD`, `pipFD`, or `pimCD`.
-    std::string title;  ///< `pFD`, `nCD`, `#pi^{+}FD`, or `#pi^{-}CD`.
+    std::string name;   ///< Plain ROOT object text such as `pFD`, `nCD`, `pipFD`, or `pimCD`.
+    std::string title;  ///< Text ROOT draws, such as `pFD`, `nCD`, `#pi^{+}FD`, or `#pi^{-}CD`.
 };
 
 /**
- * @brief Build the ROOT name and TLatex title for one supported hadron and region.
- *
- * @param pid Supported hadron PDG identifier.
- * @param region Detector-region suffix, normally `FD` or `CD`.
- * @return The plain histogram name and formatted title.
+ * @brief Build the object-name text and displayed title for one hadron and detector region.
+ * @param pid Standard PDG integer for a supported proton, neutron, positive pion, or negative pion.
+ * @param region Detector suffix, normally `FD` for forward or `CD` for central.
+ * @return Plain text for the ROOT object name and formatted text for the drawn title.
  * @throws std::runtime_error If pid does not identify a supported uniform-sample hadron.
  */
 HadronLabel hadronLabel(int pid, const std::string& region) {
@@ -97,13 +119,13 @@ HadronLabel hadronLabel(int pid, const std::string& region) {
 }
 
 /**
- * @brief Read one monitored scalar from the first particle with the requested identity.
- *
- * @param event Event to read without changing it.
- * @param pid PDG identifier of the particle to inspect.
- * @param metric Supported quantity name: `P`, `Theta`, `Phi`, `Vx`, `Vy`, or `Vz`.
- * @return Momentum in GeV/c, angle in degrees, or vertex coordinate in cm, as selected by metric.
- * @throws std::runtime_error If the particle is absent or the metric is unsupported.
+ * @brief Read one momentum, angle, or position value from the requested particle.
+ * @param event Event to search without changing it.
+ * @param pid Standard PDG integer for the particle to find.
+ * @param metric Value to return: `P` for momentum size, `Theta` for the angle from the beam direction,
+ *               `Phi` for the angle around the beam, or `Vx`, `Vy`, and `Vz` for position coordinates.
+ * @return Momentum in GeV/c, an angle in degrees, or a position coordinate in centimeters.
+ * @throws std::runtime_error If the event lacks that particle or metric is not one of the supported names.
  */
 double quantity(const Event& event, int pid, const std::string& metric) {
     for (const auto& particle : event.particles) {
@@ -115,6 +137,7 @@ double quantity(const Event& event, int pid, const std::string& metric) {
         if (metric == "Vy") { return particle.vertex.Y(); }
         if (metric == "Vz") { return particle.vertex.Z(); }
     }
+
     throw std::runtime_error("Missing particle/quantity in uniform monitoring: " + metric + ", PDG " + std::to_string(pid));
 }
 
@@ -122,20 +145,25 @@ double quantity(const Event& event, int pid, const std::string& metric) {
 
 #pragma endregion
 
-// UniformMonitoring construction ----------------------------------------------------------------------------------------------------------------------------------------
+// Creating the plot set -------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* UniformMonitoring construction */
+#pragma region /* Creating the plot set */
 
 UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, double beam) : impl_(std::make_unique<Impl>()) {
-    // Use one Vz display range for every target. It covers the positions of all RG-M target geometries.
+    // Use the same z-position range for every target so plots from different runs can be compared directly.
+    // This range contains all supported RG-M target positions.
     constexpr double vertex_z_min = -8;
     constexpr double vertex_z_max = 5;
 
+    // Add one plot with 100 bins. SetDirectory(nullptr) keeps this object as the owner instead of giving
+    // ownership to whichever ROOT file happens to be active.
     auto one = [&](std::string name, std::string title, double low, double high, std::string metric, int pid) {
         auto histogram = std::make_unique<TH1D>(name.c_str(), title.c_str(), 100, low, high);
         histogram->SetDirectory(nullptr);
         impl_->entries.push_back({std::move(histogram), std::move(metric), pid, "", 0});
     };
+
+    // Add one two-value plot with 100 bins along each axis and record the value used for each axis.
     auto two = [&](std::string name, std::string title, double x_low, double x_high, double y_low, double y_high, std::string x_metric, int x_pid, std::string y_metric, int y_pid) {
         auto histogram = std::make_unique<TH2D>(name.c_str(), title.c_str(), 100, x_low, x_high, 100, y_low, y_high);
         histogram->SetDirectory(nullptr);
@@ -143,8 +171,11 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
     };
 
     const bool tester = (sample_label == "electron-tester");
-    const bool electron_only = (sample_label == "1e" || tester);
+    const bool electron_only = ((sample_label == "1e") || tester);
     const std::string suffix = tester ? "Tester_e" : sample_label;
+
+    // Electron-only samples need plots for the electron. The tester does not include position plots
+    // because its purpose is the angular scan used to choose the trigger-electron angle.
     if (electron_only) {
         const std::string context = tester ? "Tester_e sample" : "(e,e') sample";
         one("Theta_e_" + suffix, "#theta_{e} in " + context + ";#theta_{e} [#circ]", 0, 50, "Theta", constants::electron_pdg);
@@ -155,6 +186,7 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
             one("Vy_e_1e", "V_{e,y} of e in (e,e') sample;V_{e,y} [cm]", -5, 5, "Vy", constants::electron_pdg);
             one("Vz_e_1e", "V_{e,z} of e in (e,e') sample;V_{e,z} [cm]", vertex_z_min, vertex_z_max, "Vz", constants::electron_pdg);
         }
+
         two("Theta_e_VS_Phi_e_" + suffix, "#theta_{e} vs. #phi_{e} in " + context + ";#phi_{e} [#circ];#theta_{e} [#circ]", -180, 180, 0, 50, "Phi", constants::electron_pdg, "Theta",
             constants::electron_pdg);
         two("Theta_e_VS_P_e_" + suffix, "#theta_{e} vs. P_{e} in " + context + ";P_{e} [GeV];#theta_{e} [#circ]", 0, beam * 1.1, 0, 50, "P", constants::electron_pdg, "Theta",
@@ -164,13 +196,16 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
         return;
     }
 
-    const std::string region = sample_label.size() >= 2 && sample_label.compare(sample_label.size() - 2, 2, "CD") == 0 ? "CD" : "FD";
+    const std::string region = ((sample_label.size() >= 2) && (sample_label.compare(sample_label.size() - 2, 2, "CD") == 0)) ? "CD" : "FD";
     const auto hadron = hadronLabel(hadron_pid, region);
-    // ROOT shows the object name in its statistics box. Include the hadron and detector region.
+
+    // ROOT can display the object name on a plot. Include the hadron and detector region so saved plots
+    // remain identifiable on their own.
     const std::string& channel = sample_label;
     const std::string context = "(e,e'" + hadron.title + ") sample";
-    const double theta_high = region == "CD" ? 150 : 50;
+    const double theta_high = (region == "CD") ? 150 : 50;
 
+    // The first group checks the electron alone.
     auto electron_one = [&](const std::string& metric, const std::string& symbol, double low, double high, const std::string& unit) {
         one(metric + "_e_" + channel, symbol + "_{e} in " + context + ";" + symbol + "_{e} " + unit, low, high, metric, constants::electron_pdg);
     };
@@ -189,6 +224,8 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
 
     const std::string& h = hadron.name;
     const std::string& ht = hadron.title;
+
+    // The second group checks the hadron alone.
     one("Theta_" + h + "_" + channel, "#theta_{" + ht + "} in " + context + ";#theta_{" + ht + "} [#circ]", 0, theta_high, "Theta", hadron_pid);
     one("Phi_" + h + "_" + channel, "#phi_{" + ht + "} in " + context + ";#phi_{" + ht + "} [#circ]", -180, 180, "Phi", hadron_pid);
     one("P_" + h + "_" + channel, "P_{" + ht + "} in " + context + ";P_{" + ht + "} [GeV]", 0, beam * 1.1, "P", hadron_pid);
@@ -202,6 +239,7 @@ UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, d
     two("Phi_" + h + "_VS_P_" + h + "_" + channel, "#phi_{" + ht + "} vs. P_{" + ht + "} in " + context + ";P_{" + ht + "} [GeV];#phi_{" + ht + "} [#circ]", 0, beam * 1.1, -180, 180, "P",
         hadron_pid, "Phi", hadron_pid);
 
+    // The final group shows relationships between electron and hadron values.
     two("P_e_VS_P_" + h + "_" + channel, "P_{e} vs. P_{" + ht + "} in " + context + ";P_{" + ht + "} [GeV];P_{e} [GeV]", 0, beam * 1.1, 0, beam * 1.1, "P", hadron_pid, "P",
         constants::electron_pdg);
     two("P_e_VS_Theta_" + h + "_" + channel, "P_{e} vs. #theta_{" + ht + "} in " + context + ";#theta_{" + ht + "} [#circ];P_{e} [GeV]", 0, theta_high, 0, beam * 1.1, "Theta", hadron_pid,
@@ -226,11 +264,12 @@ UniformMonitoring::~UniformMonitoring() = default;
 
 #pragma endregion
 
-// Event filling ---------------------------------------------------------------------------------------------------------------------------------------------------------
+// Adding one event to the plots -----------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Event filling */
-
-void UniformMonitoring::fill(const Event& event) {
+#pragma region /* Adding one event to the plots */
+void UniformMonitoring::addEventToHistograms(const Event& event) {
+    // Read the x value requested by every entry. A missing y value marks a one-value histogram. Otherwise,
+    // ROOT's two-value histogram receives both values.
     for (auto& entry : impl_->entries) {
         const double x = quantity(event, entry.x_pid, entry.x_metric);
         if (entry.y_metric.empty()) {
@@ -240,15 +279,14 @@ void UniformMonitoring::fill(const Event& event) {
         }
     }
 }
-
 #pragma endregion
 
-// Output and rendering --------------------------------------------------------------------------------------------------------------------------------------------------
+// Saving and drawing the plots ------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Output and rendering */
-
-void UniformMonitoring::save(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
-    // Apply the axis style before writing so saved and drawn plots look the same.
+#pragma region /* Saving and drawing the plots */
+void UniformMonitoring::saveHistogramsAndRenderPlots(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name) {
+    // Apply one axis style before writing so a histogram opened from the ROOT file looks like the rendered
+    // PDF and PNG version. Sumw2() stores information ROOT uses to calculate bin uncertainties.
     for (auto& entry : impl_->entries) {
         auto* histogram = entry.histogram.get();
         histogram->Sumw2();
@@ -261,14 +299,19 @@ void UniformMonitoring::save(const std::filesystem::path& path, const std::files
         if (entry.y_metric.empty()) { histogram->GetYaxis()->SetTitle("Number of events"); }
     }
 
+    // CREATE refuses to replace an existing ROOT file. This protects monitoring output if the expected run
+    // directory replacement did not happen.
     TFile output(path.string().c_str(), "CREATE");
     if (output.IsZombie()) { throw std::runtime_error("Cannot create uniform monitoring ROOT file"); }
 
     for (auto& entry : impl_->entries) {
         if (entry.histogram->Write() <= 0) { throw std::runtime_error("Cannot write uniform monitoring histogram"); }
     }
+
     output.Close();
 
+    // Batch mode lets ROOT draw files without opening graphical windows, which also works in batch jobs.
+    // Create one canvas with the same grid and margins for every plot.
     gROOT->SetBatch(true);
     std::filesystem::create_directories(plot_directory);
     const auto pdf = (plot_directory / pdf_name).string();
@@ -278,19 +321,25 @@ void UniformMonitoring::save(const std::filesystem::path& path, const std::files
     canvas.SetLeftMargin(0.16);
     canvas.SetRightMargin(0.12);
     canvas.cd();
+
+    // Printing the PDF name with `[` opens one multipage PDF. Each loop iteration adds a page, and `]`
+    // closes the file after the final page.
     canvas.Print((pdf + "[").c_str());
 
     std::size_t index = 0;
     for (auto& entry : impl_->entries) {
         auto* histogram = entry.histogram.get();
+
+        // Use a color map for two-value plots. Save a numbered PNG before adding the same image to the PDF,
+        // then clear the canvas so the next plot starts empty.
         histogram->Draw(entry.y_metric.empty() ? "" : "colz");
         canvas.SaveAs((plot_directory / (std::to_string(++index) + "_" + histogram->GetName() + ".png")).string().c_str());
         canvas.Print(pdf.c_str());
         canvas.Clear();
     }
+
     canvas.Print((pdf + "]").c_str());
 }
-
 #pragma endregion
 
 }  // namespace samples

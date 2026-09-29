@@ -66,7 +66,7 @@ void convertGenieGST(const RunConfig& c) {
 
     // TChain reads matching files as one ordered `gst` tree. Check input before output can be replaced.
     TChain chain("gst");
-    if (!chain.Add(c.getText("input").c_str()) || chain.GetEntries() == 0) { throw std::runtime_error("No GST entries found for: " + c.getText("input")); }
+    if (!chain.Add(c.getText("input").c_str()) || (chain.GetEntries() == 0)) { throw std::runtime_error("No GST entries found for: " + c.getText("input")); }
     if (chain.LoadTree(0) < 0) { throw std::runtime_error("Cannot load GST tree"); }
 
     // Interaction flags decide whether an entry is kept and which code is written in header field 10.
@@ -117,9 +117,9 @@ void convertGenieGST(const RunConfig& c) {
     // a later file from starting.
     while (!writer.hasReachedRunEventLimit() && reader.Next()) {
         // Check reader types for every entry, including entries in later files.
-        if (qel.GetSetupStatus() < 0 || mec.GetSetupStatus() < 0 || res.GetSetupStatus() < 0 || dis.GetSetupStatus() < 0 || resid.GetSetupStatus() < 0 || nf.GetSetupStatus() < 0 ||
-            pxl.GetSetupStatus() < 0 || pyl.GetSetupStatus() < 0 || pzl.GetSetupStatus() < 0 || pdgf.GetSetupStatus() < 0 || pxf.GetSetupStatus() < 0 || pyf.GetSetupStatus() < 0 ||
-            pzf.GetSetupStatus() < 0) {
+        if ((qel.GetSetupStatus() < 0) || (mec.GetSetupStatus() < 0) || (res.GetSetupStatus() < 0) || (dis.GetSetupStatus() < 0) || (resid.GetSetupStatus() < 0) ||
+            (nf.GetSetupStatus() < 0) || (pxl.GetSetupStatus() < 0) || (pyl.GetSetupStatus() < 0) || (pzl.GetSetupStatus() < 0) || (pdgf.GetSetupStatus() < 0) ||
+            (pxf.GetSetupStatus() < 0) || (pyf.GetSetupStatus() < 0) || (pzf.GetSetupStatus() < 0)) {
             throw std::runtime_error("GST branch type mismatch");
         }
 
@@ -127,7 +127,7 @@ void convertGenieGST(const RunConfig& c) {
         ++scanned;
 
         // Require `nf` and every parallel particle array to have the same length before using an index.
-        if (*nf < 0 || pdgf.GetSize() != static_cast<std::size_t>(*nf) || pxf.GetSize() != pdgf.GetSize() || pyf.GetSize() != pdgf.GetSize() || pzf.GetSize() != pdgf.GetSize()) {
+        if ((*nf < 0) || (pdgf.GetSize() != static_cast<std::size_t>(*nf)) || (pxf.GetSize() != pdgf.GetSize()) || (pyf.GetSize() != pdgf.GetSize()) || (pzf.GetSize() != pdgf.GetSize())) {
             throw std::runtime_error("Inconsistent GST final-state array lengths");
         }
 
@@ -142,8 +142,8 @@ void convertGenieGST(const RunConfig& c) {
         // input entries. Do not repeat this check after that file has started.
         const auto current_entry = scanned - 1;
         const auto inclusive_entries_remaining = total_entries - current_entry;
-        const bool starting_followup_file = (writer.getWrittenEventCount() > 0 && writer.getWrittenEventCount() % submission_block == 0);
-        if (starting_followup_file && inclusive_entries_remaining < submission_block) {
+        const bool starting_followup_file = ((writer.getWrittenEventCount() > 0) && (writer.getWrittenEventCount() % submission_block == 0));
+        if (starting_followup_file && (inclusive_entries_remaining < submission_block)) {
             stopped_at_submission_cutoff = true;
             break;
         }
@@ -165,7 +165,7 @@ void convertGenieGST(const RunConfig& c) {
         // Copy supported particles in input order. Skip others without changing or inventing momentum.
         for (std::size_t i = 0; i < pdgf.GetSize(); ++i) {
             const int pid = pdgf[i];
-            if (pid == constants::proton_pdg || pid == constants::neutron_pdg || pid == constants::pi_plus_pdg || pid == constants::pi_minus_pdg || pid == constants::photon_pdg) {
+            if ((pid == constants::proton_pdg) || (pid == constants::neutron_pdg) || (pid == constants::pi_plus_pdg) || (pid == constants::pi_minus_pdg) || (pid == constants::photon_pdg)) {
                 event.particles.push_back({pid, getParticleMass(pid), {pxf[i], pyf[i], pzf[i]}, vertex});
             }
         }
@@ -179,7 +179,7 @@ void convertGenieGST(const RunConfig& c) {
 
 #pragma region /* Completion and publication */
     // When neither limit stopped the loop, require ROOT to have reached the normal end of input.
-    if (!writer.hasReachedRunEventLimit() && !stopped_at_submission_cutoff && reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd) {
+    if (!writer.hasReachedRunEventLimit() && !stopped_at_submission_cutoff && (reader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd)) {
         throw std::runtime_error("Failed reading GST entries (check branch types and input files)");
     }
 

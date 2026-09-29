@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
     // Select the physical LUND converter's settings and help text.
     constexpr auto source = samples::LundSource::Physical;
     try {
-        if (argc == 2 && std::string(argv[1]) == "--help") {
+        if ((argc == 2) && (std::string(argv[1]) == "--help")) {
             std::cout << samples::buildHelpText(source);
             return 0;
         }

@@ -90,7 +90,7 @@ const std::vector<TargetVariation>& targetVariations() {
  */
 const TargetVariation& findVariation(const std::string& target, const std::string& identifier) {
     for (const auto& variation : targetVariations()) {
-        if (variation.target == target && variation.identifier == identifier) { return variation; }
+        if ((variation.target == target) && (variation.identifier == identifier)) { return variation; }
     }
 
     // The loop checked every stored setup and found none with both requested names. The setup therefore

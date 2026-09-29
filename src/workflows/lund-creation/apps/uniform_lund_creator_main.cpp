@@ -4,43 +4,52 @@
 
 /**
  * @file uniform_lund_creator_main.cpp
- * @brief Starts uniform LUND creation from the command line.
+ * @brief Reads command-line settings and starts the uniform LUND creator.
  *
  * Purpose:
- *   Read command-line settings, run the uniform LUND creator, and return a process status.
+ *   This file is the installed `uniform-lund-creator` program. It handles `--help`, turns the supplied
+ *   options into a checked RunConfig, runs uniform LUND creation, and tells the calling shell whether the
+ *   operation succeeded.
  *
  * Workflow:
- *   Print help when requested -> read and check the options -> create the uniform LUND sample -> return
- *   success or print a caught error.
+ *   If `--help` is the only option, print the help text and stop successfully. Otherwise, read and check
+ *   every option before any output directory can be replaced. Run the uniform LUND creator. Return success
+ *   when it finishes, or print one standard error and return failure when an exception is reported.
  *
  * CLI options:
- *   --config FILE                    Read `key = value` settings; CLI values take precedence.
- *   --channel 1e|eh|electron-tester  Select the generated final state (default: 1e).
- *   --hadron proton|neutron|pip|pim  Select the hadron when `--channel eh` (default: proton).
- *   --hadron-region FD|CD            Select the hadron detector region (default: FD).
- *   --beam-energy GeV                Set beam energy (default: 5.98636 GeV).
- *   --target ID                      Select the target nucleus/material (default: Ar40).
- *   --gemc-target-variation NAME     Override its beam-dependent GEMC variation (default: auto).
- *   --A N / --Z N                    Override LUND target metadata (default: auto).
- *   --output DIRECTORY               Required parent directory for the resolved run directory.
- *   --events N                       Required total generated-event count.
- *   --events-per-file N              Split output after N events (default: 25000).
- *   --seed N / --vertex-seed N       Set kinematic/vertex ROOT seeds (defaults: 67890/12345; 0 is automatic).
- *   --prefix NAME                    Override the automatic LUND filename prefix.
- *   --electron-theta-min/max DEG     Set electron polar-angle bounds (defaults: 5/40 degrees).
- *   --electron-p-min/max GeV/c       Set electron momentum bounds (defaults: 0.7/beam momentum).
- *   --electron-momentum MODE         Select auto, uniform, mixed, or beam momentum.
- *   --hadron-theta-min/max DEG       Override region/species angle bounds (defaults: auto).
- *   --hadron-p-min GeV/c             Override the species/region momentum minimum (default: auto).
- *   --hadron-p GeV/c                 Set fixed neutron momentum (default: 1 GeV/c).
- *   --hadron-momentum MODE           Select auto, fixed, sampled, uniform, or mixed momentum.
- *   --trigger-theta DEG              Set the electron trigger angle for eh (default: 25 degrees).
- *   --trigger-phi-offset DEG         Override the electron/hadron azimuthal separation (default: auto).
- *   --help                           Print the complete runtime option summary.
+ *   --config FILE                       Read `key = value` settings (default: no configuration file).
+ *   --channel 1e|eh|electron-tester     Select the created final state (default: 1e).
+ *   --hadron proton|neutron|pip|pim     Select the hadron for `eh` (default: proton).
+ *   --hadron-region FD|CD               Select the hadron detector region (default: FD).
+ *   --beam-energy GeV                   Set the incident-electron energy (default: 5.98636 GeV).
+ *   --target ID                         Select the target material (default: Ar40).
+ *   --gemc-target-variation NAME        Select a compatible GEMC target setup (default: auto).
+ *   --A N                               Set the LUND target A value (default: selected target's A).
+ *   --Z N                               Set the LUND target Z value (default: selected target's Z).
+ *   --output DIRECTORY                  Select the parent output directory (required).
+ *   --events N                          Set the number of events to create (required).
+ *   --events-per-file N                 Split output after N events (default: 25000).
+ *   --seed N                            Set the particle-motion seed (default: 67890; 0 asks ROOT for a new seed).
+ *   --vertex-seed N                     Set the target-position seed (default: 12345; 0 asks ROOT for a new seed).
+ *   --prefix NAME                       Set the LUND filename prefix (default: auto from run settings).
+ *   --electron-theta-min DEG            Set the electron theta minimum (default: 5 degrees).
+ *   --electron-theta-max DEG            Set the electron theta maximum (default: 40 degrees).
+ *   --electron-p-min GeV/c              Set the electron momentum minimum (default: 0.7 GeV/c).
+ *   --electron-p-max GeV/c              Set the electron momentum maximum (default: beam momentum).
+ *   --electron-momentum MODE            Select auto, uniform, mixed, or beam momentum (default: auto by channel).
+ *   --hadron-theta-min DEG              Set the hadron theta minimum (default: auto by particle and region).
+ *   --hadron-theta-max DEG              Set the hadron theta maximum (default: auto by particle and region).
+ *   --hadron-p-min GeV/c                Set the hadron momentum minimum (default: auto by particle and region).
+ *   --hadron-p GeV/c                    Set the fixed neutron momentum (default: 1 GeV/c).
+ *   --hadron-momentum MODE              Select auto, fixed, sampled, uniform, or mixed momentum (default: auto; sampled means auto).
+ *   --trigger-theta DEG                 Set the trigger-electron theta (default: 25 degrees).
+ *   --trigger-phi-offset DEG            Set its opposite-sector offset (default: auto by beam energy).
+ *   --help                              Print this complete option summary when used alone.
  *
  * Output:
- *   A replaced run directory containing split LUND files, a settings record, and monitoring output.
- *   Event IDs start at zero and continue across file boundaries without restarting.
+ *   The program replaces the fully checked final run directory and writes numbered LUND files, monitoring
+ *   plots, empty directories for later simulation output, and a completion manifest. Event IDs begin at
+ *   zero and continue across LUND file boundaries.
  */
 
 #include <exception>
@@ -52,49 +61,50 @@
 
 namespace env = environment;
 
-// main ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Command-line entry point ----------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* main */
+#pragma region /* Command-line entry point */
 /**
  * @brief Run the uniform LUND creator from command-line arguments.
  *
  * Purpose:
- *   Handle help and errors here. RunConfig checks settings, and generateUniform() creates the sample.
+ *   Keep command-line help, process return values, and the final error message at the program boundary.
+ *   RunConfig prepares the settings, and generateUniform() creates the complete sample.
  *
  * Workflow:
- *   Select uniform settings -> print help when requested -> check options -> generate LUND files ->
- *   return success or report an error.
+ *   Select the uniform LUND source. Print help when requested. Otherwise, create a checked RunConfig and
+ *   pass it to generateUniform(). Return 0 after success. If either stage reports an error, print it with
+ *   the standard project prefix and return 1.
  *
- * @param argc Number of argv entries, including the executable name.
- * @param argv Process arguments read during this call. This function does not change or store them.
+ * @param argc Number of command-line strings, including the executable name.
+ * @param argv Command-line strings read during this call. main() does not change or retain them.
  *
- * @return `0` after help or successful LUND creation; `1` when configuration preparation or event
- *         creation throws a `std::exception`.
+ * @return 0 after printing help or completing the run; 1 when setting preparation or LUND creation reports
+ *         a standard C++ exception.
  *
- * @note This executable creates deliberately unphysical uniform acceptance samples. It does not
- *       convert physical event-generator input or submit GEMC jobs.
+ * @note This program creates deliberately random detector-test samples. It does not convert physical
+ *       event-generator input or submit GEMC simulation jobs.
  *
- * @throws Nothing for standard configuration or uniform LUND creator failures: they are caught here and
- *         rendered to standard error. Non-standard exceptions are outside this boundary.
+ * @note Exceptions that do not derive from std::exception are not caught and may leave this function.
  */
 int main(int argc, char** argv) {
-    // Select the uniform LUND creator's settings and help text.
+    // Select the settings and help text for the uniform LUND creator.
     constexpr auto source = samples::LundSource::Uniform;
 
     try {
-        // Print help only when it is the sole user argument.
-        if (argc == 2 && std::string(argv[1]) == "--help") {
+        // Print help only when `--help` is the sole user-supplied argument.
+        if ((argc == 2) && (std::string(argv[1]) == "--help")) {
             std::cout << samples::buildHelpText(source);
             return 0;
         }
 
-        // Check every option before output can be replaced.
+        // Build and check every setting before generateUniform() may replace the run directory.
         samples::generateUniform(samples::RunConfig::createFromCommandLine(argc, argv, source));
 
-        // Generation finished successfully.
+        // All requested output and the completion manifest were written.
         return 0;
     } catch (const std::exception& error) {
-        // Reset the color before the error text and return failure.
+        // Print one standard project error and return failure to the calling shell.
         std::cerr << env::ERROR_COLOR << "Error:" << env::RESET_COLOR << ' ' << error.what() << '\n';
 
         return 1;

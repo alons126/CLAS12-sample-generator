@@ -4,64 +4,72 @@
 
 /**
  * @file UniformConfig.h
- * @brief Stores uniform-generator settings in their C++ types.
+ * @brief Converts checked text settings into values used by the uniform LUND creator.
  *
  * Purpose:
- *   Convert the final RunConfig text into numbers, flags, and enums before the event loop.
+ *   RunConfig keeps settings as text so they can be recorded exactly in the run manifest. Repeated text
+ *   comparisons and number conversions do not belong inside the event loop. UniformConfig converts those
+ *   settings once before event creation starts.
  *
  * Workflow:
- *   RunConfig checks the text settings -> UniformConfig converts them -> UniformGenerator uses them.
+ *   RunConfig checks and completes the text settings. The UniformConfig constructor copies them into
+ *   numbers, true/false choices, and named channel and hadron values. The uniform LUND creator then reads
+ *   those converted values while creating every event.
  *
  * Scope:
- *   This object stores particle and kinematic settings only. Output, formatting, RNG seeds, and target
- *   geometry remain in RunConfig.
+ *   UniformConfig stores only particle choices and particle-motion settings. Output paths, LUND text
+ *   formatting, random seeds, and the target geometry remain in RunConfig.
  */
 
 #pragma once
+
 #include "core/config/RunConfig.h"
 #include "core/lund/Event.h"
 
 namespace samples {
 
-// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
+// Uniform-event settings ------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Public interface */
+#pragma region /* Uniform-event settings */
 
-// UniformChannel object -------------------------------------------------------------------------------------------------------------------------------------------------
+// Uniform event type ----------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* UniformChannel object */
+#pragma region /* Uniform event type */
 /**
  * @enum UniformChannel
- * @brief Event type selected from the checked channel setting.
+ * @brief Names the kind of random test event to create.
  *
  * Purpose:
- *   Let the event loop choose an event type without comparing text for every event.
+ *   The `channel` setting begins as text such as `1e` or `eh`. Converting it once to UniformChannel lets
+ *   the event loop choose the correct particles without comparing that text for every event.
  *
  * Creation and use:
- *   UniformConfig converts the checked channel string to this enum. UniformGenerator uses it to choose
- *   the number of particles and their sampling rules.
+ *   UniformConfig converts the checked text into one value below. The uniform LUND creator uses that value
+ *   to choose the number of particles and how their motion is sampled.
  *
  * Meaning:
- *   Electron writes one sampled electron. ElectronHadron writes a trigger electron followed
- *   by the separately selected proton, neutron, pi+, or pi-. Both are acceptance probes.
+ *   Electron creates one electron with sampled momentum and angles. ElectronTester creates one electron at
+ *   beam momentum while scanning its angles. ElectronHadron creates a trigger electron followed by the
+ *   selected proton, neutron, positive pion, or negative pion. These are detector tests, not physical
+ *   interaction models.
  */
 enum class UniformChannel {
-    Electron,        ///< `1e`: one generated electron.
-    ElectronTester,  ///< `electron-tester`: one beam-momentum electron for the angular scan.
+    Electron,        ///< `1e`: one electron with sampled momentum and angles.
+    ElectronTester,  ///< `electron-tester`: one beam-momentum electron with sampled angles.
     ElectronHadron,  ///< `eh`: trigger electron followed by the selected hadron.
 };
 #pragma endregion
 
-// HadronSpecies object --------------------------------------------------------------------------------------------------------------------------------------------------
+// Selected hadron -------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* HadronSpecies object */
+#pragma region /* Selected hadron */
 /**
  * @enum HadronSpecies
- * @brief Hadron selected by `--hadron` for an electron-hadron sample.
+ * @brief Names the second particle in an electron-hadron test event.
  *
  * Creation and use:
- *   UniformConfig converts the checked `--hadron` text to one value. The generator uses that value
- *   with hadron_pid to choose the particle written after the trigger electron.
+ *   UniformConfig converts the checked `hadron` setting into one value below. The uniform LUND creator
+ *   uses it together with hadron_pid to create the particle written after the trigger electron.
  */
 enum class HadronSpecies {
     Proton,   ///< Proton selected by `--hadron proton`.
@@ -71,85 +79,83 @@ enum class HadronSpecies {
 };
 #pragma endregion
 
-// Resolve string settings once, outside the production event loop.
+// Converted uniform settings --------------------------------------------------------------------------------------------------------------------------------------------
 
-// UniformConfig object --------------------------------------------------------------------------------------------------------------------------------------------------
-
-#pragma region /* UniformConfig object */
+#pragma region /* Converted uniform settings */
 /**
  * @struct UniformConfig
- * @brief Converted sampling settings used in the event loop.
+ * @brief Stores particle choices and numeric ranges in forms ready for the event loop.
  *
  * Purpose:
- *   Store the converted values needed to choose particles and sample their kinematics. It does not own
- *   the full run configuration or any changing generator state.
+ *   Keep the values needed to choose particles and randomly choose their momentum and angles. The object
+ *   does not store the complete RunConfig and does not contain a changing random-number generator.
  *
  * Creation and lifetime:
- *   Construct once from a checked RunConfig after `auto` and `sampled` have been replaced. Every value
- *   is copied, so this object does not depend on the RunConfig after construction.
+ *   Create one UniformConfig after RunConfig has replaced `auto` and the older value `sampled`. Every
+ *   needed value is copied, so the RunConfig does not need to remain alive for this object.
  *
  * Units:
- *   Beam energy is GeV, momenta are GeV/c, and all angles are degrees. UniformGenerator converts angles
- *   to radians only at ROOT TVector3/math boundaries. A and Z are dimensionless LUND header metadata.
+ *   Beam energy is measured in GeV, momentum in GeV/c, and angles in degrees. The uniform LUND creator
+ *   converts angles to radians only when calling ROOT vector or math functions. A is the total number of
+ *   protons and neutrons written in the LUND header. Z is the number of protons.
  *
  * Rules:
- *   Exactly one channel enum is selected. Electron momentum is uniform-p, mixed p and 1/p, or beam-valued.
- *   Hadron momentum is exactly one of uniform-p, mixed p and 1/p, or fixed (both flags false). Hadron
- *   theta and phi are always uniform inside their configured bounds. Target metadata and mode/channel
- *   compatibility were checked by RunConfig::validateForSource(LundSource::Uniform).
+ *   channel contains exactly one event type. Electron momentum is sampled uniformly in p, sampled with
+ *   the mixed p and 1/p method, or fixed at beam momentum. Hadron momentum is uniform, mixed, or fixed;
+ *   both hadron flags are false in fixed mode. Hadron theta and phi are always sampled uniformly inside
+ *   their configured ranges. RunConfig has already checked that all choices work together.
  */
 struct UniformConfig {
-    // Channel and sampling choices --------------------------------------------------------------------------------------------------------------------------------------
-    UniformChannel channel;          ///< Electron-only or electron-hadron branch.
-    HadronSpecies hadron;            ///< Hadron identity used by the eh branch.
-    int hadron_pid;                  ///< Centralized PDG identifier for the selected hadron.
-    bool uniform_electron_momentum;  ///< True: p~U(electron_p_min,electron_p_max).
-    bool mixed_electron_momentum;    ///< True: 1e alternates uniform-p and uniform-1/p by event ID.
-    bool uniform_hadron_momentum;    ///< True: p~U(p_min,p_max); mutually exclusive with mixed mode.
-    bool mixed_hadron_momentum;      ///< True: charged hadrons alternate uniform-p and uniform-1/p by event ID.
+    // Particle and sampling choices -------------------------------------------------------------------------------------------------------------------------------------
+    UniformChannel channel;          ///< Kind of test event to create.
+    HadronSpecies hadron;            ///< Hadron used when channel is ElectronHadron.
+    int hadron_pid;                  ///< Standard PDG integer for the selected hadron.
+    bool uniform_electron_momentum;  ///< true to choose electron momentum uniformly between its limits.
+    bool mixed_electron_momentum;    ///< true to alternate uniform-p and uniform-1/p by event ID.
+    bool uniform_hadron_momentum;    ///< true to choose hadron momentum uniformly between its limits.
+    bool mixed_hadron_momentum;      ///< true to alternate uniform-p and uniform-1/p by event ID.
 
-    // Physical ranges and trigger settings ------------------------------------------------------------------------------------------------------------------------------
-    double beam;                ///< Beam energy in GeV; also supplies the c=1 momentum-scale value.
-    double electron_theta_min;  ///< Inclusive lower electron polar-angle bound in degrees.
+    // Numeric ranges and target values ----------------------------------------------------------------------------------------------------------------------------------
+    double beam;                ///< Beam energy in GeV; beam-momentum particles use the same numeric value.
+    double electron_theta_min;  ///< Lower electron angle from the beam direction, in degrees.
     double electron_theta_max;  ///< Upper electron polar-angle bound in degrees.
-    double electron_p_min;      ///< Lower sampled electron-momentum bound in GeV/c.
-    double electron_p_max;      ///< Upper sampled electron-momentum bound in GeV/c.
-    double hadron_theta_min;    ///< Inclusive lower hadron polar-angle bound in degrees.
-    double hadron_theta_max;    ///< Upper hadron polar-angle bound in degrees.
-    double hadron_p;            ///< Fixed-mode neutron momentum in GeV/c.
-    double hadron_p_min;        ///< Lower sampled-momentum bound in GeV/c.
-    double hadron_p_max;        ///< Upper sampled-momentum bound in GeV/c.
-    double trigger_theta;       ///< Artificial trigger-electron polar angle in degrees.
-    double trigger_phi_offset;  ///< Offset from the selected opposite-sector center in degrees.
-    int A;                      ///< LUND target mass-number metadata; does not select geometry.
-    int Z;                      ///< LUND target charge-number metadata; does not select geometry.
+    double electron_p_min;      ///< Lower electron-momentum limit in GeV/c.
+    double electron_p_max;      ///< Upper electron-momentum limit in GeV/c.
+    double hadron_theta_min;    ///< Lower hadron angle from the beam direction, in degrees.
+    double hadron_theta_max;    ///< Upper hadron angle from the beam direction, in degrees.
+    double hadron_p;            ///< Neutron momentum in GeV/c when fixed mode is selected.
+    double hadron_p_min;        ///< Lower hadron-momentum limit in GeV/c.
+    double hadron_p_max;        ///< Upper hadron-momentum limit in GeV/c.
+    double trigger_theta;       ///< Trigger-electron angle from the beam direction, in degrees.
+    double trigger_phi_offset;  ///< Angle away from the chosen opposite-sector center, in degrees.
+    int A;                      ///< Total number of protons and neutrons written in the LUND header.
+    int Z;                      ///< Number of protons written in the LUND header.
 
     /**
-     * @brief Copy and convert one checked uniform configuration.
-     *
-     * @param c Checked uniform settings with all automatic values already replaced.
-     *
-     * @throws std::exception If a required setting is missing or a number cannot be read. This constructor
-     *         does not check or repair the settings.
-     *
-     * @note After validation, the only remaining channel is `eh`, and only four hadron names are allowed.
+     * @brief Constructor: Copy and convert one checked set of uniform-event settings.
+     * @param c Checked uniform LUND creator settings with every automatic value already replaced.
+     * @throws std::exception If a required setting is missing or its number cannot be converted. This
+     *                        constructor assumes RunConfig has already checked the setting combinations.
+     * @note Any channel text other than `1e` or `electron-tester` becomes ElectronHadron. Any hadron text
+     *       other than `proton`, `neutron`, or `pip` becomes PiMinus. This is safe only because
+     *       RunConfig rejects all other values first.
      */
     explicit UniformConfig(const RunConfig& c)
-        : channel(c.getText("channel") == "1e"                ? UniformChannel::Electron
-                  : c.getText("channel") == "electron-tester" ? UniformChannel::ElectronTester
-                                                              : UniformChannel::ElectronHadron),
-          hadron(c.getText("hadron") == "proton"    ? HadronSpecies::Proton
-                 : c.getText("hadron") == "neutron" ? HadronSpecies::Neutron
-                 : c.getText("hadron") == "pip"     ? HadronSpecies::PiPlus
-                                                    : HadronSpecies::PiMinus),
-          hadron_pid(c.getText("hadron") == "proton"    ? constants::proton_pdg
-                     : c.getText("hadron") == "neutron" ? constants::neutron_pdg
-                     : c.getText("hadron") == "pip"     ? constants::pi_plus_pdg
-                                                        : constants::pi_minus_pdg),
-          uniform_electron_momentum(c.getText("electron-momentum") == "uniform"),
-          mixed_electron_momentum(c.getText("electron-momentum") == "mixed"),
-          uniform_hadron_momentum(c.getText("hadron-momentum") == "uniform"),
-          mixed_hadron_momentum(c.getText("hadron-momentum") == "mixed"),
+        : channel((c.getText("channel") == "1e")                ? UniformChannel::Electron
+                  : (c.getText("channel") == "electron-tester") ? UniformChannel::ElectronTester
+                                                                : UniformChannel::ElectronHadron),
+          hadron((c.getText("hadron") == "proton")    ? HadronSpecies::Proton
+                 : (c.getText("hadron") == "neutron") ? HadronSpecies::Neutron
+                 : (c.getText("hadron") == "pip")     ? HadronSpecies::PiPlus
+                                                      : HadronSpecies::PiMinus),
+          hadron_pid((c.getText("hadron") == "proton")    ? constants::proton_pdg
+                     : (c.getText("hadron") == "neutron") ? constants::neutron_pdg
+                     : (c.getText("hadron") == "pip")     ? constants::pi_plus_pdg
+                                                          : constants::pi_minus_pdg),
+          uniform_electron_momentum((c.getText("electron-momentum") == "uniform")),
+          mixed_electron_momentum((c.getText("electron-momentum") == "mixed")),
+          uniform_hadron_momentum((c.getText("hadron-momentum") == "uniform")),
+          mixed_hadron_momentum((c.getText("hadron-momentum") == "mixed")),
           beam(c.getDouble("beam-energy")),
           electron_theta_min(c.getDouble("electron-theta-min")),
           electron_theta_max(c.getDouble("electron-theta-max")),

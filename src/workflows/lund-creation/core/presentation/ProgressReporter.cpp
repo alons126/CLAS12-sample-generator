@@ -137,11 +137,11 @@ void ProgressReporter::render(std::uint64_t completed, std::uint64_t secondary_c
     line << '[';
 
     // In a terminal, color only the completed `#` positions. Saved logs contain no color instructions.
-    if (interactive_ && filled > 0) { line << env::COMPLETION_COLOR; }
+    if (interactive_ && (filled > 0)) { line << env::COMPLETION_COLOR; }
 
     line << std::string(filled, '#');
 
-    if (interactive_ && filled > 0) { line << env::RESET_COLOR; }
+    if (interactive_ && (filled > 0)) { line << env::RESET_COLOR; }
 
     // Add the unfilled part of the bar. Reserve three spaces for the percentage number so 0%, 10%, and
     // 100% all end in the same column.
@@ -156,7 +156,7 @@ void ProgressReporter::render(std::uint64_t completed, std::uint64_t secondary_c
 
     // Show the second count only when it has both a label and a total. Show the stop reason only when the
     // caller supplies one.
-    if (!secondary_label_.empty() && secondary_total > 0) { line << " | " << secondary_label_ << ": " << secondary_completed << '/' << secondary_total; }
+    if (!secondary_label_.empty() && (secondary_total > 0)) { line << " | " << secondary_label_ << ": " << secondary_completed << '/' << secondary_total; }
     if (!outcome.empty()) { line << " | " << outcome; }
 
     // In a terminal, `\r` moves the cursor to the start of the current line, and flush sends the new text

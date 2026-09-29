@@ -124,7 +124,7 @@ double TargetGeometry::getMass(int pid) {
 void TargetGeometry::validateGeometryName(const std::string& name) {
     // find() looks for the name without accidentally adding an empty geometry when the name is missing.
     const auto found = external_targets::targets.find(name);
-    if (found == external_targets::targets.end() || found->second.empty()) { throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name); }
+    if ((found == external_targets::targets.end()) || found->second.empty()) { throw std::runtime_error("Unknown or empty target geometry in targets.h: " + name); }
 }
 #pragma endregion
 

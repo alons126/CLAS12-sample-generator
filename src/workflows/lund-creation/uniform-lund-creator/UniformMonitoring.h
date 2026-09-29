@@ -4,16 +4,24 @@
 
 /**
  * @file UniformMonitoring.h
- * @brief Declares the plots created for uniform samples.
+ * @brief Defines the monitoring plots used to check uniform LUND events.
  *
  * Purpose:
- *   Store uniform monitoring histograms in one ROOT file and draw them with the documented layout.
- *   Every Vz histogram uses -8 to 5 cm to cover the target positions of all RG-M targets. Physical
- *   conversion does not use this class.
+ *   Monitoring plots let the user check that the uniform LUND creator produced the expected momentum,
+ *   angles, and event positions. UniformMonitoring collects those values in ROOT histograms, saves all
+ *   histograms in one ROOT file, and draws them as a PDF and separate PNG images. The physical LUND
+ *   converter does not create these plots.
  *
  * Workflow:
- *   Construct from the resolved uniform sample identity -> fill after each written event -> save one
- *   ROOT file -> render the same ordered histograms as a PDF and numbered PNG files.
+ *   Create one object for the selected sample. After each event is written successfully, call
+ *   addEventToHistograms() with that event. After the event loop ends, call
+ *   saveHistogramsAndRenderPlots(). It writes the histograms to one ROOT file and draws the same plots, in
+ *   the same order, into one multipage PDF and numbered PNG files.
+ *
+ * Plot ranges:
+ *   Every z-position plot covers -8 through 5 centimeters so it can show events from every supported RG-M
+ *   target. Momentum plots extend slightly above the beam energy. Angular and other position ranges depend
+ *   on the selected channel and detector region.
  */
 
 #pragma once
@@ -26,60 +34,68 @@
 
 namespace samples {
 
-// UniformMonitoring object ----------------------------------------------------------------------------------------------------------------------------------------------
+// Uniform monitoring plots ----------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* UniformMonitoring object */
+#pragma region /* Uniform monitoring plots */
 
 /**
  * @class UniformMonitoring
- * @brief Own all monitoring histograms for one uniform channel.
+ * @brief Owns and fills all monitoring histograms for one uniform sample.
  *
  * Purpose:
- *   Create the correct plots for 1e, electron-tester, and every supported electron-hadron sample.
- *   Electron-hadron ROOT names and titles include FD or CD.
+ *   Create only the plots needed by the selected channel. A one-electron sample, the electron test, and an
+ *   electron-hadron sample each use a different plot set. Electron-hadron plot names and titles include
+ *   FD for the forward detector or CD for the central detector.
  *
  * Ownership and lifetime:
- *   The private implementation owns the ROOT histograms for one run. The object cannot be copied and
- *   must stay alive from before the event loop until save() finishes.
+ *   The hidden Impl object owns every ROOT histogram. UniformMonitoring cannot be copied. Create it before
+ *   the event loop and keep it alive until saveHistogramsAndRenderPlots() has finished.
  *
  * Rules:
- *   sample_label is one resolved uniform label. Electron-hadron events contain the configured hadron
- *   after the electron. Momentum is GeV, angles are degrees, and vertices are centimeters in plots.
+ *   sample_label is a final uniform sample label. Electron-hadron events must contain the configured
+ *   hadron after the electron. Plot momentum is measured in GeV/c, angles in degrees, and event positions
+ *   in centimeters.
  */
 class UniformMonitoring {
    public:
     /**
-     * @brief Allocate the complete ordered histogram set for one uniform sample.
-     * @param sample_label Resolved label such as `1e`, `electron-tester`, `epFD`, or `epipCD`.
-     * @param hadron_pid Configured hadron PDG code; ignored for electron-only channels.
-     * @param beam Beam energy in GeV, used for momentum-axis limits.
-     * @throws std::runtime_error If the hadron PDG code is not supported. Memory errors also propagate.
+     * @brief Constructor: Create the complete ordered plot set for one uniform sample.
+     * @param sample_label Final label such as `1e`, `electron-tester`, `epFD`, or `epipCD`.
+     * @param hadron_pid Standard PDG integer for the configured hadron. Electron-only channels ignore it.
+     * @param beam Beam energy in GeV. Momentum axes extend to 110% of this value.
+     * @throws std::runtime_error If an electron-hadron sample uses an unsupported hadron.
+     * @throws std::bad_alloc If memory for a histogram cannot be allocated.
      */
     UniformMonitoring(std::string sample_label, int hadron_pid, double beam);
 
-    /** @brief Release the private implementation and its detached ROOT histograms. */
+    /** @brief Destructor: Release the hidden implementation and every ROOT histogram it owns. */
     ~UniformMonitoring();
 
     /**
-     * @brief Fill every configured histogram from one successfully written event.
-     * @param event Uniform event to read. It is not stored or changed.
-     * @throws std::runtime_error If the event lacks a required electron or hadron.
+     * @brief Add one successfully written event to every plot that uses its values.
+     * @param event Uniform event to read. The object does not store or change it.
+     * @throws std::runtime_error If the event does not contain a required electron or hadron.
      */
-    void fill(const Event& event);
+    void addEventToHistograms(const Event& event);
 
     /**
-     * @brief Write one ROOT file and render the same histograms for the completed uniform run.
-     * @param path Destination `<prefix>__monitoring_plots.root` file.
-     * @param plot_directory Destination directory for rendered files.
-     * @param pdf_name Multipage PDF filename inside plot_directory.
-     * @throws std::runtime_error If ROOT cannot create or write an output. Directory errors also propagate.
+     * @brief Save the histograms and draw them for the completed uniform run.
+     * @param path ROOT output file named `<prefix>__monitoring_plots.root`.
+     * @param plot_directory Directory that receives the PDF and PNG files.
+     * @param pdf_name Name of the multipage PDF inside plot_directory.
+     * @throws std::runtime_error If ROOT cannot create the file or write a histogram.
+     * @throws std::filesystem::filesystem_error If the plot directory cannot be created.
      */
-    void save(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name);
+    void saveHistogramsAndRenderPlots(const std::filesystem::path& path, const std::filesystem::path& plot_directory, const std::string& pdf_name);
 
+    // Hidden ROOT state -------------------------------------------------------------------------------------------------------------------------------------------------
    private:
-    /** @struct Impl @brief Stores the ordered histograms and the values used to fill their axes. */
+    /**
+     * @struct Impl
+     * @brief Stores the histograms and their axis instructions without exposing ROOT details in this header.
+     */
     struct Impl;
-    std::unique_ptr<Impl> impl_;  ///< Histograms and fill settings for one uniform run.
+    std::unique_ptr<Impl> impl_;  ///< Owns the histograms and their fill instructions for this run.
 };
 
 #pragma endregion

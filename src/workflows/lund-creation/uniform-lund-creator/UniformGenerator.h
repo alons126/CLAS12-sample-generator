@@ -4,61 +4,64 @@
 
 /**
  * @file UniformGenerator.h
- * @brief Declares uniform LUND sample generation.
+ * @brief Provides the function that creates one complete uniform LUND sample.
  *
  * Purpose:
- *   Provide one function that creates unphysical CLAS12 acceptance samples. Sampling,
- *   target vertices, LUND writing, and monitoring stay inside the implementation.
+ *   A uniform sample sends particles across chosen momentum and angle ranges so the user can study where
+ *   CLAS12 detects them. The events are deliberately random test events, not simulated interactions.
+ *   generateUniform() creates those events, chooses their positions inside the target, writes the LUND
+ *   files, and saves plots that show the generated values.
  *
  * Workflow:
- *   Read a uniform RunConfig -> call generateUniform() -> use the LUND files, plots, and run log.
+ *   Build and check a RunConfig for the uniform LUND creator, then pass it to generateUniform(). A normal
+ *   return means the run directory contains its LUND files, monitoring output, and completion manifest.
  *
  * Scope:
- *   The code generates configured 1e or electron-hadron probes from random kinematics. It is not a
- *   physics interaction model and does not read or run an event generator. Physical event conversion
- *   uses the separate physical workflow.
+ *   The function creates one-electron, electron-test, or electron-hadron test events from configured
+ *   random momentum and angles. It does not model a physical interaction, read event-generator input, run
+ *   an external event generator such as GENIE, or submit detector-simulation jobs.
  */
 
 #pragma once
+
 #include "core/config/RunConfig.h"
 
 namespace samples {
 
-// Public interface ------------------------------------------------------------------------------------------------------------------------------------------------------
+// Uniform LUND creation -------------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Public interface */
+#pragma region /* Uniform LUND creation */
 /**
- * @brief Generate the requested acceptance channel and its completed run outputs.
+ * @brief Create the requested uniform test events and all completed-run output.
  *
  * Purpose:
- *   Produce one uniform acceptance run using the shared target, LUND writer, naming, settings record,
- *   and completion marker.
+ *   Produce a sample that covers the configured particle ranges and can later be passed to detector
+ *   simulation. Use the shared target-position rules, LUND writer, output naming, manifest, and completion
+ *   marker.
  *
  * Workflow:
- *   1. Check and store the settings.
- *   2. Start separate random streams for particle motion and vertices.
- *   3. Prepare the output directory and plots.
- *   4. Create events until the requested count is written. All particles in one event share one vertex.
- *   5. Save the plots, close the LUND files, and write the completion log.
+ *   1. Check the final settings and convert them to event-loop values.
+ *   2. Start one random-number generator for particle motion and another for target positions.
+ *   3. Replace and prepare the exact run directory, then create the monitoring plots.
+ *   4. Create and write events until the requested count is reached. Every particle in one event receives
+ *      the same target position.
+ *   5. Save the monitoring output, close the LUND files, and publish the completion manifest.
  *
- * @param config Checked settings returned by
- *               RunConfig::createFromCommandLine(..., LundSource::Uniform). The function reads them during
- *               the call and does not store or change them. Momentum uses GeV/c, beam energy uses GeV,
- *               angles use degrees, and vertices use cm.
- *
- * @return Nothing. Normal return means the events, plots, and completion log were written.
- *         Progress shows written events over the requested count while generation is active.
- *
- * @throws std::exception If checking, vertex sampling, output setup, LUND writing, or plot writing fails.
- *
- * @note Every particle in an event gets the same vertex. Separate random streams keep vertex draws from
- *       changing the particle-motion sequence.
- *
- * @note Uniform files default to 25,000 events each. `events-per-file` remains configurable, and the
- *       completion log supplies each actual file count to job submission.
- *
- * @note Production uses the configured flat-theta ranges. The 1e electron and charged hadrons alternate
- *       uniform-p and uniform-1/p events. Neutrons use uniform p; only neutrons may use fixed 1 GeV/c.
+ * @param config Checked settings returned by RunConfig::createFromCommandLine() with
+ *               LundSource::Uniform. The function reads but does not change them. Momentum uses GeV/c,
+ *               beam energy uses GeV, angles use degrees, and target positions use centimeters.
+ * @return Nothing. Normal return means all requested events, monitoring output, and the completion
+ *         manifest were written.
+ * @throws std::exception If setting checks, target-position sampling, directory preparation, LUND writing,
+ *                        or monitoring output fails.
+ * @note A vertex is the x, y, and z position of the event inside the target. Separate random-number
+ *       generators ensure that choosing this position does not change the sequence used for particle
+ *       momentum and angles.
+ * @note Each LUND file holds 25,000 events by default. `events-per-file` can change that limit. The
+ *       manifest records the actual count in each file for later simulation submission.
+ * @note Theta is chosen with equal probability across its configured angle range. In mixed momentum mode,
+ *       even event IDs choose p uniformly and odd event IDs choose 1/p uniformly. Neutrons instead use
+ *       uniform p and are the only hadrons allowed to use fixed 1 GeV/c momentum.
  */
 void generateUniform(const RunConfig& config);
 #pragma endregion
