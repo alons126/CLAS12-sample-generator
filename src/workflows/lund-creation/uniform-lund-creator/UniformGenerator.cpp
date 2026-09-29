@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 15/09/2026.
-//
-
 /**
  * @file UniformGenerator.cpp
  * @brief Creates random electron and electron-hadron LUND events for detector tests.

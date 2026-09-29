@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file TargetGeometry.h
  * @brief Provides LUND vertex positions and particle masses stored in the external targets.h.

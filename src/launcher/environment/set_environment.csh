@@ -1,9 +1,5 @@
 #!/bin/tcsh
 
-#
-# Created by Alon Sportes on 15/09/2026.
-#
-
 # set_environment.csh ----------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Set the shared project environment for the current checkout and host.

@@ -1,7 +1,3 @@
-#
-# Created by Alon Sportes on 19/09/2026.
-#
-
 # Ifarm submission -------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #     Install the external worker used by submitted array tasks.

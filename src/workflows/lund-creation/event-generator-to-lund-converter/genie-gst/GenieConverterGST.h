@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 26/02/2026.
-//
-
 /**
  * @file GenieConverterGST.h
  * @brief Declares the reader that copies GENIE GST events into LUND files.

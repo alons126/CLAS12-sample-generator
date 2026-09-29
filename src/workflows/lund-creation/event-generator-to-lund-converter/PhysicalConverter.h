@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 16/09/2026.
-//
-
 /**
  * @file PhysicalConverter.h
  * @brief Declares how the physical LUND converter selects an input-file reader.

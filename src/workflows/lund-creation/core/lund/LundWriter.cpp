@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file LundWriter.cpp
  * @brief Creates the run directory, writes numbered LUND files, and publishes the completed-run manifest.

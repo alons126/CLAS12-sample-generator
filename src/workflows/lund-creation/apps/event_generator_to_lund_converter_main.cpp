@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 26/02/2026.
-//
-
 /**
  * @file event_generator_to_lund_converter_main.cpp
  * @brief Starts the physical LUND converter from the command line.

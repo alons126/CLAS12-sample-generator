@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 19/09/2026.
-//
-
 /**
  * @file UniformMonitoring.h
  * @brief Defines the monitoring plots used to check uniform LUND events.

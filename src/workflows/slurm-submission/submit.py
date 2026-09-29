@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-#
-# Created by Alon Sportes on 21/09/2026.
-#
-
 """Preview or submit completed LUND samples on ifarm.
 
 Purpose:

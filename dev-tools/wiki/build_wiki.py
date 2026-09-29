@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-#
-# Created by Alon Sportes on 24/09/2026.
-#
-
 """Build GitHub Wiki pages from the project's Markdown files.
 
 Purpose:

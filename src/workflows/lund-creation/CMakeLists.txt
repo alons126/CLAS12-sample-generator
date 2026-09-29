@@ -1,7 +1,3 @@
-#
-# Created by Alon Sportes on 14/09/2026.
-#
-
 # src/workflows/lund-creation/CMakeLists.txt -----------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   C++ libraries grouped by their job.

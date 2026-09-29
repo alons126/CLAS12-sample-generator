@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file RunConfig.cpp
  * @brief Combines defaults, a configuration file, and command-line values into checked run settings.

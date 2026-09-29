@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 15/09/2026.
-//
-
 /**
  * @file UniformConfig.h
  * @brief Converts checked text settings into values used by the uniform LUND creator.

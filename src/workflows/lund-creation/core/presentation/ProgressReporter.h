@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 27/09/2026.
-//
-
 /**
  * @file ProgressReporter.h
  * @brief Shows how many LUND events have been processed while a workflow is running.

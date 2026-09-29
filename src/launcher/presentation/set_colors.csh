@@ -1,9 +1,5 @@
 #!/bin/tcsh
 
-#
-# Created by Alon Sportes on 15/09/2026.
-#
-
 # Terminal color environment --------------------------------------------------
 
 # Description:

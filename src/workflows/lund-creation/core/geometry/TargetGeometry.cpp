@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file TargetGeometry.cpp
  * @brief Gets LUND vertex positions and particle masses from the external targets.h file.

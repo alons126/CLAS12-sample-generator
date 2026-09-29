@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 15/09/2026.
-//
-
 /**
  * @file UniformGenerator.h
  * @brief Provides the function that creates one complete uniform LUND sample.

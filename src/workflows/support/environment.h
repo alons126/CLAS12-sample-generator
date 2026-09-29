@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 26/02/2026.
-//
-
 /**
  * @file environment.h
  * @brief Provides the project-wide terminal colors for C++ output.

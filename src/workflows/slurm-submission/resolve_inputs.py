@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-#
-# Created by Alon Sportes on 19/09/2026.
-#
-
 """Check and prepare settings for completed LUND samples.
 
 Purpose:

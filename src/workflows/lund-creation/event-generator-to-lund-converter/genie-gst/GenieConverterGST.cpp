@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 26/02/2026.
-//
-
 /**
  * @file GenieConverterGST.cpp
  * @brief Reads GENIE GST data and writes the supported events as LUND records.

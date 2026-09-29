@@ -1,7 +1,3 @@
-#
-# Created by Alon Sportes on 19/09/2026.
-#
-
 # src/launcher/CMakeLists.txt --------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Build boundary for the shared local and ifarm launcher.

@@ -1,9 +1,5 @@
 #!/bin/tcsh
 
-#
-# Created by Alon Sportes on 14/09/2026.
-#
-
 # code_updater.csh -------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Refresh the disposable ifarm checkout from its configured remote branch.

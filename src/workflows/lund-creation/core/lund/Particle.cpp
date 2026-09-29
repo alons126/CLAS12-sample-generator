@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file Particle.cpp
  * @brief Gets the mass needed to write a supported particle to a LUND file.

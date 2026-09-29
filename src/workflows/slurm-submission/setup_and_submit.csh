@@ -1,9 +1,5 @@
 #!/bin/tcsh
 
-#
-# Created by Alon Sportes on 19/09/2026.
-#
-
 # Submission shell bridge -----------------------------------------------------
 # Description:
 #     Connect the sourced launcher to the Python submission program.

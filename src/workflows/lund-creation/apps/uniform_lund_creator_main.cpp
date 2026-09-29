@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 26/02/2026.
-//
-
 /**
  * @file uniform_lund_creator_main.cpp
  * @brief Reads command-line settings and starts the uniform LUND creator.

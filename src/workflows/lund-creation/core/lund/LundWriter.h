@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file LundWriter.h
  * @brief Writes events to numbered LUND files and records the completed run.

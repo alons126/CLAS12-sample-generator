@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file TargetCatalog.cpp
  * @brief Stores the supported targets and chooses the matching GEMC target setup.

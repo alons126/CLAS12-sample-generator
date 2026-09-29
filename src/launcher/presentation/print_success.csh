@@ -1,9 +1,5 @@
 #!/bin/tcsh
 
-#
-# Created by Alon Sportes on 14/09/2026.
-#
-
 # print_success.csh -----------------------------------------------------------
 # Description:
 #   Print the banner for a completed workflow.

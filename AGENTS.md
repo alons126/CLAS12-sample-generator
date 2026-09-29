@@ -14,7 +14,7 @@ Write code explanations in simple, direct terms that a newcomer can understand. 
 
 When explaining unfamiliar behavior, begin with a concrete example and the visible result. Explain why the code is necessary before describing how it works. Define every unfamiliar term in plain language where it first appears. Do not replace one unexplained technical term with another. Assume the reader knows the programming language but not the terminal, operating system, library, file format, or scientific subsystem involved.
 
-Give every maintained C++ header and source file exactly one file-level Doxygen block near its beginning, after the ownership header and before includes or `#pragma once`. Include `@file`, a concise `@brief`, and the additional categories needed to explain that file's role. A header's file brief documents the public interface, exposed types and usage contract. Its matching `.cpp` brief documents that translation unit's implementation responsibilities, workflow, internal boundaries and implementation-specific assumptions or failure behavior. Keep both briefs: the presence of a header brief does not replace the source brief. Do not copy the same description between them. For a header-only component, describe both its public contract and inline implementation in its single header brief. For a source-only application, describe the complete file purpose and workflow in that source brief.
+Give every maintained C++ header and source file exactly one file-level Doxygen block at its beginning, before includes or `#pragma once`. Include `@file`, a concise `@brief`, and the additional categories needed to explain that file's role. A header's file brief documents the public interface, exposed types and usage contract. Its matching `.cpp` brief documents that translation unit's implementation responsibilities, workflow, internal boundaries and implementation-specific assumptions or failure behavior. Keep both briefs: the presence of a header brief does not replace the source brief. Do not copy the same description between them. For a header-only component, describe both its public contract and inline implementation in its single header brief. For a source-only application, describe the complete file purpose and workflow in that source brief.
 
 Place the complete Doxygen contract for a public or otherwise separately declared C++ function at its declaration, normally in the header. Do not repeat that contract above the out-of-line definition in a `.cpp` file. Use ordinary implementation comments there only when they explain a non-obvious algorithm, invariant, performance choice, or external boundary. A function defined only in a `.cpp` file, including a translation-unit-private helper or command-line entry point, must carry its complete Doxygen contract at that definition. An inline function defined in a header is documented once at that definition. Brief forwarding functions and accessors should have concise declaration contracts and at most one implementation comment explaining why the forwarding boundary exists.
 
@@ -36,15 +36,7 @@ For a maintained command-line entry point or a wrapper that documents forwarded 
 
 ## Maintained C++ formatting
 
-Apply these rules to maintained C++ source and header files. Do not apply them to protected external or archived sources. Unless a later instruction explicitly says otherwise, none of the code-format or ownership-header rules in this section apply to `.clang-format`, `.vscode/c_cpp_properties.json`, `.vscode/settings.json`, any `*.conf` file, or Git control files such as `.gitignore`, `.gitattributes`, and `.gitmodules`.
-
-- Begin every maintained C++ source and header file with this ownership header, using the file's actual creation date:
-
-  ```cpp
-  //
-  // Created by Alon Sportes on <creation date>.
-  //
-  ```
+Apply these rules to maintained C++ source and header files. Do not apply them to protected external or archived sources. Unless a later instruction explicitly says otherwise, none of the code-format rules in this section apply to `.clang-format`, `.vscode/c_cpp_properties.json`, `.vscode/settings.json`, any `*.conf` file, or Git control files such as `.gitignore`, `.gitattributes`, and `.gitmodules`.
 
 - Leave exactly one blank line before every `#pragma region` and after every `#pragma endregion`.
 - Leave exactly one blank line after the file's include block.
@@ -65,7 +57,7 @@ For maintained C++, the repository `.clang-format` output is authoritative where
 - Blank-line requirements around `#pragma region`, `#pragma endregion`, banners, includes, and namespace-usage declarations apply only where clang-format preserves those blank lines. The formatter may remove blank lines at the beginning or end of a block, and that formatted result is compliant.
 - Run clang-format after manual C++ formatting changes and treat the resulting layout as the final code format.
 
-Every maintained source-code file and maintained script in another language must begin with the analogous `Created by Alon Sportes on <creation date>.` ownership header using that language's comment syntax. When a script begins with an interpreter directive such as `#!/usr/bin/env python3` or `#!/bin/tcsh`, keep the shebang on the first line, leave exactly one blank line, and then place the ownership header. Use the actual creation date recorded in an existing header or recover it from repository history; never guess or silently substitute the modification date. Ownership headers are required only in source code and scripts. Do not add them to documentation, example-command lists, configuration or profile files regardless of extension, data files, generated outputs, or other non-code resources. These ownership-header requirements also do not apply to protected external or archived files; `.clang-format`; `.vscode/c_cpp_properties.json`; `.vscode/settings.json`; or Git control files such as `.gitignore`, `.gitattributes`, and `.gitmodules`, unless explicitly requested.
+Do not add personal ownership, authorship, or creation-credit headers to project files. Git history records authorship and the project is designed for collaborative development. When a script begins with an interpreter directive such as `#!/usr/bin/env python3` or `#!/bin/tcsh`, keep the shebang on the first line and leave exactly one blank line before the file-level explanation or executable code.
 
 Use module/function docstrings and `# region` / `# endregion` comment markers for Python. Use description, purpose, workflow, inputs/outputs, usage and named comment regions for shell scripts. Keep shebangs first and preserve sourced-shell exit-status behavior.
 

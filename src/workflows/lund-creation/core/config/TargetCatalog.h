@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file TargetCatalog.h
  * @brief Lists supported target materials and selects the settings used to simulate them.

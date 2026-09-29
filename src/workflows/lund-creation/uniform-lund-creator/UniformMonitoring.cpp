@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 19/09/2026.
-//
-
 /**
  * @file UniformMonitoring.cpp
  * @brief Builds, fills, saves, and draws the plots used to check uniform LUND events.

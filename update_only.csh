@@ -1,9 +1,5 @@
 #!/bin/tcsh
 
-#
-# Created by Alon Sportes on 14/09/2026.
-#
-
 # update_only.csh --------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   C-shell entry point for refreshing the disposable ifarm checkout without building or running a workflow.

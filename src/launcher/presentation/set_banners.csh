@@ -1,9 +1,5 @@
 #!/bin/tcsh
 
-#
-# Created by Alon Sportes on 20/09/2026.
-#
-
 # set_banners.csh --------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
 #   Define the shared title and subtitle banner helpers.

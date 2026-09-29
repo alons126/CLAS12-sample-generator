@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 14/09/2026.
-//
-
 /**
  * @file RunConfig.h
  * @brief Reads run settings, checks them, and makes their final values available to the LUND workflow.

@@ -1,7 +1,3 @@
-//
-// Created by Alon Sportes on 27/09/2026.
-//
-
 /**
  * @file ProgressReporter.cpp
  * @brief Prints a changing progress line in a terminal or occasional progress lines in a saved log.
