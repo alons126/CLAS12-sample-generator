@@ -28,7 +28,7 @@
  *
  * Adding an input format:
  *   Add one format reader and one selection branch in convertPhysical(). Reuse the existing code for
- *   target positions, LUND writing, filenames, file splitting, and the run log.
+ *   vertex positions, LUND writing, filenames, file splitting, and the run log.
  *
  * Failure:
  *   An unknown `event-generator` value is rejected before input conversion begins. Other errors are

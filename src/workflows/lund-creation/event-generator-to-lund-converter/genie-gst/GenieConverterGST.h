@@ -16,7 +16,7 @@
  *
  * Inputs:
  *   RunConfig gives the input files, output location, event limits, beam energy, target shape, target A
- *   and Z values, and the random seed used to choose event positions inside the target.
+ *   and Z values, and the random seed used to choose vertex positions.
  *
  * Outputs:
  *   The physical LUND converter writes split LUND text files and a JSON run log. It does not run GENIE,
@@ -83,7 +83,7 @@ namespace samples {
  *
  * Failure:
  *   Throws on invalid settings, empty or incompatible input, mismatched array lengths, an input with no
- *   supported interactions, failure to choose an event position, or output failure. A failed run does not
+ *   supported interactions, failure to choose a vertex position, or output failure. A failed run does not
  *   write a completion log, although partial files may remain for inspection.
  *
  * @param config Final input, output, target, event-limit, and naming settings read during this call.

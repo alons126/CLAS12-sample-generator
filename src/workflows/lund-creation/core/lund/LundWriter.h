@@ -96,7 +96,7 @@ class LundWriter {
 
     /**
      * @brief Write one event and increase the counts after the complete event is written.
-     * @param event Event to write. Particle order, header values, and event positions stay unchanged. The
+     * @param event Event to write. Particle order, header values, and vertex positions stay unchanged. The
      *              writer calculates each particle's energy from its momentum and mass.
      * @throws std::exception If the run has reached its event limit, the event contains no particles or
      *                        invalid numeric values, its ID does not fit the LUND header integer field, or

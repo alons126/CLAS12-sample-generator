@@ -27,7 +27,7 @@
  *   --events N                          Set the number of events to write (required).
  *   --events-per-file N                 Split output after N events (default: uniform 25000; physical 10000).
  *   --seed N                            Set the uniform particle-motion seed (default: 67890).
- *   --vertex-seed N                     Set the target-position seed (default: 12345).
+ *   --vertex-seed N                     Set the vertex-position seed (default: 12345).
  *   --prefix NAME                       Set the LUND filename prefix (default: auto from run settings).
  *
  * CLI options (uniform LUND creator):
@@ -289,7 +289,7 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
 
 #pragma region /* Built-in defaults */
     // Keep settings as text so the manifest records their exact final values. These defaults select the
-    // usual RG-M beam and argon target. Particle motion and target positions use separate random seeds.
+    // usual RG-M beam and argon target. Particle motion and vertex positions use separate random seeds.
     // Particle masses come from targets.h and are not configuration settings.
     RunConfig c;
     c.values_ = {{"beam-energy", "5.98636"},
@@ -407,7 +407,7 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
 
     // Find the selected target material. Its A value is the total number of protons and neutrons, and its
     // Z value is the number of protons. The target and beam energy select the usual GEMC target setup. That
-    // setup also supplies the targets.h geometry used to choose event positions. The user may name a
+    // setup also supplies the targets.h geometry used to choose vertex positions. The user may name a
     // different compatible GEMC setup for an unusual run.
     const std::string A_override = c.getText("A");
     const std::string Z_override = c.getText("Z");
@@ -601,7 +601,7 @@ void RunConfig::validateForSource(LundSource source) const {
     }
 
     // In the LUND header, A is the total number of protons and neutrons and Z is the number of protons.
-    // They do not choose the target shape or event positions. Require a possible ordering: at least one
+    // They do not choose the target shape or vertex positions. Require a possible ordering: at least one
     // particle in the nucleus and no more protons than the total.
     if ((getNonnegativeInteger("A") < 1) || (getNonnegativeInteger("A") > 300) || (getNonnegativeInteger("Z") > getNonnegativeInteger("A"))) {
         throw std::runtime_error("Require 1 <= A <= 300 and 0 <= Z <= A");
@@ -615,9 +615,11 @@ void RunConfig::validateForSource(LundSource source) const {
 
 #pragma endregion
 
-#pragma region /* Target-position setting */
-    // Every event receives one randomly chosen position inside the selected target geometry. This workflow
-    // does not support a setting that forces every event to use one fixed position.
+#pragma region /* Vertex-position setting */
+    // Every event receives one vertex position from the selected target geometry. targets.h samples Vx
+    // and Vy from Gaussian beam-spot distributions. It samples Vz uniformly across liquid and Ar cells;
+    // for other geometries it places Vz at one listed target-component center. This workflow does not
+    // support an option that replaces those geometry rules with fixed user-supplied coordinates.
     TargetGeometry::validateGeometryName(getText("target-geometry"));
 #pragma endregion
 

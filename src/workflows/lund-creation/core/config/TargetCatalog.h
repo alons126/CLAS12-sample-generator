@@ -12,7 +12,7 @@
  *
  *   The selected target and beam energy also choose the usual GEMC target variation and vertex geometry.
  *   The GEMC target variation names the target setup used by detector simulation. The vertex geometry
- *   tells the external targets.h where inside that target to place each event. The user may select a
+ *   tells the external targets.h how to choose each particle's LUND vertex position. The user may select a
  *   different, compatible GEMC target variation when needed.
  *
  * Execution flow:
@@ -23,7 +23,7 @@
  *
  * Scope:
  *   This interface only looks up target information and selects setting names. It does not choose an
- *   event position inside the target, load a GEMC configuration file, or guess the target from A and Z.
+ *   vertex position, load a GEMC configuration file, or guess the target from A and Z.
  */
 
 #pragma once
@@ -61,7 +61,7 @@ struct Target {
 #pragma region /* Simulation settings */
 /**
  * @struct TargetVariation
- * @brief Connects one target material to its GEMC setup and event-position rules.
+ * @brief Connects one target material to its GEMC setup and vertex-position rules.
  *
  * `identifier` names the target setup used by GEMC detector simulation. The program records this name in
  * the run log manifest and later gives it to the simulation-submission workflow. `target` states which
@@ -71,7 +71,7 @@ struct Target {
 struct TargetVariation {
     std::string identifier;  ///< Name of the target setup used by GEMC.
     std::string target;      ///< Target material that may use this setup.
-    std::string geometry;    ///< Name of the event-position rules in targets.h.
+    std::string geometry;    ///< Name of the vertex-position rules in targets.h.
 };
 #pragma endregion
 
@@ -94,12 +94,12 @@ const std::vector<Target>& targets();
 const Target& findTarget(const std::string& identifier);
 
 /**
- * @brief Choose the GEMC target setup and event-position rules for a target.
+ * @brief Choose the GEMC target setup and vertex-position rules for a target.
  * @param target Target returned by findTarget().
  * @param beam_energy Beam energy in GeV.
  * @param override_name Use `auto` to select the usual setup for the target and beam energy. Otherwise,
  *                      give an exact compatible setup name such as `rgm_fall2021_C_S`.
- * @return The selected GEMC setup and event-position rules. The caller may read them but not change them.
+ * @return The selected GEMC setup and vertex-position rules. The caller may read them but not change them.
  * @throws std::runtime_error If `auto` cannot select a setup, the given setup name is unknown, or that
  *                            setup cannot be used with the selected target.
  */

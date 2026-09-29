@@ -9,7 +9,7 @@ flowchart TD
     BUILD["run.csh --workflow create-lund<br/>workflow.py builds the application<br/>RunConfig validates profile and CLI"]
     U["--source uniform<br/>uniform-lund-creator<br/>Sample configured acceptance kinematics"]
     P["--source physical<br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
-    SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex per event, serialize, and split"]
+    SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex position per event, serialize, and split"]
     DONE["Completed LUND files and manifest"]
     MONITORING["Uniform only<br/>ROOT, PDF, and PNG monitoring plots"]
     LOCAL["Creation can run locally<br/>It does not submit simulation jobs"]

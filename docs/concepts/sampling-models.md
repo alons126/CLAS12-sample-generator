@@ -1,6 +1,6 @@
 # Sampling models and random-number conventions
 
-Momentum is in GeV/c, mass in GeV/c², energy in GeV, vertices in cm, and configured angles in degrees. For magnitude p and angles θ,φ, the generated Cartesian momentum is
+Momentum is in GeV/c, mass in GeV/c², energy in GeV, vertex positions in cm, and configured angles in degrees. For magnitude p and angles θ,φ, the generated Cartesian momentum is
 
 \[
 (p_x,p_y,p_z)=p(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta),
@@ -41,7 +41,7 @@ Even event indices use \(p_U\); odd indices use \(p_I\). The alternation continu
 
 ## Trigger electron
 
-The `eh` trigger electron has beam momentum and θ=25°. Its φ is the closest center in {−120,−60,0,60,120,180} degrees to the direction opposite the hadron, followed by the configured beam offset. The opposite-sector correlation is not obligatory for CD hadrons; it is retained deliberately to keep the trigger electron separated from the hadron. All particles in an event share one sampled vertex.
+The `eh` trigger electron has beam momentum and θ=25°. Its φ is the closest center in {−120,−60,0,60,120,180} degrees to the direction opposite the hadron, followed by the configured beam offset. The opposite-sector correlation is not obligatory for CD hadrons; it is retained deliberately to keep the trigger electron separated from the hadron. All particles in an event share one vertex position.
 
 ## RNG ownership
 

@@ -8,7 +8,7 @@ flowchart LR
     RC --> D["convertPhysical dispatcher"]
     D --> G["GENIE GST adapter"]
     D --> N["New generator-format adapter"]
-    G --> T["TargetGeometry<br/>One vertex per written event"]
+    G --> T["TargetGeometry<br/>One vertex position per written event"]
     N --> T
     T --> E["Common Event and Particle records"]
     E --> W["LundWriter<br/>Serialization, splitting, and provenance"]
@@ -99,7 +99,7 @@ void convertMyGenerator(const RunConfig& config) {
 }
 ```
 
-The example is architectural, not a copy-ready reader. `supportedParticles` must preserve the documented source order, and every particle in one event must receive the same single sampled vertex. Use `getParticleMass()` so supported masses continue to come from the external target source. Physical adapters create no uniform monitoring histograms.
+The example is architectural, not a copy-ready reader. `supportedParticles` must preserve the documented source order, and every particle in one event must receive the same vertex position. Use `getParticleMass()` so supported masses continue to come from the external target source. Physical adapters create no uniform monitoring histograms.
 
 ## 4. Decide source-specific header semantics
 
@@ -148,7 +148,7 @@ Physical output naming includes event-generator name/version, tune, Q²/input-se
 Add a small deterministic fixture and integration cases covering:
 
 - every retained process and particle species;
-- stable particle ordering and one shared vertex;
+- stable particle ordering and one shared vertex position;
 - malformed/missing types and inconsistent arrays;
 - skipped processes/species and unsupported-only input;
 - capacity, rollover, short final input, and exact-block boundaries;

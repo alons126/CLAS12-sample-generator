@@ -66,7 +66,7 @@ One million events reproduces the tester's server default of 100 files × 10,000
 
 The pinned upstream ep/en prescription maps to uniform hadron momentum, flat theta, and a 0.3 GeV/c lower bound. `fixed` preserves the older selectable 1 GeV/c neutron mode, while the maintained production profiles activate the newer channel-dependent prescriptions.
 
-Historical comparisons require matched deterministic seeds, upstream histogram initialization, and isolated output directories. Do not source the archived `run.sh` for such a comparison because it contains repository cleanup and update commands. Account explicitly for the maintained mass source and tester-vertex behavior.
+Historical comparisons require matched deterministic seeds, upstream histogram initialization, and isolated output directories. Do not source the archived `run.sh` for such a comparison because it contains repository cleanup and update commands. Account explicitly for the maintained mass source and tester vertex-position behavior.
 
 ## 2. GENIE conversion
 

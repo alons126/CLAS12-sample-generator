@@ -30,7 +30,7 @@
  *   --events N                          Set the number of events to create (required).
  *   --events-per-file N                 Split output after N events (default: 25000).
  *   --seed N                            Set the particle-motion seed (default: 67890; 0 asks ROOT for a new seed).
- *   --vertex-seed N                     Set the target-position seed (default: 12345; 0 asks ROOT for a new seed).
+ *   --vertex-seed N                     Set the vertex-position seed (default: 12345; 0 asks ROOT for a new seed).
  *   --prefix NAME                       Set the LUND filename prefix (default: auto from run settings).
  *   --electron-theta-min DEG            Set the electron theta minimum (default: 5 degrees).
  *   --electron-theta-max DEG            Set the electron theta maximum (default: 40 degrees).
@@ -78,13 +78,10 @@ namespace env = environment;
  *
  * @param argc Number of command-line strings, including the executable name.
  * @param argv Command-line strings read during this call. main() does not change or retain them.
- *
  * @return 0 after printing help or completing the run; 1 when setting preparation or LUND creation reports
  *         a standard C++ exception.
- *
  * @note This program creates deliberately random detector-test samples. It does not convert physical
  *       event-generator input or submit GEMC simulation jobs.
- *
  * @note Exceptions that do not derive from std::exception are not caught and may leave this function.
  */
 int main(int argc, char** argv) {

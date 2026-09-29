@@ -9,7 +9,7 @@
  * Purpose:
  *   Cover configured particle momentum and angle ranges so later detector simulation can show which
  *   particles CLAS12 detects. These events are deliberately random and do not represent a physical
- *   interaction. The code uses the shared target-position, LUND-writing, progress, and monitoring tools.
+ *   interaction. The code uses the shared vertex-position, LUND-writing, progress, and monitoring tools.
  *
  * Execution flow:
  *   Check and print the settings. Start separate random-number generators for particle motion and target
@@ -18,7 +18,7 @@
  *   messages and a progress bar show what work is happening.
  *
  * Repeatability:
- *   Particle motion and target positions use separate ROOT TRandom3 objects. Choosing an event position
+ *   Particle motion and vertex positions use separate ROOT TRandom3 objects. Choosing a vertex position
  *   therefore does not consume a random value from the sequence used for momentum and angles. A nonzero
  *   seed repeats the same sequence. ROOT treats seed 0 as a request to choose a new seed, so that sequence
  *   cannot be repeated from the recorded zero alone.
@@ -167,7 +167,7 @@ void generateUniform(const RunConfig& c) {
     const UniformConfig settings(c);
     const auto channel = settings.channel;
 
-    // Use separate random-number generators for particle motion and target positions. A nonzero seed
+    // Use separate random-number generators for particle motion and vertex positions. A nonzero seed
     // repeats its sequence. ROOT chooses a new seed for TRandom3(0), so a recorded zero cannot repeat that
     // run later.
     TRandom3 random(c.getNonnegativeInteger("seed")), vertex_random(c.getNonnegativeInteger("vertex-seed"));
@@ -200,13 +200,13 @@ void generateUniform(const RunConfig& c) {
         event.id = writer.getWrittenEventCount();
 
         // In the LUND header, A is the total number of protons and neutrons and Z is the number of protons.
-        // These values do not choose the target shape or event position.
+        // These values do not choose the target shape or vertex position.
         event.A = settings.A;
         event.Z = settings.Z;
         event.beam_energy = beam;
 
-        // Choose exactly one x, y, and z position inside the target with vertex_random. Give that same
-        // position to every particle in this event.
+        // Choose exactly one vertex position with vertex_random. Give those same Vx, Vy, and Vz
+        // coordinates to every particle in this event.
         const auto vertex = geometry.sampleVertexPosition(vertex_random);
 
         // For an electron-only event, choose theta and phi with equal probability across their ranges.

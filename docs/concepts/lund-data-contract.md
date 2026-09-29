@@ -8,7 +8,7 @@ These types are defined in [Event.h](../../src/workflows/lund-creation/core/lund
 
 ## 2. Units and conventions
 
-Particle momenta are in GeV/c, masses are in GeV/c², beam and particle energies are in GeV, vertex coordinates are in centimeters, and configured sampling angles are in degrees. The writer uses natural units with c=1 and calculates particle energy as `sqrt(p²+m²)`. Uniform sampling uses ROOT's `TVector3` spherical-coordinate convention, and every particle in an event receives the same sampled interaction vertex. Written particles are active; reserved status, parent, and daughter fields are zero except for the fixed active-particle field described below.
+Particle momenta are in GeV/c, masses are in GeV/c², beam and particle energies are in GeV, vertex coordinates are in centimeters, and configured sampling angles are in degrees. The writer uses natural units with c=1 and calculates particle energy as `sqrt(p²+m²)`. Uniform sampling uses ROOT's `TVector3` spherical-coordinate convention, and every particle in an event receives the same vertex position. Written particles are active; reserved status, parent, and daughter fields are zero except for the fixed active-particle field described below.
 
 Electron, proton, neutron, and charged-pion masses come from the external target source through `TargetGeometry`; the photon mass is exactly zero. Physical inputs must provide upstream-generated neutral-pion decay photons because the converter skips residual PDG 111 entries rather than inventing missing decay kinematics.
 
@@ -41,9 +41,9 @@ The GENIE process tag and resonance identifier are project-specific uses of user
 | 7–9 | p_x, p_y, p_z |
 | 10 | Energy recomputed as sqrt(p²+m²) |
 | 11 | Mass |
-| 12–14 | Vertex x, y, z |
+| 12–14 | Vertex position Vx, Vy, Vz (cm) |
 
-The writer rejects empty events and non-finite particle energy/vertex data. GENIE `El` and `Ef` are not used to override the mass-shell energy calculation.
+The writer rejects empty events and non-finite particle energy or vertex-position data. GENIE `El` and `Ef` are not used to override the mass-shell energy calculation.
 
 ## 5. Output precision and layout
 

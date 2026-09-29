@@ -14,7 +14,7 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 | 3. Software architecture | [Architecture](architecture.md), [source reference](../development/source-reference.md) | Modules, data flow, APIs, ownership, build dependencies |
 | 4. Generation methods | [Sampling models](sampling-models.md), [uniform guide](../create-lund/uniform.md) | Equations, support, RNG streams, trigger electron |
 | 5. Physical-event conversion | [GENIE guide](../create-lund/physical.md) | GST schema, process/species selection, splitting |
-| 6. Geometry and configuration | [Configuration reference](../create-lund/configuration.md), [external inputs](external-inputs.md) | Target positions, beam/metadata choices, validation |
+| 6. Geometry and configuration | [Configuration reference](../create-lund/configuration.md), [external inputs](external-inputs.md) | Vertex positions, beam/metadata choices, validation |
 | 7. Data products and provenance | [Data contracts](lund-data-contract.md), [diagnostics](../create-lund/monitoring.md) | Field definitions, mass conventions, histograms, manifests |
 | 8. Detector processing | [Simulation and Slurm](../submit-simulation/guide.md) | Runtime environment, filenames, arguments, failure handling |
 | 9. Verification and limitations | [Scientific validation boundaries](../development/validation.md) | Intentional behavior, production evidence, and known limits |

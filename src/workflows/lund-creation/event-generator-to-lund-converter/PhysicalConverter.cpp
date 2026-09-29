@@ -8,7 +8,7 @@
  *
  * Purpose:
  *   Map the configured `event-generator` name to code that understands that input format. This file does
- *   not read event data, choose target positions, or write output.
+ *   not read event data, choose vertex positions, or write output.
  *
  * Call path:
  *   Read `event-generator` -> call exactly one matching reader -> return after it finishes, or reject an

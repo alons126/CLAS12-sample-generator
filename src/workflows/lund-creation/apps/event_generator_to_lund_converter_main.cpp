@@ -33,7 +33,7 @@
  *   --events N                          Set the maximum number of supported events to write (required).
  *   --events-per-file N                 Split after N written events and require N inclusive input entries before a later file (default: 10000).
  *   --seed N                            Record the particle-motion seed; physical conversion does not use it (default: 67890).
- *   --vertex-seed N                     Set the target-position seed (default: 12345; 0 asks ROOT for a new seed).
+ *   --vertex-seed N                     Set the vertex-position seed (default: 12345; 0 asks ROOT for a new seed).
  *   --prefix NAME                       Set the LUND filename prefix (default: auto from run settings).
  *   --help                              Print this complete option summary when used alone.
  *

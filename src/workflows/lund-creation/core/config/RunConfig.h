@@ -74,7 +74,7 @@ enum class LundSource {
  *
  * Stored values:
  *   Values stay as strings so the manifest records their exact final spelling. Beam energy is measured in GeV,
- *   momentum in GeV/c, angles in degrees, and target positions in centimeters. Counts, random seeds, A, and Z
+ *   momentum in GeV/c, angles in degrees, and vertex positions in centimeters. Counts, random seeds, A, and Z
  *   are whole numbers that cannot be negative.
  *
  * Ownership and lifetime:

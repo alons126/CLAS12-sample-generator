@@ -10,7 +10,7 @@
  *   Show the particle values produced by the uniform LUND creator so the user can spot an incorrect range,
  *   missing particle, or unexpected relationship. Each quantity is stored in one ROOT histogram. Hadron
  *   plot names include FD or CD so the detector region remains clear. Every z-position plot covers -8
- *   through 5 centimeters so all supported RG-M target positions fit.
+ *   through 5 centimeters so all supported RG-M vertex positions fit.
  *
  * Execution flow:
  *   The constructor creates the plot set for one sample. addEventToHistograms() finds the required
@@ -151,7 +151,7 @@ double quantity(const Event& event, int pid, const std::string& metric) {
 
 UniformMonitoring::UniformMonitoring(std::string sample_label, int hadron_pid, double beam) : impl_(std::make_unique<Impl>()) {
     // Use the same z-position range for every target so plots from different runs can be compared directly.
-    // This range contains all supported RG-M target positions.
+    // This range contains all supported RG-M vertex positions.
     constexpr double vertex_z_min = -8;
     constexpr double vertex_z_max = 5;
 

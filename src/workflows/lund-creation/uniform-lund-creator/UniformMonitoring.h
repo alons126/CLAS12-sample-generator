@@ -8,7 +8,7 @@
  *
  * Purpose:
  *   Monitoring plots let the user check that the uniform LUND creator produced the expected momentum,
- *   angles, and event positions. UniformMonitoring collects those values in ROOT histograms, saves all
+ *   angles, and vertex positions. UniformMonitoring collects those values in ROOT histograms, saves all
  *   histograms in one ROOT file, and draws them as a PDF and separate PNG images. The physical LUND
  *   converter does not create these plots.
  *
@@ -53,7 +53,7 @@ namespace samples {
  *
  * Rules:
  *   sample_label is a final uniform sample label. Electron-hadron events must contain the configured
- *   hadron after the electron. Plot momentum is measured in GeV/c, angles in degrees, and event positions
+ *   hadron after the electron. Plot momentum is measured in GeV/c, angles in degrees, and vertex positions
  *   in centimeters.
  */
 class UniformMonitoring {

@@ -12,7 +12,7 @@
  *
  * Execution flow:
  *   The uniform LUND creator or physical LUND converter creates an Event -> fills its header values ->
- *   adds particles in output order with one shared vertex -> LundWriter writes it -> monitoring may read
+ *   adds particles in output order with one shared vertex position -> LundWriter writes it -> monitoring may read
  *   the written event.
  */
 
@@ -58,7 +58,7 @@ constexpr int photon_pdg = 22;      ///< Photon identifier retained from physica
  * @brief Data for one particle that will be written to LUND.
  *
  * Purpose:
- *   Store the particle number, mass, momentum, and interaction position needed by the writer and
+ *   Store the particle number, mass, momentum, and LUND vertex position needed by the writer and
  *   monitoring code.
  *
  * Creation and use:
@@ -69,7 +69,7 @@ struct Particle {
     int pid;            ///< Supported PDG particle number written to LUND and used by monitoring.
     double mass;        ///< Rest mass in GeV/c², normally returned by getParticleMass().
     TVector3 momentum;  ///< Generated or input Cartesian momentum in GeV/c; the writer does not change it.
-    TVector3 vertex;    ///< Interaction position in cm; every particle in one event uses the same value.
+    TVector3 vertex;    ///< LUND vertex position in cm; every particle in one event uses the same coordinates.
 };
 #pragma endregion
 

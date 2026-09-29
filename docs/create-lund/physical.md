@@ -40,7 +40,7 @@ Missing branches, wrong types, inconsistent array lengths, empty inputs and unsu
   the GST files are produced, so that GST final-state truth contains the two photons that GEMC can
   transport and CLAS12 can detect. A residual PDG 111 entry is skipped; the converter does not invent
   a decay or replace it with photons because the required daughter four-momenta are absent.
-- Give every particle in an event the same sampled vertex.
+- Give every particle in an event the same vertex position.
 - Store `resid` in LUND header field 4.
 - Store process code 1=QE, 2=MEC, 3=RES, 4=DIS in header field 10. The converter requires and supports only these four reactions. Events with none of these flags are skipped; supporting another reaction requires updating the required GST branches, process-code mapping, validation, and documentation. When multiple supported flags are true, use the listed priority order.
 - Preserve the input entry index in header field 9.

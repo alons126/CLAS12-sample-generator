@@ -4,25 +4,27 @@
 
 /**
  * @file TargetGeometry.cpp
- * @brief Gets target positions and particle masses from the external targets.h file.
+ * @brief Gets LUND vertex positions and particle masses from the external targets.h file.
  *
  * Purpose:
- *   Every event needs one x, y, and z position inside the selected target. targets.h contains the target
- *   shapes, the code that chooses a position, and the particle masses. This file gives TargetGeometry
- *   access to those features while keeping the shared targets.h variables out of the rest of the project.
+ *   Every LUND particle record needs vertex x, y, and z coordinates. targets.h contains the target geometry,
+ *   the code that chooses a vertex position, and the particle masses. This file gives TargetGeometry access
+ *   to those features while keeping the shared targets.h variables out of the rest of the project.
  *
  * Execution flow:
  *   validateGeometryName() checks that targets.h contains the requested geometry. The uniform LUND creator
  *   and physical LUND converter call sampleVertexPosition() from one thread, so no competing thread exists
  *   today. The function still locks access to the shared targets.h random-number generator so this boundary
  *   remains safe if event processing becomes multithreaded later. It copies in the caller's generator, asks
- *   targets.h for a position, and copies the updated generator back. It rejects a position containing an
- *   infinite value or a value that is not a number.
+ *   targets.h for a vertex position, and copies the updated generator back. It rejects a position containing
+ *   an infinite value or a value that is not a number. targets.h samples Gaussian Vx and Vy for every
+ *   geometry. It samples Vz uniformly across `liquid` and `Ar` cells, and otherwise uses a listed
+ *   target-component center.
  *
  * Reproducibility and units:
- *   The caller creates and seeds the generator used for target positions. This generator is separate from
+ *   The caller creates and seeds the generator used for vertex positions. This generator is separate from
  *   the one used to create particle motion in the uniform LUND creator. Copying all information that
- *   determines the next random values lets each caller continue its own sequence. Returned positions are
+ *   determines the next random values lets each caller continue its own sequence. Returned coordinates are
  *   measured in centimeters.
  *
  * targets.h ownership:
@@ -128,9 +130,9 @@ void TargetGeometry::validateGeometryName(const std::string& name) {
 }
 #pragma endregion
 
-// Event-position sampling -----------------------------------------------------------------------------------------------------------------------------------------------
+// Vertex-position sampling ----------------------------------------------------------------------------------------------------------------------------------------------
 
-#pragma region /* Event-position sampling */
+#pragma region /* Vertex-position sampling */
 TVector3 TargetGeometry::sampleVertexPosition(TRandom3& random) const {
     // std::lock_guard<std::mutex> is an object that manages a std::mutex lock. `guard` is this object's
     // local name, and `(geometry_mutex)` tells its constructor which mutex to lock. Construction locks the
@@ -140,7 +142,7 @@ TVector3 TargetGeometry::sampleVertexPosition(TRandom3& random) const {
 
     // targets.h always reads random values from its shared generator named `ran`; it cannot accept the
     // caller's `random` generator as an argument. The first assignment copies the caller's current random
-    // state into `ran`. randomVertex() uses that state to choose a position for `name_` and advances `ran`.
+    // state into `ran`. randomVertex() uses that state to choose a vertex position for `name_` and advances `ran`.
     // The final assignment copies the advanced state back so the caller's next use continues the sequence.
     external_targets::ran = random;
     const auto vertex = external_targets::randomVertex(name_);

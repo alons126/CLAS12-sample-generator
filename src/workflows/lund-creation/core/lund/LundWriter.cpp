@@ -22,7 +22,7 @@
  *   LUND fields use fixed spaces, tabs, and numbers of decimal places. The uniform LUND creator supplies
  *   event IDs that begin at zero and continue across files. The physical LUND converter supplies the input
  *   GST entry number. Particle records use momentum in GeV/c, mass in GeV/c², calculated energy in GeV,
- *   and event positions in centimeters.
+ *   and vertex positions in centimeters.
  *
  * Failure:
  *   A path that could delete the filesystem root, home directory, current directory, or source checkout is
@@ -142,7 +142,7 @@ void LundWriter::writeEvent(const Event& e) {
     for (const auto& p : e.particles) {
         const double energy = std::sqrt(p.mass * p.mass + p.momentum.Mag2());
 
-        // Stop before writing this particle if its calculated energy or any event-position coordinate is
+        // Stop before writing this particle if its calculated energy or any vertex-position coordinate is
         // infinite or is not a number.
         if (!std::isfinite(energy) || !std::isfinite(p.vertex.Mag2())) { throw std::runtime_error("Non-finite particle data"); }
         // Separate fields with tabs. Write zero for the unused status and parent fields, 1 to mark the
@@ -282,7 +282,7 @@ void LundWriter::printWorkflowSummary(const RunConfig& config, const std::string
     print_value("Target geometry", config.getText("target-geometry"));
     print_value("Target A", config.getText("A"));
     print_value("Target Z", config.getText("Z"));
-    print_value("Vertex seed", config.getText("vertex-seed") + ((config.getText("vertex-seed") == "0") ? " (ROOT automatic; nonrepeatable)" : ""));
+    print_value("Vertex-position seed", config.getText("vertex-seed") + ((config.getText("vertex-seed") == "0") ? " (ROOT automatic; nonrepeatable)" : ""));
 
     if (uniform) {
         const auto channel = config.getText("channel");

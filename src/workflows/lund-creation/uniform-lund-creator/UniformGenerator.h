@@ -9,7 +9,7 @@
  * Purpose:
  *   A uniform sample sends particles across chosen momentum and angle ranges so the user can study where
  *   CLAS12 detects them. The events are deliberately random test events, not simulated interactions.
- *   generateUniform() creates those events, chooses their positions inside the target, writes the LUND
+ *   generateUniform() creates those events, chooses their vertex positions, writes the LUND
  *   files, and saves plots that show the generated values.
  *
  * Execution flow:
@@ -36,25 +36,25 @@ namespace samples {
  *
  * Purpose:
  *   Produce a sample that covers the configured particle ranges and can later be passed to detector
- *   simulation. Use the shared target-position rules, LUND writer, output naming, manifest, and completion
+ *   simulation. Use the shared vertex-position rules, LUND writer, output naming, manifest, and completion
  *   marker.
  *
  * Execution flow:
  *   1. Check the final settings and convert them to event-loop values.
- *   2. Start one random-number generator for particle motion and another for target positions.
+ *   2. Start one random-number generator for particle motion and another for vertex positions.
  *   3. Replace and prepare the exact run directory, then create the monitoring plots.
  *   4. Create and write events until the requested count is reached. Every particle in one event receives
- *      the same target position.
+ *      the same vertex position.
  *   5. Save the monitoring output, close the LUND files, and publish the completion manifest.
  *
  * @param config Checked settings returned by RunConfig::createFromCommandLine() with
  *               LundSource::Uniform. The function reads but does not change them. Momentum uses GeV/c,
- *               beam energy uses GeV, angles use degrees, and target positions use centimeters.
+ *               beam energy uses GeV, angles use degrees, and vertex positions use centimeters.
  * @return Nothing. Normal return means all requested events, monitoring output, and the completion
  *         manifest were written.
- * @throws std::exception If setting checks, target-position sampling, directory preparation, LUND writing,
+ * @throws std::exception If setting checks, vertex-position sampling, directory preparation, LUND writing,
  *                        or monitoring output fails.
- * @note A vertex is the x, y, and z position of the event inside the target. Separate random-number
+ * @note A vertex position is the Vx, Vy, and Vz coordinates written to each LUND particle record. Separate random-number
  *       generators ensure that choosing this position does not change the sequence used for particle
  *       momentum and angles.
  * @note Each LUND file holds 25,000 events by default. `events-per-file` can change that limit. The

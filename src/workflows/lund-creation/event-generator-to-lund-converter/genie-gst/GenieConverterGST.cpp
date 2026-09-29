@@ -9,7 +9,7 @@
  * Purpose:
  *   A GENIE GST ROOT tree is a table in which each row describes one event before detector simulation.
  *   This file copies the supported events and particles into LUND. It never recalculates their momenta.
- *   It only chooses one position inside the target for each written event.
+ *   It only chooses one vertex position for each written event.
  *
  * Execution flow:
  *   Open the matching GST files as one ordered input -> check every required field -> scan entries in
@@ -18,7 +18,7 @@
  *
  * Inputs:
  *   RunConfig supplies the GST file path or filename pattern, target shape, separate A and Z values, beam
- *   energy, seed for choosing event positions, event limits, file size, and output labels. The GST tree
+ *   energy, seed for choosing vertex positions, event limits, file size, and output labels. The GST tree
  *   supplies the interaction type, resonance number, electron momentum, particle IDs, and particle momenta.
  *
  * Outputs:
@@ -89,8 +89,8 @@ void convertGenieGST(const RunConfig& c) {
 #pragma region /* Resolved run state */
     std::cout << "\n" << env::SYSTEM_COLOR << "Preparing target geometry and LUND output..." << env::RESET_COLOR << "\n";
 
-    // The random number generator chooses event positions inside the target. A nonzero seed repeats the same
-    // positions on another run. ROOT gives seed 0 a new automatic value, so a run configured with 0 cannot be repeated from that value alone.
+    // The random number generator chooses vertex positions. A nonzero seed repeats the same positions on
+    // another run. ROOT gives seed 0 a new automatic value, so a run configured with 0 cannot be repeated from that value alone.
     TRandom3 random(c.getNonnegativeInteger("vertex-seed"));
 
     // Target geometry controls where the event occurs. A and Z are separate numbers written in the LUND event header.
@@ -136,7 +136,7 @@ void convertGenieGST(const RunConfig& c) {
 
         progress.update(writer.getWrittenEventCount(), scanned, total_entries);
 
-        // Store QE, MEC, RES, and DIS as codes 1, 2, 3, and 4. Skip other interactions before choosing an event position.
+        // Store QE, MEC, RES, and DIS as codes 1, 2, 3, and 4. Skip other interactions before choosing a vertex position.
         // If invalid input sets more than one flag, the first true flag in this expression wins.
         double code = *qel ? 1 : *mec ? 2 : *res ? 3 : *dis ? 4 : 0;
         if (!code) { continue; }
@@ -162,7 +162,7 @@ void convertGenieGST(const RunConfig& c) {
         event.resonance_id = *resid;
         event.weight = code;
 
-        // Choose one position inside the target. Put the scattered electron first and give this same position to every particle in the event.
+        // Choose one vertex position. Put the scattered electron first and give the same Vx, Vy, and Vz coordinates to every particle in the event.
         auto vertex = geometry.sampleVertexPosition(random);
         event.particles.push_back({constants::electron_pdg, getParticleMass(constants::electron_pdg), {*pxl, *pyl, *pzl}, vertex});
 

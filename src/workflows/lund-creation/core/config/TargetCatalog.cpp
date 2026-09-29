@@ -8,13 +8,13 @@
  *
  * Purpose:
  *   Turn a target name and beam energy into the settings needed by later workflow stages. For example,
- *   target `C12` at 2.07052 GeV selects the small carbon foil in GEMC and the matching event-position
+ *   target `C12` at 2.07052 GeV selects the small carbon foil in GEMC and the matching vertex-position
  *   rules in the external targets.h.
  *
  * Execution flow:
  *   findTarget() finds the requested material and its default A and Z values. resolveTargetVariation()
  *   uses a setup named by the user when one is given. Otherwise, it selects the usual GEMC target setup
- *   from the target name and beam energy. The selected record also gives the event-position rules used by
+ *   from the target name and beam energy. The selected record also gives the vertex-position rules used by
  *   targets.h.
  *
  * Selection rules:
@@ -58,12 +58,12 @@ const std::vector<TargetVariation>& targetVariations() {
     //  1. RG-M analysis note.
     //  2. CLAS12 Note 2026-001: https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=18
     static const std::vector<TargetVariation> variations = {
-        // Three liquid targets use the same event-position rules for the 5-cm-long cryocell.
+        // Three liquid targets use the same vertex-position rules for the 5-cm-long cryocell.
         {"rga_spring2019", "H1", "liquid"},
         {"rgb_fall2019", "D2", "liquid"},
         {"rgm_fall2021_He", "He4", "liquid"},
 
-        // Liquid Ar target uses the event-position rules for the 0.5-cm-long cryocell.
+        // Liquid Ar target uses the vertex-position rules for the 0.5-cm-long cryocell.
         {"rgm_fall2021_Ar", "Ar40", "Ar"},
 
         // Each carbon setup describes a different number or size of foils.
@@ -172,7 +172,7 @@ const TargetVariation& resolveTargetVariation(const Target& target, double beam_
     }
 
     // The target is supported, but the setup list contains no entry for it. Stop instead of continuing
-    // without the GEMC setup and event-position rules needed by later stages.
+    // without the GEMC setup and vertex-position rules needed by later stages.
     throw std::runtime_error("No GEMC target variation is configured for target '" + target.identifier + "'");
 }
 #pragma endregion
