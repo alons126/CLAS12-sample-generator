@@ -1,6 +1,6 @@
 # CLAS12 sample generator
 
-This project prepares simulation samples for the [e4ν collaboration](https://e4nu.org)’s electron-scattering studies with the [CLAS12 spectrometer](https://doi.org/10.1016/j.nima.2020.163419)[^clas12-spectrometer] at Jefferson Lab. It provides two separate user-facing workflows:
+This project prepares simulation samples for the [e4ν collaboration](https://e4nu.org)’s electron-scattering studies with the CLAS12 spectrometer[^clas12-spectrometer] at Jefferson Lab. It provides two separate user-facing workflows:
 
 | Workflow | Purpose | Result |
 | --- | --- | --- |
