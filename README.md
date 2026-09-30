@@ -1,46 +1,26 @@
 # CLAS12 sample generator
 
-This project prepares simulation samples for the [$e4\nu$ collaboration](https://e4nu.org)’s electron-scattering studies with the CLAS12 spectrometer[^clas12-spectrometer] at Jefferson Lab. It provides two separate user-facing workflows:
+This project prepares simulation samples for the [e4ν collaboration](https://e4nu.org)’s electron-scattering studies with the [CLAS12 spectrometer](https://doi.org/10.1016/j.nima.2020.163419)[^clas12-spectrometer] at Jefferson Lab. It provides two separate user-facing workflows:
 
 | Workflow | Purpose | Result |
 | --- | --- | --- |
 | `create-lund` | Create [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], from uniform acceptance kinematics or existing physical event-generator output | LUND files, a completion manifest, and uniform-only monitoring |
-| `submit` | Validate LUND output and other input requirements, then submit ifarm Slurm arrays that run GEMC detector simulation followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction] | An ifarm Slurm array and a submission log |
+| `submit` | Validate LUND output and other input requirements, then submit Slurm job arrays that run GEMC detector simulation followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction] on Jefferson Lab's ifarm | An ifarm Slurm array and a submission log |
 
-The uniform LUND creator deliberately samples unphysical acceptance coverage. The physical LUND converter copies supported truth-level content from existing event-generator output; it does not run GENIE or invent missing kinematics. Both paths share configuration, target geometry, file naming, provenance, and the handoff to detector processing. Creating LUND files never submits simulation.
+Uniform samples provide deliberately unphysical detector-acceptance coverage, while physical samples preserve the particle content of existing event-generator output. LUND creation and detector simulation remain separate steps.
 
 ## Quick start
 
-Building requires CMake 3.20 or later, a C++ compiler compatible with the selected ROOT installation, ROOT, and Python 3.9 or later. The sourced workflow launcher also requires csh or tcsh.
-
-Replace `REPOSITORY_URL` with the HTTPS or SSH clone URL of the collaboration's fork.
+Building requires CMake 3.20 or later, a C++ compiler compatible with the selected ROOT installation, ROOT, and Python 3.9 or later. The workflow launcher also requires csh or tcsh. Replace `REPOSITORY_URL` with the HTTPS or SSH clone URL of the collaboration's fork.
 
 ```bash
-git clone \
-    REPOSITORY_URL
+git clone REPOSITORY_URL
 cd CLAS12-sample-generator
-cmake \
-    -S . \
-    -B build/debug \
-    -G "Unix Makefiles" \
-    -DCMAKE_BUILD_TYPE=Debug
-cmake \
-    --build build/debug \
-    --parallel 4
 ```
 
-Create a 100-event uniform electron sample:
+### LUND file creation
 
-```bash
-build/debug/apps/uniform-lund-creator \
-    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-    --events 100 \
-    --output runs/first-electron
-```
-
-The completed run is written to `runs/first-electron/Uniform__1e__5986MeV/`. If that resolved run directory already exists, creation warns, recursively removes that exact directory, and recreates it. Review the reported path before using a production output location.
-
-The same operation through the supported checkout launcher is:
+From the ifarm ssh (or a csh or tcsh shell), create a 100-event uniform electron sample. The launcher configures and builds the applications before running the selected workflow:
 
 ```tcsh
 source run.csh \
@@ -51,9 +31,7 @@ source run.csh \
     --output runs/first-electron
 ```
 
-See the [quickstart](docs/getting-started/quickstart.md) for physical GENIE GST conversion and an ifarm submission preview.
-
-## Output and provenance
+The completed run is written below `runs/first-electron/`. Before writing, the uniform LUND creator reports the fully resolved run directory. If that directory already exists, it warns, removes it, and recreates it. Review the reported path before using a production output location. See the [installation guide](docs/getting-started/installation.md) for manual CMake commands and direct executable use. Continue with the [full quickstart](docs/getting-started/quickstart.md) for physical conversion and an ifarm submission preview.
 
 Every successful LUND run has this common boundary:
 
@@ -67,13 +45,11 @@ RUN/
 └── reconhipo/
 ```
 
-The completion manifest records resolved settings, output counts, source provenance, and the exact LUND file inventory. Uniform creation also writes ROOT, PDF, and PNG monitoring products. Physical conversion creates no monitoring histograms.
+The completion manifest records the resolved configuration, event counts, source provenance, and exact LUND file inventory. Uniform creation also writes ROOT, PDF, and PNG monitoring histograms, while physical conversion does not. The [output guide](docs/getting-started/outputs.md) explains the complete directory layout, and the [LUND data contract](docs/concepts/lund-data-contract.md) defines the serialized records and manifest fields.
 
-LUND event headers use the shared ten-field format documented in the [LUND data contract](docs/concepts/lund-data-contract.md). Particle momentum, energy, mass, and vertex coordinates are written with five digits after the decimal point. Electron, proton, neutron, and charged-pion masses come from the imported target source; photons are massless.
+### Slurm job submission on the ifarm
 
-## Submit simulation on ifarm
-
-Submission consumes an already completed `lundfiles/` directory. It previews by default:
+Submission consumes an already completed `lundfiles/` directory. The workflow previews the job array's requirements without submitting them with `sbatch`, by default:
 
 ```tcsh
 source run.csh \
@@ -82,11 +58,9 @@ source run.csh \
     --num-jobs 2
 ```
 
-The preview validates the manifest, detector inputs, software environment, and resulting `sbatch` command. It preserves existing simulation output. Add `--execute` only after reviewing the report; execution replaces the selected run's `mchipo/` and `reconhipo/` contents while preserving `lundfiles/`.
+The preview validates the completed run, detector inputs, software environment, and resulting `sbatch` command without submitting jobs. It preserves existing simulation output. Add `--execute` only after reviewing the report; execution replaces the selected run's `mchipo/` and `reconhipo/` contents while preserving `lundfiles/`.
 
-On ifarm, the login environment must provide COATJAVA 10.0.7 as described in the [ifarm environment guide](docs/submit-simulation/ifarm-environment.md). GEMC defaults to 5.14 because that release contains the RG-M Ar target and corrected one-foil C12 implementations used here.[^sportes-2026-rgm] GEMC 6.x with COATJAVA 11 still requires detector-level validation before replacing these defaults.
-
-Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later task failures or certify reconstructed output.
+Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later task failures or certify reconstructed output. Read the [ifarm environment guide](docs/submit-simulation/ifarm-environment.md) before using this workflow, then use the [submission guide](docs/submit-simulation/guide.md) for software-version defaults, input rules, output replacement, and post-submission checks.
 
 ## Documentation
 
@@ -100,13 +74,11 @@ Start with the [documentation home](docs/index.md) or choose a task directly:
 | [Concepts and contracts](docs/concepts/index.md) | Architecture, sampling, LUND records, provenance, and scientific scope |
 | [Development](docs/development/index.md) | Contribute, validate changes, publish the wiki, or add an input adapter |
 
-The [workflow examples](tutorials/README.md) contain longer production command lists. The [sample-profile inventory](config/samples/README.md) identifies reviewed and experimental configurations.
+For a first pass, read **Getting started**, then the guide for the workflow you intend to run. The [workflow examples](tutorials/README.md) contain longer command lists and complete option demonstrations. The [sample-profile inventory](config/samples/README.md) identifies reviewed and experimental configurations.
 
 ## Project boundaries
 
-This repository prepares detector-simulation input and submits detector processing. It does not run a physical event generator, calculate acceptance maps, perform physics analysis, monitor completed Slurm jobs, or validate a production campaign's detector-level physics.
-
-Two imported RG-M sources have narrow update boundaries: `src/workflows/lund-creation/external/targets.h` supplies target geometry and particle masses, while `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` contains the worker payload adapted for this project. Their provenance and replacement rules are documented under [external inputs](docs/concepts/external-inputs.md).
+This repository prepares detector-simulation input and submits detector processing. It does not run a physical event generator, calculate acceptance maps, perform physics analysis, monitor completed Slurm jobs, or by itself validate the detector-level physics of a production campaign. The [scientific scope](docs/concepts/scientific-scope.md) defines these boundaries in detail, and [external inputs](docs/concepts/external-inputs.md) records the project’s imported geometry, detector, and worker sources.
 
 ## Contributing
 
@@ -117,5 +89,3 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing code or documentation. I
 [^gemc-simulation]: M. Ungaro et al., “The CLAS12 Geant4 simulation,” *Nucl. Instrum. Meth. A* **959**, 163422 (2020). [doi:10.1016/j.nima.2020.163422](https://doi.org/10.1016/j.nima.2020.163422)
 
 [^coatjava-reconstruction]: V. Ziegler et al., “The CLAS12 software framework and event reconstruction,” *Nucl. Instrum. Meth. A* **959**, 163472 (2020). [doi:10.1016/j.nima.2020.163472](https://doi.org/10.1016/j.nima.2020.163472)
-
-[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
