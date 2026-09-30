@@ -1,15 +1,19 @@
 # CLAS12 sample generator
 
-Create LUND event samples for CLAS12 and submit completed samples to Jefferson Lab's ifarm for GEMC detector simulation and reconstruction.
-
-The project provides two separate user-facing workflows:
+This project prepares samples for the $e4\nu$ collaboration’s electron-scattering studies with the CLAS12 spectrometer[^clas12-spectrometer] at Jefferson Lab. The project provides two separate user-facing workflows:
 
 | Workflow | Purpose | Result |
 | --- | --- | --- |
-| `create-lund` | Create uniform acceptance samples or convert existing GENIE GST truth | LUND files, a completion manifest, and uniform-only monitoring |
-| `submit` | Validate completed LUND output and submit GEMC followed by `recon-util` | An ifarm Slurm array and a submission log |
+| `lund-creation` | Create [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], the CLAS12 Geant4 simulation, for either unphysical uniform acceptance samples or physical samples baised on existing event generator output | LUND files, a completion manifest, and uniform-only monitoring |
+| `slurm-submission` | Automatic validation of LUND output and submission of Slurm jobs for running the CLAS12 simulation on Jefferson Lab’s ifarm, in which the LUND files are passed through GEMC followed by by the CLAS12 reconstruction code, COATJAVA[^coatjava-reconstruction] | An ifarm Slurm array and a submission log |
 
 The uniform LUND creator deliberately samples unphysical acceptance coverage. The physical LUND converter copies supported truth-level content from existing event-generator output; it does not run GENIE or invent missing kinematics. Creating LUND files never submits simulation.
+
+
+
+It writes [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], the CLAS12 Geant4 simulation, and can submit completed samples to Jefferson Lab’s ifarm, where GEMC simulates the detector response and COATJAVA[^coatjava-reconstruction] reconstructs the resulting events.
+
+It supports deliberately unphysical samples for detector-acceptance studies and physical samples converted from existing event-generator output. Both paths share configuration, target geometry, file naming, provenance, and the handoff from event preparation to detector processing. The project does not run GENIE, perform physics analysis, or calculate final acceptance maps.
 
 ## Quick start
 
@@ -113,5 +117,11 @@ Two imported RG-M sources have narrow update boundaries: `src/workflows/lund-cre
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing code or documentation. It lists the build and validation path, documentation expectations, protected external inputs, and the wiki publication flow.
+
+[^clas12-spectrometer]: V. D. Burkert et al., “The CLAS12 Spectrometer at Jefferson Laboratory,” *Nucl. Instrum. Meth. A* **959**, 163419 (2020). [doi:10.1016/j.nima.2020.163419](https://doi.org/10.1016/j.nima.2020.163419)
+
+[^gemc-simulation]: M. Ungaro et al., “The CLAS12 Geant4 simulation,” *Nucl. Instrum. Meth. A* **959**, 163422 (2020). [doi:10.1016/j.nima.2020.163422](https://doi.org/10.1016/j.nima.2020.163422)
+
+[^coatjava-reconstruction]: V. Ziegler et al., “The CLAS12 software framework and event reconstruction,” *Nucl. Instrum. Meth. A* **959**, 163472 (2020). [doi:10.1016/j.nima.2020.163472](https://doi.org/10.1016/j.nima.2020.163472)
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
