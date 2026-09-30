@@ -11,21 +11,30 @@ This is strict JSON. Its consumer rejects unknown keys, so explanations live in 
 Create a uniform LUND sample by naming both the source and its sample profile:
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --output OUTPUT_PARENT
 ```
 
 Convert physical generator output by naming the physical source, profile, input and output:
 
 ```tcsh
-source run.csh --workflow create-lund --source physical \
-  --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --input 'GST_GLOB' \
+    --output OUTPUT_PARENT
 ```
 
 Select completed LUND output using `--lund-dir`, then submit:
 
 ```tcsh
-source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/sample/lundfiles
 ```
 
 `--workflow` is always required. `--source uniform|physical` is required for `create-lund` and is rejected for `submit`. Child options are forwarded exactly as written; the launcher no longer injects a hidden sample profile or output path.
@@ -51,6 +60,8 @@ workflow.py built-in build defaults
 For `--workflow submit`, [`run.csh`](../run.csh) directly sources the shell setup script. Build/run settings do not apply to submission.
 
 Use `--run-settings FILE` to select a different strict JSON build profile explicitly. There is no automatic `config/run.local.json`: normal ifarm synchronization removes untracked files, so an implicit local profile would be unreliable.
+
+The [launcher option tutorial](../tutorials/launcher-options.txt) demonstrates every launcher-owned CLI option, including a custom build directory/type, build-only and run-only forms, help forwarding, and the `--run-settings` override.
 
 ## Why this file remains
 

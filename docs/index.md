@@ -79,7 +79,7 @@ The project does not run a physical event generator, derive acceptance maps, or 
 | Create uniform or physical LUND files | [Create LUND files](create-lund/index.md) |
 | Submit completed LUND files to ifarm | [Submit simulation](submit-simulation/index.md) |
 | Understand sampling, records, architecture, or provenance | [Concepts and data contracts](concepts/index.md) |
-| Modify or extend the software | [Development guide](development/index.md) |
+| Modify or extend the software | [Contributing](development/contributing.md) and the [Development guide](development/index.md) |
 
 ## Common reader paths
 
@@ -88,6 +88,7 @@ The project does not run a physical event generator, derive acceptance maps, or 
 - **Physical-sample user:** [creation overview](create-lund/index.md) → [physical conversion](create-lund/physical.md) → [examples](create-lund/examples.md).
 - **ifarm operator:** [submission overview](submit-simulation/index.md) → [examples](submit-simulation/examples.md) → [full operational guide](submit-simulation/guide.md).
 - **Adapter developer:** [architecture](concepts/architecture.md) → [adding an event generator](development/adding-event-generator.md) → [scientific validation boundaries](development/validation.md).
+- **Contributor:** [contribution guide](development/contributing.md) → [source reference](development/source-reference.md) → [validation boundaries](development/validation.md).
 
 ## Safety and provenance
 

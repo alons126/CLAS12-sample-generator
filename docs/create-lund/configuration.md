@@ -2,11 +2,11 @@
 
 Sample settings use UTF-8 text with one `key = value` per line. Blank lines and lines beginning with `#` are ignored. There are no sections, inline comments, quoting rules or environment-variable expansion. Values may contain spaces. Unknown/duplicate keys are rejected. Command-line `--key value` settings override the file regardless of where `--config` appears.
 
-The two C++ LUND applications pass these settings through the shared `RunConfig` layer. It installs common and source-specific defaults, applies the optional profile and CLI overrides, resolves every `auto` value, validates the complete result, and constructs normalized paths before event processing starts. Uniform-only keys are unavailable to physical conversion and physical-only keys are unavailable to uniform generation.
+The uniform LUND creator and physical LUND converter pass these settings through the shared `RunConfig` layer. It installs common and source-specific defaults, applies the optional profile and CLI overrides, resolves every `auto` value, validates the complete result, and constructs normalized paths before event processing starts. Uniform-only keys are unavailable to the physical LUND converter, and physical-only keys are unavailable to the uniform LUND creator.
 
 Target resolution has one deliberate order. `target` selects the nucleus or material and its default A/Z metadata. Beam energy plus that target selects the standard GEMC target variation; the variation supplies the matching vertex geometry. An explicit `gemc-target-variation` replaces the automatic variation and geometry together, as needed for run 15733. Explicit `A` and `Z` values are applied last as independent LUND-header overrides.
 
-`RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the selected generator or converter consumes its checked values and `LundWriter` copies the complete resolved map into `lundfiles/lund-creation-monitoring/lund-creation-log.json`.
+`RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the uniform LUND creator or physical LUND converter consumes its checked values and `LundWriter` copies the complete resolved map into `lundfiles/lund-creation-monitoring/lund-creation-log.json`.
 
 The launcher does not select a sample profile implicitly. Pass a profile from `config/samples/uniform-lund-creation/` or `config/samples/physical-lund-creation/` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build defaults only.
 
@@ -23,14 +23,14 @@ Relative paths are interpreted from the caller's working directory. The output p
 | `gemc-target-variation` | `auto` | Optional compatible override of the beam-dependent variation and its vertex geometry |
 | `events` | Required | Total number of accepted events to write |
 | `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold; before each physical follow-up file it also sets the minimum remaining-input block aligned with submission `JOB_NEVENTS` |
-| `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused in physical conversion |
+| `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused by the physical LUND converter |
 | `vertex-seed` | `12345` | Vertex-position RNG seed; zero requests ROOT automatic, nonrepeatable seeding |
 | `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
 | `input` | Required for physical input | Event-generator input filename or quoted glob |
 | `event-generator` | `genie-gst` | Physical adapter name; generator and input format are explicit |
 | `event-generator-version` | `unknown` | Always-recorded provenance; included in an automatic physical filename prefix only when known |
 | `tune` | `auto` | Read `TUNE` from `input_options.txt` beside the standard production directory; otherwise `unknown` |
-| `q2-cut` | Energy-based | Generator provenance and naming component: `Q2-0.02`, `Q2-0.25`, or `Q2-0.40` for the three RG-M beams; accepted underscore spellings are normalized to these forms, and no cut is applied during conversion |
+| `q2-cut` | Energy-based | Generator provenance and naming component: `Q2-0.02`, `Q2-0.25`, or `Q2-0.40` for the three RG-M beams and `none` for other energies; accepted underscore spellings are normalized to these forms, and no cut is applied during conversion |
 | `output-layout` | `nested` | Physical only: `nested` groups target, generator/tune, and selection/beam directories; `metadata` uses one directory; both use `__` between metadata values |
 
 Counts and the split threshold must be integers from 1 through 4294967295. Seeds may range from 0 through 4294967295. A nonzero seed is reproducible; `TRandom3(0)` asks ROOT to choose an automatic seed, so a manifest containing zero cannot reproduce the generated sequence. Production Ar defaults resolve to A=40/Z=18.

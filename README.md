@@ -1,63 +1,117 @@
 # CLAS12 sample generator
 
-Current user-facing workflows:
+Create LUND event samples for CLAS12 and submit completed samples to Jefferson Lab's ifarm for GEMC detector simulation and reconstruction.
 
-1. **Create LUND files:** uniform acceptance samples or conversion of physical GENIE GST truth.
-2. **Submit simulation on ifarm:** consume completed LUND files, configure GEMC/detector inputs, and submit GEMC followed by reconstruction as Slurm array jobs.
+The project provides two separate user-facing workflows:
+
+| Workflow | Purpose | Result |
+| --- | --- | --- |
+| `create-lund` | Create uniform acceptance samples or convert existing GENIE GST truth | LUND files, a completion manifest, and uniform-only monitoring |
+| `submit` | Validate completed LUND output and submit GEMC followed by `recon-util` | An ifarm Slurm array and a submission log |
+
+The uniform LUND creator deliberately samples unphysical acceptance coverage. The physical LUND converter copies supported truth-level content from existing event-generator output; it does not run GENIE or invent missing kinematics. Creating LUND files never submits simulation.
+
+## Quick start
+
+Building requires CMake 3.20 or later, a C++ compiler compatible with the selected ROOT installation, ROOT, and Python 3.9 or later. The sourced workflow launcher also requires csh or tcsh.
+
+Replace `REPOSITORY_URL` with the HTTPS or SSH clone URL of the collaboration's fork.
+
+```bash
+git clone \
+    REPOSITORY_URL
+cd CLAS12-sample-generator
+cmake \
+    -S . \
+    -B build/debug \
+    -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Debug
+cmake \
+    --build build/debug \
+    --parallel 4
+```
+
+Create a 100-event uniform electron sample:
+
+```bash
+build/debug/apps/uniform-lund-creator \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 100 \
+    --output runs/first-electron
+```
+
+The completed run is written to `runs/first-electron/Uniform__1e__5986MeV/`. If that resolved run directory already exists, creation warns, recursively removes that exact directory, and recreates it. Review the reported path before using a production output location.
+
+The same operation through the supported checkout launcher is:
+
+```tcsh
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 100 \
+    --output runs/first-electron
+```
+
+See the [quickstart](docs/getting-started/quickstart.md) for physical GENIE GST conversion and an ifarm submission preview.
+
+## Output and provenance
+
+Every successful LUND run has this common boundary:
 
 ```text
-run.csh --workflow create-lund -> Python build driver -> LUND application -> completed files
-run.csh --workflow submit      -> setup_and_submit.csh -> submit.py -> sbatch array -> GEMC -> recon-util
+RUN/
+├── lundfiles/
+│   ├── PREFIX_1.txt
+│   └── lund-creation-monitoring/
+│       └── lund-creation-log.json
+├── mchipo/
+└── reconhipo/
 ```
 
-On ifarm, `~/.cshrc` must source `~/environment.csh` to load the CLAS12 environment and select COATJAVA 10.0.7; see the [ifarm environment guide](docs/submit-simulation/ifarm-environment.md) for the exact file. Then use `source run.csh --workflow submit --lund-dir RUN/lundfiles`. The completed manifest supplies sample settings; optional CLI flags or `--config config/submission.conf` override simulation defaults. GEMC falls back to 5.14 because it includes the new RG-M Ar target and corrected one-foil C12 target implementations[^sportes-2026-rgm]. Submission checks the shared version directory, loads that module in its child environment, and verifies the exact `gemc` executable passed to Slurm. GEMC 6.x with COATJAVA 11 requires further analysis validation before it can replace the current defaults. The default is preview; add `--execute` to submit and replace the selected simulation output directories while preserving LUND inputs. See the [setup and submission guide](docs/submit-simulation/guide.md).
+The completion manifest records resolved settings, output counts, source provenance, and the exact LUND file inventory. Uniform creation also writes ROOT, PDF, and PNG monitoring products. Physical conversion creates no monitoring histograms.
 
-This repository does not run the physical event generator or calculate final acceptance maps.
+LUND event headers use the shared ten-field format documented in the [LUND data contract](docs/concepts/lund-data-contract.md). Particle momentum, energy, mass, and vertex coordinates are written with five digits after the decimal point. Electron, proton, neutron, and charged-pion masses come from the imported target source; photons are massless.
 
-## First build and sample
+## Submit simulation on ifarm
 
-Requirements: CMake 3.20+, a C++ compiler compatible with your ROOT installation, ROOT with Core/RIO/Hist/Physics/Tree/TreePlayer, Python 3.9+ for the workflow drivers, and csh/tcsh for the sourced ifarm launcher. Submission preview and execution require the ifarm module command, the requested shared GEMC version, and the COATJAVA 10.0.7 `recon-util` supplied by the documented login environment; only execution requires `sbatch`.
+Submission consumes an already completed `lundfiles/` directory. It previews by default:
 
-Clone the repository:
-
-```bash
-git clone REPOSITORY_URL
+```tcsh
+source run.csh \
+    --workflow submit \
+    --lund-dir /absolute/path/to/completed-run/lundfiles \
+    --num-jobs 2
 ```
 
-```bash
-cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
-cmake --build build/debug --parallel 4
+The preview validates the manifest, detector inputs, software environment, and resulting `sbatch` command. It preserves existing simulation output. Add `--execute` only after reviewing the report; execution replaces the selected run's `mchipo/` and `reconhipo/` contents while preserving `lundfiles/`.
 
-build/debug/apps/uniform-lund-creator \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-  --events 100 \
-  --output runs/first-electron
-```
+On ifarm, the login environment must provide COATJAVA 10.0.7 as described in the [ifarm environment guide](docs/submit-simulation/ifarm-environment.md). GEMC defaults to 5.14 because that release contains the RG-M Ar target and corrected one-foil C12 implementations used here.[^sportes-2026-rgm] GEMC 6.x with COATJAVA 11 still requires detector-level validation before replacing these defaults.
 
-The resolved uniform run is written below `runs/first-electron/Uniform__1e__5986MeV`. If that directory already exists, generation prints a warning, removes its previous contents and recreates it. Building and generation do not run `git clean` or submit jobs.
-
-LUND output uses one space between fields and writes particle momentum, energy, mass, and vertex-position coordinates with five digits after the decimal point. Electron, proton, neutron, and charged-pion masses come from the external target source; photons are massless. Production momentum defaults are mixed p/1-p for the 1e electron and charged hadrons, and uniform p for neutrons. Sampled hadron momentum always extends to the beam energy; fixed 1 GeV/c momentum is a neutron-only option. Select electron–hadron samples with `--channel eh --hadron proton|neutron|pip|pim --hadron-region FD|CD`.
-
-Open `runs/first-electron/Uniform__1e__5986MeV/lundfiles/lund-creation-monitoring/lund-creation-log.json` to see the resolved settings, output counts, and full configure-time Git information. LUND text is under `lundfiles/`; uniform diagnostics are stored once in `lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root`. Physical conversion does not create monitoring histograms.
+Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later task failures or certify reconstructed output.
 
 ## Documentation
 
-Start at the [documentation home](docs/index.md). It presents the currently implemented workflows first and routes readers by task instead of exposing the complete reference at once.
+Start with the [documentation home](docs/index.md) or choose a task directly:
 
 | Subject | Use it for |
 | --- | --- |
 | [Getting started](docs/getting-started/index.md) | Install, build, run a small sample, and understand outputs |
-| [Create LUND files](docs/create-lund/index.md) | Uniform generation, physical conversion, configuration, examples, and monitoring |
+| [Create LUND files](docs/create-lund/index.md) | Uniform LUND creation, physical LUND conversion, configuration, examples, and monitoring |
 | [Submit simulation](docs/submit-simulation/index.md) | Preview and submit ifarm GEMC/reconstruction jobs |
 | [Concepts and contracts](docs/concepts/index.md) | Architecture, sampling, LUND records, provenance, and scientific scope |
-| [Development](docs/development/index.md) | Source reference, documentation, wiki publishing, and [adding an event-generator adapter](docs/development/adding-event-generator.md) |
+| [Development](docs/development/index.md) | Contribute, validate changes, publish the wiki, or add an input adapter |
 
-Worked commands are grouped by workflow in the [LUND-creation examples](docs/create-lund/examples.md) and [submission examples](docs/submit-simulation/examples.md). The longer [checked-in command lists](tutorials/README.md) cover the documented production matrix.
+The [workflow examples](tutorials/README.md) contain longer production command lists. The [sample-profile inventory](config/samples/README.md) identifies reviewed and experimental configurations.
 
-Workflow implementations are peers under `src/workflows/`; shared C++ workflow support is under `src/workflows/support/`, and the shared dispatcher is under `src/launcher/`. The [architecture walkthrough](docs/concepts/architecture.md) maps these directories to build targets and runtime call chains.
+## Project boundaries
 
-The project has two narrow update boundaries for code obtained from RG-M. `src/workflows/lund-creation/external/targets.h` is an exact RG-M copy containing the target implementations available with GEMC 5.14 when it was added[^sportes-2026-rgm]. `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` adapts the RG-M job payload to the project’s generator-independent settings. Small adapters around these files allow later RG-M updates without copying target geometry or detector commands; see [external inputs](docs/concepts/external-inputs.md).
+This repository prepares detector-simulation input and submits detector processing. It does not run a physical event generator, calculate acceptance maps, perform physics analysis, monitor completed Slurm jobs, or validate a production campaign's detector-level physics.
 
-For local editing and server execution via `source run.csh`, read the [SSH workflow](docs/submit-simulation/ifarm-environment.md). When sourcing from outside the checkout, the user may set the optional `CLAS12_SAMPLES_DIR` environment variable to its absolute path; the project does not define it automatically. Target-header replacement, LUND format and gcard/field provenance are covered in [external inputs](docs/concepts/external-inputs.md).
+Two imported RG-M sources have narrow update boundaries: `src/workflows/lund-creation/external/targets.h` supplies target geometry and particle masses, while `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` contains the worker payload adapted for this project. Their provenance and replacement rules are documented under [external inputs](docs/concepts/external-inputs.md).
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing code or documentation. It lists the build and validation path, documentation expectations, protected external inputs, and the wiki publication flow.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)

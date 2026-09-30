@@ -30,17 +30,34 @@ The login setup selects COATJAVA, while the submission workflow separately loads
 In a **csh/tcsh** session on the server, select the workflow, source, sample profile and output explicitly:
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output runs/electron-001
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --output runs/electron-001
 ```
 
 The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, pulls the remote revision, and initializes configured submodules at their pinned revisions. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads build defaults from `config/run.json` and dispatches the action written in the command. Existing resolved run directories are removed and recreated after the safety checks described in the workflow guide.
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform --config config/samples/uniform-lund-creation/uniform-enFD-5986MeV.conf --output runs/en-001
-source run.csh --workflow create-lund --source physical --config config/samples/physical-lund-creation/genie-gst.conf \
-  --input '/data/genie/*.root' --output runs/physical
-source run.csh --workflow create-lund --source uniform --build true --run false
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-enFD-5986MeV.conf \
+    --output runs/en-001
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --input '/data/genie/*.root' \
+    --output runs/physical
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --build true \
+    --run false
 ```
 
 GENIE glob patterns must be quoted so they reach ROOT unchanged. Options after `--config` override matching sample-profile values. `workflow.py` forwards child options exactly as written and does not inject a hidden sample profile or output path. All workflow paths are interpreted from the repository root, including when the wrapper is launched elsewhere. This differs from directly invoking the C++ executables, which use the caller's directory.
@@ -55,16 +72,22 @@ To source from another directory, first set `CLAS12_SAMPLES_DIR` to the absolute
 unset CLAS12_SAMPLES_DIR
 unsetenv CLAS12_SAMPLES_DIR
 setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
-source "$CLAS12_SAMPLES_DIR/run.csh" --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output runs/electron-003
+source "$CLAS12_SAMPLES_DIR/run.csh" \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --output runs/electron-003
 ```
 
 `CLAS12_SAMPLES_DIR` is an optional user-defined environment variable; the project does not create it. The example clears both tcsh namespaces before assignment for the same reason as project-owned exports. It overrides automatic checkout discovery so the launcher can be sourced from any working directory. When the shell is already in the repository root, it is unnecessary:
 
 ```tcsh
 cd /shared/path/CLAS12-sample-generator
-source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output runs/electron-001
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --output runs/electron-001
 ```
 
 Because `setenv` stores the value in the current shell, it remains available for later commands and sessions descended from that shell. Remove it when it should no longer override checkout discovery:
@@ -104,7 +127,11 @@ Building always invokes CMake dependency checking, so replacing an uncommitted `
 After transferring committed changes to the remote, a server refresh/build is:
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform --build true --run false
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --build true \
+    --run false
 ```
 
 The refresh requires a configured Git upstream and network access to any not-yet-initialized submodule. It intentionally discards server-side edits and untracked files, retaining the updater's documented build exclusions. It stops before building if cleanup, reset, pull, submodule synchronization, or submodule checkout fails.
@@ -114,7 +141,9 @@ The refresh requires a configured Git upstream and network access to any not-yet
 First create the LUND files. Pass the completed LUND directory; use optional config/CLI overrides for detector settings. Commit and push any in-checkout configuration changes locally first. Then, from a csh/tcsh login shell on ifarm:
 
 ```tcsh
-source run.csh --workflow submit --lund-dir /shared/sample/lundfiles
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/sample/lundfiles
 ```
 
 This previews setup and the Slurm command in copyable multiline shell form. Add `--execute` to submit the selected arrays and clear and recreate the simulation output directories, preserving LUND input. Preview still performs the documented server-checkout refresh and environment loading. At the output-directory stage it inspects both exact paths before changing either one, preserves existing sample outputs and farm logs, reports what execution would clear, and creates and verifies `mchipo/` or `reconhipo/` if either directory is missing. Execution warns before deleting existing simulation output and recreates both directories empty. The setup checks inputs and prints the report before calling `sbatch`; execution then reports the accepted `SLURM_JOB_ID` and records it in the sample's submission log. Preview and execution finish with the same shared success/stop artwork used by LUND creation. See the [submission guide](guide.md) for settings and failure behavior.

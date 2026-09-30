@@ -3,13 +3,20 @@
 These files describe the LUND sample being created. They do not select the user-facing workflow, configure CMake, or submit Slurm jobs. Select a profile explicitly in every LUND-creation command:
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf --output OUTPUT_PARENT
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --output OUTPUT_PARENT
 ```
 
 ```tcsh
-source run.csh --workflow create-lund --source physical \
-  --config config/samples/physical-lund-creation/genie-gst.conf --input 'GST_GLOB' --output OUTPUT_PARENT
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --input 'GST_GLOB' \
+    --output OUTPUT_PARENT
 ```
 
 The executable installs built-in defaults, reads the named profile, then applies explicit `--key value` overrides. Unknown and repeated keys fail. Blank lines and lines beginning with `#` are ignored; inline comments, sections, quoting, and environment expansion are unsupported. Every checked-in profile groups its values under comment-only explanation sections covering their purpose, consumers, units, derived behavior, output contract, and relevant validation limits.
@@ -18,7 +25,7 @@ Profiles normally specify `target`; beam energy plus that target selects the sta
 
 ## Uniform production matrix
 
-Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each supported RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, the angular and momentum ranges listed below, rounded PDG-based masses, and 25,000 events per file. Production profiles request 50,000,000 events, while tester profiles request 1,000,000 events. Override `--events` for smaller studies.
+Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each supported RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, the angular and momentum ranges listed below, particle masses supplied by the application's imported target source, and 25,000 events per file. Production profiles request 50,000,000 events, while tester profiles request 1,000,000 events. Override `--events` for smaller studies.
 
 | Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
 | --- | --- | --- | --- |
@@ -35,7 +42,7 @@ Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform
 
 The 1e profiles use the updated 0.7 GeV/c minimum and 50/50 uniform-p/uniform-1/p mixture. Their electron theta is flat from 5° to 40°, except that the 2.07052 GeV outbending profile extends the minimum to 2°. The epFD profiles use a beam-momentum 25° trigger electron and a proton mixture from 0.3 GeV/c to the beam momentum. The enFD profiles use the same trigger prescription and uniform neutron momentum from zero to the beam momentum. All retain full phi coverage. The beam-specific trigger offsets are written explicitly as 16°, 7°, and 5°.
 
-FD pion and all CD profiles are marked experimental inside the files. They encode the documented updated conventions but have not yet been tested as production samples; see [uniform generation](../../docs/create-lund/uniform.md) and [validation](../../docs/development/validation.md).
+FD pion and all CD profiles are marked experimental inside the files. They encode the documented updated conventions but have not yet been tested as production samples; see [uniform LUND creation](../../docs/create-lund/uniform.md) and [validation](../../docs/development/validation.md).
 
 The electron tester profiles sample the selected target geometry and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
 
@@ -52,7 +59,7 @@ Physical profiles are stored in `physical-lund-creation/`.
 
 ## Available common options
 
-`output`, `beam-energy`, `target`, optional `gemc-target-variation`, optional LUND-header overrides `A` and `Z`, `events`, `events-per-file`, `seed`, `vertex-seed`, and `prefix` are common configuration keys. Every uniform run writes its ROOT monitoring file and fills `MonitoringPlotsPath` with PDF/PNG renderings; physical conversion creates no monitoring plots. Every event samples the geometry belonging to the resolved target variation. Uniform and physical prefixes are automatic unless `--prefix` explicitly overrides them. `events-per-file` defaults to 25,000 for uniform and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
+`output`, `beam-energy`, `target`, optional `gemc-target-variation`, optional LUND-header overrides `A` and `Z`, `events`, `events-per-file`, `seed`, `vertex-seed`, and `prefix` are common configuration keys. Every uniform LUND creator run writes its ROOT monitoring file and fills `MonitoringPlotsPath` with PDF/PNG renderings; the physical LUND converter creates no monitoring plots. Every event samples the geometry belonging to the resolved target variation. Uniform and physical prefixes are automatic unless `--prefix` explicitly overrides them. `events-per-file` defaults to 25,000 for uniform input and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
 
 ## Available uniform options
 
@@ -65,9 +72,19 @@ Physical profiles may set `input`, `event-generator`, `event-generator-version`,
 The full types, units, allowed values, automatic resolutions, RG-M target catalog, and failure behavior are documented in [configuration.md](../../docs/create-lund/configuration.md). The selected executable also prints its current interface:
 
 ```tcsh
-source run.csh --workflow create-lund --source uniform --build false -- --help
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --build false \
+    -- \
+    --help
 ```
 
 ```tcsh
-source run.csh --workflow create-lund --source physical --build false -- --help
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --build false \
+    -- \
+    --help
 ```

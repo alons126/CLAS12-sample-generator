@@ -31,9 +31,9 @@ From the repository root:
 ```bash
 wiki_preview="$(mktemp -d)"
 python3 dev-tools/wiki/build_wiki.py \
-  --output "$wiki_preview" \
-  --repository alons126/CLAS12-sample-generator \
-  --branch main
+    --output "$wiki_preview" \
+    --repository ORGANIZATION/REPOSITORY \
+    --branch main
 ```
 
-The command prints the generated page count. Inspect the temporary directory as Markdown, then remove it when it is no longer needed. Generation rejects a destination that is the checkout itself or one of its ancestors, unresolved local links, unmatched or unused footnotes, missing required source pages, and colliding wiki filenames. Review generated citations and source links after adding a reference, otherwise ambiguous filename, or function name; use an explicit repository path or qualified function name in the project prose to select one definition.
+Replace `ORGANIZATION/REPOSITORY` with the GitHub location of the current fork. The publication workflow does this automatically with GitHub Actions' `GITHUB_REPOSITORY` value, so no repository owner or name is embedded in the generated public documentation. The command prints the generated page count. Inspect the temporary directory as Markdown, then remove it when it is no longer needed. Generation rejects a destination that is the checkout itself or one of its ancestors, unresolved local links, unmatched or unused footnotes, missing required source pages, and colliding wiki filenames. Review generated citations and source links after adding a reference, otherwise ambiguous filename, or function name; use an explicit repository path or qualified function name in the project prose to select one definition.

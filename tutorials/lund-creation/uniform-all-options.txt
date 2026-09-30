@@ -1,0 +1,137 @@
+# Uniform LUND creator option examples
+#
+# These examples cover every public option accepted by uniform-lund-creator, plus
+# the launcher selections needed to reach it. Values in the arbitrary studies are
+# deliberately non-production examples. Review the resolved output path and replace
+# every /path/to/... placeholder before running a command.
+
+#########################################################################################
+# Print the current uniform LUND creator interface
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --build false \
+    -- \
+    --help
+
+#########################################################################################
+# Arbitrary 1e study: all common options and all electron-range options
+#
+# The profile is read first. Every explicit option below overrides its matching value.
+# Ar40 permits an arbitrary positive beam energy because its detector variation and
+# vertex geometry do not depend on one of the three standard RG-M beam values.
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --channel 1e \
+    --beam-energy 3.75 \
+    --target Ar40 \
+    --gemc-target-variation rgm_fall2021_Ar \
+    --A 40 \
+    --Z 18 \
+    --events 137 \
+    --events-per-file 41 \
+    --seed 24680 \
+    --vertex-seed 13579 \
+    --prefix arbitrary-electrons \
+    --electron-theta-min 7.5 \
+    --electron-theta-max 32.5 \
+    --electron-momentum uniform \
+    --electron-p-min 0.85 \
+    --electron-p-max 3.25 \
+    --output /path/to/arbitrary-uniform-output
+
+#########################################################################################
+# Arbitrary electron-hadron study: every sampled-hadron and trigger option
+#
+# hadron-p remains a checked option but is consumed only when hadron-momentum=fixed.
+# The following mixed charged-pion study uses hadron-p-min instead.
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --channel eh \
+    --hadron pim \
+    --hadron-region CD \
+    --beam-energy 4.2 \
+    --target Ar40 \
+    --gemc-target-variation rgm_fall2021_Ar \
+    --A 40 \
+    --Z 18 \
+    --events 211 \
+    --events-per-file 73 \
+    --seed 86420 \
+    --vertex-seed 97531 \
+    --prefix arbitrary-epimCD \
+    --electron-theta-min 5 \
+    --electron-theta-max 40 \
+    --electron-momentum beam \
+    --electron-p-min 0.7 \
+    --electron-p-max 4.2 \
+    --hadron-theta-min 42 \
+    --hadron-theta-max 133 \
+    --hadron-momentum mixed \
+    --hadron-p-min 0.16 \
+    --hadron-p 1.15 \
+    --trigger-theta 27 \
+    --trigger-phi-offset 9 \
+    --output /path/to/arbitrary-uniform-output
+
+#########################################################################################
+# Fixed neutron momentum: demonstrate the mode that consumes --hadron-p
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --channel eh \
+    --hadron neutron \
+    --hadron-region FD \
+    --hadron-momentum fixed \
+    --hadron-p 1.15 \
+    --events 89 \
+    --output /path/to/arbitrary-uniform-output
+
+#########################################################################################
+# Documented examples: reviewed profile, explicit proton study, and electron tester
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-4029MeV.conf \
+    --events 10000 \
+    --events-per-file 2500 \
+    --seed 67890 \
+    --vertex-seed 12345 \
+    --output /path/to/documented-uniform-output
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --channel eh \
+    --hadron proton \
+    --hadron-region FD \
+    --beam-energy 5.98636 \
+    --target Ar40 \
+    --hadron-momentum mixed \
+    --hadron-p-min 0.3 \
+    --hadron-theta-min 5 \
+    --hadron-theta-max 45 \
+    --trigger-theta 25 \
+    --events 1000 \
+    --output /path/to/documented-uniform-output
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/electron-tester-5986MeV.conf \
+    --events 5000 \
+    --prefix tester-5986 \
+    --output /path/to/documented-uniform-output

@@ -12,63 +12,63 @@
 #########################################################################################
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__1e__2070MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__1e__2070MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__1e__4029MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__1e__4029MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__1e__5986MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__1e__5986MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 #########################################################################################
 # Uniform (e,e'nFD) sample Slurm submission
 #########################################################################################
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__enFD__2070MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__enFD__2070MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__enFD__4029MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__enFD__4029MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__enFD__5986MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__enFD__5986MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 #########################################################################################
 # Uniform (e,e'pFD) sample Slurm submission
 #########################################################################################
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__epFD__2070MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__epFD__2070MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__epFD__4029MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__epFD__4029MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
 
 source run.csh \
-  --workflow submit \
-  --lund-dir /lustre24/expphy/volatile/clas12/asportes/Analysis_output/Uniform_samples/Uniform__epFD__5986MeV/lundfiles \
-  --num-jobs 5 \
-  --execute
+    --workflow submit \
+    --lund-dir /path/to/uniform-output/Uniform__epFD__5986MeV/lundfiles \
+    --num-jobs 5 \
+    --execute

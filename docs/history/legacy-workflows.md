@@ -1,6 +1,6 @@
 # Legacy launch chains and current equivalents
 
-These archived call chains correspond to the legacy baseline recorded by the [`legacy-v1.0.0` GitHub release tag](https://github.com/alons126/CLAS12-sample-generator/releases/tag/legacy-v1.0.0). The Uniform source remains a pinned submodule, so the tag records its exact referenced revision rather than duplicating that independent repository.
+These archived call chains correspond to the legacy baseline recorded by the [`legacy-v1.0.0` GitHub release tag](https://github.com/ORGANIZATION/REPOSITORY/releases/tag/legacy-v1.0.0). Replace `ORGANIZATION/REPOSITORY` with the location of this fork. The Uniform source remains a pinned submodule, so the tag records its exact referenced revision rather than duplicating that independent repository.
 
 ## 1. Uniform generation
 
@@ -20,29 +20,29 @@ The three active `CodeRun.cpp` calls map to these maintained commands. `legacy-c
 
 ```bash
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/legacy-coderun.conf \
-  --seed 0 \
-  --output OUTPUT_PARENT
+    --config config/samples/uniform-lund-creation/legacy-coderun.conf \
+    --seed 0 \
+    --output OUTPUT_PARENT
 
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/legacy-coderun.conf \
-  --channel eh --hadron proton --hadron-region FD \
-  --electron-momentum beam \
-  --hadron-momentum uniform \
-  --hadron-p-min 0.3 \
-  --prefix Uniform_ep_sample_2070MeV \
-  --seed 0 \
-  --output OUTPUT_PARENT
+    --config config/samples/uniform-lund-creation/legacy-coderun.conf \
+    --channel eh --hadron proton --hadron-region FD \
+    --electron-momentum beam \
+    --hadron-momentum uniform \
+    --hadron-p-min 0.3 \
+    --prefix Uniform_ep_sample_2070MeV \
+    --seed 0 \
+    --output OUTPUT_PARENT
 
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/legacy-coderun.conf \
-  --channel eh --hadron neutron --hadron-region FD \
-  --electron-momentum beam \
-  --hadron-momentum uniform \
-  --hadron-p-min 0.3 \
-  --prefix Uniform_en_sample_2070MeV \
-  --seed 0 \
-  --output OUTPUT_PARENT
+    --config config/samples/uniform-lund-creation/legacy-coderun.conf \
+    --channel eh --hadron neutron --hadron-region FD \
+    --electron-momentum beam \
+    --hadron-momentum uniform \
+    --hadron-p-min 0.3 \
+    --prefix Uniform_en_sample_2070MeV \
+    --seed 0 \
+    --output OUTPUT_PARENT
 ```
 
 The three commands can share one output parent because the maintained writer creates distinct `Uniform__1e__2070MeV/`, `Uniform__epFD__2070MeV/`, and `Uniform__enFD__2070MeV/` run directories below it. The old launcher instead rewrote `OutPut/` to sibling `OutPut_1e/`, `OutPut_ep/`, and `OutPut_en/` directories. The explicit LUND filename prefixes above retain the archived names only for historical comparison. Use a smaller explicit `--events` value for a smoke test.
@@ -53,13 +53,13 @@ The separately selectable legacy electron tester maps to:
 
 ```bash
 source run.csh --workflow create-lund --source uniform \
-  --config config/samples/uniform-lund-creation/electron-tester-2070MeV.conf \
-  --beam-energy 2.07052 \
-  --A 1 --Z 1 \
-  --events 1000000 --events-per-file 10000 \
-  --prefix Uniform_1e_sample_2070MeV \
-  --seed 0 \
-  --output OUTPUT_PARENT/tester
+    --config config/samples/uniform-lund-creation/electron-tester-2070MeV.conf \
+    --beam-energy 2.07052 \
+    --A 1 --Z 1 \
+    --events 1000000 --events-per-file 10000 \
+    --prefix Uniform_1e_sample_2070MeV \
+    --seed 0 \
+    --output OUTPUT_PARENT/tester
 ```
 
 One million events reproduces the tester's server default of 100 files × 10,000 events. Its old local-path branch reduced that to 100,000 events. Repeat with the two other beam energies and matching prefixes for the commented tester calls. The maintained tester keeps its beam-momentum electron and samples the selected target geometry.
@@ -98,9 +98,9 @@ The Q² labels were `Q2_0_02`, `Q2_0_25` and `Q2_0_40` at the three energies. Th
 
 ```bash
 build/debug/apps/event-generator-to-lund-converter --event-generator genie-gst \
-  --config config/samples/physical-lund-creation/legacy-genie-wrapper.conf \
-  --input '/shared/truth/C12/GEM21_11a_00_000/2070MeV_Q2_0_02/master-routine_validation_01-eScattering/*.root' \
-  --events 10000 --output runs/legacy-genie-smoke
+    --config config/samples/physical-lund-creation/legacy-genie-wrapper.conf \
+    --input '/shared/truth/C12/GEM21_11a_00_000/2070MeV_Q2_0_02/master-routine_validation_01-eScattering/*.root' \
+    --events 10000 --output runs/legacy-genie-smoke
 ```
 
 The archived wrapper limited the number of input ROOT files. The maintained converter instead takes the complete input file or glob explicitly and limits accepted output with `--events`; it has no `--files` option. It checks the GST schema and does not infer physical metadata from filenames. Historical comparisons must preserve the archived event loop while isolating its output and replacing unsafe directory shell calls.

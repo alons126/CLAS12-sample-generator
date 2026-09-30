@@ -1,21 +1,25 @@
-# Uniform samples
+# Uniform LUND creation
 
 ## Generate a sample
 
 ```bash
 build/debug/apps/uniform-lund-creator \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-  --events 100 --output runs
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 100 \
+    --output runs
 ```
 
-Uniform generation uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. Both the run-directory name and automatic LUND filename prefix use `Uniform__<label>__<beam-MeV>MeV`.
+The uniform LUND creator uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. Both the run-directory name and automatic LUND filename prefix use `Uniform__<label>__<beam-MeV>MeV`.
 
 For example, a central-detector pi+ sample is:
 
 ```bash
 build/debug/apps/uniform-lund-creator \
-  --channel eh --hadron pip --hadron-region CD \
-  --events 100 --output runs
+    --channel eh \
+    --hadron pip \
+    --hadron-region CD \
+    --events 100 \
+    --output runs
 ```
 
 `events` is the total run size. `events-per-file` controls splitting and defaults to 25,000. The completed manifest records every file count; submission uses the largest selected file count as the shared GEMC/reconstruction `JOB_NEVENTS` limit.
@@ -62,8 +66,8 @@ The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a
 
 ```bash
 build/debug/apps/uniform-lund-creator \
-  --config config/samples/uniform-lund-creation/electron-tester-5986MeV.conf \
-  --output runs
+    --config config/samples/uniform-lund-creation/electron-tester-5986MeV.conf \
+    --output runs
 ```
 
 The tester always scans electron θ from 5–40° and all φ at beam momentum, and samples the selected target geometry. It provides a rough estimate of where the trigger electron in electron–hadron samples should be thrown. The 25° trigger setting was selected from this scan.
@@ -78,4 +82,4 @@ Electron, proton, neutron, and charged-pion masses come directly from the extern
 
 ## Output and diagnostics
 
-`lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root` contains the complete monitoring set for 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel. Hadron labels include the detector region. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms, including `<prefix>__plots.pdf`. Like physical conversion, uniform creation prepares empty `mchipo/` and `reconhipo/` directories for later simulation and reconstruction. See [diagnostics](monitoring.md) and [sampling equations](../concepts/sampling-models.md).
+`lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root` contains the complete monitoring set for 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel. Hadron labels include the detector region. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms, including `<prefix>__plots.pdf`. Like the physical LUND converter, the uniform LUND creator prepares empty `mchipo/` and `reconhipo/` directories for later simulation and reconstruction. See [diagnostics](monitoring.md) and [sampling equations](../concepts/sampling-models.md).

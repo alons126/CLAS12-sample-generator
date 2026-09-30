@@ -16,18 +16,23 @@ source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
   -> Slurm task: GEMC -> recon-util
 ```
 
-Creation may run locally or on the server. Submission runs in a Python child of the server login shell; detector execution runs only in Slurm jobs. The small sourced shell bridge initializes the shared colors and returns the Python status. `submit.py` owns reports, checks, output replacement and submission; `resolve_inputs.py` only resolves inputs. The external payload is unchanged.
+Creation may run locally or on the server. Submission runs in a Python child of the server login shell; detector execution runs only in Slurm jobs. The small sourced shell bridge initializes the shared colors and returns the Python status. `submit.py` owns reports, checks, output replacement and submission; `resolve_inputs.py` only resolves inputs. The external payload remains the boundary that runs each array task.
 
 ## Submit workflow-1 output
 
 ```tcsh
-source run.csh --workflow submit --lund-dir /shared/Uniform__enFD__2070MeV/lundfiles
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/Uniform__enFD__2070MeV/lundfiles
 ```
 
 Without `--execute`, this previews the resolved setup and exact `sbatch` command. The output-action report starts with the `OUTPATH` check, then places each `mchipo/` and `reconhipo/` check directly beside its planned action. Internally, both child paths are inspected before either can change. Preview preserves an existing directory and all its contents, states that execution would delete and recreate it, and creates and verifies either directory when missing. The multiline `sbatch` display uses the system color for option names and normal white for option values. Preview does not call `sbatch`, clear farm logs, or replace existing output. Add `--execute` to clear and recreate both simulation output directories and submit:
 
 ```tcsh
-source run.csh --workflow submit --lund-dir /shared/sample/lundfiles --execute
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/sample/lundfiles \
+    --execute
 ```
 
 The switch is CLI-only: a config file cannot enable execution. The normal `run.csh` disposable-checkout synchronization still runs during preview; sample/output protection does not disable that documented server refresh.
@@ -35,10 +40,11 @@ The switch is CLI-only: a config file cannot enable execution. The normal `run.c
 To submit several completed samples in one invocation, repeat `--lund-dir`:
 
 ```tcsh
-source run.csh --workflow submit \
-  --lund-dir /shared/sample-a/lundfiles \
-  --lund-dir /shared/sample-b/lundfiles \
-  --execute
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/sample-a/lundfiles \
+    --lund-dir /shared/sample-b/lundfiles \
+    --execute
 ```
 
 The resolver validates every selected sample first and returns in-memory settings to `submit.py`. The coordinator processes those samples in order and produces one independent Slurm array per sample. No temporary shell assignments or generated wrappers are needed. If a later sample fails setup or `sbatch`, subsequent samples are skipped while arrays already accepted by Slurm remain submitted.
@@ -56,10 +62,17 @@ The resolver automatically derives two deliberately distinct labels from `beam-e
 All settings have matching `key = value` config entries and `--key value` CLI flags. Precedence is **CLI > explicit config > manifest > defaults**. CLI paths are relative to the checkout; paths inside a config are relative to that config. Blank lines and full-line `#` comments are accepted; duplicate, unknown and empty keys fail. Values are plain text, not executable shell expressions.
 
 ```tcsh
-source run.csh --workflow submit --config config/submission.conf
-source run.csh --workflow submit --lund-dir /shared/sample/lundfiles \
-  --num-jobs 10 --events-per-job 1000 \
-  --gcard /shared/cards/custom.gcard --yaml /shared/reconstruction/custom.yaml
+source run.csh \
+    --workflow submit \
+    --config config/submission.conf
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/sample/lundfiles \
+    --num-jobs 10 \
+    --events-per-job 1000 \
+    --gcard /shared/cards/custom.gcard \
+    --yaml /shared/reconstruction/custom.yaml
 ```
 
 [config/submission.conf](../../config/submission.conf) is a commented example to adapt, not an automatically loaded site profile. Use `source run.csh --workflow submit --help` for every option. Help and malformed CLI arguments return before server synchronization.
@@ -83,11 +96,18 @@ Truth metadata overrides must agree with the manifest: source, beam, target iden
 Supply missing metadata through a config or CLI. For uniform input, for example:
 
 ```tcsh
-source run.csh --workflow submit --lund-dir /shared/archive/lundfiles \
-  --source uniform --beam-energy 2.07052 --target Ar40 \
-  --channel eh --hadron neutron --hadron-region FD \
-  --prefix Uniform__enFD__2070MeV --events-per-job 10000 \
-  --gemc-target-variation rgm_fall2021_Ar
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/archive/lundfiles \
+    --source uniform \
+    --beam-energy 2.07052 \
+    --target Ar40 \
+    --channel eh \
+    --hadron neutron \
+    --hadron-region FD \
+    --prefix Uniform__enFD__2070MeV \
+    --events-per-job 10000 \
+    --gemc-target-variation rgm_fall2021_Ar
 ```
 
 Without a manifest, source, beam energy in GeV, target identity and prefix are required. Uniform input also needs its channel (`1e`, `electron-tester`, `eh`, or a complete label such as `epFD` or `enCD`). `eh` requires hadron and region. Physical input accepts `--event-generator` (default `genie-gst`), `--tune` and `--q2-cut` (default unknown). Supply a detector target variation or explicit GCARD. The file inventory must be contiguous `PREFIX_1.txt` through `PREFIX_N.txt`. The resolver discovers the job count, but requires `events-per-job` because it does not scan whole LUND files to count events.

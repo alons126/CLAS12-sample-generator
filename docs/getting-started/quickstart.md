@@ -5,19 +5,25 @@ All commands below start at the repository root. `run.csh` is a tcsh/csh workflo
 ## Build
 
 ```bash
-cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
-cmake --build build/debug --parallel 4
+cmake \
+    -S . \
+    -B build/debug \
+    -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Debug
+cmake \
+    --build build/debug \
+    --parallel 4
 ```
 
 ## Create a small uniform sample
 
 ```tcsh
 source run.csh \
-  --workflow create-lund \
-  --source uniform \
-  --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-  --events 100 \
-  --output runs/quickstart
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 100 \
+    --output runs/quickstart
 ```
 
 The completed run is `runs/quickstart/Uniform__1e__5986MeV/`. Generation replaces that resolved run directory if it already exists.
@@ -26,12 +32,12 @@ The completed run is `runs/quickstart/Uniform__1e__5986MeV/`. Generation replace
 
 ```tcsh
 source run.csh \
-  --workflow create-lund \
-  --source physical \
-  --config config/samples/physical-lund-creation/genie-gst.conf \
-  --input '/path/to/gst*.root' \
-  --events 100 \
-  --output runs/quickstart
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --input '/path/to/gst*.root' \
+    --events 100 \
+    --output runs/quickstart
 ```
 
 Quote a glob so ROOT receives it unchanged. This command converts existing GENIE GST truth; it does not run GENIE.
@@ -42,9 +48,9 @@ After either creation command completes, preview the detector job without submit
 
 ```tcsh
 source run.csh \
-  --workflow submit \
-  --lund-dir /absolute/path/to/completed-run/lundfiles \
-  --num-jobs 2
+    --workflow submit \
+    --lund-dir /absolute/path/to/completed-run/lundfiles \
+    --num-jobs 2
 ```
 
 Preview validates the manifest, detector inputs, software environment, and resulting `sbatch` command. Add `--execute` only after reviewing the resolved report. See the [submission examples](../submit-simulation/examples.md).

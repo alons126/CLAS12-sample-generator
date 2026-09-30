@@ -13,8 +13,14 @@ HIPO/CLAS12ROOT/MPI/GENIE development libraries are not linked by these generato
 ## Build commands
 
 ```bash
-cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
-cmake --build build/debug --parallel 4
+cmake \
+    -S . \
+    -B build/debug \
+    -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Debug
+cmake \
+    --build build/debug \
+    --parallel 4
 ```
 
 Executables are `build/debug/apps/uniform-lund-creator` and `build/debug/apps/event-generator-to-lund-converter`. Both support `--help` and return nonzero on failure.
@@ -22,15 +28,25 @@ Executables are `build/debug/apps/uniform-lund-creator` and `build/debug/apps/ev
 For production:
 
 ```bash
-cmake -S . -B build/release -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-cmake --build build/release --parallel 4
+cmake \
+    -S . \
+    -B build/release \
+    -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Release
+cmake \
+    --build build/release \
+    --parallel 4
 ```
 
 Select ROOT explicitly if discovery fails:
 
 ```bash
-cmake -S . -B build/debug -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug \
-  -DCMAKE_PREFIX_PATH="$(root-config --prefix)"
+cmake \
+    -S . \
+    -B build/debug \
+    -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_PREFIX_PATH="$(root-config --prefix)"
 ```
 
 `-S .` selects the checkout as the source tree, `-B` selects an out-of-source build directory, `-G "Unix Makefiles"` keeps the supported build-tool choice explicit, and `CMAKE_BUILD_TYPE` selects Debug or Release compiler settings. The configure and build commands address the same selected directory directly.
@@ -40,11 +56,21 @@ The project adopts `ROOT_CXX_STANDARD`, so the compiled application uses the sam
 ## Individual workflows
 
 ```bash
-cmake -S . -B build/uniform-only -DBUILD_GENIE=OFF
-cmake --build build/uniform-only --parallel 4
+cmake \
+    -S . \
+    -B build/uniform-only \
+    -DBUILD_GENIE=OFF
+cmake \
+    --build build/uniform-only \
+    --parallel 4
 
-cmake -S . -B build/genie-only -DBUILD_UNIFORM=OFF
-cmake --build build/genie-only --parallel 4
+cmake \
+    -S . \
+    -B build/genie-only \
+    -DBUILD_UNIFORM=OFF
+cmake \
+    --build build/genie-only \
+    --parallel 4
 ```
 
 Build settings never initiate sample generation or submission.
@@ -52,7 +78,9 @@ Build settings never initiate sample generation or submission.
 ## Installation
 
 ```bash
-cmake --install build/release --prefix /path/to/install
+cmake \
+    --install build/release \
+    --prefix /path/to/install
 ```
 
 The LUND executables and external `submit_GEMC_sample.sh` payload are installed under `bin/`; example settings and detector resources are under `share/clas12-samples/config/`. ROOT must remain available for LUND creation. Submission uses the checkout’s sourced setup script; its payload and inputs must be visible on worker nodes.

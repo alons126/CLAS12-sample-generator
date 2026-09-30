@@ -1,0 +1,104 @@
+# Slurm submission option examples
+#
+# Run submission on ifarm from a csh/tcsh login shell. Preview is the default.
+# Commands containing --execute can delete and recreate the selected run's mchipo/
+# and reconhipo/ directories, and optional farm cleanup can delete direct files from
+# its exact target. Replace and review every /path/to/... placeholder first.
+
+#########################################################################################
+# Print every current submission option without server synchronization
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --help
+
+#########################################################################################
+# Documented safe preview of one completed manifest-backed sample
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/completed-run/lundfiles
+
+#########################################################################################
+# Documented selection, event-limit, detector-resource, and job-name overrides
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --config config/submission.conf \
+    --lund-dir /path/to/completed-run/lundfiles \
+    --gemc-version 5.14 \
+    --gemc-target-variation rgm_fall2021_Ar \
+    --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
+    --yaml config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
+    --torus -1.0 \
+    --num-jobs 3 \
+    --events-per-job 5000 \
+    --job-name arbitrary_manifest_preview
+
+#########################################################################################
+# Manual uniform input: demonstrate every uniform truth option and runtime control
+#
+# The selected lundfiles directory must contain arbitrary-enCD_1.txt through
+# arbitrary-enCD_4.txt because no completion manifest supplies the inventory here.
+# Custom directories and detector files must exist on shared storage.
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/manual-uniform-run/lundfiles \
+    --source uniform \
+    --beam-energy 3.75 \
+    --target Ar40 \
+    --channel eh \
+    --hadron neutron \
+    --hadron-region CD \
+    --prefix arbitrary-enCD \
+    --gemc-version 5.14 \
+    --gemc-target-variation rgm_fall2021_Ar \
+    --gcard /path/to/custom-detector.gcard \
+    --yaml /path/to/custom-reconstruction.yaml \
+    --torus -0.75 \
+    --num-jobs 4 \
+    --events-per-job 321 \
+    --job-name arbitrary_uniform_array \
+    --clas12tags-dir /path/to/clas12Tags \
+    --clear-farm-out true \
+    --farm-out /path/to/farm_out \
+    --execute
+
+#########################################################################################
+# Manual physical input: demonstrate every physical truth-metadata option
+#
+# The directory must contain arbitrary-physical_1.txt and arbitrary-physical_2.txt.
+# This command is a preview because --execute is intentionally omitted.
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/manual-physical-run/lundfiles \
+    --source physical \
+    --beam-energy 5.98636 \
+    --target C12 \
+    --event-generator genie-gst \
+    --tune GTEST_42 \
+    --q2-cut study-Q2-0.17 \
+    --prefix arbitrary-physical \
+    --gemc-version 5.14 \
+    --gemc-target-variation rgm_fall2021_Cx4 \
+    --num-jobs 2 \
+    --events-per-job 777 \
+    --job-name arbitrary_physical_preview \
+    --clear-farm-out false
+
+#########################################################################################
+# Documented repeated --lund-dir form: one independently resolved array per sample
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/sample-a/lundfiles \
+    --lund-dir /path/to/sample-b/lundfiles \
+    --num-jobs 2
