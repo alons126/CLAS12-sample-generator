@@ -13,6 +13,8 @@ The **uniform LUND creator** makes deliberately unphysical samples that cover co
 
 The workflows stop at reconstructed [HIPO](https://github.com/gavalian/hipo) output, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). They do not generate physical interactions, calculate detector acceptance, skim reconstructed data, or perform physics analysis.
 
+**For the legacy code:** see `legacy-code-archive` tag.
+
 ## Start here
 
 The [project Wiki](../../wiki) is the user and developer manual. Its [documentation home](../../wiki/Home) gives separate reading paths for running the software and extending it.
