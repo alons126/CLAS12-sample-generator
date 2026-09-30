@@ -1,19 +1,13 @@
 # CLAS12 sample generator
 
-This project prepares samples for the $e4\nu$ collaboration’s electron-scattering studies with the CLAS12 spectrometer[^clas12-spectrometer] at Jefferson Lab. The project provides two separate user-facing workflows:
+This project prepares simulation samples for the [$e4\nu$ collaboration](https://e4nu.org)’s electron-scattering studies with the CLAS12 spectrometer[^clas12-spectrometer] at Jefferson Lab. It provides two separate user-facing workflows:
 
 | Workflow | Purpose | Result |
 | --- | --- | --- |
-| `lund-creation` | Create [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], the CLAS12 Geant4 simulation, for either unphysical uniform acceptance samples or physical samples baised on existing event generator output | LUND files, a completion manifest, and uniform-only monitoring |
-| `slurm-submission` | Automatic validation of LUND output and submission of Slurm jobs for running the CLAS12 simulation on Jefferson Lab’s ifarm, in which the LUND files are passed through GEMC followed by by the CLAS12 reconstruction code, COATJAVA[^coatjava-reconstruction] | An ifarm Slurm array and a submission log |
+| `create-lund` | Create [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], from uniform acceptance kinematics or existing physical event-generator output | LUND files, a completion manifest, and uniform-only monitoring |
+| `submit` | Validate LUND output and other input requirements, then submit ifarm Slurm arrays that run GEMC detector simulation followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction] | An ifarm Slurm array and a submission log |
 
-The uniform LUND creator deliberately samples unphysical acceptance coverage. The physical LUND converter copies supported truth-level content from existing event-generator output; it does not run GENIE or invent missing kinematics. Creating LUND files never submits simulation.
-
-
-
-It writes [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], the CLAS12 Geant4 simulation, and can submit completed samples to Jefferson Lab’s ifarm, where GEMC simulates the detector response and COATJAVA[^coatjava-reconstruction] reconstructs the resulting events.
-
-It supports deliberately unphysical samples for detector-acceptance studies and physical samples converted from existing event-generator output. Both paths share configuration, target geometry, file naming, provenance, and the handoff from event preparation to detector processing. The project does not run GENIE, perform physics analysis, or calculate final acceptance maps.
+The uniform LUND creator deliberately samples unphysical acceptance coverage. The physical LUND converter copies supported truth-level content from existing event-generator output; it does not run GENIE or invent missing kinematics. Both paths share configuration, target geometry, file naming, provenance, and the handoff to detector processing. Creating LUND files never submits simulation.
 
 ## Quick start
 

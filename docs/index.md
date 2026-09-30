@@ -50,7 +50,7 @@ flowchart TB
     subgraph SIMULATE["2. Submit and simulate"]
         direction RL
         SUBMIT["Warn, clear, and recreate mchipo and reconhipo<br/>Preserve lundfiles and submit the sbatch array"] --> GEMC["GEMC<br/>Detector simulation"]
-        GEMC --> RECON["recon-util<br/>Reconstructed HIPO"]
+        GEMC --> RECON["COATJAVA reconstruction<br/>Reconstructed HIPO"]
     end
 
     PREPARE --> EXECUTE

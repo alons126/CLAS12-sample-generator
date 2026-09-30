@@ -13,7 +13,7 @@ source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
         -> resolve_inputs.py: manifest + configuration + CLI -> validated settings
         -> COATJAVA environment and selected GEMC checks, setup report, output preparation
         -> sbatch --job-name=NAME --array=1-N <external payload>
-  -> Slurm task: GEMC -> recon-util
+  -> Slurm task: GEMC detector simulation -> COATJAVA reconstruction
 ```
 
 Creation may run locally or on the server. Submission runs in a Python child of the server login shell; detector execution runs only in Slurm jobs. The small sourced shell bridge initializes the shared colors and returns the Python status. `submit.py` owns reports, checks, output replacement and submission; `resolve_inputs.py` only resolves inputs. The external payload remains the boundary that runs each array task.

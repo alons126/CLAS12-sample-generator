@@ -1,6 +1,6 @@
 # GEMC and reconstruction worker
 
-`src/workflows/slurm-submission/external/submit_GEMC_sample.sh` is adapted from RG-M job-submission code. Slurm supplies one array index, environment variables identify the input and detector settings, GEMC runs first, and reconstruction follows.
+`src/workflows/slurm-submission/external/submit_GEMC_sample.sh` is adapted from RG-M job-submission code. Slurm supplies one array index and environment variables identify the input and detector settings. The worker then runs the two-part CLAS12 simulation chain: GEMC transports the LUND particles through the detector and writes simulated HIPO output under `mchipo/`; COATJAVA reconstruction, invoked with `recon-util`, reads that file and writes reconstructed HIPO output under `reconhipo/`.
 
 Python validates and resolves inputs but does not copy the detector commands. When RG-M provides an updated job script, compare it with this payload and carry forward the generator-independent inputs described below. The payload is excluded from routine edits so its origin and update path stay clear.
 
@@ -17,7 +17,7 @@ For uniform samples, a prefix can be `Uniform__enFD__2070MeV`. For physical samp
 
 ## What remains the same
 
-The script contains the Slurm header, field settings, directory assignments, GEMC command, and reconstruction command. It requires `JOB_NEVENTS` from the coordinator. It does not contain command arrays, a parser, preview mode, directory creation, input validation, or output checks.
+The script contains the Slurm header, field settings, directory assignments, GEMC detector-simulation command, and COATJAVA reconstruction command. It requires `JOB_NEVENTS` from the coordinator. It does not contain command arrays, a parser, preview mode, directory creation, input validation, or output checks.
 
 The payload processes `JOB_NEVENTS` events with solenoid -1.0 and `TORUS_FIELD` supplied by the caller. The same count is passed to GEMC and reconstruction. Paths follow:
 
@@ -27,7 +27,7 @@ OUTPATH/mchipo/mc_SAMPLE_FILE_PREFIX_SLURM_ARRAY_TASK_ID_torusTORUS_FIELD.hipo
 OUTPATH/reconhipo/recon_SAMPLE_FILE_PREFIX_SLURM_ARRAY_TASK_ID_torusTORUS_FIELD.hipo
 ```
 
-Create the directories before direct execution. `gemc` and `recon-util` must be available in PATH. Execute with Bash or submit with `sbatch`; the script does not itself submit a job. Without a caller-supplied Bash `-e`, a failed GEMC command does not automatically prevent reconstruction. After Slurm accepts an array, neither this worker nor the coordinator tracks later task failures, retries them, or validates reconstructed HIPO content. Operators must inspect Slurm states and logs and verify at least one `reconhipo/` file with `hipo-utils -dump`; see the [submission guide](guide.md#post-submission-verification).
+Create the directories before direct execution. `gemc` and COATJAVA's `recon-util` reconstruction command must be available in PATH. Execute with Bash or submit with `sbatch`; the script does not itself submit a job. Without a caller-supplied Bash `-e`, a failed GEMC command does not automatically prevent reconstruction. After Slurm accepts an array, neither this worker nor the coordinator tracks later task failures, retries them, or validates reconstructed HIPO content. Operators must inspect Slurm states and logs and verify at least one `reconhipo/` file with `hipo-utils -dump`; see the [submission guide](guide.md#post-submission-verification).
 
 ## Caller settings
 
