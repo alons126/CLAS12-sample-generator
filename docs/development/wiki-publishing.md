@@ -1,6 +1,8 @@
-# Public GitHub Wiki
+# Generated GitHub Wiki
 
-The repository is public on GitHub. Its GitHub Wiki is a generated reading view of the project Markdown in this checkout; repository files remain the source of truth.
+The GitHub Wiki is the project's sole reader-facing long-form manual. The Markdown files in this checkout are its version-controlled source; they are not a second documentation product. `README.md` introduces the project and directs readers to the Wiki, while `docs/index.md` becomes the Wiki home page and defines its reading order.
+
+Never edit a Wiki page directly. Make every correction in its repository source, review that change with the code, and let the publication workflow replace the generated Wiki. This rule prevents the published manual from drifting away from the files used during development and review.
 
 ## Publication workflow
 
@@ -12,14 +14,14 @@ Inline-code references in prose are linked automatically. An exact repository pa
 
 Write repository file references as Markdown links or inline code. Prefer repository-relative paths when a basename occurs more than once. Write function references as qualified names such as `RunConfig::createFromCommandLine` when an unqualified name has multiple definitions. These forms let publication resolve the reference deterministically while keeping project Markdown readable outside the wiki.
 
-The [Publish documentation wiki](../../.github/workflows/publish-wiki.yml) action runs after matching documentation changes reach `dev` or `main`. It builds into a temporary directory, checks out the separate `<repository>.wiki.git` repository, synchronizes the generated tree, and pushes only when content changed. Generated source links point to the branch that triggered publication, so the public wiki can follow active development before the project is ready to merge into `main`.
+The [Publish documentation wiki](../../.github/workflows/publish-wiki.yml) action validates the generated Wiki for matching pull requests. After matching documentation changes reach `dev` or `main`, it builds into a temporary directory, checks out the separate `<repository>.wiki.git` repository, synchronizes the generated tree, and pushes only when content changed. Generated source links point to the branch that triggered publication, so the public Wiki can follow active development before the project is ready to merge into `main`.
 
-Direct wiki edits are temporary because the next successful publication replaces them. Make lasting edits in this repository and submit them through its normal review history.
+The action obtains the current fork as `OWNER/NAME` from GitHub Actions' `GITHUB_REPOSITORY` value. The README uses repository-relative `../../wiki` links, so neither the documentation nor its publication configuration embeds one definitive repository URL.
 
 ## Initial GitHub setup
 
 1. Enable **Wikis** under the public repository's **Settings → Features**.
-2. Create and save the initial `Home` page so GitHub initializes the separate wiki Git repository.
+2. Initialize the separate Wiki Git repository once. GitHub does not create `<repository>.wiki.git` until an initial page is saved through the Wiki screen, and it provides no REST or GraphQL API for this bootstrap. A repository administrator or authenticated browser automation can save the generated `Home.md` content as that first page. The publication action replaces it afterward; do not maintain it manually.
 3. Push a matching documentation change to `dev` or `main`. Manual runs become available when GitHub recognizes the workflow on the default branch, but they are not required for `dev` publication.
 
 The action first uses its repository-scoped `GITHUB_TOKEN`. If repository policy does not permit that token to push the wiki Git repository, create a repository secret named `WIKI_TOKEN` containing a narrowly scoped token with permission to write this repository; the workflow automatically prefers that secret when present.
@@ -36,4 +38,4 @@ python3 dev-tools/wiki/build_wiki.py \
     --branch main
 ```
 
-Replace `ORGANIZATION/REPOSITORY` with the GitHub location of the current fork. The publication workflow does this automatically with GitHub Actions' `GITHUB_REPOSITORY` value, so no repository owner or name is embedded in the generated public documentation. The command prints the generated page count. Inspect the temporary directory as Markdown, then remove it when it is no longer needed. Generation rejects a destination that is the checkout itself or one of its ancestors, unresolved local links, unmatched or unused footnotes, missing required source pages, and colliding wiki filenames. Review generated citations and source links after adding a reference, otherwise ambiguous filename, or function name; use an explicit repository path or qualified function name in the project prose to select one definition.
+Replace `ORGANIZATION/REPOSITORY` with the GitHub location of the current fork. The publication workflow supplies this value automatically. The command prints the generated page count. Inspect the temporary directory as Markdown, then remove it when it is no longer needed. Generation rejects a destination that is the checkout itself or one of its ancestors, unresolved local links, unmatched or unused footnotes, missing required source pages, and colliding Wiki filenames. Review generated citations and source links after adding a reference, otherwise ambiguous filename, or function name; use an explicit repository path or qualified function name in the project prose to select one definition.

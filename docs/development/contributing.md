@@ -54,9 +54,9 @@ Use the terms **uniform LUND creator** and **physical LUND converter** when dist
 
 Follow the [source documentation conventions](documentation-style.md) for C++, Python, shell, CMake, and configuration explanations.
 
-## Verify the wiki
+## Verify the Wiki
 
-The repository Markdown is the source of truth. GitHub Wiki pages are generated and must not be edited directly. Build a local preview from the repository root:
+The GitHub Wiki is the sole reader-facing long-form manual, and the repository Markdown is its source of truth. Never edit generated Wiki pages directly. Change the corresponding file under `docs/` or another mapped source, then build a local preview from the repository root:
 
 ```bash
 wiki_preview="$(mktemp -d)"

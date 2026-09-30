@@ -7,7 +7,11 @@ This project prepares simulation samples for the [e4ν collaboration](https://e4
 | `create-lund` | Create [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], from uniform acceptance kinematics or existing physical event-generator output | LUND files, a completion manifest, and uniform-only monitoring |
 | `submit` | Validate LUND output and other input requirements, then submit Slurm job arrays that run GEMC detector simulation followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction] on Jefferson Lab's ifarm | An ifarm Slurm array and a submission log |
 
-Uniform samples provide deliberately unphysical detector-acceptance coverage, while physical samples preserve the particle content of existing event-generator output. LUND creation and detector simulation remain separate steps.
+Uniform samples provide deliberately unphysical detector-acceptance coverage, while physical samples preserve the particle content of existing event-generator output. The project does not run a physical event generator, calculate acceptance maps, or perform physics analysis. LUND creation and detector simulation remain separate steps; the [scientific scope](../../wiki/concepts-scientific-scope) defines these boundaries in detail.
+
+**Full documentation:** [Read the project Wiki](../../wiki).
+
+**For legacy code implementation:** See the `legacy-code-archive` tag.
 
 ## Quick start
 
@@ -20,7 +24,9 @@ cd CLAS12-sample-generator
 
 ### LUND file creation
 
-From the ifarm ssh (or a csh or tcsh shell), create a 100-event uniform electron sample. The launcher configures and builds the applications before running the selected workflow:
+From a csh or tcsh login shell on ifarm, create a 100-event uniform electron sample. `run.csh` treats its checkout as disposable: before running the workflow, it removes untracked files, discards tracked changes, pulls the configured remote branch, and updates submodules while preserving the `build/` directory. Commit and push valuable changes from a development checkout before using it. For local LUND creation, use the direct-executable instructions in the Wiki instead.
+
+The launcher configures and builds the applications before running the selected workflow:
 
 ```tcsh
 source run.csh \
@@ -31,7 +37,7 @@ source run.csh \
     --output runs/first-electron
 ```
 
-The completed run is written below `runs/first-electron/`. Before writing, the uniform LUND creator reports the fully resolved run directory. If that directory already exists, it warns, removes it, and recreates it. Review the reported path before using a production output location. See the [installation guide](docs/getting-started/installation.md) for manual CMake commands and direct executable use. Continue with the [full quickstart](docs/getting-started/quickstart.md) for physical conversion and an ifarm submission preview.
+The completed run is written to `runs/first-electron/Uniform__1e__5986MeV/`. Before writing, the uniform LUND creator reports this fully resolved run directory. If it already exists, the creator warns, removes it, and recreates it. Review the reported path before using a production output location. See the Wiki's [installation guide](../../wiki/getting-started-installation) for manual CMake commands and direct executable use. Continue with the [full quickstart](../../wiki/getting-started-quickstart) for physical conversion and an ifarm submission preview.
 
 Every successful LUND run has this common boundary:
 
@@ -39,13 +45,18 @@ Every successful LUND run has this common boundary:
 RUN/
 ├── lundfiles/
 │   ├── PREFIX_1.txt
+│   ├── ...                         # additional split files when needed
 │   └── lund-creation-monitoring/
-│       └── lund-creation-log.json
+│       ├── lund-creation-log.json
+│       ├── PREFIX__monitoring_plots.root  # uniform only
+│       └── MonitoringPlotsPath/           # uniform only
+│           ├── PREFIX__plots.pdf
+│           └── INDEX_HISTOGRAM.png
 ├── mchipo/
 └── reconhipo/
 ```
 
-The completion manifest records the resolved configuration, event counts, source provenance, and exact LUND file inventory. Uniform creation also writes ROOT, PDF, and PNG monitoring histograms, while physical conversion does not. The [output guide](docs/getting-started/outputs.md) explains the complete directory layout, and the [LUND data contract](docs/concepts/lund-data-contract.md) defines the serialized records and manifest fields.
+The completion manifest records the resolved configuration, event counts, source provenance, and exact LUND file inventory. Uniform creation also writes ROOT, PDF, and PNG monitoring histograms, while physical conversion does not. The Wiki's [output guide](../../wiki/getting-started-outputs) explains the complete directory layout, the [LUND data contract](../../wiki/concepts-lund-data-contract) defines the serialized records and manifest fields, and [external inputs](../../wiki/concepts-external-inputs) records the imported geometry, detector, and worker sources.
 
 ### Slurm job submission on the ifarm
 
@@ -60,25 +71,21 @@ source run.csh \
 
 The preview validates the completed run, detector inputs, software environment, and resulting `sbatch` command without submitting jobs. It preserves existing simulation output. Add `--execute` only after reviewing the report; execution replaces the selected run's `mchipo/` and `reconhipo/` contents while preserving `lundfiles/`.
 
-Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later task failures or certify reconstructed output. Read the [ifarm environment guide](docs/submit-simulation/ifarm-environment.md) before using this workflow, then use the [submission guide](docs/submit-simulation/guide.md) for software-version defaults, input rules, output replacement, and post-submission checks.
+Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later task failures or certify reconstructed output. Read the Wiki's [ifarm environment guide](../../wiki/submit-simulation-ifarm-environment) before using this workflow, then use the [submission guide](../../wiki/submit-simulation-guide) for software-version defaults, input rules, output replacement, and post-submission checks.
 
 ## Documentation
 
-Start with the [documentation home](docs/index.md) or choose a task directly:
+The [project Wiki](../../wiki) is the complete user and developer manual. Start at its documentation home for the recommended reading order, or choose a subject directly:
 
 | Subject | Use it for |
 | --- | --- |
-| [Getting started](docs/getting-started/index.md) | Install, build, run a small sample, and understand outputs |
-| [Create LUND files](docs/create-lund/index.md) | Uniform LUND creation, physical LUND conversion, configuration, examples, and monitoring |
-| [Submit simulation](docs/submit-simulation/index.md) | Preview and submit ifarm GEMC/reconstruction jobs |
-| [Concepts and contracts](docs/concepts/index.md) | Architecture, sampling, LUND records, provenance, and scientific scope |
-| [Development](docs/development/index.md) | Contribute, validate changes, publish the wiki, or add an input adapter |
+| [Getting started](../../wiki/getting-started-overview) | Install, build, run a small sample, and understand outputs |
+| [Create LUND files](../../wiki/create-lund-overview) | Uniform LUND creation, physical LUND conversion, configuration, examples, and monitoring |
+| [Submit simulation](../../wiki/submit-simulation-overview) | Preview and submit ifarm GEMC/reconstruction jobs |
+| [Concepts and contracts](../../wiki/concepts-overview) | Architecture, sampling, LUND records, provenance, and scientific scope |
+| [Development](../../wiki/development-overview) | Contribute, validate changes, publish the Wiki, or add an input adapter |
 
-For a first pass, read **Getting started**, then the guide for the workflow you intend to run. The [workflow examples](tutorials/README.md) contain longer command lists and complete option demonstrations. The [sample-profile inventory](config/samples/README.md) identifies reviewed and experimental configurations.
-
-## Project boundaries
-
-This repository prepares detector-simulation input and submits detector processing. It does not run a physical event generator, calculate acceptance maps, perform physics analysis, monitor completed Slurm jobs, or by itself validate the detector-level physics of a production campaign. The [scientific scope](docs/concepts/scientific-scope.md) defines these boundaries in detail, and [external inputs](docs/concepts/external-inputs.md) records the project’s imported geometry, detector, and worker sources.
+For a first pass, read **Getting started**, then the guide for the workflow you intend to run. The Wiki's [workflow examples](../../wiki/Workflow-Examples) contain longer command lists and complete option demonstrations. The [sample-profile inventory](../../wiki/Sample-Profiles) identifies reviewed and experimental configurations.
 
 ## Contributing
 

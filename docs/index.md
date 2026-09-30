@@ -71,6 +71,20 @@ Submission responsibility ends when `sbatch` accepts the array. The project does
 
 The project does not run a physical event generator, derive acceptance maps, or perform physics analysis.
 
+## Recommended reading order
+
+For a first complete pass through the project, read the documentation in this order:
+
+1. [Installation](getting-started/installation.md) to learn the software requirements and build the project.
+2. [Quickstart](getting-started/quickstart.md) to create a small LUND sample and preview simulation submission.
+3. [Output layout](getting-started/outputs.md) to understand the files and completion manifest handed between workflows.
+4. [Create LUND files](create-lund/index.md), followed by either [uniform sampling](create-lund/uniform.md) or [physical conversion](create-lund/physical.md), according to the sample being prepared.
+5. [Submit simulation](submit-simulation/index.md) before running GEMC detector simulation and COATJAVA reconstruction on ifarm.
+6. [Concepts and data contracts](concepts/index.md) when checking scientific boundaries, serialized records, provenance, or architecture.
+7. [Development](development/index.md) only when modifying or extending the project.
+
+The workflow-specific routes below are shorter alternatives when only one task is needed.
+
 ## Choose where to start
 
 | Goal | Start here |

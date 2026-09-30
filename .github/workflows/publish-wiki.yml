@@ -1,6 +1,15 @@
 name: Publish documentation wiki
 
 on:
+  pull_request:
+    paths:
+      - README.md
+      - config/run.json.md
+      - config/samples/README.md
+      - docs/**
+      - tutorials/**
+      - dev-tools/wiki/build_wiki.py
+      - .github/workflows/publish-wiki.yml
   push:
     branches:
       - dev
@@ -16,16 +25,35 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: publish-documentation-wiki
   cancel-in-progress: true
 
 jobs:
+  validate:
+    name: Validate generated wiki
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out project documentation
+        uses: actions/checkout@v4
+
+      - name: Build wiki pages
+        run: >-
+          python3 dev-tools/wiki/build_wiki.py
+          --output "${RUNNER_TEMP}/generated-wiki"
+          --repository "${GITHUB_REPOSITORY}"
+          --branch "${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+
   publish:
     name: Build and publish wiki
+    needs: validate
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Check out project documentation

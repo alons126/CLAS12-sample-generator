@@ -72,6 +72,8 @@ SPECIAL_PAGES = {
     Path("config/run.json.md"): "Launcher-Settings.md",
 }
 
+README_WIKI_PREFIX = "../../wiki"
+
 SIDEBAR_SECTIONS = (
     ("START HERE", "getting-started"),
     ("CREATE LUND FILES", "create-lund"),
@@ -466,8 +468,9 @@ def rewrite_links(text, source, pages, repository, branch):
         branch: Public source branch.
 
     Returns:
-        Markdown with wiki links for pages and repository links for other files. External links and
-        links within a page stay unchanged.
+        Markdown with wiki links for pages and repository links for other files. Fork-safe Wiki links
+        in the repository README become internal Wiki links. External links and links within a page
+        stay unchanged.
 
     Raises:
         FileNotFoundError: If a relative link names no checked-in source target.
@@ -485,6 +488,19 @@ def rewrite_links(text, source, pages, repository, branch):
 
         path_text, separator, anchor = target.partition("#")
         decoded = urllib.parse.unquote(path_text)
+
+        if source == (ROOT / "README.md").resolve() and (
+            decoded == README_WIKI_PREFIX or decoded.startswith(README_WIKI_PREFIX + "/")
+        ):
+            requested_page = decoded.removeprefix(README_WIKI_PREFIX).lstrip("/") or "Home"
+            available_pages = {Path(name).stem for name in pages.values()}
+
+            if requested_page not in available_pages:
+                raise FileNotFoundError(f"Unresolved Wiki link in README.md: {target}")
+
+            fragment = f"#{anchor}" if separator else ""
+            return match.group("prefix") + requested_page + fragment + match.group("suffix")
+
         resolved = (source.parent / decoded).resolve()
 
         try:
@@ -512,7 +528,7 @@ def generated_notice(repository, branch, source):
 
     relative = source.relative_to(ROOT)
     url = repository_url(repository, branch, relative)
-    return f"> This page is generated from [{relative.as_posix()}]({url}). Edit the repository source; automated publishing replaces direct wiki edits.\n\n"
+    return f"> This page is generated from [{relative.as_posix()}]({url}). Do not edit it directly; change the repository source and let automation publish the Wiki.\n\n"
 # endregion
 
 
