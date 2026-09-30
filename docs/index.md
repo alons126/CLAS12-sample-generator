@@ -6,9 +6,9 @@ This project prepares simulation samples for the [e4ν collaboration](https://e4
 
 ```mermaid
 flowchart TD
-    BUILD["`run.csh --workflow create-lund`<br/>workflow.py builds the application<br/>RunConfig validates profile and CLI"]
-    U["`--source uniform`<br/>uniform-lund-creator<br/>Sample configured acceptance kinematics"]
-    P["`--source physical`<br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
+    BUILD["<code>run.csh --workflow create-lund</code><br/>workflow.py builds the application<br/>RunConfig validates profile and CLI"]
+    U["<code>--source uniform</code><br/>uniform-lund-creator<br/>Sample configured acceptance kinematics"]
+    P["<code>--source physical</code><br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
     SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex position per event, serialize, and split"]
     DONE["LUND files and completion manifest"]
     MONITORING["Uniform only<br/>ROOT, PDF, and PNG monitoring plots"]
@@ -40,11 +40,11 @@ See [Create LUND files](create-lund/index.md) for configuration, source-specific
 flowchart TB
     subgraph PREPARE["1. Prepare and validate"]
         direction LR
-        INPUTS["LUND files<br/>Completion manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["`run.csh --workflow submit`<br/>Validate arguments and refresh the disposable ifarm checkout"]
+        INPUTS["LUND files<br/>Completion manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["<code>run.csh --workflow submit</code><br/>Validate arguments and refresh the disposable ifarm checkout"]
         ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate ifarm and inspect both output paths"]
     end
 
-    EXECUTE{"`--execute` ?"}
+    EXECUTE{"<code>--execute</code> ?"}
     PREVIEW["Preview, by default<br/>Preserve existing output, explain execution actions,<br/>create and verify missing directories"]
 
     subgraph SIMULATE["2. Submit and simulate"]
