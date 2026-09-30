@@ -1,6 +1,6 @@
 # Legacy launch chains and current equivalents
 
-These archived call chains correspond to the legacy baseline recorded by the [`legacy-v1.0.0` GitHub release tag](https://github.com/ORGANIZATION/REPOSITORY/releases/tag/legacy-v1.0.0). Replace `ORGANIZATION/REPOSITORY` with the location of this fork. The Uniform source remains a pinned submodule, so the tag records its exact referenced revision rather than duplicating that independent repository.
+These archived call chains correspond to the legacy baseline recorded by the `legacy-code-archive` tag. The Uniform source remains a pinned submodule, so the tag records its exact referenced revision rather than duplicating that independent repository.
 
 ## 1. Uniform generation
 
@@ -128,7 +128,7 @@ The current archived selection is uniform submission. Its active loop is **en at
 | --- | --- |
 | Uncomment uniform vs GENIE setup line | Choose generation/conversion CLI; both yield the same manifest contract |
 | Hardcoded output/input prefixes | `--output`, `--prefix`, manifest file list |
-| `NUM_OF_FILES` / Slurm array | Actual number of completed manifest files |
+| `NUM_OF_FILES` / Slurm array | Actual number of files listed by the completion manifest |
 | `NEVENTS=10000` in archived payloads | `JOB_NEVENTS` defaults to the largest selected manifest count; explicit event-limit overrides are supported |
 | `TARGET_VARIATION`, `GCARD_FILE`, `YAML_FILE` | Resolved manifest values and config/CLI overrides |
 | `TORUS_FIELD` | Retained +0.5 at 2 GeV; −1.0 at 4/6 GeV |
@@ -138,4 +138,4 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Simulation output reset | Recreate `mchipo`/`reconhipo` for either source; preserve LUND |
 | Repository update | Guarded disposable-clone refresh in `run.csh` |
 
-`source run.csh --workflow submit` sources the unified setup directly. Select completed samples with `--lund-dir`; supply optional config/CLI overrides. See the [submission guide](../submit-simulation/guide.md) for the maintained handoff. Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.
+`source run.csh --workflow submit` sources the unified setup directly. Select LUND runs with `--lund-dir`; supply optional config/CLI overrides. See the [submission guide](../submit-simulation/guide.md) for the maintained handoff. Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.

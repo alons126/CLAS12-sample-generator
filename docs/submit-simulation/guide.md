@@ -1,10 +1,10 @@
 # Create LUND files, then submit ifarm simulation
 
-The project has two separate workflows. `create-lund` produces completed LUND files from uniform kinematics or physical generator output. `submit` consumes those files and submits GEMC followed by reconstruction to ifarm Slurm.
+The project has two separate workflows. `create-lund` produces LUND files and publishes a completion manifest after a successful run. `submit` consumes that run, or explicitly described LUND input, and submits GEMC followed by reconstruction to ifarm Slurm.
 
 ```text
 source run.csh --workflow create-lund --source uniform|physical ...
-  -> launcher/workflow.py -> LUND application -> RUN/lundfiles and completed manifest
+  -> launcher/workflow.py -> LUND application -> RUN/lundfiles and completion manifest
 
 source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
   -> guarded server-checkout update
@@ -37,7 +37,7 @@ source run.csh \
 
 The switch is CLI-only: a config file cannot enable execution. The normal `run.csh` disposable-checkout synchronization still runs during preview; sample/output protection does not disable that documented server refresh.
 
-To submit several completed samples in one invocation, repeat `--lund-dir`:
+To submit several LUND runs in one invocation, repeat `--lund-dir`:
 
 ```tcsh
 source run.csh \
@@ -51,7 +51,7 @@ The resolver validates every selected sample first and returns in-memory setting
 
 The resolver reads `lund-creation-monitoring/lund-creation-log.json` under the supplied directory. It obtains source, beam energy, target identity, detector target variation, channel/hadron/region, generator/tune/Q² labels, filename prefix and completed file counts from the manifest. `OUTPATH` is the supplied directory's parent, so copied samples do not depend on the original absolute creation path. It does not infer scientific metadata from directory names.
 
-The array size is the number of completed files, not the requested generation capacity. The default `JOB_NEVENTS` is the largest event count among the selected files. Physical LUND conversion uses `events-per-file` as both its rollover size and its remaining-input cutoff scale, keeping generation aligned with the intended per-task limit. The cutoff is evaluated before starting a follow-up file and never interrupts a file already in progress. Because it counts input entries rather than accepted reactions, unsupported reactions inside an allowed block can still leave that file shorter than `JOB_NEVENTS`; that task reaches input EOF before the limit. Confirm EOF behavior with the selected detector versions during server validation.
+The array size is the number of selected LUND files, not the requested generation capacity. The default `JOB_NEVENTS` is the largest event count among those files. Physical LUND conversion uses `events-per-file` as both its rollover size and its remaining-input cutoff scale, keeping generation aligned with the intended per-task limit. The cutoff is evaluated before starting a follow-up file and never interrupts a file already in progress. Because it counts input entries rather than accepted reactions, unsupported reactions inside an allowed block can still leave that file shorter than `JOB_NEVENTS`; that task reaches input EOF before the limit. Confirm EOF behavior with the selected detector versions during server validation.
 
 **GEMC defaults to 5.14** because that release includes the new RG-M Ar target implementation and the corrected one-foil C12 target[^sportes-2026-rgm]. Set another version in the submission config or with `--gemc-version`; LUND creation does not select or record it. GEMC 6.x is compatible with COATJAVA 11, but that detector/reconstruction combination needs further testing to determine whether it changes analysis results and is therefore not the project default. The default GCARD uses the manifest's detector target variation together with the beam and submission-time GEMC version. Default YAML and torus settings use +0.5 at 2.07052 GeV and −1.0 at 4.02962/5.98636 GeV. Other beam energies require explicit `--gcard`, `--yaml` and `--torus`. The payload retains fixed solenoid −1.0.
 

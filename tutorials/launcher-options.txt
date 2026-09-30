@@ -3,6 +3,10 @@
 # Run these commands from the repository root. The launcher options control
 # configuring, building, and starting a LUND application. They do not configure
 # detector submission. Replace /path/to/... values before running an example.
+# Except for help and argument-validation exits, run.csh treats the checkout as
+# disposable: it removes untracked files except build/, discards tracked changes,
+# pulls the configured branch, and updates submodules. Commit and push valuable
+# changes from a development checkout before running the workflow examples.
 
 #########################################################################################
 # Print launcher help without updating, building, creating output, or submitting jobs
@@ -69,4 +73,4 @@ source run.csh \
 
 source run.csh \
     --workflow submit \
-    --lund-dir /path/to/completed-run/lundfiles
+    --lund-dir /path/to/lund-run/lundfiles

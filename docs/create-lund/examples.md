@@ -2,6 +2,8 @@
 
 These examples show supported option combinations beyond the minimal quickstart. Commands use small counts unless explicitly marked as production-style. Existing resolved run directories are replaced after a warning.
 
+Commands using `run.csh` are for a disposable ifarm checkout. Before a workflow runs, the launcher removes untracked files except the reusable `build/` tree, discards tracked changes, pulls the configured remote branch, and updates submodules. Commit and push valuable changes from a development checkout first. For local development, build with CMake and use the direct executables shown below.
+
 ## Build without creating output
 
 ```tcsh

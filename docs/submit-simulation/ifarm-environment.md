@@ -138,7 +138,7 @@ The refresh requires a configured Git upstream and network access to any not-yet
 
 ## Detector processing and submission
 
-First create the LUND files. Pass the completed LUND directory; use optional config/CLI overrides for detector settings. Commit and push any in-checkout configuration changes locally first. Then, from a csh/tcsh login shell on ifarm:
+First create the LUND files and completion manifest. Pass the run's `lundfiles/` directory; use optional config/CLI overrides for detector settings. Commit and push any in-checkout configuration changes locally first. Then, from a csh/tcsh login shell on ifarm:
 
 ```tcsh
 source run.csh \

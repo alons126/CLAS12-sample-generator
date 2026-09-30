@@ -14,7 +14,7 @@ Inputs:
     project paths start at the repository root.
 
 Outputs:
-    Build products and completed LUND files. Creation never submits simulation jobs.
+    Build products, LUND files, and a completion manifest. Creation never submits simulation jobs.
 
 Failure:
     Invalid settings or failed commands stop the workflow and return a nonzero status. Child

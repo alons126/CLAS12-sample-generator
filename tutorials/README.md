@@ -5,15 +5,20 @@ The command lists are grouped by user-facing workflow:
 - [`launcher-options.txt`](launcher-options.txt) demonstrates every launcher-owned build/run option, help routing, child-option forwarding, and submission selection.
 - [`uniform-lund-creation.txt`](lund-creation/uniform-lund-creation.txt) creates nine uniform LUND samples: `1e`, `enFD`, and `epFD` at 2070, 4029, and 5986 MeV.
 - [`uniform-all-options.txt`](lund-creation/uniform-all-options.txt) demonstrates every uniform LUND creator option through valid arbitrary studies and the examples from the LUND-creation documentation.
-- [`uniform-slurm-submission.txt`](slurm-submission/uniform-slurm-submission.txt) consumes those completed LUND directories and submits the corresponding GEMC and reconstruction jobs.
+- [`uniform-slurm-submission.txt`](slurm-submission/uniform-slurm-submission.txt) consumes those LUND run directories and submits the corresponding GEMC and reconstruction jobs.
 - [`genie-gst-lund-creation.txt`](lund-creation/genie-gst-lund-creation.txt) converts physical C12 GENIE GST samples at 2070, 4029, and 5986 MeV, plus the run-15733 target-variation exception.
 - [`physical-all-options.txt`](lund-creation/physical-all-options.txt) demonstrates every physical LUND converter option, an arbitrary metadata-layout study, and the documented provenance examples.
-- [`genie-gst-slurm-submission.txt`](slurm-submission/genie-gst-slurm-submission.txt) consumes those completed physical LUND directories and submits the corresponding GEMC and reconstruction jobs.
+- [`genie-gst-slurm-submission.txt`](slurm-submission/genie-gst-slurm-submission.txt) consumes those physical LUND run directories and submits the corresponding GEMC and reconstruction jobs.
 - [`all-options.txt`](slurm-submission/all-options.txt) demonstrates every public submission option for manifest-backed and manually described uniform and physical inputs.
 
-Run the commands from the repository root in a csh/tcsh shell. LUND creation and
-simulation submission remain separate workflows. Each submission example selects
-only the first five completed LUND files, producing a five-task Slurm array.
+Run the commands from the repository root in a csh/tcsh login shell on ifarm. `run.csh`
+treats that checkout as disposable: before a workflow runs, it removes untracked files
+except the reusable `build/` tree, discards tracked changes, pulls the configured remote
+branch, and updates submodules. Commit and push valuable changes from a development
+checkout first. For local LUND creation, build with CMake and invoke the compiled
+executables directly. LUND creation and simulation submission remain separate workflows.
+Each submission example selects only the first five LUND files from each run, producing
+a five-task Slurm array.
 
 Replace every `/path/to/...` value with a reviewed location that is visible in the
 environment where the command will run. Keep LUND and simulation output on shared

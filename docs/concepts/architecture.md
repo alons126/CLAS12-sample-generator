@@ -55,7 +55,7 @@ flowchart TB
     S -->|physical| P["event-generator-to-lund-converter<br/>RunConfig::createFromCommandLine then convertPhysical"]
     U --> LW["Shared event model, target geometry, and LundWriter"]
     P --> LW
-    LW --> F["Completed LUND files and manifest"]
+    LW --> F["LUND files and completion manifest"]
 
     W -->|submit| C["setup_and_submit.csh"]
     C --> PY["submit.py<br/>resolve_inputs.py resolves every sample"]
@@ -96,13 +96,13 @@ This boundary is intentionally side-effect-free with respect to run products: co
 4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
 5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It groups electron, hadron, vertex-position, single-particle correlation, and electron–hadron correlation plots, uses the documented canvas style, sets every Vz axis to −8–5 cm to cover all RG-M vertex positions[^sportes-2026-rgm][^rgm-analysis-note], and labels protons, neutrons, pip, and pim by FD or CD.
 6. It writes every histogram once to `<prefix>__monitoring_plots.root` and renders the same objects to `<prefix>__plots.pdf` and individual PNG files for every uniform channel.
-7. After output and monitoring finish successfully, `LundWriter::finalizeRun` atomically renames the completed manifest into place.
+7. After output and monitoring finish successfully, `LundWriter::finalizeRun` atomically renames the completion manifest into place.
 
 ## Following a physical run
 
 `convertPhysical()` selects the `event-generator` adapter; `genie-gst` is the implemented default. `convertGenieGST()` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and `TTreeReaderArray` objects obtain each entry's array lengths from ROOT leaf metadata. Before indexed access, the adapter requires nonnegative `nf`, `pdgf.GetSize() == nf`, and identical `pxf`, `pyf`, and `pzf` sizes. This validates the complete parallel-array boundary without imposing a fixed particle limit. The adapter supports only QE, MEC, RES, and DIS; another reaction requires an adapter update. It assigns the corresponding process code, filters supported PDG codes, creates an `Event`, and calls the shared writer. Physical conversion creates no ROOT monitoring file or rendered monitoring plots.
 
-The converter stops at accepted-event capacity, input exhaustion, or the physical-input submission cutoff. Before starting a follow-up output file, it requires at least `events-per-file` inclusive input entries beginning with the current accepted entry. The first file is always allowed, and a file that has started is never interrupted by the cutoff. The comparison is intentionally entry-based, so unsupported reactions inside an allowed block can still yield a shorter LUND file. No empty rollover file is opened. Errors reading later chain entries prevent publication of a completed manifest.
+The converter stops at accepted-event capacity, input exhaustion, or the physical-input submission cutoff. Before starting a follow-up output file, it requires at least `events-per-file` inclusive input entries beginning with the current accepted entry. The first file is always allowed, and a file that has started is never interrupted by the cutoff. The comparison is intentionally entry-based, so unsupported reactions inside an allowed block can still yield a shorter LUND file. No empty rollover file is opened. Errors reading later chain entries prevent publication of a completion manifest.
 
 ## Simulation boundary
 
@@ -114,7 +114,7 @@ The converter stops at accepted-event capacity, input exhaustion, or the physica
 - Add another physical adapter under `src/workflows/lund-creation/event-generator-to-lund-converter/<generator-format>/` and register it behind `convertPhysical()`; keep the public executable and manifest contract unchanged.
 - Replace or extend `src/workflows/lund-creation/external/targets.h`, the external geometry source, and validate its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
 - Add detector cards under `config/detector/` and select them explicitly at execution time.
-- Resolve submission inputs from the completed manifest, explicit config and CLI; use the external payload’s scheduler defaults.
+- Resolve submission inputs from the completion manifest, explicit config and CLI; use the external payload’s scheduler defaults.
 
 Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
 

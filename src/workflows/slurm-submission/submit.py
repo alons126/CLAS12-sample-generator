@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Preview or submit completed LUND samples on ifarm.
+"""Preview or submit LUND runs on ifarm.
 
 Purpose:
     Pass checked LUND and detector settings to the external GEMC/reconstruction worker through Slurm.
@@ -12,7 +12,7 @@ Execution flow:
     stays unchanged. Detector commands remain in the external worker.
 
 Inputs:
-    Completed LUND files and manifests, optional config/CLI overrides, GCARD and YAML files,
+    LUND files and completion manifests, optional config/CLI overrides, GCARD and YAML files,
     and the ifarm shell environment containing the module command, Slurm, reconstruction tools,
     and the shared ``*_COLOR`` settings. Standard GEMC selections also require the matching shared
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
@@ -855,7 +855,7 @@ def submit_array(command, environment, root):
     return match.group(1)
 
 def submit_sample(values, environment, root, execute, report, farm_cleared):
-    """Check, report, and optionally submit one completed LUND sample.
+    """Check, report, and optionally submit one LUND run.
 
     Purpose:
         Pass one checked sample to the external GEMC/reconstruction Slurm worker.
@@ -1087,7 +1087,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
 # region Entry point
 def main():
-    """Preview or submit every selected completed LUND sample.
+    """Preview or submit every selected LUND run.
 
     Purpose:
         Run the Python part called by run.csh after the shell environment is ready. Return one integer

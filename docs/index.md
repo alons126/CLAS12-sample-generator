@@ -1,8 +1,10 @@
 # CLAS12 sample generator documentation
 
-This project currently has two user-facing workflows. First create completed LUND files from uniform acceptance sampling or existing physical event-generator truth. Later, and only as a separate action, submit those LUND files to ifarm Slurm for GEMC detector simulation followed by CLAS12 reconstruction. Future downstream workflows will join these as peers when they are implemented.
+This project prepares simulation samples for the [e4ν collaboration](https://e4nu.org)'s electron-scattering studies with the CLAS12 spectrometer[^clas12-spectrometer] at Jefferson Lab. It currently has two user-facing workflows.
 
-## 1. Create LUND files
+First, create LUND files from deliberately unphysical uniform acceptance sampling or existing physical event-generator truth-level output. The physical LUND converter currently supports [GENIE](https://github.com/GENIE-MC/Generator) GST input; its adapter boundary allows other event-generator formats to be added. When creation succeeds, it publishes `lund-creation-log.json`, which records the exact LUND file inventory, event counts, resolved settings, and provenance and marks the run as ready for submission. Later, and only as a separate action, submit that run's `lundfiles/` directory to ifarm Slurm for GEMC detector simulation[^gemc-simulation] followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction]. Future downstream workflows will join these as peers when they are implemented.
+
+## 1. The LUND file creation workflow
 
 ```mermaid
 flowchart TD
@@ -10,7 +12,7 @@ flowchart TD
     U["--source uniform<br/>uniform-lund-creator<br/>Sample configured acceptance kinematics"]
     P["--source physical<br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
     SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex position per event, serialize, and split"]
-    DONE["Completed LUND files and manifest"]
+    DONE["LUND files and completion manifest"]
     MONITORING["Uniform only<br/>ROOT, PDF, and PNG monitoring plots"]
     LOCAL["Creation can run locally<br/>It does not submit simulation jobs"]
 
@@ -30,17 +32,17 @@ flowchart TD
     class MONITORING,LOCAL note;
 ```
 
-Code shown in the diagram: [`run.csh`](../run.csh), [`workflow.py`](../src/launcher/workflow.py), [`RunConfig.h`](../src/workflows/lund-creation/core/config/RunConfig.h), and [`LundWriter.h`](../src/workflows/lund-creation/core/lund/LundWriter.h).
+**Code shown in the diagram:** [`run.csh`](../run.csh), [`workflow.py`](../src/launcher/workflow.py), [`RunConfig.h`](../src/workflows/lund-creation/core/config/RunConfig.h), and [`LundWriter.h`](../src/workflows/lund-creation/core/lund/LundWriter.h).
 
 See [Create LUND files](create-lund/index.md) for configuration, source-specific behavior, examples, and output contracts.
 
-## 2. Submit and simulate
+## 2. The Slurm submission workflow
 
 ```mermaid
 flowchart TB
     subgraph PREPARE["1. Prepare and validate"]
         direction LR
-        INPUTS["Completed LUND files<br/>Manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["run.csh --workflow submit<br/>Validate arguments and refresh the disposable ifarm checkout"]
+        INPUTS["LUND files<br/>Completion manifest or explicit metadata<br/>GCARD, YAML, and optional overrides"] --> ENTRY["run.csh --workflow submit<br/>Validate arguments and refresh the disposable ifarm checkout"]
         ENTRY --> VALIDATE["setup_and_submit.csh calls submit.py<br/>resolve_inputs.py resolves every sample<br/>Validate ifarm and inspect both output paths"]
     end
 
@@ -63,27 +65,11 @@ flowchart TB
     class INPUTS,ENTRY,VALIDATE,PREVIEW,SUBMIT,GEMC,RECON stage;
 ```
 
-Code shown in the diagram: [`run.csh`](../run.csh), [`setup_and_submit.csh`](../src/workflows/slurm-submission/setup_and_submit.csh), [`submit.py`](../src/workflows/slurm-submission/submit.py), and [`resolve_inputs.py`](../src/workflows/slurm-submission/resolve_inputs.py).
+**Code shown in the diagram:** [`run.csh`](../run.csh), [`setup_and_submit.csh`](../src/workflows/slurm-submission/setup_and_submit.csh), [`submit.py`](../src/workflows/slurm-submission/submit.py), and [`resolve_inputs.py`](../src/workflows/slurm-submission/resolve_inputs.py).
 
-See [Submit simulation](submit-simulation/index.md) for preview, execution, environment, and worker details.
+See [Submit simulation](submit-simulation/index.md) for preview, execution, environment, and worker details. The project does not run a physical event generator, derive acceptance maps, or perform physics analysis.
 
-Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later Slurm task failures or validate reconstructed output. After the jobs finish, inspect the scheduler and job logs and use `hipo-utils -dump` on at least one file in `RUN/reconhipo/` to confirm that readable CLAS12 data banks are present.
-
-The project does not run a physical event generator, derive acceptance maps, or perform physics analysis.
-
-## Recommended reading order
-
-For a first complete pass through the project, read the documentation in this order:
-
-1. [Installation](getting-started/installation.md) to learn the software requirements and build the project.
-2. [Quickstart](getting-started/quickstart.md) to create a small LUND sample and preview simulation submission.
-3. [Output layout](getting-started/outputs.md) to understand the files and completion manifest handed between workflows.
-4. [Create LUND files](create-lund/index.md), followed by either [uniform sampling](create-lund/uniform.md) or [physical conversion](create-lund/physical.md), according to the sample being prepared.
-5. [Submit simulation](submit-simulation/index.md) before running GEMC detector simulation and COATJAVA reconstruction on ifarm.
-6. [Concepts and data contracts](concepts/index.md) when checking scientific boundaries, serialized records, provenance, or architecture.
-7. [Development](development/index.md) only when modifying or extending the project.
-
-The workflow-specific routes below are shorter alternatives when only one task is needed.
+**Note:** Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later Slurm task failures or validate reconstructed output. After the jobs finish, inspect the scheduler and job logs and use `hipo-utils -dump` on at least one file in `RUN/reconhipo/` to confirm that readable CLAS12 data banks are present.
 
 ## Choose where to start
 
@@ -91,7 +77,7 @@ The workflow-specific routes below are shorter alternatives when only one task i
 | --- | --- |
 | Build the project and make a small sample | [Getting started](getting-started/index.md) |
 | Create uniform or physical LUND files | [Create LUND files](create-lund/index.md) |
-| Submit completed LUND files to ifarm | [Submit simulation](submit-simulation/index.md) |
+| Submit a LUND run to ifarm | [Submit simulation](submit-simulation/index.md) |
 | Understand sampling, records, architecture, or provenance | [Concepts and data contracts](concepts/index.md) |
 | Modify or extend the software | [Contributing](development/contributing.md) and the [Development guide](development/index.md) |
 
@@ -109,3 +95,9 @@ The workflow-specific routes below are shorter alternatives when only one task i
 LUND creation reports the fully resolved run directory, then recursively replaces that exact directory when it already exists. Both LUND sources prepare empty simulation output directories. Submission previews by default: it inspects both paths before changing either one, creates and verifies missing directories, preserves existing contents, and reports what execution would clear. With `--execute`, it warns before deleting existing simulation output and recreates both directories empty while preserving LUND input. The ifarm checkout is intentionally disposable and is refreshed from Git before a real workflow. Read the relevant workflow page before using production paths.
 
 Every successful LUND run publishes `lundfiles/lund-creation-monitoring/lund-creation-log.json`. That manifest is the handoff from creation to submission and records resolved settings, software provenance, scanned/written counts, and the exact LUND file inventory.
+
+[^clas12-spectrometer]: V. D. Burkert et al., “The CLAS12 Spectrometer at Jefferson Laboratory,” *Nucl. Instrum. Meth. A* **959**, 163419 (2020). [doi:10.1016/j.nima.2020.163419](https://doi.org/10.1016/j.nima.2020.163419)
+
+[^gemc-simulation]: M. Ungaro et al., “The CLAS12 Geant4 simulation,” *Nucl. Instrum. Meth. A* **959**, 163422 (2020). [doi:10.1016/j.nima.2020.163422](https://doi.org/10.1016/j.nima.2020.163422)
+
+[^coatjava-reconstruction]: V. Ziegler et al., “The CLAS12 software framework and event reconstruction,” *Nucl. Instrum. Meth. A* **959**, 163472 (2020). [doi:10.1016/j.nima.2020.163472](https://doi.org/10.1016/j.nima.2020.163472)

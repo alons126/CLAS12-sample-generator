@@ -4,6 +4,10 @@
 # the launcher selections needed to reach it. Values in the arbitrary studies are
 # deliberately non-production examples. Review the resolved output path and replace
 # every /path/to/... placeholder before running a command.
+# Run these commands from a disposable ifarm checkout. Before each workflow,
+# run.csh removes untracked files except build/, discards tracked changes, pulls
+# the configured branch, and updates submodules. Commit and push valuable changes
+# from a development checkout first. Use the compiled executable for local creation.
 
 #########################################################################################
 # Print the current uniform LUND creator interface

@@ -27,7 +27,7 @@
 #   --help                         Print launcher help without synchronizing the ifarm checkout.
 #
 # CLI options (forwarded to submit.py for submit):
-#   --lund-dir DIRECTORY           Select completed LUND input; repeat for multiple samples.
+#   --lund-dir DIRECTORY           Select a LUND run directory; repeat for multiple samples.
 #   --config FILE                  Read optional key = value submission settings.
 #   --execute                      Replace simulation outputs and submit; default is preview.
 #   --source uniform|physical      Override source metadata when no manifest supplies it.
@@ -44,7 +44,7 @@
 #   --gemc-target-variation NAME   Select detector target variation.
 #   --gcard FILE / --yaml FILE     Override detector and reconstruction inputs.
 #   --torus SCALE                  Override the beam-dependent torus default.
-#   --num-jobs N                   Submit first N completed LUND files; default: all.
+#   --num-jobs N                   Submit the first N selected LUND files; default: all.
 #   --events-per-job N             Set common event limit; default: selected-file maximum.
 #   --job-name NAME                Override the metadata-derived Slurm job name.
 #   --clas12tags-dir DIRECTORY     Use a custom clas12Tags checkout as GEMC_DATA_DIR.
@@ -149,7 +149,7 @@ if ($#argv == 0) then
     printf "%s%s\n" "    --input 'GST_GLOB' " '\'
     echo "    --output OUTPUT_PARENT"
     echo ""
-    echo "Submit completed LUND files:"
+    echo "Submit LUND files from a run:"
     echo '  source run.csh \'
     echo '    --workflow submit \'
     echo "    --lund-dir RUN/lundfiles"

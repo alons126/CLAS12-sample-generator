@@ -8,7 +8,7 @@ flowchart TD
     U["--source uniform<br/>uniform-lund-creator<br/>Sample configured acceptance kinematics"]
     P["--source physical<br/>event-generator-to-lund-converter<br/>Read and select existing GENIE GST truth"]
     SHARED["Shared target geometry, Event, Particle, and LundWriter<br/>Assign one vertex position per event, serialize, and split"]
-    DONE["Completed LUND files and manifest"]
+    DONE["LUND files and completion manifest"]
     MONITORING["Uniform only<br/>ROOT, PDF, and PNG monitoring plots"]
     LOCAL["Creation can run locally<br/>It does not submit simulation jobs"]
 
@@ -50,4 +50,4 @@ During event writing, an interactive terminal shows one dynamically refreshed pr
 - [LUND data contract](../concepts/lund-data-contract.md): serialized fields, splitting, and manifest schema.
 - [Targets, seeds, and sampling](../concepts/sampling-models.md): scientific definitions and reproducibility.
 
-Creating LUND files never submits simulation. Continue with [Submit simulation](../submit-simulation/index.md) only after a run has a completed manifest.
+Creating LUND files never submits simulation. Continue with [Submit simulation](../submit-simulation/index.md) only after a run has a completion manifest.

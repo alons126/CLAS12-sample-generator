@@ -14,12 +14,12 @@ source run.csh \
     --help
 
 #########################################################################################
-# Documented safe preview of one completed manifest-backed sample
+# Documented safe preview of one completion-manifest-backed sample
 #########################################################################################
 
 source run.csh \
     --workflow submit \
-    --lund-dir /path/to/completed-run/lundfiles
+    --lund-dir /path/to/lund-run/lundfiles
 
 #########################################################################################
 # Documented selection, event-limit, detector-resource, and job-name overrides
@@ -28,7 +28,7 @@ source run.csh \
 source run.csh \
     --workflow submit \
     --config config/submission.conf \
-    --lund-dir /path/to/completed-run/lundfiles \
+    --lund-dir /path/to/lund-run/lundfiles \
     --gemc-version 5.14 \
     --gemc-target-variation rgm_fall2021_Ar \
     --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \

@@ -22,7 +22,7 @@ build/debug/apps/uniform-lund-creator \
     --output runs
 ```
 
-`events` is the total run size. `events-per-file` controls splitting and defaults to 25,000. The completed manifest records every file count; submission uses the largest selected file count as the shared GEMC/reconstruction `JOB_NEVENTS` limit.
+`events` is the total run size. `events-per-file` controls splitting and defaults to 25,000. The completion manifest records every file count; submission uses the largest selected file count as the shared GEMC/reconstruction `JOB_NEVENTS` limit.
 
 ## Reviewed profiles
 

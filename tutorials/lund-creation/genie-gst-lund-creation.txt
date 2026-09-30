@@ -1,5 +1,9 @@
-# Run these commands from the repository root to convert physical GENIE GST
-# samples into the LUND inputs used by genie-gst-slurm-submission.txt.
+# Run these commands from a disposable ifarm checkout. Before each workflow,
+# run.csh removes untracked files except build/, discards tracked changes, pulls
+# the configured branch, and updates submodules. Commit and push valuable changes
+# from a development checkout first. Use compiled executables for local conversion.
+# These commands convert physical GENIE GST samples into the LUND inputs used by
+# genie-gst-slurm-submission.txt.
 #
 # Expected input layout for each quoted glob:
 #   SAMPLE_DIRECTORY/input_options.txt

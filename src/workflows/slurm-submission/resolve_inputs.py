@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Check and prepare settings for completed LUND samples.
+"""Check and prepare settings for LUND runs.
 
 Purpose:
     Turn a completed run log and optional user settings into checked values for submission. This file
@@ -12,7 +12,7 @@ Execution flow:
 
 Inputs:
     One or more RUN/lundfiles directories, optional flat key = value configuration, CLI overrides,
-    and completed lund-creation-log.json manifests when available.
+    and completion manifests in lund-creation-log.json when available.
 
 Outputs:
     Checked values for preview or execution. This file does not load software, clean output, run
@@ -26,7 +26,7 @@ CLI options:
     --lund-dir DIRECTORY          Select completed RUN/lundfiles; repeat for multiple samples.
     --config FILE                 Read optional key = value submission settings.
     --execute                     Replace simulation outputs and submit; default: preview.
-    --source uniform|physical     Set source when no completed manifest supplies it.
+    --source uniform|physical     Set source when no completion manifest supplies it.
     --beam-energy GeV             Set truth beam energy when no manifest supplies it.
     --target ID                   Set truth target identity when no manifest supplies it.
     --channel NAME                Set uniform 1e, eh, electron-tester, or a complete FD/CD label.
@@ -334,7 +334,7 @@ def channel_label(values):
     return channel
 
 def read_manifest(lund_dir):
-    """Read and check the completed LUND run log when present.
+    """Read and check the LUND run's completion manifest when present.
 
     Args:
         lund_dir: Completed RUN/lundfiles directory selected for submission.

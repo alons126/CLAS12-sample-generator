@@ -34,7 +34,7 @@ Expose one synchronous function that borrows the resolved configuration:
 namespace samples {
 
 /**
- * @brief Convert supported MyGenerator truth records into completed LUND output.
+ * @brief Convert supported MyGenerator truth records into LUND files and publish a completion manifest.
  * @param config Resolved physical-source configuration borrowed for this call.
  * @throws std::exception For invalid input/schema, unsupported-only input, or output failure.
  */
@@ -155,6 +155,6 @@ Add a small deterministic fixture and integration cases covering:
 - input failure in a later chained file;
 - manifest scanned/written/per-file counts and provenance;
 - absence of physical monitoring ROOT/PDF/PNG output;
-- failure without a completed manifest.
+- failure without a completion manifest.
 
 Update [validation](validation.md), the [physical conversion guide](../create-lund/physical.md), [configuration](../create-lund/configuration.md), [source reference](source-reference.md), and relevant examples in the same change.

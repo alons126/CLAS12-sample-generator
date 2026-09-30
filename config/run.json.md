@@ -29,7 +29,7 @@ source run.csh \
     --output OUTPUT_PARENT
 ```
 
-Select completed LUND output using `--lund-dir`, then submit:
+Select a LUND run using `--lund-dir`, then submit:
 
 ```tcsh
 source run.csh \
@@ -67,7 +67,7 @@ The [launcher option tutorial](../tutorials/launcher-options.txt) demonstrates e
 
 The file keeps stable operational defaults out of scientific sample profiles and avoids repeating build controls in every command. It does not hide the action being performed. A reader can determine the selected workflow, source, sample definition, input and output directly from the command line.
 
-Sample physics and generation settings belong in [samples](samples). Submission settings come from the completed manifest plus optional key=value configuration and CLI overrides; scheduler defaults remain in the external payload. Protected GCARD and reconstruction resources belong in [detector](detector).
+Sample physics and generation settings belong in [samples](samples). Submission settings come from the completion manifest plus optional key=value configuration and CLI overrides; scheduler defaults remain in the external payload. Protected GCARD and reconstruction resources belong in [detector](detector).
 
 ## Failure behavior
 

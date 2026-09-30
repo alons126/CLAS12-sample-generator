@@ -7,7 +7,7 @@ This project prepares simulation samples for the [e4ν collaboration](https://e4
 | `create-lund` | Create [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], from uniform acceptance kinematics or existing physical event-generator output | LUND files, a completion manifest, and uniform-only monitoring |
 | `submit` | Validate LUND output and other input requirements, then submit Slurm job arrays that run GEMC detector simulation followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction] on Jefferson Lab's ifarm | An ifarm Slurm array and a submission log |
 
-Uniform samples provide deliberately unphysical detector-acceptance coverage, while physical samples preserve the particle content of existing event-generator output. The project does not run a physical event generator, calculate acceptance maps, or perform physics analysis. LUND creation and detector simulation remain separate steps; the [scientific scope](../../wiki/concepts-scientific-scope) defines these boundaries in detail.
+Uniform samples provide deliberately unphysical detector-acceptance coverage, while physical samples preserve the particle content of existing event-generator output. The physical LUND converter currently supports [GENIE](https://github.com/GENIE-MC/Generator) GST input; its adapter boundary allows other event-generator formats to be added. The project does not run a physical event generator, calculate acceptance maps, or perform physics analysis. LUND creation and detector simulation remain separate steps; the [scientific scope](../../wiki/concepts-scientific-scope) defines these boundaries in detail.
 
 **Full documentation:** [Read the project Wiki](../../wiki).
 
@@ -17,7 +17,7 @@ Uniform samples provide deliberately unphysical detector-acceptance coverage, wh
 
 Building requires CMake 3.20 or later, a C++ compiler compatible with the selected ROOT installation, ROOT, and Python 3.9 or later. The workflow launcher also requires csh or tcsh. Replace `REPOSITORY_URL` with the HTTPS or SSH clone URL of the collaboration's fork.
 
-```bash
+```tcsh
 git clone REPOSITORY_URL
 cd CLAS12-sample-generator
 ```
@@ -60,16 +60,16 @@ The completion manifest records the resolved configuration, event counts, source
 
 ### Slurm job submission on the ifarm
 
-Submission consumes an already completed `lundfiles/` directory. The workflow previews the job array's requirements without submitting them with `sbatch`, by default:
+Submission consumes a successful run's `lundfiles/` directory. Its completion manifest normally supplies the exact file inventory and event counts. The workflow previews the job array's requirements without submitting them with `sbatch`, by default:
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /absolute/path/to/completed-run/lundfiles \
+    --lund-dir /absolute/path/to/lund-run/lundfiles \
     --num-jobs 2
 ```
 
-The preview validates the completed run, detector inputs, software environment, and resulting `sbatch` command without submitting jobs. It preserves existing simulation output. Add `--execute` only after reviewing the report; execution replaces the selected run's `mchipo/` and `reconhipo/` contents while preserving `lundfiles/`.
+The preview validates the LUND run, detector inputs, software environment, and resulting `sbatch` command without submitting jobs. It preserves existing simulation output. Add `--execute` only after reviewing the report; execution replaces the selected run's `mchipo/` and `reconhipo/` contents while preserving `lundfiles/`.
 
 Submission responsibility ends when `sbatch` accepts the array. The project does not monitor later task failures or certify reconstructed output. Read the Wiki's [ifarm environment guide](../../wiki/submit-simulation-ifarm-environment) before using this workflow, then use the [submission guide](../../wiki/submit-simulation-guide) for software-version defaults, input rules, output replacement, and post-submission checks.
 

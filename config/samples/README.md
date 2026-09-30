@@ -2,6 +2,8 @@
 
 These files describe the LUND sample being created. They do not select the user-facing workflow, configure CMake, or submit Slurm jobs. Select a profile explicitly in every LUND-creation command:
 
+The `run.csh` examples are for a disposable ifarm checkout. Before a workflow runs, the launcher removes untracked files except the reusable `build/` tree, discards tracked changes, pulls the configured remote branch, and updates submodules. Commit and push valuable changes from a development checkout first. For local work, pass the same profile to a compiled LUND executable directly.
+
 ```tcsh
 source run.csh \
     --workflow create-lund \

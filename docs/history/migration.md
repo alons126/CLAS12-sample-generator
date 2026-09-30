@@ -1,6 +1,6 @@
 # Migration and compatibility options
 
-The imported sources are retained under `legacy/` and recorded by the public [`legacy-v1.0.0` GitHub release tag](https://github.com/ORGANIZATION/REPOSITORY/releases/tag/legacy-v1.0.0). Replace `ORGANIZATION/REPOSITORY` with the location of this fork. Use the root build and supported CLIs; historical launch scripts perform site-specific operations and may clean/reset repositories. Detailed provenance is in the [launch-chain reference](legacy-workflows.md).
+The imported sources are retained under `legacy/` and recorded by the `legacy-code-archive` tag. Use the root build and supported CLIs; historical launch scripts perform site-specific operations and may clean/reset repositories. Detailed provenance is in the [launch-chain reference](legacy-workflows.md).
 
 ## Entry points
 
@@ -37,7 +37,7 @@ Uniform LUND creation writes one `lundfiles/lund-creation-monitoring/<prefix>__m
 
 ## Retained corrections
 
-Physical conversion retains a remaining-input cutoff generalized to the configured `events-per-file` block used to align with submission `JOB_NEVENTS`, but corrects the premature mid-file stop: the cutoff is checked only before a follow-up file starts. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completed manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](../submit-simulation/ifarm-environment.md).
+Physical conversion retains a remaining-input cutoff generalized to the configured `events-per-file` block used to align with submission `JOB_NEVENTS`, but corrects the premature mid-file stop: the cutoff is checked only before a follow-up file starts. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completion manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](../submit-simulation/ifarm-environment.md).
 
 Known behavior differences and detector-level limitations—including unknown historical random states—are listed in [scientific validation boundaries](../development/validation.md).
 

@@ -1,6 +1,8 @@
 # Quickstart
 
-All commands below start at the repository root. `run.csh` is a tcsh/csh workflow entry point; source it from a compatible shell. Examples intentionally use small event counts.
+All commands below start at the repository root and intentionally use small event counts. The build and LUND-creation commands run locally through the compiled executables. The submission preview uses `run.csh` from a csh/tcsh login shell on ifarm.
+
+`run.csh` treats its ifarm checkout as disposable: before a workflow runs, it removes untracked files except the reusable `build/` tree, discards tracked changes, pulls the configured remote branch, and updates submodules. Commit and push valuable changes from a development checkout before using it.
 
 ## Build
 
@@ -17,10 +19,8 @@ cmake \
 
 ## Create a small uniform sample
 
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
+```bash
+build/debug/apps/uniform-lund-creator \
     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
     --events 100 \
     --output runs/quickstart
@@ -30,10 +30,8 @@ The completed run is `runs/quickstart/Uniform__1e__5986MeV/`. Generation replace
 
 ## Convert existing physical truth
 
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source physical \
+```bash
+build/debug/apps/event-generator-to-lund-converter \
     --config config/samples/physical-lund-creation/genie-gst.conf \
     --input '/path/to/gst*.root' \
     --events 100 \
@@ -44,12 +42,12 @@ Quote a glob so ROOT receives it unchanged. This command converts existing GENIE
 
 ## Preview ifarm submission
 
-After either creation command completes, preview the detector job without submitting it:
+After either creation command succeeds and the run is available on storage visible from ifarm, preview the detector job without submitting it:
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /absolute/path/to/completed-run/lundfiles \
+    --lund-dir /absolute/path/to/lund-run/lundfiles \
     --num-jobs 2
 ```
 
