@@ -18,20 +18,7 @@ If one of these inputs must change, treat the update as a deliberate source repl
 
 ## Build and validate
 
-Configure a fresh out-of-source build when changing compilers or ROOT installations:
-
-```bash
-cmake \
-    -S . \
-    -B build/debug \
-    -G "Unix Makefiles" \
-    -DCMAKE_BUILD_TYPE=Debug
-cmake \
-    --build build/debug \
-    --parallel 4
-```
-
-Run the affected executable with `--help`, then exercise the changed path with a small event count or a submission preview. When the configured checkout provides validation targets, run:
+Follow the [developer build reference](building.md) for a fresh out-of-source build, ROOT selection, partial builds, and compiler changes. Run the affected executable with `--help`, then exercise the changed path with a small event count or a submission preview. When the configured checkout provides validation targets, run:
 
 ```bash
 ctest \

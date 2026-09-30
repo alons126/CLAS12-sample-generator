@@ -5,7 +5,7 @@ This project prepares simulation samples for the [e4ν collaboration](https://e4
 | Workflow | Purpose | Result |
 | --- | --- | --- |
 | `create-lund` | Create [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), the truth-level input to GEMC[^gemc-simulation], from uniform acceptance kinematics or existing physical event-generator output | LUND files, a completion manifest, and uniform-only monitoring |
-| `submit` | Validate LUND output and other input requirements, then submit Slurm job arrays that run GEMC detector simulation followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction] on Jefferson Lab's ifarm | An ifarm Slurm array and a submission log |
+| `submit` | Validate LUND output and other input requirements, then submit Slurm job arrays that run GEMC detector simulation followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction] on Jefferson Lab's ifarm. The output is [HIPO](https://github.com/gavalian/hipo) files to be analyzed using [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master) | An ifarm Slurm array and a submission log |
 
 Uniform samples provide deliberately unphysical detector-acceptance coverage, while physical samples preserve the particle content of existing event-generator output. The physical LUND converter currently supports [GENIE](https://github.com/GENIE-MC/Generator) GST input; its adapter boundary allows other event-generator formats to be added. The project does not run a physical event generator, compute cross sections, calculate acceptance maps, or perform physics analysis. LUND creation and detector simulation remain separate steps; the [scientific validation guide](../../wiki/development-validation) distinguishes verified software behavior from the detector-level evidence required for a production campaign.
 
@@ -37,7 +37,7 @@ source run.csh \
     --output runs/first-electron
 ```
 
-The completed run is written to `runs/first-electron/Uniform__1e__5986MeV/`. Before writing, the uniform LUND creator reports this fully resolved run directory. If it already exists, the creator warns, removes it, and recreates it. Review the reported path before using a production output location. See the Wiki's [installation guide](../../wiki/getting-started-installation) for manual CMake commands and direct executable use. Continue with the [full quickstart](../../wiki/getting-started-quickstart) for physical conversion and an ifarm submission preview.
+The completed run is written to `runs/first-electron/Uniform__1e__5986MeV/`. Before writing, the uniform LUND creator reports this fully resolved run directory. If it already exists, the creator warns, removes it, and recreates it. Review the reported path before using a production output location. See the Wiki's [dependency and build guide](../../wiki/getting-started-installation) for the distinction between automatic ifarm builds and direct local development. Continue with the [full quickstart](../../wiki/getting-started-quickstart) for a local Debug build, physical conversion, and an ifarm submission preview.
 
 Every successful LUND run has this common boundary:
 

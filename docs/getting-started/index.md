@@ -2,7 +2,7 @@
 
 Use this section when first installing the project or when you want the shortest path to a verified sample.
 
-1. [Install and build](installation.md).
+1. [Check dependencies and choose a build path](installation.md).
 2. Follow the [quickstart](quickstart.md) for the uniform LUND creator, physical LUND converter, or submission preview.
 3. Learn the [run-directory and output layout](outputs.md).
 
