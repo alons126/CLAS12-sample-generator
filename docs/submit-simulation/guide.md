@@ -131,7 +131,7 @@ Optional farm-output cleanup deletes only direct files in the exact reviewed dir
 
 The coordinator does not poll task states, retry failures, reconcile outputs, or inspect HIPO content. After the array finishes:
 
-1. Review every array task in Slurm and its `.out` and `.err` files or in the [outstanding Jobs dashboard here](https://scicomp.jlab.org/scicomp/slurmJob/activeJob?user=asportes&account=clas12); other users can adjust those filters or use `squeue -u <username>`.
+1. Review every array task in Slurm and its `.out` and `.err` files or in the [outstanding Jobs dashboard here](https://scicomp.jlab.org/scicomp/slurmJob/activeJob); other users can adjust those filters or use `squeue -u <username>`.
 2. Compare the submitted task range with `RUN/mchipo/` and `RUN/reconhipo/`.
 3. Open at least one reconstructed file:
 
