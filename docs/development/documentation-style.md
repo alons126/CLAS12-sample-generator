@@ -22,7 +22,7 @@ Protected external inputs are excluded from routine edits: `src/workflows/lund-c
 
 ## Citations and references
 
-Use `docs/references.bib` to identify the project BibTeX key and citation details. Repository Markdown pages use GitHub footnote syntax; they do not show raw LaTeX `\cite{...}` commands and do not send readers to the bibliography file. GitHub Wikis do not support footnotes, so the Wiki generator converts those markers and definitions into linked numbered citations and a **References** section. Put each citation marker directly after the text it supports and before the closing punctuation:
+Use `tech-note/references.bib` to identify the project BibTeX key and citation details while the publication workspace remains in the repository. Repository Markdown pages use GitHub footnote syntax; they do not show raw LaTeX `\cite{...}` commands and do not send readers to the bibliography file. GitHub Wikis do not support footnotes, so the Wiki generator converts those markers and definitions into linked numbered citations and a **References** section. Put each citation marker directly after the text it supports and before the closing punctuation:
 
 ```markdown
 This statement is supported by the target note[^sportes-2026-rgm].

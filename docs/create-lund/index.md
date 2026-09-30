@@ -41,6 +41,12 @@ Both sources share validated configuration, target sampling, particle records, L
 
 During event writing, an interactive terminal shows one dynamically refreshed progress bar. Redirected output and batch logs receive occasional complete progress lines instead of carriage-return animation. Both sources calculate completion from written/requested events. Physical conversion also reports scanned/total GST input entries because rejected interactions and the submission-tail cutoff mean those two counts can advance differently. The final progress line states why the physical scan stopped; it can finish below 100% when input exhaustion or the submission-tail cutoff prevents the requested number of events from being written.
 
+## Output replacement and completion
+
+Before writing, either source reports the fully resolved run directory. If that directory already exists, the workflow warns, recursively removes that exact directory, and recreates it. Review the reported path before using a production output location. Both sources prepare empty `mchipo/` and `reconhipo/` directories beside `lundfiles/` for the later simulation workflow.
+
+A successful run publishes `lundfiles/lund-creation-monitoring/lund-creation-log.json` last. This manifest records the resolved settings, software provenance, scanned and written event counts, and exact LUND file inventory. A failed or interrupted run may leave partial output for inspection, but it does not publish the manifest and is not ready for submission. See [Outputs and completion](../getting-started/outputs.md) for the directory layout and [the LUND data contract](../concepts/lund-data-contract.md) for manifest fields.
+
 ## Pages in this section
 
 - [Configuration reference](configuration.md): all shared and source-specific settings.

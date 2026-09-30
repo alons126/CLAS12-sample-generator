@@ -6,6 +6,6 @@ The public baseline for the legacy code is the `legacy-code-archive` tag. It rec
 
 - [Migration and compatibility options](migration.md) maps retired entry points to the maintained workflows.
 - [Legacy launch chains](legacy-workflows.md) records exact archived selections and their current equivalents.
-- [Scientific validation boundaries](../development/validation.md) defines intentional behavior and remaining detector-level validation.
+- [Scientific validation boundaries](../../docs/development/validation.md) defines intentional behavior and remaining detector-level validation.
 
 The archived source trees are independent historical references. Current user and developer contracts must stand on their own and must not require readers to understand those trees.

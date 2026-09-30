@@ -136,10 +136,6 @@ def source_pages():
         resolved = source.resolve()
         relative = source.relative_to(ROOT / "docs")
 
-        # Development comparison notes stay in the repository but are not part of the reader wiki.
-        if relative.parts[0] == "history":
-            continue
-
         if resolved not in pages:
             parts = list(relative.with_suffix("").parts)
 

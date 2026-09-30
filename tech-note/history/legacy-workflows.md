@@ -138,4 +138,4 @@ The current archived selection is uniform submission. Its active loop is **en at
 | Simulation output reset | Recreate `mchipo`/`reconhipo` for either source; preserve LUND |
 | Repository update | Guarded disposable-clone refresh in `run.csh` |
 
-`source run.csh --workflow submit` sources the unified setup directly. Select LUND runs with `--lund-dir`; supply optional config/CLI overrides. See the [submission guide](../submit-simulation/guide.md) for the maintained handoff. Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.
+`source run.csh --workflow submit` sources the unified setup directly. Select LUND runs with `--lund-dir`; supply optional config/CLI overrides. See the [submission guide](../../docs/submit-simulation/guide.md) for the maintained handoff. Server detector software and RNG state remain necessary external conditions for detector-level reproducibility.

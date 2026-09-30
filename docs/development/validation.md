@@ -11,11 +11,14 @@ Software behavior and detector-level scientific validation are separate responsi
 - **Production sampling:** the 1e and charged-hadron mixtures use the configured uniform-p/uniform-1/p prescription. Neutrons use uniform momentum, including the configured zero-to-beam range.
 - **Diagnostics:** monitoring is uniform-only and is stored once in `<prefix>__monitoring_plots.root`; its combined PDF is `<prefix>__plots.pdf`. Physical conversion creates no monitoring histograms.
 - **Metadata:** checked-in Ar profiles use A=40 and Z=18. Geometry, A, and Z remain independently configurable for unusual studies.
+- **Reproduction boundary:** match the beam energy, target variation and geometry, A/Z metadata, both configured seeds, source/channel settings, physical input, software versions, and file settings. These inputs can be selected independently, so individually valid values do not necessarily describe one consistent campaign.
 
 ## Production validation
 
-Use matched LUND samples, identical GEMC and reconstruction versions, identical GCARD/YAML/database resources, and explicit detector RNG control when the production environment supports it. Compare event counts, generated banks, reconstructed particle yields, and acceptance distributions. Retain logs, manifests, software versions, resource hashes, tolerances, and statistical uncertainties with the campaign record.
+Use matched LUND samples, identical GEMC and reconstruction versions, identical GCARD/YAML/database resources, and explicit detector RNG control when the production environment supports it. Compare event counts, generated banks, reconstructed particle yields, and acceptance distributions. Retain the source revision, input-dataset provenance, campaign manifest, ROOT/compiler/GEMC/reconstruction versions, loaded modules, geometry databases, detector-card and reconstruction-YAML hashes, simulation RNG settings, logs, tolerances, and statistical uncertainties with the campaign record.
 
 Uniform FD pion modes and every uniform CD mode remain marked as unvalidated for production. Their configuration files and documentation retain that warning until detector-level evidence supports changing it.
 
 Server software, geometry databases, reconstruction versions, field settings, and simulation RNG state are required before claiming equivalent HIPO output or acceptance. A successful local build or a readable output file does not establish detector-level scientific validity.
+
+Publication-quality acceptance results require reconstructed acceptance plots and statistical comparisons from the intended server environment. Local software checks and uniform-generation monitoring cannot supply that detector-level evidence. Retain the underlying ROOT histograms used to produce exported figures.

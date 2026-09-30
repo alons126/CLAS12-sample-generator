@@ -29,7 +29,7 @@ The beam-specific production profiles select the requested modes directly; `samp
 - en: uniform p from zero to beam momentum and flat theta within the original 5–35° window.
 - ep: half uniform p and half uniform 1/p from 0.3 GeV/c to beam momentum, retaining the original 5–45° flat-theta prescription.
 
-All production channels keep the original flat-theta and azimuth prescriptions, and all electron–hadron modes keep the trigger-electron construction. See [sampling equations](../concepts/sampling-models.md) and the sample profiles.
+All production channels keep the original flat-theta and azimuth prescriptions, and all electron–hadron modes keep the trigger-electron construction. See [sampling equations](../../docs/concepts/sampling-models.md) and the sample profiles.
 
 ## Diagnostics
 
@@ -37,9 +37,9 @@ Uniform LUND creation writes one `lundfiles/lund-creation-monitoring/<prefix>__m
 
 ## Retained corrections
 
-Physical conversion retains a remaining-input cutoff generalized to the configured `events-per-file` block used to align with submission `JOB_NEVENTS`, but corrects the premature mid-file stop: the cutoff is checked only before a follow-up file starts. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completion manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](../submit-simulation/ifarm-environment.md).
+Physical conversion retains a remaining-input cutoff generalized to the configured `events-per-file` block used to align with submission `JOB_NEVENTS`, but corrects the premature mid-file stop: the cutoff is checked only before a follow-up file starts. Creation publishes a manifest only after success. Submission resolves array size and event limit from the completion manifest or explicit settings, validates inputs and replaces the selected simulation output directories. `run.csh` owns the intentional clean/reset/pull operation for the disposable ifarm checkout before invoking the workflow driver. Generation may also replace its fully resolved run directory. See the [SSH workflow](../../docs/submit-simulation/ifarm-environment.md).
 
-Known behavior differences and detector-level limitations—including unknown historical random states—are listed in [scientific validation boundaries](../development/validation.md).
+Known behavior differences and detector-level limitations—including unknown historical random states—are listed in [scientific validation boundaries](../../docs/development/validation.md).
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
 

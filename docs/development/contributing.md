@@ -50,7 +50,7 @@ Update every affected explanation in the same change:
 - source contracts and comments for implementation behavior;
 - examples whenever a command, path contract, or default changes.
 
-Use the terms **uniform LUND creator** and **physical LUND converter** when distinguishing the two LUND sources. The physical LUND converter consumes existing event-generator truth; it does not run an event generator. Keep historical comparisons inside `docs/history/`, which is retained in the repository but excluded from the reader wiki.
+Use the terms **uniform LUND creator** and **physical LUND converter** when distinguishing the two LUND sources. The physical LUND converter consumes existing event-generator truth; it does not run an event generator. Keep publication planning and historical comparisons under `tech-note/`; that development-only tree is outside the reader Wiki source.
 
 Follow the [source documentation conventions](documentation-style.md) for C++, Python, shell, CMake, and configuration explanations.
 

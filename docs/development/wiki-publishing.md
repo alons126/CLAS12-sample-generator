@@ -6,7 +6,7 @@ Never edit a Wiki page directly. Make every correction in its repository source,
 
 ## Publication workflow
 
-[`dev-tools/wiki/build_wiki.py`](../../dev-tools/wiki/build_wiki.py) collects `README.md`, every `docs/**/*.md` page, the tutorial index, the sample-profile reference, and the launcher/build reference pages. It creates collision-free page names in GitHub Wiki's flat namespace, maps `docs/index.md` to `Home.md`, groups links by subject in `_Sidebar.md`, generates `_Footer.md`, rewrites documentation links to wiki pages, and rewrites links to code or configuration as public GitHub source URLs.
+[`dev-tools/wiki/build_wiki.py`](../../dev-tools/wiki/build_wiki.py) collects `README.md`, every `docs/**/*.md` page, the tutorial index, the sample-profile reference, and the launcher/build reference pages. Publication planning, bibliography material, and historical comparisons live under `tech-note/` and are not Wiki inputs. The generator creates collision-free page names in GitHub Wiki's flat namespace, maps `docs/index.md` to `Home.md`, groups links by subject in `_Sidebar.md`, generates `_Footer.md`, rewrites documentation links to wiki pages, and rewrites links to code or configuration as public GitHub source URLs.
 
 GitHub renders footnotes in repository Markdown but does not support them in Wikis. The generator therefore converts each page's `[^key]` markers into linked superscript numbers and replaces its footnote definitions with a numbered **References** section. Citation numbers follow first use on each page, and the generated reference includes a return link to the first citation. Keep native footnote syntax in the repository source; do not hand-maintain a second Wiki-specific citation form.
 

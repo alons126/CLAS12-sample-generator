@@ -103,6 +103,20 @@ source run.csh \
     --output /path/to/arbitrary-uniform-output
 
 #########################################################################################
+# Compatibility spelling: sampled resolves exactly like auto
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --channel eh \
+    --hadron proton \
+    --hadron-region FD \
+    --hadron-momentum sampled \
+    --events 53 \
+    --output /path/to/arbitrary-uniform-output
+
+#########################################################################################
 # Documented examples: reviewed profile, explicit proton study, and electron tester
 #########################################################################################
 

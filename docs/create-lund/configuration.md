@@ -46,7 +46,7 @@ Counts and the split threshold must be integers from 1 through 4294967295. Seeds
 | `electron-momentum` | `auto` | `mixed` for 1e, `beam` for eh; explicit `uniform`, `mixed`, or `beam` |
 | `electron-p-min/max` | `0.7` / beam | 1e momentum bounds in GeV/c |
 | `hadron-theta-min/max` | `auto` / `auto` | FD: p/pions 5–45°, n 5–35°; CD: nucleons 35–145°, pions 35–140° |
-| `hadron-momentum` | `auto` | charged hadrons → `mixed`; neutron → `uniform`; neutron-only `fixed` is optional |
+| `hadron-momentum` | `auto` | `auto` and its older alias `sampled` resolve to `mixed` for charged hadrons and `uniform` for neutrons; neutron-only `fixed` is optional |
 | `hadron-p` | `1` | Fixed neutron momentum in GeV/c |
 | `hadron-p-min` | species/region | p: 0.3 FD, 0.2 CD; pip/pim: 0.2 FD, 0.1 CD; n: 0; upper bound is always beam energy |
 | `trigger-theta` | `25` | Trigger electron theta in eh, degrees |
