@@ -1,12 +1,10 @@
-# Physical LUND converter option examples
+# Physical LUND converter option inventory
 #
-# These examples cover every public option accepted by the physical LUND converter.
-# The converter reads existing GENIE GST truth; it does not run GENIE. Quote input
-# globs so the pattern reaches ROOT unchanged. Replace every /path/to/... placeholder.
-# Run these commands from a disposable ifarm checkout. Before each workflow,
-# run.csh removes untracked files except build/, discards tracked changes, pulls
-# the configured branch, and updates submodules. Commit and push valuable changes
-# from a development checkout first. Use the compiled executable for local conversion.
+# Together these commands show every public physical-conversion option. The converter
+# reads existing GENIE GST truth; it does not run GENIE. Arbitrary values demonstrate
+# syntax, not production settings. Quote input globs so ROOT receives them unchanged,
+# replace every /path/to/... placeholder, and commit changes before using run.csh on
+# the disposable ifarm checkout. Use the built converter for local development.
 
 #########################################################################################
 # Print the current physical LUND converter interface

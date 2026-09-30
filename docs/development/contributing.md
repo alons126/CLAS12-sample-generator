@@ -1,49 +1,51 @@
 # Contributing
 
-Contributions should leave the software, command-line help, checked-in profiles, and documentation describing one consistent workflow. Small, focused changes are easier to review and validate than unrelated changes combined in one branch.
+Keep changes focused and leave the repository describing one coherent workflow.
 
-## Before changing the project
+## Before changing code
 
-1. Read the [architecture overview](../concepts/architecture.md) and the guide for the workflow you will change.
-2. Check the [scientific validation boundaries](validation.md). A successful build verifies software integration, not detector-level physics.
-3. Discuss a new workflow, file format, physics convention, or output contract with the project maintainers before implementing it.
+Read the [architecture](../concepts/architecture.md), the user guide for the affected workflow, and the [validation boundaries](validation.md). Discuss a new workflow, scientific convention, file format, or output contract before implementing it; those choices affect collaborators and existing campaign data.
 
-Do not edit imported detector and geometry sources as part of routine project work:
+Do not casually edit protected external inputs:
 
-- `src/workflows/lund-creation/external/targets.h` is the protected target-geometry and particle-mass source.
-- `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` is the imported worker payload adapted at a defined boundary.
-- Files below `config/detector/` are externally supplied GCARD and reconstruction resources.
+- `src/workflows/lund-creation/external/targets.h`
+- `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`
+- anything under `config/detector/`
 
-If one of these inputs must change, treat the update as a deliberate source replacement. Record its origin, compare behavior, update the relevant provenance documentation, and validate the affected production chain.
+The [external-input guide](../concepts/external-inputs.md) defines their ownership and replacement process.
 
-## Build and validate
+## Implement within the existing boundaries
 
-Follow the [developer build reference](building.md) for a fresh out-of-source build, ROOT selection, partial builds, and compiler changes. Run the affected executable with `--help`, then exercise the changed path with a small event count or a submission preview. When the configured checkout provides validation targets, run:
+- Keep LUND configuration in `RunConfig`, source-specific event logic in its producer or adapter, and serialization/completion in `LundWriter`.
+- Keep uniform monitoring with the uniform LUND creator.
+- Keep submission resolution separate from environment loading, output actions, and the external task worker.
+- Add a new user-facing workflow as a peer under `src/workflows/` only when implementation begins.
+- Move code into shared support only when more than one implemented workflow needs the same real contract.
 
-```bash
-ctest \
-    --test-dir build/debug \
-    --output-on-failure
-```
+Use the terms **uniform LUND creator** and **physical LUND converter** when the distinction matters. The latter converts existing truth and does not run an event generator.
 
-Do not use a successful local run as evidence of detector-level acceptance equivalence. Production validation also requires the selected GEMC and reconstruction versions, detector resources, external databases, random-state controls, campaign inputs, and statistical comparisons described in the [validation guide](validation.md).
+## Validate the change
 
-## Keep documentation synchronized
+Configure a fresh development build, compile the affected targets, inspect current `--help`, and run the smallest meaningful example. For submission changes, use preview first and verify that resolved settings and planned actions are correct. For format or output changes, inspect the generated records and manifest rather than relying only on process exit status.
 
-Update every affected explanation in the same change:
+A successful build verifies software integration, not detector-level equivalence. Record any production validation that remains and follow the [scientific validation guide](validation.md).
 
-- user workflow pages for visible behavior, options, outputs, or failure modes;
-- configuration references and sample profiles for setting changes;
-- source contracts and comments for implementation behavior;
-- examples whenever a command, path contract, or default changes.
+## Update the complete contract
 
-Use the terms **uniform LUND creator** and **physical LUND converter** when distinguishing the two LUND sources. The physical LUND converter consumes existing event-generator truth; it does not run an event generator. Keep publication planning and historical comparisons under `tech-note/`; that development-only tree is outside the reader Wiki source.
+In the same change, update every affected item:
 
-Follow the [source documentation conventions](documentation-style.md) for C++, Python, shell, CMake, and configuration explanations.
+- source comments and public interfaces;
+- CLI help and validation errors;
+- checked-in profiles and configuration references;
+- user procedures, data contracts, and failure behavior;
+- tutorials that demonstrate the changed option or command; and
+- the Wiki source.
 
-## Verify the Wiki
+Do not add build trees, generated samples, HIPO files, credentials, personal paths, or farm logs to Git. Keep historical comparisons and publication working notes outside the reader documentation.
 
-The GitHub Wiki is the sole reader-facing long-form manual, and the repository Markdown is its source of truth. Never edit generated Wiki pages directly. Change the corresponding file under `docs/` or another mapped source, then build a local preview from the repository root:
+## Check the Wiki
+
+Build a local generated copy from the repository root:
 
 ```bash
 wiki_preview="$(mktemp -d)"
@@ -53,8 +55,4 @@ python3 dev-tools/wiki/build_wiki.py \
     --branch main
 ```
 
-Replace `ORGANIZATION/REPOSITORY` with the GitHub location of the current fork. GitHub Actions supplies this value automatically during publication. Generation must finish without unresolved local links, missing source pages, or page-name collisions. See [wiki publishing](wiki-publishing.md) for publication and initial GitHub setup.
-
-## Keep commits reviewable
-
-Do not commit build trees, generated samples, HIPO files, batch output, credentials, personal paths, or local tutorial copies. Explain the reason for the change, the visible behavior, and the validation performed in the proposed change description. Call out any scientific behavior that still needs production validation.
+Replace the repository placeholder with the current fork. Generation must finish without broken local links, citation errors, missing pages, or page-name collisions. Do not edit generated Wiki pages directly.

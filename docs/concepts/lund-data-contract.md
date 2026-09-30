@@ -1,96 +1,103 @@
-# Event records, LUND output and provenance
+# LUND data contract and provenance
 
-## 1. In-memory representation
+The common record and writer separate source-specific event logic from the [LUND format consumed by GEMC](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html).
 
-`Particle` stores PDG code, mass, a `TVector3` momentum and a `TVector3` vertex. `Event` stores a run/input event index, A/Z, beam energy, resonance metadata, weight/process code and an ordered particle vector. Uniform events contain one electron or an electron followed by one selected hadron. Converted events contain the scattered electron followed by retained GST particles in their input order. Retained physical species are protons, neutrons, charged pions and photons. Neutral pions must be decayed upstream into photons before GST production; residual PDG 111 entries are skipped rather than copied or decayed by the physical LUND converter.
+## In-memory records
 
-These types are defined in [Event.h](../../src/workflows/lund-creation/core/lund/Event.h). LUND serialization is centralized in [LundWriter.cpp](../../src/workflows/lund-creation/core/lund/LundWriter.cpp).
+`Particle` stores a PDG identifier, mass, three-momentum, and vertex. `Event` stores an event ID, A, Z, beam energy, two source-specific header values, and an ordered particle vector.
 
-## 2. Units and conventions
+Uniform events contain one electron or an electron followed by one hadron. Physical GENIE events contain the scattered electron followed by supported GST particles in input order. Every particle in one event has the same vertex.
 
-Particle momenta are in GeV/c, masses are in GeV/c², beam and particle energies are in GeV, vertex coordinates are in centimeters, and configured sampling angles are in degrees. The writer uses natural units with c=1 and calculates particle energy as `sqrt(p²+m²)`. Uniform sampling uses ROOT's `TVector3` spherical-coordinate convention, and every particle in an event receives the same vertex position. Written particles are active; reserved status, parent, and daughter fields are zero except for the fixed active-particle field described below.
+Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as sqrt(p²+m²).
 
-Electron, proton, neutron, and charged-pion masses come from the external target source through `TargetGeometry`; the photon mass is exactly zero. Physical inputs must provide upstream-generated neutral-pion decay photons because the physical LUND converter skips residual PDG 111 entries rather than inventing missing decay kinematics.
+## Ten-field event header
 
-## 3. LUND header: ten fields
-
-| Field | Uniform value | GENIE conversion value |
+| Field | Uniform | GENIE GST conversion |
 | --- | --- | --- |
-| 1 | Number of written particles | Number of retained particles including electron |
-| 2 | Configured A (default `Ar40` target resolves to 40) | Configured A |
-| 3 | Configured Z (default `Ar40` target resolves to 18) | Configured Z |
-| 4 | 0 | GST `resid`, the GENIE resonance identifier |
+| 1 | Particle count | Retained particle count, including electron |
+| 2 | Configured A | Configured A |
+| 3 | Configured Z | Configured Z |
+| 4 | 0 | GST `resid` |
 | 5 | 0 | 0 |
-| 6 | 11 (electron beam) | 11 |
-| 7 | Configured beam energy | Same |
+| 6 | 11 | 11 |
+| 7 | Beam energy | Beam energy |
 | 8 | 1 | 1 |
-| 9 | Global generated-event index, starting at zero | Global input entry index, including skipped entries |
+| 9 | Zero-based generated-event ID | Zero-based GST entry index |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
 
-The GENIE process tag and resonance identifier are project-specific uses of user fields. Field 10 is not a physical cross-section weight. We produce LUND files following the format in the [GEMC LUND documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html); the table above describes this repository's actual output.
+Field 10 is a process tag for converted GENIE input, not an event weight or cross section.
 
-## 4. Particle record: fourteen fields
+Every header uses this exact format:
 
-| Fields | Contents |
+```text
+%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %d \t %.2f \n
+```
+
+Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 has two. A 5.98636 GeV beam is written as `5.986360`.
+
+## Fourteen-field particle record
+
+| Field | Meaning |
 | --- | --- |
 | 1 | One-based particle index |
-| 2 | 0 (reserved placeholder) |
-| 3 | 1 (active particle) |
-| 4 | PDG code |
-| 5–6 | 0, 0 (reserved parent/daughter placeholders) |
-| 7–9 | p_x, p_y, p_z |
-| 10 | Energy recomputed as sqrt(p²+m²) |
-| 11 | Mass |
-| 12–14 | Vertex position Vx, Vy, Vz (cm) |
+| 2 | 0, reserved |
+| 3 | 1, active particle |
+| 4 | PDG identifier |
+| 5–6 | 0, 0, reserved parent/status fields |
+| 7–9 | px, py, pz in GeV/c |
+| 10 | Calculated energy in GeV |
+| 11 | Mass in GeV/c² |
+| 12–14 | Vx, Vy, Vz in cm |
 
-The writer rejects empty events and non-finite particle energy or vertex-position data. GENIE `El` and `Ef` are not used to override the mass-shell energy calculation.
+Momentum, energy, mass, and vertex values have five digits after the decimal point. The writer rejects empty events and non-finite energy or vertex data.
 
-## 5. Output precision and layout
+## Supported species and order
 
-Every uniform and physical event header uses the exact format string `"%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %d \t %.2f \n"`. Therefore, fields 4, 5, and 7 have six digits after the decimal point, while field 10 has two. A configured beam energy of 5.98636 is written as `5.986360`, including for electron–hadron and electron-tester samples. Uniform event IDs start at zero and remain continuous across split files; physical conversion uses the input entry index. Particle momenta, energy, mass, and vertices use five digits after the decimal point.
+Supported physical output species are electron (11), photon (22), charged pions (±211), neutron (2112), and proton (2212). The scattered electron is first. Supported final-state particles retain GST order.
 
-Uniform prefixes and run-directory names are derived as `Uniform__<resolved-label>__<beam-MeV>MeV`. Physical prefixes are derived as `<target>__<event-generator>[-<version>]__<tune>__<Q2-cut>__<beam-MeV>MeV`; a known version joins the generator with a hyphen, while `unknown` is omitted. The manifest always records `event-generator-version`, including `unknown`. Nested physical directories use `OUTPUT/<target>/<event-generator>__<tune>/<Q2-cut>__<beam-MeV>MeV`. The metadata layout joins generator and version with a hyphen and uses `__` between the resulting metadata groups. Hyphens and decimal points remain valid inside one value, as in `genie-gst`, `3.6.2`, and `Q2-0.40`. `--prefix` remains an explicit override for a downstream naming requirement. Output paths are explicit and never inferred from the current machine.
+Neutral pions are not written. The input production must decay them upstream so their photons exist in GST. The converter skips a residual PDG 111 instead of inventing daughter momenta.
 
-## 6. Mass convention
+The serialized masses are:
 
-Supported PDG identifiers are declared with the particle record in [`Event.h`](../../src/workflows/lund-creation/core/lund/Event.h). `getParticleMass()` delegates to `TargetGeometry.cpp`, the only project source file that includes external [`targets.h`](../../src/workflows/lund-creation/external/targets.h). Electron, proton, neutron, and charged-pion values are read from that source without duplication. The photon mass is exactly zero. The writer calculates energy from the same in-memory mass and writes both energy and mass with five digits after the decimal point.
-
-| Species (PDG) | LUND mass (GeV/c²) |
+| Species | Mass in GeV/c² |
 | --- | ---: |
-| electron (11) | 0.00051 |
-| proton (2212) | 0.93827 |
-| neutron (2112) | 0.93957 |
-| pip/pim (±211) | 0.13957 |
-| photon (22) | 0 |
+| electron | 0.00051 |
+| proton | 0.93827 |
+| neutron | 0.93957 |
+| $\pi^{+}$ / $\pi^{-}$ | 0.13957 |
+| photon | 0.00000 |
 
-The table shows five-decimal serialized values. Internally, [`targets.h`](../../src/workflows/lund-creation/external/targets.h) supplies electron `0.000511` and proton `0.938272`, so mass-shell energy uses those source values before rounding.
-Neutral-pion mass is absent because PDG 111 is not a supported LUND output species. CLAS12 reconstructs neutral pions from their two-photon decays, so physical GST input must already contain the daughter photons generated upstream.
+These are the five-decimal LUND values. Energy is calculated before serialization from the source precision in `targets.h` (for example, electron 0.000511 and proton 0.938272); photon mass is exactly zero.
 
-## 7. File splitting and completion
+## Splitting and file names
 
-The uniform LUND creator writes exactly the requested `events` count. The physical LUND converter writes up to that accepted-event capacity, with an additional submission cutoff tied to `events-per-file`. Before an accepted event would start a follow-up LUND file, conversion compares the inclusive GST input-entry count beginning with that entry against `events-per-file`; it stops without creating the file when the count is smaller. The first file is always allowed, and the cutoff is never reevaluated inside a file that has started. Because this is an input-entry test rather than an accepted-event test, unsupported reactions inside an allowed block can still make its LUND file short. `events-per-file` defaults to 10,000 for the physical LUND converter and also controls normal rollover. The uniform LUND creator defaults to 25,000 events per file. File numbering starts at 1; filenames are `lundfiles/PREFIX_INDEX.txt`. A file is opened only when an accepted event is available. Uniform event IDs use one zero-based sequence for the complete run and therefore do not restart when a new file opens.
+LUND filenames are `lundfiles/<PREFIX>_<INDEX>.txt`, with one-based file indexes. A file opens only when an event is ready, so a successful run has no empty rollover file. Uniform event IDs remain continuous across files.
 
-Submission resolves manifest/config/CLI inputs into shell settings: `NUM_OF_JOBS` selects numbered LUND files and `JOB_NEVENTS` supplies the shared per-task event limit to GEMC and reconstruction. Physical conversion uses its `events-per-file` value as the input-tail cutoff block so generation and the intended per-task limit share one scale. The cutoff prevents a known-short raw-input tail from starting a follow-up file without interrupting an exact final block; unsupported reactions can still yield fewer written events than raw entries. The completion manifest supplies actual per-file counts automatically; explicit configuration supports inputs without a manifest.
+The writer rotates at `events-per-file`. Physical conversion also uses that number for its follow-up-file input-tail rule, as defined in the [physical guide](../create-lund/physical.md). Actual per-file counts, including a short final file, are recorded in the manifest.
 
-The writer warns, removes and recreates an existing run directory before creation. For either source it prepares empty `mchipo/` and `reconhipo/` directories beside `lundfiles/`; only the uniform LUND creator prepares rendered monitoring output. It writes `lundfiles/lund-creation-monitoring/lund-creation-log.json.tmp` only after LUND output and any required uniform monitoring finish, then renames it to `lundfiles/lund-creation-monitoring/lund-creation-log.json`. The physical LUND converter has no monitoring stage. Failure leaves partial output for inspection without publishing a completion manifest; rerunning the same resolved output replaces those partial results.
+## Completion manifest
 
-Before output creation, the writer prints a setup report grouped into run limits, beam/target values, active source settings, and resolved output paths. It omits fixed serialization constants and settings unused by the selected channel. After the manifest is published, the completion report contains only generated/scanned events, written events, LUND file count, and completion status.
+After all required output succeeds, the writer closes the LUND stream, writes `lund-creation-log.json.tmp`, and atomically renames it to `lund-creation-log.json`. The final name marks completion.
 
-For an input shorter than `events-per-file`, the first file is allowed to consume the available input. For longer input, the rule is evaluated only when an accepted event would start a follow-up file. Exact-multiple blocks are completed. See [validation](../development/validation.md).
+Schema version 1 contains:
 
-## 8. Manifest schema version 1
+| Member | Meaning |
+| --- | --- |
+| `schema_version` | Manifest schema, currently 1 |
+| `workflow` | `uniform` or `physical` |
+| `version`, `revision`, `root_version` | Project version, configure-time Git description, and ROOT version |
+| `targets_sha256` | Hash of the compiled external target header |
+| `git` | Configure-time repository, branch, commit, status, tag, and tracking details |
+| `scanned_events`, `written_events` | Source entries examined and events written |
+| `config` | Complete resolved settings as strings |
+| `files` | Relative LUND paths and event counts in creation order |
 
-| Member | Type | Meaning |
-| --- | --- | --- |
-| `schema_version` | integer | Currently 1 |
-| `workflow` | string | `uniform` or `physical`; physical generator identity is in `config.event-generator` |
-| `version`, `revision`, `root_version` | strings | Project version, short configure-time Git description/dirty marker, ROOT version |
-| `targets_sha256` | string | SHA-256 of the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) used at compilation |
-| `git` | object | Configure-time repository URL, branch, commit subject/hash/date/author, porcelain status summary, nearest tag, detached-HEAD state, tracking branch and ahead/behind counts, and GitHub tree link |
-| `scanned_events`, `written_events` | integers | Input scan count and output count |
-| `config` | object of strings | Fully merged/resolved settings, including RNG/output/mass/sampling modes |
-| `files` | array | Each element has relative `path` and integer `events` |
+The `git` object includes the repository, branch, commit message, complete commit hash, commit date and author, working-tree status summary, nearest tag, detached-HEAD state, tracking branch, ahead/behind counts, and an exact-commit GitHub source link when the repository address permits one.
 
-Local input patterns and output paths are resolved to absolute paths in configuration. Git fields describe the checkout when CMake configured the executable, not a later working-tree change made without rebuilding. The manifest does not hash or freeze original GST inputs; preserve them and the source checkout. A dirty status identifies modified paths but is not a complete source snapshot.
+For uniform creation, scanned and written counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The manifest does not hash the original GST input or capture a dirty checkout as a restorable source snapshot. Preserve source input, checkout revision, and campaign records separately.
 
-After `sbatch` accepts the array and returns a numeric job ID, execution atomically writes `reconhipo/slurm-submission-log.json`. It contains that job ID, the exact submission command, every resolved coordinator/worker parameter, runtime Git information, and SHA-256 hashes of the selected GCARD, reconstruction YAML, and external worker payload. The record proves what Slurm accepted from the coordinator; it does not claim that an array task completed, capture external databases or detector RNG state, or replace scheduler task logs. If writing the log fails, the accepted array remains submitted.
+Git fields describe the checkout when CMake configured the executable. Reusing a build after changing the working tree does not update them; rebuild when provenance must reflect new source.
+
+## Submission record
+
+After `sbatch` accepts an array, the separate `reconhipo/slurm-submission-log.json` records the returned job ID, exact command, resolved worker environment, runtime Git state, and hashes of the GCARD, YAML, and worker payload. It records the handoff to Slurm, not task completion, detector database state, or scientific validity.

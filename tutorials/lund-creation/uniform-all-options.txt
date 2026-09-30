@@ -1,13 +1,9 @@
-# Uniform LUND creator option examples
+# Uniform LUND creator option inventory
 #
-# These examples cover every public option accepted by uniform-lund-creator, plus
-# the launcher selections needed to reach it. Values in the arbitrary studies are
-# deliberately non-production examples. Review the resolved output path and replace
-# every /path/to/... placeholder before running a command.
-# Run these commands from a disposable ifarm checkout. Before each workflow,
-# run.csh removes untracked files except build/, discards tracked changes, pulls
-# the configured branch, and updates submodules. Commit and push valuable changes
-# from a development checkout first. Use the compiled executable for local creation.
+# Together these commands show every public creator option and the launcher choices
+# needed to reach it. Arbitrary values demonstrate syntax and validation; they are
+# not production recommendations. Replace every /path/to/... placeholder. Run the
+# launcher on ifarm from a disposable checkout, or use the built executable locally.
 
 #########################################################################################
 # Print the current uniform LUND creator interface

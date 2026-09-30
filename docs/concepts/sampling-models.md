@@ -1,48 +1,58 @@
-# Sampling models and random-number conventions
+# Sampling models and random numbers
 
-Momentum is in GeV/c, mass in GeV/c², energy in GeV, vertex positions in cm, and configured angles in degrees. For magnitude p and angles θ,φ, the generated Cartesian momentum is
+The uniform LUND creator uses angles in degrees, momentum in GeV/c, mass in GeV/c², energy in GeV, and vertex coordinates in centimeters. For magnitude p and direction theta, phi, ROOT constructs
 
 \[
 (p_x,p_y,p_z)=p(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta),
 \qquad E=\sqrt{p^2+m^2}.
 \]
 
-## Electron-only mode
+## Electron-only events
 
-`channel=1e` draws θ uniformly from 5–40° and φ uniformly over the full azimuth. Its default momentum alternates by run-global event index over bounds \(a=0.7\) GeV/c and \(b=E_{beam}\): even indices use \(p\sim U(a,b)\), and odd indices use \(1/p\sim U(1/b,1/a)\). `electron-momentum=uniform` selects pure uniform-p; `beam` is the electron-tester mode.
+For `channel=1e`, theta and phi are uniform inside the configured ranges. The default momentum is a deterministic 50/50 mixture over bounds a and b:
 
-The tester always keeps the 5–40° and full-φ scan at beam momentum. It provides a rough estimate for the trigger-electron placement in electron–hadron samples; the fixed 25° trigger value was selected from that scan.
+- even run-global event IDs draw p uniformly from [a,b];
+- odd IDs draw q uniformly from [1/b,1/a] and use p=1/q.
 
-## Electron–hadron mode
+The production bounds are a=0.7 GeV/c and b=beam momentum. `electron-momentum=uniform` selects only the first distribution. The 2.07052 GeV production profile changes the theta minimum from 5° to 2°; this is a profile choice rather than a hidden beam rule.
 
-`channel=eh` selects the second particle with `hadron=proton|neutron|pip|pim` and its angular region with `hadron-region=FD|CD`.
+The electron tester fixes p to the beam momentum while scanning theta from 5–40° and full phi.
 
-| Hadron | FD θ | CD θ | FD p minimum | CD p minimum | Default p model |
-| --- | --- | --- | ---: | ---: | --- |
-| proton | 5–45° | 35–145° | 0.3 | 0.2 | mixed |
-| neutron | 5–35° | 35–145° | 0 | 0 | uniform |
-| pip, pim | 5–45° | 35–140° | 0.2 | 0.1 | mixed |
+## Electron–hadron events
 
-Maximum p is the beam energy. Theta is always uniform inside the configured FD/CD range and phi is always uniform over −180° to 180°. Fixed 1 GeV/c momentum is an optional neutron-only mode in either region.
+For `channel=eh`, hadron theta is uniform inside the configured FD or CD range and phi is uniform from −180° to 180°. The upper momentum bound is the beam momentum.
 
-For charged hadrons, `mixed` alternates uniform-p and uniform-1/p:
+Charged hadrons use the same run-global even/odd mixture of uniform-p and uniform-1/p. Neutrons use uniform-p, including a lower bound of zero. The optional fixed mode is neutron-only.
 
-\[
-p_U\sim U(a,b),\qquad q\sim U(1/b,1/a),\quad p_I=1/q.
-\]
+The trigger electron has beam momentum and configured theta, normally 25°. Its phi is determined rather than sampled: find the center in {−120, −60, 0, 60, 120, 180}° closest to the direction opposite the hadron, then add the configured offset. Equal-distance ties keep the first center checked. The same separation rule is retained for CD samples even though the CD geometry does not require it.
 
-Its inverse component has cumulative distribution
+## Vertex positions
 
-\[
-F_I(p)=\frac{1/a-1/p}{1/a-1/b}.
-\]
+The target catalog resolves a geometry key. `TargetGeometry` uses the external `targets.h` implementation to draw Vx and Vy from its beam-spot distributions and Vz from the selected target cell or foil positions. Exactly one vertex is drawn for each written event, and every particle in that event receives it.
 
-Even event indices use \(p_U\); odd indices use \(p_I\). The alternation continues across file boundaries. Neutrons default to pure uniform-p so their distribution can cover migration around analysis-imposed thresholds.
+In the checked-in target source, Vx and Vy are independent Gaussian draws with mean 0 and sigma 0.04 cm. Vz follows the resolved geometry:
 
-## Trigger electron
+| Geometry | Vz prescription in cm |
+| --- | --- |
+| `Ar` | Uniform from −5.75 to −5.25 |
+| `liquid` | Uniform from −5.5 to −0.5 |
+| `4-foil` | Equal choice of −4.875, −3.625, −2.375, and −1.125 |
+| `1-foil` | Fixed at −0.5 |
+| `1-foil-small` | Fixed at −2.1 |
+| `1-foil-large` | Fixed at −2.32 |
+| `Ca` | Fixed at −3.0 |
 
-The `eh` trigger electron has beam momentum and θ=25°. Its φ is the closest center in {−120,−60,0,60,120,180} degrees to the direction opposite the hadron, followed by the configured beam offset. The opposite-sector correlation is not obligatory for CD hadrons; it is retained deliberately to keep the trigger electron separated from the hadron. All particles in an event share one vertex position.
+These values describe the checked-in `targets.h` snapshot. Recheck this table whenever that protected source is replaced.
 
-## RNG ownership
+Target identity, geometry, and LUND A/Z metadata are distinct values. An A/Z override does not change the vertex distribution.
 
-Uniform generation owns separate `TRandom3` streams for kinematics (`seed`) and geometry (`vertex-seed`). Nonzero seeds are repeatable when the complete configuration, software, ROOT version, and draw order match. `TRandom3(0)` requests ROOT automatic seeding and is intentionally nonrepeatable; recording zero does not record the internal seed. Reference comparisons therefore use known nonzero seeds.
+## Random-stream ownership
+
+Uniform creation owns two `TRandom3` objects:
+
+- `seed` controls particle momentum and angles;
+- `vertex-seed` controls target positions.
+
+The streams remain separate, so a geometry change does not consume values from the kinematic sequence. The geometry adapter temporarily transfers the vertex RNG state through the external header's global generator under a mutex, then returns the updated state to the caller.
+
+A nonzero seed repeats a sequence only when the complete configuration, software, ROOT version, and draw order also match. `TRandom3(0)` requests automatic seeding. A manifest containing zero therefore cannot reproduce the sequence from that value alone.

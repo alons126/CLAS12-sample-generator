@@ -1,6 +1,6 @@
-# Outputs and completion
+# Run directories and outputs
 
-Both LUND sources use the same completed-run boundary:
+Both LUND sources create the same run boundary:
 
 ```text
 RUN/
@@ -9,20 +9,29 @@ RUN/
 │   ├── <PREFIX>_2.txt
 │   └── lund-creation-monitoring/
 │       ├── lund-creation-log.json
-│       ├── <PREFIX>__monitoring_plots.root  # uniform only
-│       └── MonitoringPlotsPath/           # uniform only
+│       ├── <PREFIX>__monitoring_plots.root   # uniform only
+│       └── MonitoringPlotsPath/             # uniform only
 │           ├── <PREFIX>__plots.pdf
 │           └── <INDEX>_<HISTOGRAM>.png
-├── mchipo/                                # prepared by either LUND source or submission
-└── reconhipo/                             # prepared by either LUND source or submission
-    ├── slurm-submission-log.json          # resolved submission, Git, and input provenance
-    └── recon_<PREFIX>_<INDEX>_torus<SCALE>.hipo # reconstructed task output after Slurm runs
+├── mchipo/
+│   └── mc_<PREFIX>_<INDEX>_torus<SCALE>.hipo
+└── reconhipo/
+    ├── recon_<PREFIX>_<INDEX>_torus<SCALE>.hipo
+    └── slurm-submission-log.json
 ```
 
-`lund-creation-log.json` is published last and marks a consumable run. It includes resolved LUND settings and full configure-time Git information. A failed creation may leave partial files for inspection but no completion manifest. Submission reads the manifest's exact file list and event counts rather than guessing from directory names.
+The contents appear in stages:
 
-Both LUND sources create empty `mchipo/` and `reconhipo/` directories as part of the completed-run layout. Submission inspects both paths before changing either one. Preview preserves existing contents, explains that execution would clear them, and creates and verifies either directory when missing; it does not create a submission log. With `--execute`, submission warns before deleting each existing directory and its contents, recreates both directories empty to clear previous run output, and calls `sbatch`. After Slurm accepts the array and returns a numeric job ID, submission atomically writes `slurm-submission-log.json`. The log records that job ID, all resolved submission parameters, the exact command, runtime Git information, and hashes of the GCARD, reconstruction YAML, and worker payload. If log publication then fails, the accepted array remains submitted.
+| Stage | What exists |
+| --- | --- |
+| Successful LUND creation | LUND text files, the completion manifest, empty `mchipo/` and `reconhipo/`; uniform runs also contain monitoring products |
+| Accepted `sbatch` submission | `slurm-submission-log.json` records the accepted job ID and resolved submission; HIPO output may not exist yet |
+| Completed Slurm tasks | GEMC output appears under `mchipo/`, and COATJAVA reconstruction output appears under `reconhipo/` |
 
-Each submitted jobs has an `.err` and an `.out` files associated with it in the `farm-out` directory. The job ID from `sbatch` and name from the code can be used to locate the relevant job's files. In general, environment being used at the submission stage is forwarded into the jobs on the ifarm. The echo commands in [`submit_GEMC_sample.sh`](src/workflows/slurm-submission/external/submit_GEMC_sample.sh) are therefore used to validate proper definitions of each job parameters.
+The final manifest name is a completion marker. A failed or interrupted creation may leave partial files and a temporary `.json.tmp` file, but submission rejects that state. The [LUND data contract](../concepts/lund-data-contract.md) defines the text records and manifest fields.
 
-Uniform creation also produces ROOT monitoring and rendered PDF/PNG plots. Physical conversion produces summaries and provenance but no monitoring histograms. GEMC and reconstruction outputs appear only after the separate submission workflow executes. For field-level LUND and manifest definitions, see the [LUND data contract](../concepts/lund-data-contract.md). For replacement and recovery behavior, see the [creation configuration](../create-lund/configuration.md) and [submission guide](../submit-simulation/guide.md).
+The creation workflow replaces an existing resolved `RUN/` directory after warning. Submission has a different boundary: preview preserves existing simulation output, while `--execute` replaces only `mchipo/` and `reconhipo/` and preserves `lundfiles/`. The [submission guide](../submit-simulation/guide.md) defines those actions and the recovery implications.
+
+Each Slurm task also writes scheduler `.out` and `.err` files to the farm-output path configured by the worker. The worker echoes its received settings for diagnosis; those lines report values but do not validate that the values are scientifically correct. After jobs finish, inspect every task state and log, compare the output inventory with the submitted array, and open at least one reconstructed file with `hipo-utils -dump`.
+
+The simulation and reconstruction products use the [HIPO format](https://github.com/gavalian/hipo). Downstream physics analysis is outside this repository; [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master) provides ROOT interfaces for reading and analyzing CLAS12 HIPO data.

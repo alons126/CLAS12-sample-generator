@@ -11,8 +11,9 @@ Execution flow:
     pages.
 
 Inputs:
-    The repository README, docs/**/*.md, tutorial index, sample-profile reference, and build/launcher
-    references. The GitHub OWNER/NAME and branch are given directly so source links stay stable.
+    The repository README, non-ignored docs/**/*.md pages, tutorial index, sample-profile reference,
+    and build/launcher references. The GitHub OWNER/NAME and branch are given directly so source links
+    stay stable.
 
 Outputs:
     A flat wiki directory. Existing non-Markdown files and `.git` stay in place. File links use the
@@ -33,6 +34,7 @@ from collections import defaultdict
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 import urllib.parse
 
@@ -107,12 +109,36 @@ IGNORED_REFERENCE_PARTS = {".git", "build", "test-runs", "__pycache__"}
 # Page discovery --------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # region Page discovery
+def git_ignored_sources(sources):
+    """Return documentation candidates excluded by the repository's Git ignore rules."""
+
+    relative_paths = [source.relative_to(ROOT).as_posix() for source in sources]
+
+    if not relative_paths:
+        return set()
+
+    result = subprocess.run(
+        ["git", "check-ignore", "-z", "--stdin"],
+        cwd=ROOT,
+        input="\0".join(relative_paths) + "\0",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if result.returncode not in (0, 1):
+        diagnostic = result.stderr.strip() or "git check-ignore failed"
+        raise RuntimeError(diagnostic)
+
+    return {(ROOT / path).resolve() for path in result.stdout.split("\0") if path}
+
+
 def source_pages():
     """Map each project Markdown source to its wiki filename.
 
     Execution flow:
-        Add the pages with fixed names, then add every remaining documentation page. Give each page a
-        unique filename because a GitHub Wiki keeps all pages in one directory.
+        Add the pages with fixed names, then add every remaining non-ignored documentation page. Give
+        each page a unique filename because a GitHub Wiki keeps all pages in one directory.
 
     Returns:
         Absolute source paths mapped to flat wiki filenames.
@@ -132,11 +158,14 @@ def source_pages():
 
         pages[source.resolve()] = wiki_name
 
-    for source in sorted((ROOT / "docs").rglob("*.md")):
+    documentation_sources = sorted((ROOT / "docs").rglob("*.md"))
+    ignored_sources = git_ignored_sources(documentation_sources)
+
+    for source in documentation_sources:
         resolved = source.resolve()
         relative = source.relative_to(ROOT / "docs")
 
-        if resolved not in pages:
+        if resolved not in pages and resolved not in ignored_sources:
             parts = list(relative.with_suffix("").parts)
 
             if parts[-1] == "index":

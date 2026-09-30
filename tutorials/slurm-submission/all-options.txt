@@ -1,9 +1,9 @@
-# Slurm submission option examples
+# Slurm submission option inventory
 #
-# Run submission on ifarm from a csh/tcsh login shell. Preview is the default.
-# Commands containing --execute can delete and recreate the selected run's mchipo/
-# and reconhipo/ directories, and optional farm cleanup can delete direct files from
-# its exact target. Replace and review every /path/to/... placeholder first.
+# Together these commands show every public submission option. Run them on ifarm from
+# csh/tcsh. Preview is the default. --execute replaces the selected run's mchipo/ and
+# reconhipo/ directories; optional farm cleanup deletes direct files from one exact
+# reviewed directory. Replace every /path/to/... placeholder before use.
 
 #########################################################################################
 # Print every current submission option without server synchronization

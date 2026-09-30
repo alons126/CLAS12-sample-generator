@@ -1,99 +1,106 @@
-# Create LUND files, then submit ifarm simulation
+# Simulation submission guide
 
-The project has two separate workflows. `create-lund` produces LUND files and publishes a completion manifest after a successful run. `submit` consumes that run, or explicitly described LUND input, and submits GEMC followed by reconstruction to ifarm Slurm.
+Run submission from a csh/tcsh login shell on ifarm after LUND creation has published its completion manifest.
+
+## Preview one run
+
+```tcsh
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/path/to/run/lundfiles
+```
+
+Preview is the default. It resolves the sample, loads and verifies the selected GEMC environment, checks COATJAVA and all detector inputs, inspects both simulation-output paths, creates a missing `mchipo/` or `reconhipo/` directory, and prints the exact `sbatch` command. It preserves existing output and does not call `sbatch` or write a submission log.
+
+Add `--execute` only after reviewing that report:
+
+```tcsh
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/path/to/run/lundfiles \
+    --execute
+```
+
+Execution warns, removes the exact existing `mchipo/` and `reconhipo/` directories recursively, recreates them empty, and submits the array. It never removes `lundfiles/`. The `--execute` switch is CLI-only; a configuration file cannot enable it.
+
+## How inputs are resolved
+
+Settings follow this precedence:
 
 ```text
-source run.csh --workflow create-lund --source uniform|physical ...
-  -> launcher/workflow.py -> LUND application -> RUN/lundfiles and completion manifest
-
-source run.csh --workflow submit --lund-dir RUN/lundfiles [overrides]
-  -> guarded server-checkout update
-  -> source src/workflows/slurm-submission/setup_and_submit.csh
-     -> submit.py
-        -> resolve_inputs.py: manifest + configuration + CLI -> validated settings
-        -> COATJAVA environment and selected GEMC checks, setup report, output preparation
-        -> sbatch --job-name=NAME --array=1-N <external payload>
-  -> Slurm task: GEMC detector simulation -> COATJAVA reconstruction
+command line -> optional submission config -> completion manifest -> defaults
 ```
 
-Creation may run locally or on the server. Submission runs in a Python child of the server login shell; detector execution runs only in Slurm jobs. The small sourced shell bridge initializes the shared colors and returns the Python status. `submit.py` owns reports, checks, output replacement and submission; `resolve_inputs.py` only resolves inputs. The external payload remains the boundary that runs each array task.
+CLI paths are resolved from the repository root. Paths inside a submission config are resolved from that config file. The parser accepts plain `key = value` lines, blank lines, and full-line comments. Unknown, duplicate, and empty keys fail.
 
-## Submit workflow-1 output
+Paths forwarded to the external worker may contain only letters, digits, `/`, `_`, `-`, and `.`. This restriction is checked before submission because the worker passes those paths to external commands.
 
-```tcsh
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/Uniform__enFD__2070MeV/lundfiles
-```
+The manifest supplies the exact LUND inventory and per-file event counts. The array size defaults to the selected file count, and the shared `JOB_NEVENTS` limit defaults to the largest selected file count. `--num-jobs N` selects the first N files. `--events-per-job N` replaces the shared event limit; it does not rewrite or recount the files.
 
-Without `--execute`, this previews the resolved setup and exact `sbatch` command. The output-action report starts with the `OUTPATH` check, then places each `mchipo/` and `reconhipo/` check directly beside its planned action. Internally, both child paths are inspected before either can change. Preview preserves an existing directory and all its contents, states that execution would delete and recreate it, and creates and verifies either directory when missing. The multiline `sbatch` display uses the system color for option names and normal white for option values. Preview does not call `sbatch`, clear farm logs, or replace existing output. Add `--execute` to clear and recreate both simulation output directories and submit:
+Truth metadata from a manifest cannot be contradicted by an override. Detector policy can be changed independently: GEMC version, compatible detector target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name.
 
-```tcsh
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/sample/lundfiles \
-    --execute
-```
+## Submission options
 
-The switch is CLI-only: a config file cannot enable execution. The normal `run.csh` disposable-checkout synchronization still runs during preview; sample/output protection does not disable that documented server refresh.
-
-To submit several LUND runs in one invocation, repeat `--lund-dir`:
-
-```tcsh
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/sample-a/lundfiles \
-    --lund-dir /shared/sample-b/lundfiles \
-    --execute
-```
-
-The resolver validates every selected sample first and returns in-memory settings to `submit.py`. The coordinator processes those samples in order and produces one independent Slurm array per sample. No temporary shell assignments or generated wrappers are needed. If a later sample fails setup or `sbatch`, subsequent samples are skipped while arrays already accepted by Slurm remain submitted.
-
-The resolver reads `lund-creation-monitoring/lund-creation-log.json` under the supplied directory. It obtains source, beam energy, target identity, detector target variation, channel/hadron/region, generator/tune/Q² labels, filename prefix and completed file counts from the manifest. `OUTPATH` is the supplied directory's parent, so copied samples do not depend on the original absolute creation path. It does not infer scientific metadata from directory names.
-
-The array size is the number of selected LUND files, not the requested generation capacity. The default `JOB_NEVENTS` is the largest event count among those files. Physical LUND conversion uses `events-per-file` as both its rollover size and its remaining-input cutoff scale, keeping generation aligned with the intended per-task limit. The cutoff is evaluated before starting a follow-up file and never interrupts a file already in progress. Because it counts input entries rather than accepted reactions, unsupported reactions inside an allowed block can still leave that file shorter than `JOB_NEVENTS`; that task reaches input EOF before the limit. Confirm EOF behavior with the selected detector versions during server validation.
-
-**GEMC defaults to 5.14** because that release includes the new RG-M Ar target implementation and the corrected one-foil C12 target[^sportes-2026-rgm]. Set another version in the submission config or with `--gemc-version`; LUND creation does not select or record it. GEMC 6.x is compatible with COATJAVA 11, but that detector/reconstruction combination needs further testing to determine whether it changes analysis results and is therefore not the project default. The default GCARD uses the manifest's detector target variation together with the beam and submission-time GEMC version. Default YAML and torus settings use +0.5 at 2.07052 GeV and −1.0 at 4.02962/5.98636 GeV. Other beam energies require explicit `--gcard`, `--yaml` and `--torus`. The payload retains fixed solenoid −1.0.
-
-The resolver automatically derives two deliberately distinct labels from `beam-energy`: `BEAM_ENERGY_LABEL` identifies the sample as `2070MeV`, `4029MeV`, or `5986MeV`, while `DETECTOR_ENERGY_GROUP` selects the corresponding `2GeV`, `4GeV`, or `6GeV` detector-resource directory. For other energies, both use the nearest-MeV label and explicit detector inputs are required.
-
-## Configuration and CLI overrides
-
-All settings have matching `key = value` config entries and `--key value` CLI flags. Precedence is **CLI > explicit config > manifest > defaults**. CLI paths are relative to the checkout; paths inside a config are relative to that config. Blank lines and full-line `#` comments are accepted; duplicate, unknown and empty keys fail. Values are plain text, not executable shell expressions.
-
-```tcsh
-source run.csh \
-    --workflow submit \
-    --config config/submission.conf
-
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/sample/lundfiles \
-    --num-jobs 10 \
-    --events-per-job 1000 \
-    --gcard /shared/cards/custom.gcard \
-    --yaml /shared/reconstruction/custom.yaml
-```
-
-[config/submission.conf](../../config/submission.conf) is a commented example to adapt, not an automatically loaded site profile. Use `source run.csh --workflow submit --help` for every option. Help and malformed CLI arguments return before server synchronization.
-
-| Options | Meaning |
+| Option | Meaning |
 | --- | --- |
-| `--lund-dir` | Existing RUN/lundfiles; repeat for several samples using the same overrides |
-| `--num-jobs`, `--events-per-job` | Optional first-N file selection and per-task event limit |
-| `--gemc-version` | GEMC version used for detector resources and output naming; defaults to 5.14 |
-| `--gcard`, `--yaml`, `--torus` | Explicit simulation choices overriding derived defaults |
-| `--clas12tags-dir` | Use a custom checkout or fork of [gemc/clas12Tags](https://github.com/gemc/clas12Tags) as `GEMC_DATA_DIR` |
-| `--job-name` | Override the metadata-derived Slurm name |
-| `--clear-farm-out true|false`, `--farm-out DIRECTORY` | Optional log cleanup, off by default. Setting it to `true` requires the exact cleanup directory; omit it to preserve existing logs. |
+| `--lund-dir DIRECTORY` | Existing `RUN/lundfiles`; repeat to process several samples in order |
+| `--config FILE` | Optional submission `key = value` file |
+| `--num-jobs N` | Select the first N LUND files |
+| `--events-per-job N` | Override the common GEMC/reconstruction event limit |
+| `--gemc-version VERSION` | Select GEMC resources; default 5.14 |
+| `--gemc-target-variation NAME` | Override simulation target variation without relabeling truth target |
+| `--gcard FILE` | Explicit GEMC detector card |
+| `--yaml FILE` | Explicit COATJAVA reconstruction settings |
+| `--torus SCALE` | Override the beam-dependent torus scale |
+| `--job-name NAME` | Override the metadata-derived Slurm job name |
+| `--clas12tags-dir DIRECTORY` | Use a reviewed custom clas12Tags checkout as `GEMC_DATA_DIR` |
+| `--clear-farm-out true|false` | With execution, optionally delete files directly inside one exact farm-output directory; default false |
+| `--farm-out DIRECTORY` | Required exact cleanup target when farm-output cleanup is true |
+| `--execute` | Replace simulation output and call `sbatch` |
 
-Default uniform job names use `Uniform__<label>__<beam-MeV>MeV`. Default physical job names use `<target>__<event-generator>__<tune>__<Q2-cut>__<beam-MeV>MeV__GEMC<version>`. Hyphens remain valid inside one metadata value.
+The following options describe LUND input that has no manifest. With a manifest, conflicting truth values are rejected rather than used to relabel the run.
 
-Truth metadata overrides must agree with the manifest: source, beam, target identity, particle content, prefix and physical provenance cannot silently be relabeled. Detector variation and simulation policy may be changed independently. File paths, counts and totals are validated; incomplete `.json.tmp` output is rejected. No manifest is rewritten. Each selected sample must have a distinct output directory, and resolution of all samples finishes before any setup/submission begins.
+| Option | Meaning |
+| --- | --- |
+| `--source uniform|physical` | Required input kind |
+| `--beam-energy GeV` | Required truth beam energy |
+| `--target ID` | Required truth target identity |
+| `--prefix NAME` | Required filename prefix before `_INDEX.txt` |
+| `--channel NAME` | Uniform `1e`, `electron-tester`, `eh`, or a complete label such as `epFD` |
+| `--hadron NAME`, `--hadron-region FD|CD` | Particle and region required when `channel=eh` |
+| `--event-generator NAME` | Physical adapter label; default `genie-gst` |
+| `--tune NAME` | Physical tune/model label; default `unknown` |
+| `--q2-cut NAME` | Physical upstream-selection label; default `unknown`, with no cut applied during submission |
 
-## LUND without a manifest
+Use `source run.csh --workflow submit --help` for the live interface. [`config/submission.conf`](../../config/submission.conf) is an example, not an automatically loaded site profile.
 
-Supply missing metadata through a config or CLI. For uniform input, for example:
+## Detector defaults
+
+GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this project.[^sportes-2026-rgm] CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). The default detector resources are selected from the manifest's target variation, beam energy, and submission-time GEMC version.
+
+For 2.07052 GeV, the torus default is +0.5. For 4.02962 and 5.98636 GeV, it is −1.0. The worker always applies solenoid −1.0. Other beam energies require explicit `--gcard`, `--yaml`, and `--torus` values.
+
+The coordinator distinguishes the nearest-MeV sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). These are naming and lookup values, not alternate beam energies.
+
+When `--clas12tags-dir` is absent, the coordinator checks the shared versioned clas12Tags directory, loads `gemc/<version>`, confirms that `GEMC_DATA_DIR` matches the request, and verifies that the resolved `gemc` executable belongs to it. A custom clas12Tags checkout replaces the data directory but not the selected GEMC executable checks. The verified child environment is exported to Slurm.
+
+## Submit several runs
+
+Repeat `--lund-dir`:
+
+```tcsh
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/run-a/lundfiles \
+    --lund-dir /shared/run-b/lundfiles \
+    --num-jobs 5
+```
+
+Every sample is fully resolved before any output replacement or submission begins. The coordinator then processes samples in order and creates one independent array per sample. If a later sample fails, later samples are skipped, but arrays already accepted by Slurm remain submitted.
+
+## LUND input without a manifest
+
+Manifest-free input is supported for archived files. Supply `source`, beam energy, target, prefix, event limit, and source-specific metadata explicitly. Files must be contiguous from `PREFIX_1.txt` through `PREFIX_N.txt` because the resolver will not guess gaps or scan every file to count events.
 
 ```tcsh
 source run.csh \
@@ -110,70 +117,30 @@ source run.csh \
     --gemc-target-variation rgm_fall2021_Ar
 ```
 
-Without a manifest, source, beam energy in GeV, target identity and prefix are required. Uniform input also needs its channel (`1e`, `electron-tester`, `eh`, or a complete label such as `epFD` or `enCD`). `eh` requires hadron and region. Physical input accepts `--event-generator` (default `genie-gst`), `--tune` and `--q2-cut` (default unknown). Supply a detector target variation or explicit GCARD. The file inventory must be contiguous `PREFIX_1.txt` through `PREFIX_N.txt`. The resolver discovers the job count, but requires `events-per-job` because it does not scan whole LUND files to count events.
+Uniform input needs `channel`; `eh` also needs hadron and region. Physical input may supply event generator, tune, and Q² label, defaulting to `genie-gst`, `unknown`, and `unknown`. A detector variation or explicit GCARD is required.
 
-## Server execution and output replacement
+## Submission record and failures
 
-Use a csh/tcsh login shell with the ifarm module command and reconstruction available. The required login setup is documented in the [ifarm environment guide](ifarm-environment.md): `~/.cshrc` must source `~/environment.csh`, which loads the CLAS12 environment and selects COATJAVA 10.0.7. When `CLAS12TAGS_DIR` is empty, submission derives the shared clas12Tags parent from the inherited `GEMC_DATA_DIR` (or uses `/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags` when none is inherited), checks the parent and requested-version directory, and only then loads `gemc/<version>` in the Python child environment. Informational output produced by both module operations streams directly to the terminal, preserving the module system's original colors; only its generated Python environment code stays internal. The workflow verifies that the resulting `GEMC_DATA_DIR` is the requested version and that the resolved `gemc` executable is inside that directory. The report prints `SLURM_GEMC_EXECUTABLE`, which is the executable inherited by `sbatch`.
+After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the numeric job ID and atomically writes `RUN/reconhipo/slurm-submission-log.json`. It records the ID, exact command, resolved parameters, runtime Git state, and SHA-256 hashes of the GCARD, YAML, and worker payload.
 
-For a custom GEMC detector implementation, such as testing target geometry, clone or fork [gemc/clas12Tags](https://github.com/gemc/clas12Tags) on shared storage and pass its checkout with `--clas12tags-dir DIRECTORY`. The selected GEMC module and executable are still loaded and verified, while the standard shared-version directory precheck is skipped. The setup validates `CLAS12TAGS_DIR` and then exports `GEMC_DATA_DIR=$CLAS12TAGS_DIR` before submission. `SBATCH_EXPORT=ALL` and `SLURM_EXPORT_ENV=ALL` preserve the selected directory in every Slurm task. Scheduler/log defaults remain in the external payload's `#SBATCH` directives.
+If Slurm accepts an array but its response cannot be parsed, or writing the submission log fails afterward, inspect Slurm before retrying. Retrying blindly can create a duplicate array. An earlier accepted array is never cancelled automatically when a later sample fails.
 
-Python copies the inherited environment, loads the selected GEMC module in that copy, then overwrites its sample settings with the resolved values before calling `sbatch`. Stale shell locals cannot shadow these values. Module and per-sample exports stay inside the Python child process, so the interactive shell does not change; the verified environment is passed to Slurm and its workers. Consequently, `which gemc` at the prompt after submission may still show the login shell's earlier version. Use the reported `SLURM_GEMC_EXECUTABLE` to identify what preview or execution will pass to Slurm.
+Optional farm-output cleanup deletes only direct files in the exact reviewed directory and runs once per invocation. It requires both `--clear-farm-out true` and `--farm-out DIRECTORY`; omit both to preserve scheduler logs.
 
-`run.csh` refreshes the disposable server clone first. **Server edits are discarded; commit and push code/config changes from the local clone first.** Keep LUND/output on shared storage outside the disposable checkout. Explicit configs outside the checkout are also supported. See [SSH execution](ifarm-environment.md).
+## Verify the finished array
 
-Submission checks `OUTPATH/mchipo` and `OUTPATH/reconhipo` for both uniform and physical samples. It completes the inspection stage for both exact paths before applying any directory action. A preview creates and verifies a missing directory, preserves every existing file, states what execution would clear, and creates no submission log. **With `--execute`, submission warns before recursively deleting each existing directory and then recreates both directories empty to clear previous-run output.** LUND inputs are preserved. Symbolic links and existing non-directory paths are rejected in both modes. After `sbatch` accepts an array, the coordinator reads the numeric ID from `Submitted batch job NUMBER`, prints it as `SLURM_JOB_ID`, and writes it to `OUTPATH/reconhipo/slurm-submission-log.json`. That log also contains every resolved parameter, the exact command, runtime Git repository/branch/commit/status/tracking information, and SHA-256 hashes for the GCARD, YAML, and worker payload. Uniform monitoring is produced during LUND creation and does not use a simulation `rootfiles` directory. Optional farm-output cleanup prints the exact resolved directory and deletes only files directly in it, once per invocation.
+The coordinator does not poll task states, retry failures, reconcile outputs, or inspect HIPO content. After the array finishes:
 
-One array is submitted per sample. A completed preview or execution prints the shared success artwork once after all samples finish. An interruption or handled failure prints one blank line, the final error, one blank line, and then the shared stop artwork; it stops later samples and returns the original nonzero `$status` without closing the sourced shell. Already submitted jobs remain submitted. If Slurm accepts an array but its response cannot be parsed or the subsequent provenance write fails, inspect the scheduler before retrying. Worker paths must contain only letters, digits, `/`, `.`, `_` and `-` because the external payload passes these paths as unquoted command arguments. There is no local detector-execution workflow.
-
-## Slurm command reference
-
-Run these commands on ifarm.
-
-Submit a GEMC job from a Slurm submission script:
-
-```bash
-sbatch <submit script>
-```
-
-Cancel one job:
-
-```bash
-scancel <job id>
-```
-
-Cancel all jobs owned by one user:
-
-```bash
-scancel --user=<username>
-```
-
-Check the status of one user's jobs. The [JLab active-job dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob) provides another view:
-
-```bash
-squeue -u <username>
-```
-
-Print the current priority for all pending production jobs:
-
-```bash
-squeue -t pd -p production -o "%.8Q %.10u/%10a" | uniq -c
-```
-
-## Post-submission verification
-
-The submission command can report only setup failures and whether `sbatch` accepted the array. After that handoff, the repository does not poll Slurm job states, collect per-task exit status, retry failed tasks, reconcile expected and actual outputs, or inspect reconstructed HIPO contents. A zero submission status therefore means that Slurm accepted the request, not that GEMC and reconstruction later succeeded for every task.
-
-After the array finishes:
-
-1. Review the Slurm state and job logs for every array task.
-2. Compare the contents of `OUTPATH/mchipo/` and `OUTPATH/reconhipo/` with the submitted task range.
-3. Test at least one reconstructed HIPO file:
+1. Review every array task in Slurm and its `.out` and `.err` files or in the [outstanding Jobs dashboard here](https://scicomp.jlab.org/scicomp/slurmJob/activeJob?user=asportes&account=clas12); other users can adjust those filters or use `squeue -u <username>`.
+2. Compare the submitted task range with `RUN/mchipo/` and `RUN/reconhipo/`.
+3. Open at least one reconstructed file:
 
    ```text
-   hipo-utils -dump OUTPATH/reconhipo/<hipo-file-name>.hipo
+   hipo-utils -dump RUN/reconhipo/<file>.hipo
    ```
 
-The dump must open successfully and display CLAS12 data banks. Treat this as a minimum smoke test only: one readable file does not prove that the remaining tasks or files succeeded.
+The file must open and display CLAS12 data banks. This is a smoke test only; one readable file does not establish that the remaining tasks succeeded or that the campaign is scientifically valid.
+
+Useful Slurm commands include `squeue -u <username>` and `scancel <job-id>`. Use `scancel --user=<username>` only when intentionally cancelling all jobs owned by that account.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)

@@ -1,8 +1,7 @@
-# Run these commands from a disposable ifarm checkout. Before each workflow,
-# run.csh removes untracked files except build/, discards tracked changes, pulls
-# the configured branch, and updates submodules. Commit and push valuable changes
-# from a development checkout first. Use compiled executables for local creation.
-# These commands create the LUND inputs used by uniform-slurm-submission.txt.
+# Reviewed uniform command matrix for the LUND inputs consumed by
+# uniform-slurm-submission.txt. Run on ifarm from a disposable checkout and commit
+# development changes before use. For local development, invoke the built executable.
+# Replace /path/to/uniform-output with the intended output parent.
 
 #########################################################################################
 # Uniform (e,e') sample generation

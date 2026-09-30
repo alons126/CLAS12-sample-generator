@@ -1,10 +1,8 @@
 # Corresponding creation commands: genie-gst-lund-creation.txt
-# Run on ifarm after the matching physical LUND conversion finishes.
-# Each command submits only the first 5 LUND files from the selected run.
-# The manifest supplies target, target variation, beam, GENIE tune, filename prefix,
-# completed file counts, and the default event limit. GEMC defaults to 5.14 at submission.
-# Omit --execute to preview without sbatch or output replacement.
-# Replace every /path/to/... placeholder before running these commands.
+# Run on ifarm after each matching manifest is published. Each example submits the
+# first 5 LUND files. The manifest supplies truth metadata, inventory, prefix, and the
+# event limit; GEMC defaults to 5.14. Remove --execute to preview, and replace every
+# /path/to/... placeholder before use.
 #
 # These directory names assume TUNE GEM21_11a_00_000 was discovered from
 # input_options.txt and the default nested output layout was used.

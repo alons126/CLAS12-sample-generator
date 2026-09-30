@@ -1,66 +1,32 @@
-# Uniform monitoring and figure products
+# Uniform monitoring
 
-## 1. Scope and output file
+Monitoring belongs only to the uniform LUND creator. The physical LUND converter reports counts and provenance but creates no monitoring histograms.
 
-Monitoring is produced only by uniform LUND creation. Physical event-generator conversion copies supported truth particles into LUND and creates no ROOT monitoring file, PDF, or PNG.
-
-Each uniform run stores every monitoring histogram exactly once in:
+Each uniform run writes every histogram once to:
 
 ```text
-lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root
+RUN/lundfiles/lund-creation-monitoring/<PREFIX>__monitoring_plots.root
 ```
 
-`UniformMonitoring` is implemented beside the uniform LUND creator in [`src/workflows/lund-creation/uniform-lund-creator/`](../../src/workflows/lund-creation/uniform-lund-creator). There is no separate shared monitoring layer because the physical LUND converter does not consume it.
-
-## 2. Plot groups
-
-The monitoring file contains these plot groups:
-
-- 100 bins per axis.
-- Momentum range 0 to 1.1 times the beam energy and axis unit `[GeV]`.
-- Electron and FD polar-angle display range 0–50 degrees.
-- CD hadron polar-angle display range 0–150 degrees, covering the configured CD generation ranges.
-- Azimuth range −180–180 degrees; paired electron-hadron azimuth correlations retain −200–200 degrees.
-- Vertex-position Vx/Vy ranges −5–5 cm and Vz range −8–5 cm. This common Vz range aims to cover every RG-M vertex position[^sportes-2026-rgm][^rgm-analysis-note].
-- One-dimensional y-axis title `Number of events`.
-- Centered axis titles, title size 0.06 and label size 0.0425.
-- A 1000×750 grid canvas with bottom/left/right margins 0.14/0.16/0.12.
-- One-dimensional plots drawn normally and two-dimensional plots drawn with `colz`.
-
-The 1e histograms cover electron momentum, angles, and vertices. The electron tester covers electron momentum and angles but intentionally omits vertex plots because it is an angular scan. Electron–hadron monitoring adds hadron momentum, angles, vertices, single-particle correlations, and electron–hadron correlations. Histogram names include the particle and detector-region labels.
-
-## 3. Hadron and region notation
-
-A hadron `part` detected in the Central Detector or Forward Detector is written as `partCD` or `partFD`. Plain ROOT object names use `p`, `n`, `pip`, or `pim`; displayed ROOT titles use `p`, `n`, `#pi^{+}`, or `#pi^{-}`.
-
-Examples:
-
-```cpp
-TH1D("P_pFD_epFD",
-     "P_{pFD} in (e,e'pFD) sample;P_{pFD} [GeV]",
-     100, 0, Ebeam * 1.1);
-
-TH1D("P_pipCD_epipCD",
-     "P_{#pi^{+}CD} in (e,e'#pi^{+}CD) sample;P_{#pi^{+}CD} [GeV]",
-     100, 0, Ebeam * 1.1);
-```
-
-The region-bearing particle token is used consistently in momentum, theta, phi, vertex, particle-correlation, and electron-hadron correlation histograms. Each ROOT object name ends with the complete resolved channel label (`epFD`, `enFD`, `epipFD`, `epimFD`, or its CD counterpart). ROOT therefore shows the actual uniform channel in the statistics box.
-
-## 4. Rendered products
-
-Every uniform generation run renders the same histograms stored in the ROOT file into:
+It renders the same objects into:
 
 ```text
-lundfiles/lund-creation-monitoring/MonitoringPlotsPath/
-├── Uniform__<sample-label>__<beam>MeV__plots.pdf
-├── 1_<histogram-name>.png
-├── 2_<histogram-name>.png
+RUN/lundfiles/lund-creation-monitoring/MonitoringPlotsPath/
+├── <PREFIX>__plots.pdf
+├── 1_<HISTOGRAM>.png
 └── ...
 ```
 
-Rendering is part of the uniform output contract for every channel and does not create a second ROOT file.
+The plots cover the quantities relevant to the selected channel:
 
-[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+- electron momentum, theta, and phi;
+- hadron momentum, theta, and phi for `eh`;
+- vertex coordinates, except in the electron-tester angular scan;
+- single-particle momentum/angle correlations; and
+- electron–hadron correlations.
 
-[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.
+Hadron object names include both species and region: `pFD`, `nCD`, `pipFD`, and so on. Each object name also ends with the complete channel label so ROOT's statistics display identifies the sample.
+
+Histograms use 100 bins per axis. Momentum displays extend to 1.1 times the beam energy. Electron and FD theta displays cover 0–50°; CD hadron theta displays cover 0–150°. Phi covers −180–180°, with −200–200° for paired electron–hadron phi correlations. Vx and Vy cover −5–5 cm and Vz covers −8–5 cm. One-dimensional plots use `Number of events`; two-dimensional plots use ROOT's `colz` rendering.
+
+These products validate the generated uniform distributions. They do not measure detector acceptance and do not replace validation of GEMC and reconstructed output.

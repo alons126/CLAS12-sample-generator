@@ -1,23 +1,27 @@
 # Quickstart
 
-All commands below start at the repository root and intentionally use small event counts. The build and LUND-creation commands run locally through the compiled executables. The submission preview uses `run.csh` from a csh/tcsh login shell on ifarm.
+These examples use small event counts. Replace every `/path/to/...` value before running a command.
 
-`run.csh` treats its ifarm checkout as disposable: before a workflow runs, it removes untracked files except the reusable `build/` tree, discards tracked changes, pulls the configured remote branch, and updates submodules. Commit and push valuable changes from a development checkout before using it.
+## Create uniform LUND files on ifarm
 
-## Build
+From a csh/tcsh login shell in the repository root:
 
-```bash
-cmake \
-    -S . \
-    -B build/debug \
-    -G "Unix Makefiles" \
-    -DCMAKE_BUILD_TYPE=Debug
-cmake \
-    --build build/debug \
-    --parallel 4
+```tcsh
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 100 \
+    --output /path/to/output
 ```
 
-## Create a small uniform sample
+The final run directory is `/path/to/output/Uniform__1e__5986MeV`. The creator prints that resolved path before replacing or writing it.
+
+`run.csh` treats its ifarm checkout as disposable. A normal workflow run removes untracked files except documented build exclusions, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first.
+
+## Run locally during development
+
+After completing the [local build](installation.md#choose-the-right-entry-point), invoke the application directly:
 
 ```bash
 build/debug/apps/uniform-lund-creator \
@@ -26,9 +30,7 @@ build/debug/apps/uniform-lund-creator \
     --output runs/quickstart
 ```
 
-The completed run is `runs/quickstart/Uniform__1e__5986MeV/`. Generation replaces that resolved run directory if it already exists.
-
-## Convert existing physical truth
+To convert existing physical truth:
 
 ```bash
 build/debug/apps/event-generator-to-lund-converter \
@@ -38,17 +40,27 @@ build/debug/apps/event-generator-to-lund-converter \
     --output runs/quickstart
 ```
 
-Quote a glob so ROOT receives it unchanged. This command converts existing GENIE GST truth; it does not run GENIE.
+Quote the input pattern so ROOT, rather than the shell, receives it. This command converts existing GENIE GST truth; it does not run GENIE.
 
-## Preview ifarm submission
+## Check completion
 
-After either creation command succeeds and the run is available on storage visible from ifarm, preview the detector job without submitting it:
+A successful run contains:
+
+```text
+RUN/lundfiles/lund-creation-monitoring/lund-creation-log.json
+```
+
+The manifest is written last. Partial LUND files without this manifest do not form a completed run and should not be submitted.
+
+## Preview simulation submission
+
+Make the run available on storage visible from ifarm, then preview its Slurm array:
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /absolute/path/to/lund-run/lundfiles \
+    --lund-dir /path/to/run/lundfiles \
     --num-jobs 2
 ```
 
-Preview validates the manifest, detector inputs, software environment, and resulting `sbatch` command. Add `--execute` only after reviewing the resolved report. See the [submission examples](../submit-simulation/examples.md).
+Preview validates and reports the environment, detector inputs, output actions, and exact `sbatch` command. It does not call `sbatch`. Read the [submission guide](../submit-simulation/guide.md) before adding `--execute`.

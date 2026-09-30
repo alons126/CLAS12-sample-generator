@@ -1,24 +1,29 @@
 # Scientific validation boundaries
 
-Software behavior and detector-level scientific validation are separate responsibilities. The implementation defines record formats, supported particle content, sampling prescriptions, file splitting, configuration validation, provenance, and submission handoff. A production campaign must also establish that its detector and reconstruction settings are suitable for the intended analysis.
+Software validation and detector-level scientific validation answer different questions.
 
-## Defined software behavior
+Software validation establishes that the implementation follows its documented contract: accepted options, event selection, sampling rules, record fields, units, ordering, file splitting, manifests, path safety, and submission handoff. It can show that a file is readable and that configured values were propagated correctly.
 
-- **Physical-input cutoff:** before starting a follow-up file, conversion requires at least `events-per-file` inclusive input entries beginning with the current accepted entry. The first file is allowed through input exhaustion, and an exact final block is never interrupted after it starts. This is an input-entry cutoff, not an accepted-event calculation.
-- **Random state:** ROOT treats `TRandom3(0)` as automatic seeding, so a run cannot be reconstructed from the configured zero alone. Use explicit nonzero seeds when repeatability is required.
-- **Mass source:** electron, proton, neutron, and charged-pion masses come from external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); photons use exact zero.
-- **Neutral pions:** the physical LUND converter requires neutral pions to be decayed during upstream GENIE production and consumes the resulting photons. Residual PDG 111 entries are skipped because the physical LUND converter does not invent missing decay kinematics.
-- **Production sampling:** the 1e and charged-hadron mixtures use the configured uniform-p/uniform-1/p prescription. Neutrons use uniform momentum, including the configured zero-to-beam range.
-- **Diagnostics:** monitoring is uniform-only and is stored once in `<prefix>__monitoring_plots.root`; its combined PDF is `<prefix>__plots.pdf`. Physical conversion creates no monitoring histograms.
-- **Metadata:** checked-in Ar profiles use A=40 and Z=18. Geometry, A, and Z remain independently configurable for unusual studies.
-- **Reproduction boundary:** match the beam energy, target variation and geometry, A/Z metadata, both configured seeds, source/channel settings, physical input, software versions, and file settings. These inputs can be selected independently, so individually valid values do not necessarily describe one consistent campaign.
+Production validation must also establish that the complete campaign is suitable for its analysis. That requires the intended GEMC and COATJAVA versions, GCARD and YAML resources, external databases, detector random state, target implementation, input dataset, reconstruction conditions, and statistically meaningful comparisons.
 
-## Production validation
+## Important software boundaries
 
-Use matched LUND samples, identical GEMC and reconstruction versions, identical GCARD/YAML/database resources, and explicit detector RNG control when the production environment supports it. Compare event counts, generated banks, reconstructed particle yields, and acceptance distributions. Retain the source revision, input-dataset provenance, campaign manifest, ROOT/compiler/GEMC/reconstruction versions, loaded modules, geometry databases, detector-card and reconstruction-YAML hashes, simulation RNG settings, logs, tolerances, and statistical uncertainties with the campaign record.
+- Uniform samples are acceptance probes, not physical interactions.
+- A physical adapter copies supported truth and does not invent missing kinematics.
+- `TRandom3(0)` is not reproducible from the recorded zero.
+- Target geometry and LUND A/Z metadata are independently configurable.
+- The GENIE process code in LUND field 10 is not a cross-section weight.
+- Physical file cutoff counts remaining input entries, not remaining accepted events.
+- Uniform monitoring checks generated distributions; it is not reconstructed acceptance.
+- An accepted Slurm job ID does not show that any task completed.
+- One readable HIPO file does not show that every task succeeded or that detector output is equivalent.
 
-Uniform FD pion modes and every uniform CD mode remain marked as unvalidated for production. Their configuration files and documentation retain that warning until detector-level evidence supports changing it.
+## Current uniform status
 
-Server software, geometry databases, reconstruction versions, field settings, and simulation RNG state are required before claiming equivalent HIPO output or acceptance. A successful local build or a readable output file does not establish detector-level scientific validity.
+The 1e, epFD, enFD, and electron-tester modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented but remain unvalidated for production. Keep that warning in their profiles and user documentation until detector-level evidence supports changing it.
 
-Publication-quality acceptance results require reconstructed acceptance plots and statistical comparisons from the intended server environment. Local software checks and uniform-generation monitoring cannot supply that detector-level evidence. Retain the underlying ROOT histograms used to produce exported figures.
+## Campaign record
+
+Retain the source revision, completion manifest, original physical input, ROOT/compiler versions, GEMC and COATJAVA versions, loaded modules, target-header hash, GCARD/YAML hashes, geometry and calibration database versions, detector random settings, scheduler logs, expected and actual file inventories, comparison tolerances, and statistical uncertainties.
+
+For acceptance work, compare generated and reconstructed counts and distributions using matched samples and identical detector/reconstruction conditions. Preserve the ROOT histograms behind exported figures. Local creation monitoring cannot substitute for these detector-level comparisons.

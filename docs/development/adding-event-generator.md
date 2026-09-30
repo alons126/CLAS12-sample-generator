@@ -1,25 +1,25 @@
-# Adding another event-generator-to-LUND adapter
+# Adding a physical-input adapter
 
-Add a generator as a small adapter behind the existing `event-generator-to-lund-converter` executable. Do not create a new top-level workflow or duplicate target sampling, LUND formatting, output naming, manifests, or completion behavior.
+Add another generator/format reader behind `event-generator-to-lund-converter`. Do not create a new top-level workflow or copy common target, writer, naming, splitting, provenance, or completion code.
 
-```mermaid
-flowchart LR
-    CLI["event-generator-to-lund-converter"] --> RC["RunConfig physical settings"]
-    RC --> D["convertPhysical dispatcher"]
-    D --> G["GENIE GST adapter"]
-    D --> N["New generator-format adapter"]
-    G --> T["TargetGeometry<br/>One vertex position per written event"]
-    N --> T
-    T --> E["Common Event and Particle records"]
-    E --> W["LundWriter<br/>Serialization, splitting, and provenance"]
-    W --> F["LUND files and completion manifest"]
-```
+## 1. Define the scientific input contract
 
-Code shown in the diagram: [`event_generator_to_lund_converter_main.cpp`](../../src/workflows/lund-creation/apps/event_generator_to_lund_converter_main.cpp), [`RunConfig.h`](../../src/workflows/lund-creation/core/config/RunConfig.h), `convertPhysical()`, [`TargetGeometry.h`](../../src/workflows/lund-creation/core/geometry/TargetGeometry.h), and [`LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h).
+Before coding, document:
 
-## 1. Define the adapter boundary
+- input format, required records, units, and ordering;
+- supported interactions and particles;
+- skipped content and the reason;
+- event-ID and header-field meanings;
+- treatment of weights, process codes, and generator metadata;
+- upstream decay requirements;
+- malformed-input and unsupported-only behavior; and
+- whether a finite-input tail rule is needed.
 
-Create a format-specific directory beneath `src/workflows/lund-creation/event-generator-to-lund-converter/`, for example:
+A physical adapter copies available truth. It must not resample particle kinematics, manufacture missing decay products, or borrow GENIE-specific meanings without a scientific reason.
+
+## 2. Add the adapter directory
+
+Create a format-specific sibling:
 
 ```text
 src/workflows/lund-creation/event-generator-to-lund-converter/
@@ -28,133 +28,45 @@ src/workflows/lund-creation/event-generator-to-lund-converter/
     └── MyGeneratorConverter.cpp
 ```
 
-Expose one synchronous function that borrows the resolved configuration:
+Expose one synchronous function that borrows the resolved `RunConfig` and either completes the run or throws. Use an adapter name that includes the format when a generator has several outputs.
 
-```cpp
-namespace samples {
+## 3. Validate before reading indexed data
 
-/**
- * @brief Convert supported MyGenerator truth records into LUND files and publish a completion manifest.
- * @param config Resolved physical-source configuration borrowed for this call.
- * @throws std::exception For invalid input/schema, unsupported-only input, or output failure.
- */
-void convertMyGenerator(const RunConfig& config);
+Check files, record containers, required fields, stored types, array lengths, units, and cross-field consistency before indexed access. Stop instead of guessing malformed input. Validate later files in a chain as well as the first.
 
-}  // namespace samples
-```
+If no supported event is written, fail without publishing a completion manifest.
 
-Document the input schema, accepted processes and particles, ordering, metadata mapping, units, assumptions, ownership, and failure behavior. Use an adapter identifier that distinguishes formats when one generator can emit several, as `genie-gst` does. The public executable remains `event-generator-to-lund-converter --event-generator mygenerator-myformat`.
+## 4. Translate to the common model
 
-## 2. Validate before accessing records
+For each accepted input event:
 
-The adapter owns generator-specific input validation. Check files, trees/records, types, array lengths, required metadata, and cross-field consistency before indexed access. Reject malformed input instead of partially guessing its meaning. If no supported events are written, fail without publishing a completion manifest.
+1. fill one `Event` with documented header metadata;
+2. sample exactly one vertex through `TargetGeometry`;
+3. add supported particles in the documented order;
+4. use `getParticleMass()` for supported project species;
+5. give every particle the same vertex; and
+6. call `LundWriter::writeEvent()`.
 
-Physical conversion must copy available truth. It must not resample particle momenta, manufacture missing decay products, or silently reinterpret generator weights/process identifiers. Document every supported and skipped category.
+The adapter owns input traversal and scanned/written accounting. `LundWriter` owns accepted-event capacity, filenames, rollover, serialization, guarded output replacement, and the final manifest. Physical adapters do not create uniform monitoring products.
 
-## 3. Translate into the common event model
+## 5. Register settings and dispatch
 
-The adapter should follow this shape while substituting its real reader and source semantics:
+Add the adapter identifier to the physical branch of `RunConfig`. Add only settings that are genuinely format-specific; keep input, target, output, capacity, splitting, and provenance in the common physical contract.
 
-```cpp
-void convertMyGenerator(const RunConfig& config) {
-    config.validateForSource(LundSource::Physical);
-    LundWriter::printWorkflowSummary(config, "physical");
+Add one explicit branch in `convertPhysical()`. The current supported set is small, so a direct dispatcher is clearer than a speculative plugin lifecycle.
 
-    TargetGeometry geometry(config.getText("target-geometry"));
-    TRandom3 vertex_random(config.getNonnegativeInteger("vertex-seed"));
-    LundWriter writer(config, "physical");
-    std::uint64_t scanned = 0;
-
-    MyGeneratorReader reader(config.getText("input"));
-
-    while (!writer.hasReachedRunEventLimit() && reader.next()) {
-        ++scanned;
-
-        if (!supportedInteraction(reader)) {
-            continue;
-        }
-
-        Event event;
-        event.id = reader.sourceIndex();
-        event.A = static_cast<int>(config.getNonnegativeInteger("A"));
-        event.Z = static_cast<int>(config.getNonnegativeInteger("Z"));
-        event.beam_energy = config.getDouble("beam-energy");
-        event.resonance_id = sourceHeaderMetadata(reader);
-        event.weight = sourceProcessCode(reader);
-
-        const auto vertex = geometry.sampleVertexPosition(vertex_random);
-
-        for (const auto& truth : supportedParticles(reader)) {
-            event.particles.push_back(
-                {truth.pdg, getParticleMass(truth.pdg), truth.momentum, vertex});
-        }
-
-        writer.writeEvent(event);
-    }
-
-    if (!writer.getWrittenEventCount()) { throw std::runtime_error("No supported MyGenerator events in input"); }
-
-    writer.finalizeRun(scanned);
-    LundWriter::printWorkflowSummary(config, "physical", scanned, writer.getWrittenEventCount(), true);
-}
-```
-
-The example is architectural, not a copy-ready reader. `supportedParticles` must preserve the documented source order, and every particle in one event must receive the same vertex position. Use `getParticleMass()` so supported masses continue to come from the external target source. Physical adapters create no uniform monitoring histograms.
-
-## 4. Decide source-specific header semantics
-
-Document and validate how the generator maps into:
-
-- event identifier and ordering;
-- nuclear A/Z metadata versus target geometry;
-- beam energy;
-- header field 4 metadata;
-- final header field process/weight semantics;
-- retained/skipped PDG identities;
-- upstream-decay requirements;
-- scanned, rejected, and written counts.
-
-Do not copy GENIE's `resid` or QE/MEC/RES/DIS mapping unless the new source has the same scientifically justified meaning.
-
-## 5. Register configuration and dispatch
-
-Update the physical branch of `RunConfig` so `event-generator=mygenerator-myformat` is accepted. Add only genuinely required generator-specific settings; keep shared input, target, output, capacity, splitting, and provenance keys common. Update the command-line help and a checked-in sample profile with explicit metadata.
-
-Include the adapter in `PhysicalConverter.cpp` and add one direct branch:
-
-```cpp
-if (config.getText("event-generator") == "mygenerator-myformat") {
-    convertMyGenerator(config);
-    return;
-}
-```
-
-The explicit dispatcher is intentional. Do not introduce a registry or plugin lifecycle for this small supported set.
+Update CLI help and add a checked-in example profile with explicit metadata. Preserve the public executable name and `--event-generator` interface.
 
 ## 6. Add build integration
 
-Create a source-specific library in `src/workflows/lund-creation/CMakeLists.txt`, link only its required parser/runtime dependencies, and link it privately into `PhysicalConversion`. Keep generator libraries out of `LundCore` so uniform-only builds do not acquire unrelated dependencies.
+Create a format-specific library and link only its parser/runtime dependencies. Keep those dependencies out of `LundCore` and the uniform-only build. If a new optional build switch can remove the adapter, ensure the dispatcher cannot reference a library that was not built.
 
-If the adapter needs a new optional build switch, document its interaction with the existing physical executable and ensure the executable is not built with a dispatcher branch whose adapter library is absent.
+## 7. Preserve names and provenance
 
-## 7. Preserve splitting and provenance
+Physical output names include target, adapter, optional generator version, tune or model label, input-selection label, and beam energy. Use explicit `none` or `unknown` when a field does not apply. Keep every unsanitized resolved value separately in the manifest. GEMC version remains a later submission choice.
 
-`LundWriter` owns successful-event capacity, file rotation, serialization, guarded output replacement, and manifest publication. The adapter owns input traversal and rejection counts. If the input has a finite entry inventory and must align follow-up files with `JOB_NEVENTS`, implement and validate the documented inclusive remaining-input cutoff or extract the common policy without changing GENIE behavior.
+## 8. Validate the boundary
 
-Physical output naming includes event-generator name/version, tune, Q²/input-selection label, beam energy, and target variation. Use explicit `none` or `unknown` tokens when a field does not apply; preserve the original unsanitized values in the manifest. GEMC version is selected later by simulation submission.
+Exercise every retained process and particle, ordering, shared vertices, malformed records, skipped content, unsupported-only input, capacity, rollover, short input, exact block boundaries, later-file read failures, counts, provenance, and failure without a manifest. Confirm that physical conversion produces no uniform monitoring products.
 
-## 8. Test the adapter
-
-Add a small deterministic fixture and integration cases covering:
-
-- every retained process and particle species;
-- stable particle ordering and one shared vertex position;
-- malformed/missing types and inconsistent arrays;
-- skipped processes/species and unsupported-only input;
-- capacity, rollover, short final input, and exact-block boundaries;
-- input failure in a later chained file;
-- manifest scanned/written/per-file counts and provenance;
-- absence of physical monitoring ROOT/PDF/PNG output;
-- failure without a completion manifest.
-
-Update [validation](validation.md), the [physical conversion guide](../create-lund/physical.md), [configuration](../create-lund/configuration.md), [source reference](source-reference.md), and relevant examples in the same change.
+Update the physical user guide, configuration reference, data contract, source map, tutorials, and scientific validation status in the same change.

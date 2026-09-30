@@ -1,85 +1,68 @@
 # Uniform LUND creation
 
-## Generate a sample
+The uniform LUND creator makes controlled acceptance-test events. It samples configured momentum and angle ranges but does not model an electron–nucleus interaction or enforce exclusive energy-momentum conservation.
 
-```bash
-build/debug/apps/uniform-lund-creator \
+## Run a reviewed profile
+
+```tcsh
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
     --events 100 \
-    --output runs
+    --output /path/to/output
 ```
 
-The uniform LUND creator uses `--channel 1e` for one sampled electron, `--channel electron-tester` for the beam-momentum angular scan, and `--channel eh` for a trigger electron followed by the hadron selected with `--hadron proton|neutron|pip|pim`. For `eh`, `--hadron-region FD|CD` chooses the hadron acceptance. The resulting sample labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`. Both the run-directory name and automatic LUND filename prefix use `Uniform__<label>__<beam-MeV>MeV`.
+The checked-in profile provides the sample definition. The explicit `--events 100` makes this a smoke test; production profiles request 50,000,000 events, while electron-tester profiles request 1,000,000. Command-line values override matching profile values. The [sample-profile inventory](../../config/samples/README.md) lists the profile pattern for every implemented channel at 2.07052, 4.02962, and 5.98636 GeV.
 
-For example, a central-detector pi+ sample is:
+## Available channels
 
-```bash
-build/debug/apps/uniform-lund-creator \
-    --channel eh \
-    --hadron pip \
-    --hadron-region CD \
-    --events 100 \
-    --output runs
-```
+| Channel | Event content | Output label |
+| --- | --- | --- |
+| `1e` | One sampled electron | `1e` |
+| `electron-tester` | One beam-momentum electron in an angular scan | `electron-tester` |
+| `eh` | One trigger electron followed by one selected hadron | `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, or `epimCD` |
 
-`events` is the total run size. `events-per-file` controls splitting and defaults to 25,000. The completion manifest records every file count; submission uses the largest selected file count as the shared GEMC/reconstruction `JOB_NEVENTS` limit.
+For `eh`, select `--hadron proton|neutron|pip|pim` and `--hadron-region FD|CD`. The electron is always written first. Both particles receive the same sampled vertex position.
 
-## Reviewed profiles
+The automatic run name and filename prefix are `Uniform__<label>__<beam-MeV>MeV`. File splitting does not restart the zero-based event-number sequence.
 
-Every supported mode has an explicit profile at each supported beam energy:
+`events` is the total run size. `events-per-file` defaults to 25,000 and controls LUND file splitting. The completion manifest records the exact count in every file; submission uses the largest selected file count as the common GEMC/reconstruction event limit.
 
-| Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
-| --- | --- | --- | --- |
-| 1e | `uniform-1e-2070MeV.conf` | `uniform-1e-4029MeV.conf` | `uniform-1e-5986MeV.conf` |
-| epFD | `uniform-epFD-2070MeV.conf` | `uniform-epFD-4029MeV.conf` | `uniform-epFD-5986MeV.conf` |
-| enFD | `uniform-enFD-2070MeV.conf` | `uniform-enFD-4029MeV.conf` | `uniform-enFD-5986MeV.conf` |
-| epipFD | `uniform-epipFD-2070MeV.conf` | `uniform-epipFD-4029MeV.conf` | `uniform-epipFD-5986MeV.conf` |
-| epimFD | `uniform-epimFD-2070MeV.conf` | `uniform-epimFD-4029MeV.conf` | `uniform-epimFD-5986MeV.conf` |
-| epCD | `uniform-epCD-2070MeV.conf` | `uniform-epCD-4029MeV.conf` | `uniform-epCD-5986MeV.conf` |
-| enCD | `uniform-enCD-2070MeV.conf` | `uniform-enCD-4029MeV.conf` | `uniform-enCD-5986MeV.conf` |
-| epipCD | `uniform-epipCD-2070MeV.conf` | `uniform-epipCD-4029MeV.conf` | `uniform-epipCD-5986MeV.conf` |
-| epimCD | `uniform-epimCD-2070MeV.conf` | `uniform-epimCD-4029MeV.conf` | `uniform-epimCD-5986MeV.conf` |
-| Electron tester | `electron-tester-2070MeV.conf` | `electron-tester-4029MeV.conf` | `electron-tester-5986MeV.conf` |
+## Production definitions
 
-Each file contains the relevant scientific definition: beam energy, target identity, event/file counts, seeds, momentum and angular settings, trigger prescription, and monitoring selection. Prefix, LUND layout, masses, vertex-position mode, trigger-electron momentum, and sampled hadron maximum are automatic contracts rather than repeated profile values. Supply only `--output` for the recorded profile as written; command-line options remain available for deliberate studies and override the file. Uniform profiles request 50,000,000 events and tester profiles request 1,000,000, so add a smaller `--events` value for smoke tests. The unvalidated pion/CD profiles also carry an explicit warning in their file headers.
+The 1e sample draws theta from 5–40° and phi from the full azimuth. Its default momentum alternates between uniform-p and uniform-1/p from 0.7 GeV/c to the beam momentum. The 2.07052 GeV outbending profile deliberately extends theta down to 2°. These are project generation bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts.[^burkert-clas12][^asryan-ecal]
 
-## Production sampling contract
+Electron–hadron samples use a beam-momentum trigger electron at 25°. Its phi is placed at the CLAS12 sector center closest to the direction opposite the hadron, then shifted by 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° at other beam energies unless overridden. This separation rule is retained for CD samples even though the CD geometry does not require it. The hadron generation bounds below were chosen to cover the relevant CLAS12 forward-detector and central-detector regions described by the spectrometer and reconstruction system.[^burkert-clas12][^ziegler-reconstruction]
 
-| Hadron/region | θ range | p minimum | Momentum distribution |
-| --- | ---: | ---: | --- |
-| proton FD | 5–45° | 0.3 GeV/c | 50/50 uniform-p and uniform-1/p |
-| neutron FD | 5–35° | 0 | uniform-p |
-| pip or pim FD | 5–45° | 0.2 GeV/c | 50/50 uniform-p and uniform-1/p |
-| proton CD | 35–145° | 0.2 GeV/c | 50/50 uniform-p and uniform-1/p |
-| neutron CD | 35–145° | 0 | uniform-p |
-| pip or pim CD | 35–140° | 0.1 GeV/c | 50/50 uniform-p and uniform-1/p |
+| Hadron | FD theta | CD theta | FD p minimum | CD p minimum | Default momentum model |
+| --- | --- | --- | ---: | ---: | --- |
+| proton | 5–45° | 35–145° | 0.3 GeV/c | 0.2 GeV/c | mixed uniform-p / uniform-1/p |
+| neutron | 5–35° | 35–145° | 0 | 0 | uniform-p |
+| $\pi^{+}$ or $\pi^{-}$ | 5–45° | 35–140° | 0.2 GeV/c | 0.1 GeV/c | mixed uniform-p / uniform-1/p |
 
-Every maximum momentum defaults to the beam energy. θ is uniform in theta and φ is uniform from −180° to 180°. These deliberately unphysical samples map acceptance; they do not enforce exclusive energy or momentum conservation.
+Every hadron momentum range ends at the beam momentum. Hadron theta is uniform within its configured range and phi is uniform from −180° to 180°, so equal-width angular bins receive comparable generated statistics. The optional fixed-momentum mode is neutron-only and defaults to 1 GeV/c. The [sampling model](../concepts/sampling-models.md) gives the exact distributions, trigger correlation, and random-stream rules.
 
-> **Validation status:** uniform FD pion samples (`epipFD` and `epimFD`) and every uniform CD particle sample (`epCD`, `enCD`, `epipCD`, and `epimCD`) have not yet been tested as production samples. Automated integration checks exercise their labels, particle IDs, configured bounds, and output structure, but their complete generated distributions and detector workflow have not been validated. Do not treat them as validated production modes until those checks are complete. Production validation currently covers `1e`, `epFD`, `enFD`, and the electron tester.
+The electron tester scans 5–40° and full phi at beam momentum while sampling the selected target geometry. It is the rough angular study from which the 25° trigger-electron prescription was selected.
 
-The `1e` electron has θ 5–40°, full φ, and a 50/50 uniform-p/uniform-1/p mixture from 0.7 GeV/c to beam momentum. In `eh`, the trigger electron has beam momentum and θ=25°. Its φ is the CLAS12 sector center closest to the direction opposite the hadron, plus the beam-dependent offset: 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° otherwise. This opposite-sector constraint is not required for a CD hadron, but it is retained deliberately to keep the trigger electron separated from the hadron.
+## Validation status
 
-The optional `--hadron-momentum fixed --hadron-p 1` study is accepted only for a neutron, in either FD or CD. Hadron theta and phi are always sampled uniformly inside the configured detector ranges so equal-width angular bins receive comparable generated statistics for acceptance mapping.
+The 1e, epFD, enFD, and electron-tester modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented and covered by software checks but have not completed detector-level production validation. Their profile headers retain this warning.
 
-## Electron tester
+## Targets and repeatability
 
-```bash
-build/debug/apps/uniform-lund-creator \
-    --config config/samples/uniform-lund-creation/electron-tester-5986MeV.conf \
-    --output runs
-```
+The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, `A = 40`, `Z = 18`, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. A/Z are separate LUND-header metadata and do not silently change geometry.
 
-The tester always scans electron θ from 5–40° and all φ at beam momentum, and samples the selected target geometry. It provides a rough estimate of where the trigger electron in electron–hadron samples should be thrown. The 25° trigger setting was selected from this scan.
+The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls target positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. `TRandom3(0)` requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
 
-## Targets, reproducibility, and masses
+Electron, proton, neutron, and charged-pion masses come from the protected target source; photon mass is exactly zero. The [LUND data contract](../concepts/lund-data-contract.md) lists their serialized values and precision.
 
-`--target` selects the nucleus/material and its LUND A/Z metadata. Beam energy plus target resolves the GEMC target variation and matching external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) geometry. Production profiles use `target = Ar40`; the resolved manifest contains `target = Ar40`, `target-geometry = Ar`, `A = 40`, `Z = 18`, and `gemc-target-variation = rgm_fall2021_Ar`. `--gemc-target-variation` changes both the variation and geometry for an exceptional configuration.
+## Results
 
-`seed` controls kinematics and `vertex-seed` controls geometry. Defaults 67890 and 12345 are repeatable. `TRandom3(0)` asks ROOT to choose an automatic seed; a manifest that records zero therefore cannot reproduce the event sequence. The streams are separate so geometry draws do not shift kinematics.
+The creator writes split LUND files, a completion manifest, one ROOT monitoring file, one combined PDF, and individual PNG plots. It also prepares empty `mchipo/` and `reconhipo/` directories for later submission. See [uniform monitoring](monitoring.md) and [run directories](../getting-started/outputs.md).
 
-Electron, proton, neutron, and charged-pion masses come directly from the external `src/workflows/lund-creation/external/targets.h` source through `getParticleMass()`. The photon mass is exactly zero. LUND serialization still writes every mass and derived energy to five decimal places.
+[^burkert-clas12]: V. D. Burkert et al., “The CLAS12 Spectrometer at Jefferson Laboratory,” *Nucl. Instrum. Meth. A* **959**, 163419 (2020). [doi:10.1016/j.nima.2020.163419](https://doi.org/10.1016/j.nima.2020.163419)
 
-## Output and diagnostics
+[^ziegler-reconstruction]: V. Ziegler et al., “The CLAS12 software framework and event reconstruction,” *Nucl. Instrum. Meth. A* **959**, 163472 (2020). [doi:10.1016/j.nima.2020.163472](https://doi.org/10.1016/j.nima.2020.163472)
 
-`lundfiles/lund-creation-monitoring/<prefix>__monitoring_plots.root` contains the complete monitoring set for 1e, the electron tester, and every proton, neutron, pip, and pim FD/CD channel. Hadron labels include the detector region. It is the only monitoring ROOT file. Every uniform run also fills `MonitoringPlotsPath/` with PDF/PNG views of those same histograms, including `<prefix>__plots.pdf`. Like the physical LUND converter, the uniform LUND creator prepares empty `mchipo/` and `reconhipo/` directories for later simulation and reconstruction. See [diagnostics](monitoring.md) and [sampling equations](../concepts/sampling-models.md).
+[^asryan-ecal]: G. Asryan et al., “The CLAS12 forward electromagnetic calorimeter,” *Nucl. Instrum. Meth. A* **959**, 163425 (2020). [doi:10.1016/j.nima.2020.163425](https://doi.org/10.1016/j.nima.2020.163425)

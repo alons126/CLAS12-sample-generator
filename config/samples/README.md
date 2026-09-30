@@ -1,92 +1,44 @@
-# Sample configuration profiles
+# Sample profiles
 
-These files describe the LUND sample being created. They do not select the user-facing workflow, configure CMake, or submit Slurm jobs. Select a profile explicitly in every LUND-creation command:
-
-The `run.csh` examples are for a disposable ifarm checkout. Before a workflow runs, the launcher removes untracked files except the reusable `build/` tree, discards tracked changes, pulls the configured remote branch, and updates submodules. Commit and push valuable changes from a development checkout first. For local work, pass the same profile to a compiled LUND executable directly.
+Profiles under `config/samples/` describe a LUND sample. They do not choose a workflow, control CMake, or submit detector jobs. Select one explicitly:
 
 ```tcsh
 source run.csh \
     --workflow create-lund \
     --source uniform \
     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-    --output OUTPUT_PARENT
+    --output /path/to/output
 ```
 
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source physical \
-    --config config/samples/physical-lund-creation/genie-gst.conf \
-    --input 'GST_GLOB' \
-    --output OUTPUT_PARENT
-```
+The application applies built-in defaults, reads the profile, then applies command-line overrides. Profiles use plain `key = value` lines with blank lines and full-line comments. Unknown or repeated keys fail.
 
-The executable installs built-in defaults, reads the named profile, then applies explicit `--key value` overrides. Unknown and repeated keys fail. Blank lines and lines beginning with `#` are ignored; inline comments, sections, quoting, and environment expansion are unsupported. Every checked-in profile groups its values under comment-only explanation sections covering their purpose, consumers, units, derived behavior, output contract, and relevant validation limits.
+`output` is normally supplied at runtime so a checked-in profile contains no machine-specific path. Every resolved value, including defaults and CLI overrides, is recorded in the completion manifest.
 
-Profiles normally specify `target`; beam energy plus that target selects the standard GEMC target variation and matching vertex geometry. `gemc-target-variation` overrides that automatic choice for an exceptional configuration such as run 15733. Explicit `A` or `Z` values remain optional LUND-header overrides. All resolved values are recorded in `lundfiles/lund-creation-monitoring/lund-creation-log.json` even when they are absent from the profile.
+## Uniform profiles
 
-## Uniform production matrix
+Each supported uniform mode has a complete Ar40 profile for the three RG-M beam energies:
 
-Uniform profiles are stored in `uniform-lund-creation/`. Every supported uniform mode has one complete profile for each supported RG-M beam energy. Select the file matching the sample and beam rather than overriding a generic profile. The profiles use Ar40 geometry and A=40/Z=18, repeatable seeds, the angular and momentum ranges listed below, particle masses supplied by the application's imported target source, and 25,000 events per file. Production profiles request 50,000,000 events, while tester profiles request 1,000,000 events. Override `--events` for smaller studies.
-
-| Sample | 2.07052 GeV | 4.02962 GeV | 5.98636 GeV |
-| --- | --- | --- | --- |
-| Uniform 1e | `uniform-1e-2070MeV.conf` | `uniform-1e-4029MeV.conf` | `uniform-1e-5986MeV.conf` |
-| Uniform epFD | `uniform-epFD-2070MeV.conf` | `uniform-epFD-4029MeV.conf` | `uniform-epFD-5986MeV.conf` |
-| Uniform enFD | `uniform-enFD-2070MeV.conf` | `uniform-enFD-4029MeV.conf` | `uniform-enFD-5986MeV.conf` |
-| Uniform epipFD | `uniform-epipFD-2070MeV.conf` | `uniform-epipFD-4029MeV.conf` | `uniform-epipFD-5986MeV.conf` |
-| Uniform epimFD | `uniform-epimFD-2070MeV.conf` | `uniform-epimFD-4029MeV.conf` | `uniform-epimFD-5986MeV.conf` |
-| Uniform epCD | `uniform-epCD-2070MeV.conf` | `uniform-epCD-4029MeV.conf` | `uniform-epCD-5986MeV.conf` |
-| Uniform enCD | `uniform-enCD-2070MeV.conf` | `uniform-enCD-4029MeV.conf` | `uniform-enCD-5986MeV.conf` |
-| Uniform epipCD | `uniform-epipCD-2070MeV.conf` | `uniform-epipCD-4029MeV.conf` | `uniform-epipCD-5986MeV.conf` |
-| Uniform epimCD | `uniform-epimCD-2070MeV.conf` | `uniform-epimCD-4029MeV.conf` | `uniform-epimCD-5986MeV.conf` |
-| Electron tester | `electron-tester-2070MeV.conf` | `electron-tester-4029MeV.conf` | `electron-tester-5986MeV.conf` |
-
-The 1e profiles use the updated 0.7 GeV/c minimum and 50/50 uniform-p/uniform-1/p mixture. Their electron theta is flat from 5° to 40°, except that the 2.07052 GeV outbending profile extends the minimum to 2°. The epFD profiles use a beam-momentum 25° trigger electron and a proton mixture from 0.3 GeV/c to the beam momentum. The enFD profiles use the same trigger prescription and uniform neutron momentum from zero to the beam momentum. All retain full phi coverage. The beam-specific trigger offsets are written explicitly as 16°, 7°, and 5°.
-
-FD pion and all CD profiles are marked experimental inside the files. They encode the documented updated conventions but have not yet been tested as production samples; see [uniform LUND creation](../../docs/create-lund/uniform.md) and [validation](../../docs/development/validation.md).
-
-The electron tester profiles sample the selected target geometry and scan electron theta from 5° to 40° and full phi at beam momentum. They provide the rough estimate from which the 25° trigger-electron prescription was selected.
-
-The directory also contains the development-only comparison profile `legacy-coderun.conf`. It is kept until implementation work finishes and is not a recommended production profile.
-
-## Physical-input profiles
-
-Physical profiles are stored in `physical-lund-creation/`.
-
-| Profile | Purpose |
+| Mode | Profile pattern |
 | --- | --- |
-| `genie-gst.conf` | Physical GENIE GST conversion example |
-| `legacy-genie-wrapper.conf` | Development-only comparison settings; not a production example |
+| 1e | `uniform-1e-{2070,4029,5986}MeV.conf` |
+| epFD / enFD | `uniform-{epFD,enFD}-{2070,4029,5986}MeV.conf` |
+| epipFD / epimFD | `uniform-{epipFD,epimFD}-{2070,4029,5986}MeV.conf` |
+| epCD / enCD | `uniform-{epCD,enCD}-{2070,4029,5986}MeV.conf` |
+| epipCD / epimCD | `uniform-{epipCD,epimCD}-{2070,4029,5986}MeV.conf` |
+| electron tester | `electron-tester-{2070,4029,5986}MeV.conf` |
 
-## Available common options
+Production profiles request 50,000,000 events and tester profiles request 1,000,000, with 25,000 events per file. Override `--events` for a smoke test.
 
-`output`, `beam-energy`, `target`, optional `gemc-target-variation`, optional LUND-header overrides `A` and `Z`, `events`, `events-per-file`, `seed`, `vertex-seed`, and `prefix` are common configuration keys. Every uniform LUND creator run writes its ROOT monitoring file and fills `MonitoringPlotsPath` with PDF/PNG renderings; the physical LUND converter creates no monitoring plots. Every event samples the geometry belonging to the resolved target variation. Uniform and physical prefixes are automatic unless `--prefix` explicitly overrides them. `events-per-file` defaults to 25,000 for uniform input and 10,000 for physical input. `output` is normally supplied at runtime so a committed profile does not embed a machine-specific path.
+The 1e, epFD, enFD, and electron-tester profiles are the production-tested modes. FD pion and all CD profiles are clearly marked as not yet production-validated. Their settings describe implemented behavior, not a validation claim.
 
-## Available uniform options
+## Physical profile
 
-Uniform profiles may set `channel`, `hadron`, `hadron-region`, `electron-theta-min`, `electron-theta-max`, `electron-momentum`, `electron-p-min`, `electron-p-max`, `hadron-theta-min`, `hadron-theta-max`, `hadron-momentum`, `hadron-p`, `hadron-p-min`, `trigger-theta`, and `trigger-phi-offset`. Sampled hadron momentum always ends at beam energy; the eh trigger electron automatically uses beam momentum.
+`physical-lund-creation/genie-gst.conf` is the current GENIE GST example. Supply `--input` and `--output` at runtime. Its `tune = auto` setting reads the exact `TUNE` value from the standard `input_options.txt` layout and records `unknown` when discovery is not possible.
 
-## Available physical options
+The profile does not run GENIE. It configures conversion of existing GST truth.
 
-Physical profiles may set `input`, `event-generator`, `event-generator-version`, `tune`, `q2-cut`, and `output-layout` in addition to the common options. `tune = auto` reads `TUNE` from the standard production `input_options.txt` and falls back to `unknown`. The automatic physical filename prefix appends `-<event-generator-version>` to the generator only when the version is known, while the manifest always records the resolved value. `output-layout = nested` creates target, generator/tune, and selection/beam directories; `metadata` places all metadata in one directory. Double underscores separate metadata groups, while a hyphen joins the generator and its version. Hyphens and decimal points remain valid inside values such as `genie-gst`, `3.6.2`, and `Q2-0.40`. `input` and `output` are normally supplied at runtime. The implemented physical adapter is `genie-gst`, identifying both the generator and its GST input format. GEMC version belongs to simulation submission, not LUND creation.
+## Where option definitions live
 
-The full types, units, allowed values, automatic resolutions, RG-M target catalog, and failure behavior are documented in [configuration.md](../../docs/create-lund/configuration.md). The selected executable also prints its current interface:
+The [LUND configuration reference](../../docs/create-lund/configuration.md) is authoritative for types, defaults, ranges, automatic target resolution, output layouts, and replacement behavior. The [uniform guide](../../docs/create-lund/uniform.md) defines production sampling, and the [physical guide](../../docs/create-lund/physical.md) defines the GST selection and cutoff.
 
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --build false \
-    -- \
-    --help
-```
-
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source physical \
-    --build false \
-    -- \
-    --help
-```
+Use the selected executable's `--help` for the current accepted CLI. The [all-options tutorials](../../tutorials/README.md) demonstrate the exact spelling of every public setting with deliberately arbitrary values.

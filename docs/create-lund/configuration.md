@@ -1,107 +1,87 @@
-# Configuration reference
+# LUND-creation configuration reference
 
-Sample settings use UTF-8 text with one `key = value` per line. Blank lines and lines beginning with `#` are ignored. There are no sections, inline comments, quoting rules or environment-variable expansion. Values may contain spaces. Unknown/duplicate keys are rejected. Command-line `--key value` settings override the file regardless of where `--config` appears.
+Both LUND applications accept `--key value` pairs and at most one `--config FILE`. A configuration file uses plain `key = value` lines. Blank lines and full-line `#` comments are accepted; inline comments, quoting, sections, shell expansion, duplicate keys, and unknown keys are rejected.
 
-The uniform LUND creator and physical LUND converter pass these settings through the shared `RunConfig` layer. It installs common and source-specific defaults, applies the optional profile and CLI overrides, resolves every `auto` value, validates the complete result, and constructs normalized paths before event processing starts. Uniform-only keys are unavailable to the physical LUND converter, and physical-only keys are unavailable to the uniform LUND creator.
+Resolution order is:
 
-Target resolution has one deliberate order. `target` selects the nucleus or material and its default A/Z metadata. Beam energy plus that target selects the standard GEMC target variation; the variation supplies the matching vertex geometry. An explicit `gemc-target-variation` replaces the automatic variation and geometry together, as needed for run 15733. Explicit `A` and `Z` values are applied last as independent LUND-header overrides.
+```text
+built-in defaults -> configuration file -> command line -> automatic values -> validation
+```
 
-`RunConfig` is configuration policy, not workflow execution. It does not generate particles, read GST event records, advance either random stream, create or remove output directories, write LUND/ROOT files, or submit GEMC jobs. Once parsing succeeds, the uniform LUND creator or physical LUND converter consumes its checked values and `LundWriter` copies the complete resolved map into `lundfiles/lund-creation-monitoring/lund-creation-log.json`.
+The launcher does not choose a sample profile. Name one explicitly, or supply every required value. Launcher build settings belong to [`config/run.json`](../../config/run.json.md), not to a sample profile.
 
-The launcher does not select a sample profile implicitly. Pass a profile from `config/samples/uniform-lund-creation/` or `config/samples/physical-lund-creation/` in each `create-lund` command, or explicitly provide every required sample option. See the [sample-profile inventory](../../config/samples/README.md) for profile purposes and option groups. `config/run.json` contains build defaults only.
-
-Relative paths are interpreted from the caller's working directory. The output path and local GENIE input pattern are resolved to absolute paths in the manifest. ROOT-supported remote URLs remain unchanged.
-
-## Common sample settings
+## Common settings
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `output` | Required | Output parent/run directory; an existing resolved run directory is replaced after a warning |
+| `output` | required | Parent output directory; the program adds the final run name |
+| `events` | required | Maximum number of events written, from 1 to 4294967295 |
+| `events-per-file` | 25000 uniform; 10000 physical | Split size; also the physical follow-up-file cutoff scale |
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
-| `target` | `Ar40` | Target nucleus/material; together with beam energy selects A/Z, GEMC variation, and vertex geometry |
-| `A`, `Z` | `auto` | Optional LUND-metadata overrides applied after target defaults; require 1≤A≤300, 0≤Z≤A |
-| `gemc-target-variation` | `auto` | Optional compatible override of the beam-dependent variation and its vertex geometry |
-| `events` | Required | Total number of accepted events to write |
-| `events-per-file` | `25000` uniform / `10000` physical | Positive split threshold; before each physical follow-up file it also sets the minimum remaining-input block aligned with submission `JOB_NEVENTS` |
-| `seed` | `67890` | Uniform kinematic RNG seed; zero requests ROOT automatic, nonrepeatable seeding; unused by the physical LUND converter |
-| `vertex-seed` | `12345` | Vertex-position RNG seed; zero requests ROOT automatic, nonrepeatable seeding |
-| `prefix` | `auto` | LUND filename label; letters, digits, `_`, `-`, `.` |
-| `input` | Required for physical input | Event-generator input filename or quoted glob |
-| `event-generator` | `genie-gst` | Physical adapter name; generator and input format are explicit |
-| `event-generator-version` | `unknown` | Always-recorded provenance; included in an automatic physical filename prefix only when known |
-| `tune` | `auto` | Read `TUNE` from `input_options.txt` beside the standard production directory; otherwise `unknown` |
-| `q2-cut` | Energy-based | Generator provenance and naming component: `Q2-0.02`, `Q2-0.25`, or `Q2-0.40` for the three RG-M beams and `none` for other energies; accepted underscore spellings are normalized to these forms, and no cut is applied during conversion |
-| `output-layout` | `nested` | Physical only: `nested` groups target, generator/tune, and selection/beam directories; `metadata` uses one directory; both use `__` between metadata values |
+| `target` | `Ar40` | Target identity used to resolve A, Z, GEMC variation, and vertex geometry |
+| `gemc-target-variation` | `auto` | Compatible target-variation override; changes the resolved geometry with it |
+| `A`, `Z` | `auto` | Independent LUND-header overrides; require 1 ≤ A ≤ 300 and 0 ≤ Z ≤ A |
+| `seed` | `67890` | Uniform-kinematics seed; accepted but unused for physical input |
+| `vertex-seed` | `12345` | Target-position seed |
+| `prefix` | `auto` | LUND filename prefix using letters, numbers, `_`, `-`, and `.` |
 
-Counts and the split threshold must be integers from 1 through 4294967295. Seeds may range from 0 through 4294967295. A nonzero seed is reproducible; `TRandom3(0)` asks ROOT to choose an automatic seed, so a manifest containing zero cannot reproduce the generated sequence. Production Ar defaults resolve to A=40/Z=18.
+Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable when software, configuration, and draw order match. Seed 0 asks ROOT for automatic, nonrepeatable seeding; the manifest records the configured zero, not the internally chosen value.
+
+`target` and `A`/`Z` are related but not interchangeable. The target and variation select spatial geometry. A and Z are numbers written to the LUND header. Explicit A/Z overrides never silently change geometry.
+
+## Target catalog
+
+| Target | A | Z | Automatic GEMC variation | Vertex geometry |
+| --- | ---: | ---: | --- | --- |
+| `H1` | 1 | 1 | `rga_spring2019` | `liquid` |
+| `D2` | 2 | 1 | `rgb_fall2019` | `liquid` |
+| `He4` | 4 | 2 | `rgm_fall2021_He` | `liquid` |
+| `Ar40` | 40 | 18 | `rgm_fall2021_Ar` | `Ar` |
+| `C12`, 2.07052 GeV | 12 | 6 | `rgm_fall2021_C_S` | `1-foil-small` |
+| `C12`, 4.02962 GeV | 12 | 6 | `rgm_fall2021_C_L` | `1-foil-large` |
+| `C12`, 5.98636 GeV | 12 | 6 | `rgm_fall2021_Cx4` | `4-foil` |
+| `Ca40` / `Ca48` | 40 / 48 | 20 | `rgm_fall2021_Ca` | `Ca` |
+| `Sn120` | 120 | 50 | `rgm_fall2021_Sn_L` | `1-foil-large` |
+| `Sn-nat` | 119 | 50 | `rgm_fall2021_Snx4` | `4-foil` |
+
+C12 at another beam energy requires an explicit compatible variation. Run 15733 is the documented 4.02962 GeV exception and uses `rgm_fall2021_C_S`.[^sportes-2026-rgm] The geometry rules come from the protected external `targets.h`; see [external inputs](../concepts/external-inputs.md).
 
 ## Uniform settings
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `channel` | `1e` | `1e` for one sampled electron, `electron-tester` for the beam-momentum angular scan, or `eh` for trigger electron plus selected hadron |
+| `channel` | `1e` | `1e`, `electron-tester`, or `eh` |
 | `hadron` | `proton` | `proton`, `neutron`, `pip`, or `pim`; used by `eh` |
-| `hadron-region` | `FD` | `FD` or `CD`; resolves the hadron angular and momentum thresholds |
-| `electron-theta-min/max` | `5` / `40` | Electron-only/tester theta range, degrees; the production 2.07052 GeV outbending 1e profile explicitly uses `2` / `40` |
-| `electron-momentum` | `auto` | `mixed` for 1e, `beam` for eh; explicit `uniform`, `mixed`, or `beam` |
-| `electron-p-min/max` | `0.7` / beam | 1e momentum bounds in GeV/c |
-| `hadron-theta-min/max` | `auto` / `auto` | FD: p/pions 5–45°, n 5–35°; CD: nucleons 35–145°, pions 35–140° |
-| `hadron-momentum` | `auto` | `auto` and its older alias `sampled` resolve to `mixed` for charged hadrons and `uniform` for neutrons; neutron-only `fixed` is optional |
+| `hadron-region` | `FD` | `FD` or `CD`; used by `eh` |
+| `electron-theta-min/max` | `5` / `40` | Electron-only theta bounds in degrees |
+| `electron-momentum` | `auto` | `auto`, `uniform`, `mixed`, or `beam` |
+| `electron-p-min/max` | `0.7` / beam | Electron momentum bounds in GeV/c |
+| `hadron-theta-min/max` | `auto` | Bounds resolved from hadron species and region |
+| `hadron-momentum` | `auto` | `auto`, compatibility alias `sampled`, `uniform`, `mixed`, or neutron-only `fixed` |
+| `hadron-p-min` | `auto` | Species/region minimum; maximum is always beam momentum |
 | `hadron-p` | `1` | Fixed neutron momentum in GeV/c |
-| `hadron-p-min` | species/region | p: 0.3 FD, 0.2 CD; pip/pim: 0.2 FD, 0.1 CD; n: 0; upper bound is always beam energy |
-| `trigger-theta` | `25` | Trigger electron theta in eh, degrees |
-| `trigger-phi-offset` | energy-based | Offset from sector closest to opposite hadron direction |
+| `trigger-theta` | `25` | Trigger-electron theta in degrees |
+| `trigger-phi-offset` | `auto` | 16°, 7°, or 5° at the three standard beams; otherwise 0° |
 
-Every event receives exactly one vertex position from the selected target geometry, and every particle in that event receives the same Vx, Vy, and Vz coordinates. The workflow does not accept user-supplied fixed coordinates. The trigger electron is placed near the sector opposite the hadron for both FD and CD samples. The electron tester scans theta from 5° to 40° and full phi at beam momentum; this scan motivated the 25° production trigger setting. Mixed sampling requires a positive lower bound. Resolved labels are `1e`, `electron-tester`, `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, and `epimCD`; they control output directory and automatic prefix names. Resolved values are recorded in the manifest.
+`auto` resolves electron momentum to `mixed` for 1e and `beam` for the other channels. It resolves charged-hadron momentum to `mixed` and neutron momentum to `uniform`. The [uniform guide](uniform.md) owns the production ranges; the [sampling model](../concepts/sampling-models.md) owns the mathematical definitions.
 
-## Target geometry
+## Physical settings
 
-The authoritative source is the replaceable [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md) for provenance and replacement instructions. The table describes the checked-in snapshot and must be reviewed after updates.
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `input` | required | GENIE GST ROOT file, quoted local pattern, or ROOT-supported remote address |
+| `event-generator` | `genie-gst` | Generator/format adapter; this is the only implemented value |
+| `event-generator-version` | `unknown` | Recorded provenance and optional prefix component |
+| `tune` | `auto` | Discover `TUNE` from the standard production layout or record `unknown` |
+| `q2-cut` | beam-based | Provenance label only; no Q² cut is applied during conversion |
+| `output-layout` | `nested` | `nested` or `metadata` |
 
-All vertex positions below are in cm in the imported GEMC coordinate convention. Vx and Vy are independent Gaussian values with mean 0 and sigma 0.04 cm for every geometry. For the `liquid` and `Ar` target cells, Vz is uniform across the cell's extent along z. For every other geometry, Vz is a listed target-component center. A multi-component geometry selects one of its centers uniformly, so `4-foil` chooses each foil center with equal probability.
+Automatic Q² labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for 2.07052, 4.02962, and 5.98636 GeV. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
 
-| Name | Vz prescription |
-| --- | --- |
-| `Ar` | Uniform −5.75 to −5.25 |
-| `liquid` | Uniform −5.5 to −0.5 |
-| `4-foil` | Equal choice of −4.875, −3.625, −2.375, −1.125 |
-| `1-foil` | −0.5 |
-| `1-foil-small` | −2.1 |
-| `1-foil-large` | −2.32 |
-| `Ca` | −3.0 |
+The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<beam-MeV>MeV`. The metadata directory is `OUTPUT/<GEMC-variation>__<event-generator>-<version>__<tune>__<Q2-label>__<beam-MeV>MeV`. Every component is sanitized for use as a path while the manifest retains each original resolved value. GEMC version is selected during simulation submission and is not part of LUND creation.
 
-Geometry is an internal resolved manifest value named `target-geometry`; it is not a command-line option. Unknown geometries fail instead of writing sentinel coordinates.
+## Output replacement
 
-## RG-M target catalog
-
-The target catalog selects nuclear metadata and the beam-dependent GEMC target variation in one place. The resolved GEMC variation supplies its external geometry key. Natural tin uses representative LUND `A=119`; choose an explicit isotope override when the event sample requires one. Empty-target configurations are not LUND vertex sources and therefore are not catalog entries.
-
-For C12, 2.07052 GeV automatically selects the small 4 mm foil, 4.02962 GeV selects the large 6 mm foil, and 5.98636 GeV selects four foils. Run 15733 is the exception: use `--gemc-target-variation rgm_fall2021_C_S` with C12 at 4.02962 GeV. The target note documents the foil sizes, beam use, and corresponding GEMC variations, while the RG-M analysis note records the target cells and beam energies[^sportes-2026-rgm][^rgm-analysis-note].
-
-| Target | A | Z | Vertex geometry | GEMC target variation | Automatic selection |
-| --- | --- | --- | --- | --- | --- |
-| `H1` | 1 | 1 | `liquid` | `rga_spring2019` | Any beam energy |
-| `D2` | 2 | 1 | `liquid` | `rgb_fall2019` | Any beam energy |
-| `He4` | 4 | 2 | `liquid` | `rgm_fall2021_He` | Any beam energy |
-| `C12` | 12 | 6 | `1-foil-small` | `rgm_fall2021_C_S` | 2.07052 GeV |
-| `C12` | 12 | 6 | `1-foil-large` | `rgm_fall2021_C_L` | 4.02962 GeV |
-| `C12` | 12 | 6 | `4-foil` | `rgm_fall2021_Cx4` | 5.98636 GeV |
-| `Sn-nat` | 119 | 50 | `4-foil` | `rgm_fall2021_Snx4` | Any beam energy |
-| `Ca40` | 40 | 20 | `Ca` | `rgm_fall2021_Ca` | Any beam energy |
-| `Ca48` | 48 | 20 | `Ca` | `rgm_fall2021_Ca` | Any beam energy |
-| `Ar40` | 40 | 18 | `Ar` | `rgm_fall2021_Ar` | Any beam energy |
-| `Sn120` | 120 | 50 | `1-foil-large` | `rgm_fall2021_Sn_L` | Any beam energy |
-
-## Manifest
-
-Schema version 1 contains `workflow`, project `version`, the short configure-time Git `revision`, a full `git` object (repository, branch, commit, status, tag, tracking state, and GitHub tree link), `root_version`, the compiled header hash `targets_sha256`, resolved string-valued `config`, `scanned_events`, `written_events`, and `files` objects with relative `path` and integer `events`.
-
-It is a completion record and pipeline input, not a content-addressed archive: retain the source checkout and original GST files for full provenance. Rounded masses and all LUND fields/precision are defined in the [data contract](../concepts/lund-data-contract.md). ROOT monitoring files may contain timestamps; reproducibility checks compare LUND output.
-
-## Detector and submission settings
-
-Supply `--lund-dir RUN/lundfiles` to infer settings from its manifest, with optional `--config` and CLI overrides. GEMC falls back to 5.14. It selects GCARD/YAML resources explicitly and uses the external payload’s scheduler defaults. There are no site JSON files. See the [submission guide](../submit-simulation/guide.md).
+Configuration is fully resolved and validated before the writer changes output. The writer converts the final run path to an absolute normalized path and refuses broad or unsafe targets such as the filesystem root, home directory, current directory, or a path containing the source checkout. If the exact run directory exists, it warns, removes it recursively, and recreates it. Rerunning the same resolved configuration therefore replaces partial and completed output at that path.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
-
-[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.

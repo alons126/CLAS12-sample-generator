@@ -1,53 +1,39 @@
-# Reading explanations inside the source
+# Source documentation conventions
 
-Project source files start with their purpose and workflow, then use named banners and foldable regions to locate an operation. Public headers describe interfaces and ownership; implementations explain algorithms, parameters, output meanings, and important failure behavior. Inline comments identify the intent of major stages.
+Source explanations are part of the implementation contract. They should help a contributor understand what a component owns, why it exists, what enters and leaves it, and how it fails.
 
-C++ uses Doxygen blocks (`@file`, `@class`/`@struct`, `@brief`, `@param`, `@return`/`@note`) and paired `#pragma region` / `#pragma endregion` markers. Existing `#pragma once` inclusion guards remain separate from those navigation markers. Python uses module/function docstrings and `# region` / `# endregion` comments. Shell scripts use comment blocks for purpose, workflow, usage, inputs and exit-status behavior, with the same comment-region convention. Region folding depends on editor support; shell/Python region markers are ordinary comments.
+## General writing
 
-Write explanations in simple, direct language that a newcomer can follow. Prefer common words and short sentences. Keep a technical term when it names a real API, format, scientific quantity, language rule, or exact behavior; explain it where needed instead of replacing it with vague wording. State concrete actions directly—for example, say that a function “reads an environment variable” rather than that it “provides an environment-access boundary.”
+Use simple, direct language. Begin unfamiliar behavior with a concrete action and visible result. Keep exact technical terms when they name a real API, data format, scientific quantity, or language rule, and explain them where they first matter.
 
-Every project C++ header and source has one file-level Doxygen block at its beginning, before includes or `#pragma once`. Personal ownership and authorship headers are omitted because Git history records contributions and the project is designed for collaborative development. A header brief explains the public interface, exposed types, and usage contract. Its corresponding `.cpp` brief explains the implementation responsibilities, workflow, internal boundaries, and implementation-specific assumptions or failures. Both are kept and written for their different audiences instead of repeating the same text. A header-only component covers its public contract and inline implementation in its one header brief; a source-only application describes its complete purpose and workflow in the source brief.
+Do not describe project code as “maintained” or make current behavior depend on readers knowing historical implementations. Keep historical comparisons outside the reader documentation.
 
-For C++, put a function's complete public Doxygen contract on its declaration, normally in the header, and do not repeat it above the out-of-line `.cpp` definition. The definition should contain ordinary comments only for implementation details that are not clear from the code. Functions defined only in a `.cpp`, including private helpers and command-line entry points, keep their complete Doxygen contract at the definition. Inline header definitions are documented once in place. This keeps generated API documentation complete without making declarations and definitions drift apart.
+## C++
 
-Descriptions follow each component's actual responsibilities. Small accessors need a short contract; event loops and orchestration functions need ordered stages. Names, units, ownership, configuration precedence and differences between preview and execution should be explicit. Comments must be updated when the implementation changes.
+Every project header and source starts with one file-level Doxygen block. A header explains its public types and use contract; the matching source explains implementation workflow, internal boundaries, assumptions, and failure behavior. Do not copy the same description into both.
 
-The shared runtime palette is defined only in `src/launcher/presentation/set_colors.csh`. `run.csh` loads it before workflow diagnostics and exports it to child processes. `src/workflows/support/environment.h` is the C++ interface that maps those inherited `*_COLOR` values onto semantic constants. Other C++ files select those constants and must not contain literal ANSI escape definitions or fallback palettes. Python and CMake decode the inherited environment values instead of defining another palette.
+Put a declared function's complete contract at its declaration. Do not repeat it above the out-of-line definition. A function defined only in a source file is documented at that definition. Constructors and destructors begin their brief with `Constructor:` or `Destructor:`.
 
-Every project-owned terminal error uses `ERROR_COLOR + "Error:" + RESET_COLOR + " " + message`, and every project-owned warning uses `WARNING_COLOR + "Warning:" + RESET_COLOR + " " + message`. Exception text and validation messages do not include their own label; the final output boundary adds exactly one colored prefix. Output copied from an external command is left unchanged, followed by the standardized project error when that command stops the workflow.
+Document classes, structs, enums, configuration records, constants, ownership, units, invariants, and consumers in proportion to their complexity. Use named separator banners and `#pragma region` markers for meaningful sections. Run the repository formatter after C++ edits and treat its output as authoritative.
 
-When a workflow uses `print_stop.csh`, its final failure output is always one blank line, the error diagnostic, one blank line, and then the stop artwork. The coordinator flushes output before invoking the printer and retains the original failure status. The stop printer begins with artwork rather than adding another leading blank line, so the coordinator owns the spacing.
+## Python, shell, and CMake
 
-Protected external inputs are excluded from routine edits: `src/workflows/lund-creation/external/targets.h`, `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, and every file recursively under `config/detector/`. The documentation convention does not authorize changes to those files. Complete repository instructions are recorded in `AGENTS.md`.
+Python uses module/function docstrings and `# region` markers. Shell files keep the shebang first, then explain purpose, workflow, inputs, output, usage, and sourced-shell status behavior. CMake files use comment sections that explain targets, dependencies, generated files, options, and failures.
 
-## Citations and references
+User-facing entry points list every owned CLI option with its value, meaning, and default or required state. Wrappers distinguish owned options from forwarded options.
 
-Use `tech-note/references.bib` to identify the project BibTeX key and citation details while the publication workspace remains in the repository. Repository Markdown pages use GitHub footnote syntax; they do not show raw LaTeX `\cite{...}` commands and do not send readers to the bibliography file. GitHub Wikis do not support footnotes, so the Wiki generator converts those markers and definitions into linked numbered citations and a **References** section. Put each citation marker directly after the text it supports and before the closing punctuation:
+## Runtime presentation
 
-```markdown
-This statement is supported by the target note[^sportes-2026-rgm].
-```
+`src/launcher/presentation/set_colors.csh` is the only ANSI palette. C++ reads it through `src/workflows/support/environment.h`; Python, shell, and CMake read the inherited environment. Do not define fallback palettes elsewhere.
 
-Place each complete footnote definition on one line at the bottom of every page that uses it. Copy its author, title, institution, report number, date and URL from the matching BibTeX entry, and update both together when those details change. The generator rejects missing, duplicate, or unused definitions so a publication cannot silently drop a reference.
+Project errors use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line.
 
-## Build and JSON configuration
+Every workflow prints shared success artwork once after the complete invocation succeeds. A handled failure prints one blank line, the final error, one blank line, and shared stop artwork once while preserving the original status.
 
-Project `CMakeLists.txt` files use comment-based description, purpose, workflow, input/output and failure notes, plus named `# region` / `# endregion` sections. The comments explain target dependencies, optional workflows, generated files and installation boundaries without changing CMake commands.
+## Citations
 
-Strict JSON does not support comments. Runtime profiles keep their existing schemas and have adjacent `.json.md` field references. Do not add invented `_comment` keys to readers that reject unknown settings. VS Code's JSONC files support inline comment banners and regions despite their `.json` filenames.
+Repository Markdown uses GitHub footnotes with the marker immediately after the supported statement. Copy complete citation details from the project's internal bibliography; readers should not need to open that working file. The Wiki generator converts footnotes into numbered Wiki references and rejects missing, duplicate, or unused definitions.
 
-| Configuration | Explanation |
-| --- | --- |
-| `config/run.json` | [Launcher build defaults and precedence](../../config/run.json.md) |
-| `.vscode/c_cpp_properties.json` | Inline comments explain compile-command-based editor configuration |
-| `.vscode/settings.json` | Inline comments explain language associations, formatting, folding and highlighting |
+## Protected sources
 
-Generated build-tree JSON and protected external or development-only configurations are excluded.
-
-## Data objects and state
-
-The same layers apply to structs, classes, enums, private implementation records, constants and configuration containers. An object description explains its purpose, producers/consumers, ownership and lifetime; member comments explain units, defaults, allowed values and relationships. Named object regions make nested definitions navigable. Passive records need a usage/lifecycle explanation rather than an invented algorithm. For example, `Particle` and `Event` document the generator-to-writer data contract, while diagnostic storage records explain ownership of detached ROOT histograms.
-
-Every file under `config/detector/` is classified as external and read-only for the assistant, recursively and regardless of extension. This includes current and future files, not only recognized gcard/YAML resources.
-
-The `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` payload is external code and is excluded from routine edits. Skip it in routine source-documentation passes; its interface is described in [the GEMC payload guide](../submit-simulation/worker-reference.md).
+These conventions do not authorize edits to external `targets.h`, the external submission worker, or detector resources. Their update procedure is documented in [external inputs](../concepts/external-inputs.md).

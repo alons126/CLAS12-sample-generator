@@ -1,61 +1,57 @@
 # External geometry and detector inputs
 
-## Target source and replacement
+Some files are versioned in this repository but owned by an external scientific or operational source. They are protected from routine refactoring because changing them can change generated vertices, detector response, reconstruction, or batch behavior.
 
-The project has two small boundaries for code obtained from RG-M: target geometry enters through [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h), and each Slurm array task runs through [`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh). Adapters around these files avoid copying their geometry or detector commands. If RG-M publishes an update, the corresponding file can be reviewed and updated without redesigning the workflows.
+## Protected inputs
 
-The checked-in `targets.h` is an exact copy of the RG-M target source containing the latest RG-M target implementations available with GEMC 5.14 when this snapshot was adopted. Its external origin is [awild7/rgm](https://github.com/awild7/rgm/tree/main), and the target implementations are documented in CLAS12 Note 2026-001[^sportes-2026-rgm]. The file is consumed byte-for-byte through `TargetGeometry`; project-specific validation and RNG isolation remain outside it.
+| Path | Origin and role | Project boundary |
+| --- | --- | --- |
+| `src/workflows/lund-creation/external/targets.h` | RG-M target geometry and particle masses | Read through `TargetGeometry` |
+| `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` | RG-M-derived Slurm worker | Called by the submission coordinator through environment variables |
+| `config/detector/` | Campaign GCARD and reconstruction YAML snapshots | Selected and hashed during submission |
 
-The GEMC submission payload was also obtained from RG-M code, but unlike `targets.h`, it has been modified for this project. It keeps the RG-M script's overall structure while accepting the generator-independent settings documented in the [worker reference](../submit-simulation/worker-reference.md). Future RG-M payload revisions should be compared with this file so detector-command changes can be incorporated without changing its project interface.
+Do not edit these as part of a general cleanup. Treat a change as a reviewed source replacement with recorded origin and production validation.
 
-The two RG-M files and detector cards/YAML under `config/detector/` are external inputs kept in the repository so workflows remain reproducible. Project code uses them through small interfaces so an upstream replacement can be reviewed and validated in one place.
+## Target geometry adapter
 
-Both the uniform LUND creator and physical LUND converter call this header's `randomVertex()` through `TargetGeometry`. The returned `TVector3` is the vertex position written to LUND particle columns 12–14 as Vx, Vy, and Vz in centimeters. The target catalog selects valid map keys and supplies nucleus and GEMC metadata without changing the external header. For every geometry, `targets.h` samples Vx and Vy independently from Gaussian beam-spot distributions. For `liquid` and `Ar`, it samples Vz uniformly across the target cell's extent along z. For every other geometry, Vz is a listed target-component center; when a geometry contains multiple components, `4-foil` for example, one center is selected uniformly. Every particle in one event receives the same vertex position.
+The checked-in `targets.h` is kept as an exact source copy from the [RG-M repository](https://github.com/awild7/rgm). That repository also contains RG-M analysis and utility code that may be useful for downstream work, but it is not a runtime dependency of this project. `TargetGeometry.cpp` is the only project source that includes the header. The adapter:
 
-The adapter transfers the caller's complete vertex-position RNG state into and out of the header's `ran` generator under a mutex. Both current event loops are single-threaded, so the mutex has no competing caller today. It is defensive protection for possible future multithreaded event processing because `targets.h` exposes only one shared generator. Separate Slurm jobs run in separate processes and do not share this mutex or generator. This transfer keeps the vertex-position and kinematic random streams separate without changing the order of random draws. The header's particle formatter and mass globals are not used. Every mode, including the electron tester, uses its selected target geometry.
+- validates a resolved geometry name;
+- samples one position in centimeters;
+- isolates the external global RNG behind caller-owned state and a mutex; and
+- exposes the external electron, proton, neutron, and charged-pion masses.
 
-To update geometry:
+Project code does not copy the geometry table or mass constants. The target catalog maps user-facing target variations to geometry keys. Every manifest records a SHA-256 hash of the header compiled into the executable.
 
-1. Replace only `src/workflows/lund-creation/external/targets.h` with the reviewed RG-M version, preserving it as an exact copy.
-2. Preserve the external API: `targets` maps names to nonempty position vectors, `ran` is a `TRandom3`, and `randomVertex(std::string)` returns a `TVector3` in cm. If upstream changes this API, adapt `TargetGeometry.cpp` as well. New target names are discovered from the map; their sampling prescription comes from the replacement function.
-3. Build with `source run.csh --workflow create-lund --source uniform --build true --run false` in tcsh, or the CMake commands in the build guide. CMake detects header changes and recalculates its SHA-256; each generated manifest records `targets_sha256` for the compiled header, including uncommitted replacements.
-4. Review changed vertex-position bounds. Geometry updates can intentionally change results relative to the frozen archive; record the reason and revised scientific validation. Update the snapshot table in the configuration guide and choose matching detector geometry and A/Z.
-5. Commit the header and documentation, recording the upstream revision or download origin. Rebuild the server checkout before producing samples.
+To update the header:
 
-The adapter compiles directly against the selected header, so the project does not copy its geometry table.
+1. Record the upstream revision or download source.
+2. Replace the file without project-specific edits.
+3. If its API changed, update only the adapter boundary needed to consume it.
+4. Rebuild so the new hash enters generated provenance.
+5. Review target mappings, vertex bounds, monitoring ranges, and affected documentation.
+6. Validate generated distributions and the matching detector configuration before production use.
 
-## LUND format
+The target implementations and RG-M variations are described in CLAS12 Note 2026-001.[^sportes-2026-rgm]
 
-We produce LUND files following the [GEMC LUND format documentation](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html): an event header followed by fourteen-field particle records, with momentum in GeV/c, energy in GeV, mass in GeV/c², and the vertex position Vx, Vy, and Vz in cm. The [data contract](lund-data-contract.md) specifies every column and the project-specific meanings of user-defined header fields. In particular, the GENIE process tag is not a physical cross-section weight. The writer uses the precision, spacing, and numbering rules stated in that contract.
+## Detector resources
 
-## Gcard provenance and field settings
+Files under `config/detector/` are fixed snapshots, not files downloaded from the current upstream branch at runtime. Their GCARD source is the [`gemc` directory in `JeffersonLab/clas12-config`](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). The GCARD controls GEMC geometry and detector configuration. The YAML controls COATJAVA reconstruction. The submission record hashes both selected files.
 
-We use gcards from [JeffersonLab/clas12-config, gemc directory](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). The files under `config/detector/` are fixed campaign/version snapshots; they are not downloaded from the current upstream branch at runtime. Select a matching card and reconstruction YAML explicitly. Keep their versions and the simulation record's hashes for each campaign. Their small integration boundary allows the snapshots to be updated as a group.
+Standard field policy is:
 
-| Nominal electron beam energy | Electron bending | Torus scale | Solenoid scale |
-| --- | --- | --- | --- |
-| 2 GeV | Outbending | +0.5 | −1 |
-| 4 GeV | Inbending | −1 | −1 |
-| 6 GeV | Inbending | −1 | −1 |
+| Nominal beam | Electron bending | Torus | Solenoid |
+| --- | --- | ---: | ---: |
+| 2 GeV | outbending | +0.5 | −1.0 |
+| 4 GeV | inbending | −1.0 | −1.0 |
+| 6 GeV | inbending | −1.0 | −1.0 |
 
-For 2 GeV:
+The worker passes torus and solenoid scales on the GEMC command line, so review them together with the selected card. Scientific settings are never inferred from a LUND filename.
 
-```xml
-<!-- you can scale the fields here. Remember torus -1 means e- INBENDING  -->
-<option name="SCALE_FIELD" value="binary_torus, 0.5"/>
-<option name="SCALE_FIELD" value="binary_solenoid, -1"/>
-```
+## Worker payload
 
-For 4 and 6 GeV:
+Unlike the exact target-header copy, the RG-M worker was adapted to accept generator-independent variables and a complete file prefix. Its concrete GEMC and `recon-util` commands remain localized there. When an upstream worker changes, compare the command and scheduler behavior and preserve the documented interface unless the coordinator, tutorials, and validation are updated together.
 
-```xml
-<!-- you can scale the fields here. Remember torus -1 means e- INBENDING  -->
-<option name="SCALE_FIELD" value="binary_torus, -1"/>
-<option name="SCALE_FIELD" value="binary_solenoid, -1"/>
-```
-
-The checked-in gcards contain these scales. The sourced submission settings select torus `0.5` at 2 GeV and `-1.0` at 4/6 GeV; the external payload applies the chosen torus scale and fixed solenoid `-1.0` on the GEMC command line. Review these explicit settings together with the selected card, YAML and GEMC module. No detector settings are inferred from a LUND filename.
-
-The [unified external GEMC payload](../submit-simulation/worker-reference.md) documents `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`, its retained monitoring fields, generator-independent inputs, installation and the boundary with Python setup and its sourced shell bridge.
+See the [worker reference](../submit-simulation/worker-reference.md) for the environment contract.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)

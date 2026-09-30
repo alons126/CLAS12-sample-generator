@@ -1,125 +1,117 @@
-# Architecture and code walkthrough
+# Architecture
 
-## Source layout
-
-Project code is grouped under `src/workflows/`, with one peer directory for each user-facing workflow. `src/workflows/lund-creation/` owns LUND creation, while `src/workflows/slurm-submission/` owns ifarm job submission. Shared C++ workflow support belongs in `src/workflows/support/`. `src/launcher/` owns workflow selection, checkout synchronization, environment setup, and terminal output; build-system templates belong in `cmake/`. Inside LUND creation, folders separate the main responsibilities while `LundCore` compiles the small shared layers together.
-
-| Directory | Responsibility |
-| --- | --- |
-| `src/workflows/` | Peer user-facing workflows and support shared by their implementations |
-| `src/workflows/lund-creation/` | Both uniform and physical LUND creation, their entry points, and external geometry |
-| `src/workflows/slurm-submission/` | Sourced setup/submission script and external GEMC payload |
-| `src/workflows/support/` | C++ interfaces shared across current and future workflows |
-| `src/launcher/` | Dispatcher, checkout synchronization, environment setup, and terminal presentation used by `run.csh` |
-| `cmake/` | Build-system templates, including generated version provenance |
-| `src/workflows/lund-creation/core/config/` | Parse and validate run settings; resolve RG-M target identity and metadata |
-| `src/workflows/lund-creation/core/lund/` | Represent events and particles; split files, serialize LUND, and publish the manifest |
-| `src/workflows/lund-creation/core/geometry/` | Adapt the external target definitions to one vertex position per event |
-| `src/workflows/lund-creation/uniform-lund-creator/` | Produce deliberately unphysical acceptance-map events and their monitoring |
-| `src/workflows/lund-creation/event-generator-to-lund-converter/` | Dispatch a physical input source to its event-generator/format adapter |
-| `src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/` | Read GENIE GST as the currently implemented physical adapter |
-| `src/workflows/lund-creation/external/` | External imported target geometry |
-| `src/workflows/slurm-submission/external/` | External GEMC/reconstruction worker payload |
-
-The two implementation directories intentionally match their installed executable names, so source ownership and runtime diagnostics use the same vocabulary. The GENIE reader is nested under `event-generator-to-lund-converter` as `genie-gst` because the adapter accepts one particular GENIE output format rather than every format GENIE can produce. A future adapter belongs beside it and should identify both generator and input format where necessary. Cross-layer includes state dependencies directly, for example `core/config/RunConfig.h`, `core/lund/Event.h`, and `core/geometry/TargetGeometry.h`.
-
-Future workflows receive another peer directory under `src/workflows/` when their implementation begins. Planned workflows do not have empty placeholder directories. Code moves into `src/workflows/support/` only after multiple workflow implementations share the same concrete contract.
-
-Two small boundaries contain code obtained from RG-M. [`targets.h`](../../src/workflows/lund-creation/external/targets.h) is an exact RG-M copy containing the target implementations available with GEMC 5.14 when it was added; `TargetGeometry` gives the rest of the project a small interface to it. [`submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) adapts the RG-M job payload, and the submission coordinator supplies its checked environment. These narrow boundaries allow future RG-M updates without copying geometry or GEMC/reconstruction commands elsewhere.
-
-## Build targets
-
-| Target | Source | Responsibility |
-| --- | --- | --- |
-| `LundCore` | `src/workflows/lund-creation/core/config/`, `src/workflows/lund-creation/core/lund/`, `src/workflows/lund-creation/core/geometry/` | Shared configuration-to-manifest LUND pipeline |
-| `UniformGeneration` | `src/workflows/lund-creation/uniform-lund-creator/` | Uniform sampling prescriptions and uniform-only monitoring |
-| `GenieGstConversion` | `src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/` | GENIE GST input adapter |
-| `PhysicalConversion` | `src/workflows/lund-creation/event-generator-to-lund-converter/` | Select the configured physical event-generator/format adapter |
-| `uniform-lund-creator` | `src/workflows/lund-creation/apps/uniform_lund_creator_main.cpp` | Parse CLI, call generator, report errors |
-| `event-generator-to-lund-converter` | `src/workflows/lund-creation/apps/event_generator_to_lund_converter_main.cpp` | Parse physical input settings and dispatch an adapter |
-
-The root CMake file discovers ROOT, adds the workflow registry, and adds launcher integration directly. `src/workflows/CMakeLists.txt` adds only workflows that currently exist. The LUND workflow's CMake file defines its libraries and links the two entry points stored in `apps/`. Every implementation is compiled once; implementation files are never included from another implementation. Development comparison code is not part of the project build.
-
-## Workflow dispatcher
-
-The two workflows start at `run.csh`, after the guarded disposable-server refresh:
-
-```mermaid
-flowchart TB
-    R["run.csh"] --> G["Guard and refresh the disposable ifarm checkout"]
-    G --> W{"--workflow"}
-
-    W -->|create-lund| L["workflow.py<br/>Optionally configure and build"]
-    L --> S{"--source"}
-    S -->|uniform| U["uniform-lund-creator<br/>RunConfig::createFromCommandLine then generateUniform"]
-    S -->|physical| P["event-generator-to-lund-converter<br/>RunConfig::createFromCommandLine then convertPhysical"]
-    U --> LW["Shared event model, target geometry, and LundWriter"]
-    P --> LW
-    LW --> F["LUND files and completion manifest"]
-
-    W -->|submit| C["setup_and_submit.csh"]
-    C --> PY["submit.py<br/>resolve_inputs.py resolves every sample"]
-    PY --> X{"--execute?"}
-    X -->|No| V["Validated preview report"]
-    X -->|Yes| A["Replace simulation outputs<br/>Submit sbatch array"]
-    A --> J["External GEMC and reconstruction worker"]
-```
-
-Code shown in the diagram: [`run.csh`](../../run.csh), [`workflow.py`](../../src/launcher/workflow.py), [`uniform_lund_creator_main.cpp`](../../src/workflows/lund-creation/apps/uniform_lund_creator_main.cpp), `generateUniform()`, [`event_generator_to_lund_converter_main.cpp`](../../src/workflows/lund-creation/apps/event_generator_to_lund_converter_main.cpp), `convertPhysical()`, [`setup_and_submit.csh`](../../src/workflows/slurm-submission/setup_and_submit.csh), [`submit.py`](../../src/workflows/slurm-submission/submit.py), [`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py), and [`submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh).
-
-The Python driver owns LUND build staging and forwards sample arguments unchanged. It reads build defaults from `config/run.json`; sample physics belongs in the workflow-specific directories below `config/samples/`. Submission bypasses that driver. Its Python coordinator imports the input resolver, checks and reports the preloaded environment, inspects both simulation-output paths, applies the preview or execution directory action, and passes validated settings to `sbatch` only with `--execute`. It consumes existing LUND files and explicitly selected GCARD/YAML resources. Scheduler defaults stay in the external payload. Creation never submits jobs automatically. See the [submission guide](../submit-simulation/guide.md) for the full call chain and editable settings.
-
-## Sample configuration boundary
-
-`RunConfig.h` declares the read-only configuration object shared by the uniform LUND creator, physical LUND converter, and `LundWriter`; `RunConfig.cpp` implements its construction and validation. Each LUND executable calls `RunConfig::createFromCommandLine()` exactly once with either `LundSource::Uniform` or `LundSource::Physical`. The named source selects the accepted settings and validation rules without an unclear true or false argument.
-
-Resolution follows one fixed sequence:
+The source tree follows the two user-facing workflows instead of one monolithic pipeline:
 
 ```text
-shared + source-specific built-in defaults
-    -> optional key = value sample profile
-    -> command-line overrides
-    -> target/channel/beam-dependent auto values
-    -> shared and source-specific validation
-    -> normalized input path and final absolute run-directory path
+src/
+├── launcher/                       # run.csh support, build dispatch, checkout and presentation
+└── workflows/
+    ├── lund-creation/              # uniform creation and physical conversion
+    ├── slurm-submission/           # ifarm validation and submission
+    └── support/                    # C++ support shared by real workflow implementations
 ```
 
-The object retains values as strings so the spelling actually used by the run can be written to `lundfiles/lund-creation-monitoring/lund-creation-log.json`. Consumers use `RunConfig::getText()`, `RunConfig::getDouble()`, and `RunConfig::getNonnegativeInteger()` for checked access; the writer uses `RunConfig::getAllSettings()` to serialize the full resolved configuration. Target identity may supply automatic geometry, A/Z, and GEMC variation values, but explicit overrides remain independent. Source-specific options are rejected in the wrong mode rather than accepted and ignored.
+Future user-facing workflows belong beside the existing workflow directories. They should not be nested inside LUND creation or submission. Add shared infrastructure only after at least two workflows have the same concrete need.
 
-This boundary is intentionally side-effect-free with respect to run products: configuration preparation may read the selected profile, but it does not inspect GST event contents, sample kinematics or vertices, create or replace the run directory, write LUND or monitoring files, or submit simulation. Those responsibilities begin only after configuration preparation succeeds and remain with the uniform LUND creator, physical input adapter, writer, and submission workflow respectively.
+## Entry points and control flow
 
-## Following a uniform run
+`run.csh` is the operational front door. After early help/argument checks, it refreshes the disposable ifarm checkout and selects a workflow.
 
-1. The application calls `RunConfig::createFromCommandLine`. Built-in defaults are merged with a `key = value` file and then command-line overrides. Unknown, repeated and invalid settings fail before opening an output directory.
-2. `generateUniform()` receives the resolved `1e` or `eh` channel, selected hadron, and FD/CD region, then owns separate kinematic and vertex random streams. `TargetGeometry` selects one vertex position and every particle in the event receives the same Vx, Vy, and Vz coordinates.
-3. `Event` holds metadata and `Particle` values. Generation logic operates on these values, not on text formatting or shell commands.
-4. `LundWriter` creates a new run directory, splits events into numbered files, and serializes all channels in the same format.
-5. `UniformMonitoring` owns one ordered set of detached ROOT histograms. It groups electron, hadron, vertex-position, single-particle correlation, and electron–hadron correlation plots, uses the documented canvas style, sets every Vz axis to −8–5 cm to cover all RG-M vertex positions[^sportes-2026-rgm][^rgm-analysis-note], and labels protons, neutrons, pip, and pim by FD or CD.
-6. It writes every histogram once to `<prefix>__monitoring_plots.root` and renders the same objects to `<prefix>__plots.pdf` and individual PNG files for every uniform channel.
-7. After output and monitoring finish successfully, `LundWriter::finalizeRun` atomically renames the completion manifest into place.
+For LUND creation:
 
-## Following a physical run
+```text
+run.csh
+  -> src/launcher/workflow.py
+  -> CMake configure/build when requested
+  -> uniform-lund-creator or event-generator-to-lund-converter
+  -> RunConfig
+  -> source-specific event producer
+  -> common Event/Particle model and LundWriter
+  -> LUND files and completion manifest
+```
 
-`convertPhysical()` selects the `event-generator` adapter; `genie-gst` is the implemented default. `convertGenieGST()` loads a `TChain("gst")` and validates required branches. Typed `TTreeReaderValue` and `TTreeReaderArray` objects obtain each entry's array lengths from ROOT leaf metadata. Before indexed access, the adapter requires nonnegative `nf`, `pdgf.GetSize() == nf`, and identical `pxf`, `pyf`, and `pzf` sizes. This validates the complete parallel-array boundary without imposing a fixed particle limit. The adapter supports only QE, MEC, RES, and DIS; another reaction requires an adapter update. It assigns the corresponding process code, filters supported PDG codes, creates an `Event`, and calls the shared writer. Physical conversion creates no ROOT monitoring file or rendered monitoring plots.
+For submission:
 
-The converter stops at accepted-event capacity, input exhaustion, or the physical-input submission cutoff. Before starting a follow-up output file, it requires at least `events-per-file` inclusive input entries beginning with the current accepted entry. The first file is always allowed, and a file that has started is never interrupted by the cutoff. The comparison is intentionally entry-based, so unsupported reactions inside an allowed block can still yield a shorter LUND file. No empty rollover file is opened. Errors reading later chain entries prevent publication of a completion manifest.
+```text
+run.csh
+  -> setup_and_submit.csh
+  -> submit.py
+       -> resolve_inputs.py
+       -> environment and input checks
+       -> preview, or output replacement plus sbatch
+  -> submit_GEMC_sample.sh in each Slurm task
+       -> GEMC
+       -> recon-util (COATJAVA)
+```
 
-## Simulation boundary
+The launcher never turns LUND creation into implicit submission. The submission coordinator never runs GEMC locally.
 
-`src/workflows/slurm-submission/submit.py` combines the uniform/physical setup workflows. The small sourced `setup_and_submit.csh` bridge supplies shared colors and the inherited environment. Python checks the requested shared GEMC version, loads it in an invocation-owned environment, verifies the resulting data directory and executable, checks remaining inputs, and inspects both simulation-output paths before changing either one. Preview creates only missing directories, preserves existing contents, and reports what execution would clear. `--execute` warns, recursively deletes existing simulation-output directories, recreates both empty, and submits one array per sample. The external payload owns all GEMC/reconstruction commands. No Python process runs inside the array, and the project does not run detector simulation locally.
+## LUND-creation layers
 
-## Adding functionality
+| Layer | Main responsibility |
+| --- | --- |
+| `apps/` | Thin CLI entry points and final error presentation |
+| `core/config/` | Parse, merge, resolve, and validate settings; select target metadata |
+| `core/geometry/` | Isolate the external target source and sample one vertex per event |
+| `core/lund/` | Define `Event` and `Particle`; serialize, split, and publish completion |
+| `core/presentation/` | Shared progress reporting for interactive and redirected output |
+| `uniform-lund-creator/` | Generate random acceptance-test particles and uniform-only monitoring |
+| `event-generator-to-lund-converter/` | Dispatch physical input to a format-specific adapter |
+| `event-generator-to-lund-converter/genie-gst/` | Validate and translate GENIE GST records |
 
-- Add a sampling prescription in `src/workflows/lund-creation/uniform-lund-creator/` with validated settings and documented distribution or invariants.
-- Add another physical adapter under `src/workflows/lund-creation/event-generator-to-lund-converter/<generator-format>/` and register it behind `convertPhysical()`; keep the public executable and manifest contract unchanged.
-- Replace or extend `src/workflows/lund-creation/external/targets.h`, the external geometry source, and validate its vertex bounds; see [external inputs](external-inputs.md). Geometry and nuclear A/Z are separate choices.
-- Add detector cards under `config/detector/` and select them explicitly at execution time.
-- Resolve submission inputs from the completion manifest, explicit config and CLI; use the external payload’s scheduler defaults.
+`LundCore` compiles the small common layers once. `UniformGeneration` depends on it and adds ROOT histogram/graphics components. `GenieGstConversion` depends on it and adds ROOT tree components. `PhysicalConversion` is the stable dispatcher in front of the format-specific adapter. The installed executables remain separate so a restricted build can omit an unused source and its ROOT components.
 
-Do not infer physics configuration from filenames or output paths. Keep the external header's global RNG isolated inside the geometry adapter; do not add application-global RNGs or duplicate LUND formatting in individual workflows.
+## Configuration boundary
 
-The complete [source/API inventory](../development/source-reference.md) also covers examples and error paths.
+Each executable constructs one `RunConfig` for its source. Resolution is deterministic:
 
-[^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+```text
+built-in common and source defaults
+  -> optional sample profile
+  -> command-line overrides
+  -> automatic target/channel/beam values
+  -> validation
+  -> normalized input and final output paths
+```
 
-[^rgm-analysis-note]: Andrew Denniston, Justin Estee, Julian Kahlbow, and Erin Marshall Seroka, *RG-M Analysis Note: 6 GeV Electron Proton Selection and Particle ID*, unpublished draft, Massachusetts Institute of Technology and The George Washington University, February 2026.
+The object stores final values as strings for provenance and exposes checked typed readers to the event code. It does not generate events, advance random streams, modify output, or submit jobs. Source-specific keys are rejected in the wrong source instead of being ignored.
+
+## Common event boundary
+
+Source-specific code produces `Event` objects containing ordered `Particle` records. That boundary keeps scientific input logic away from text serialization:
+
+- the uniform LUND creator decides which random particles exist;
+- a physical adapter decides which input events and particles are supported;
+- `TargetGeometry` supplies one vertex shared by every particle in the event; and
+- `LundWriter` owns file names, splitting, exact formatting, output replacement, counts, and the final manifest.
+
+This separation is the main extension rule. A new input adapter should translate its records into `Event`; it should not copy the writer, target sampling, or completion logic.
+
+## Uniform path
+
+`generateUniform()` converts resolved settings into a typed `UniformConfig`, creates separate kinematic and vertex RNGs, and generates events until the requested written count is reached. It writes each event before adding it to `UniformMonitoring`, so diagnostics never count an event that failed to reach LUND. Monitoring is saved before the manifest is published.
+
+## Physical path
+
+`convertPhysical()` dispatches the selected adapter. `convertGenieGST()` validates the ROOT tree and branch types, scans entries in order, selects supported interactions, copies supported truth particles, and calls the common writer. It owns scanned-versus-written accounting and the input-tail cutoff. It creates no monitoring histograms.
+
+To add another format, create a sibling adapter and one explicit dispatcher branch. Keep the public executable and shared output contract. The [adapter guide](../development/adding-event-generator.md) lists the required scientific and software decisions.
+
+## Submission boundary
+
+`resolve_inputs.py` is a pure resolution and validation layer: CLI, optional config, manifest, and defaults become one checked settings record per sample. `submit.py` owns environment loading, reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker owns only commands executed by an array task.
+
+This division prevents shell variables, path-name guesses, or worker-specific branches from becoming hidden configuration. It also keeps preview and execution on the same resolution path.
+
+## Protected external boundaries
+
+Two imported sources sit behind small interfaces:
+
+- `src/workflows/lund-creation/external/targets.h` supplies target geometry and particle masses through `TargetGeometry`.
+- `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` supplies the GEMC/COATJAVA worker command boundary.
+
+Detector GCARD and YAML files under `config/detector/` are also external campaign resources. Replace these deliberately and validate the resulting production chain; do not edit them as routine project code. See [external inputs](external-inputs.md).
+
+## Rules for future workflows
+
+A new workflow needs one clear entry point, input contract, output contract, configuration path, and owning directory. Keep workflow-specific file formats and physics inside that directory. Do not create empty placeholders or a generic orchestration framework for planned work. Reuse current components only when their contract genuinely matches the new workflow.

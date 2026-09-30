@@ -1,13 +1,13 @@
 # Development guide
 
-Use this section when changing project code or documentation.
+Read these pages in this order when changing the project:
 
-- [Contributing](contributing.md)
-- [Developer build reference](building.md)
-- [Source and API reference](source-reference.md)
-- [Adding another event-generator adapter](adding-event-generator.md)
-- [Scientific validation boundaries](validation.md)
-- [Source documentation conventions](documentation-style.md)
-- [Wiki publishing](wiki-publishing.md)
+1. [Architecture](../concepts/architecture.md)
+2. [Contributing](contributing.md)
+3. [Developer build reference](building.md)
+4. [Source and API map](source-reference.md)
+5. [Scientific validation boundaries](validation.md)
 
-Software behavior, comments, and user/developer documentation form one contract. A change is incomplete when any affected layer still describes the previous behavior.
+Use [adding a physical-input adapter](adding-event-generator.md) for that specific extension. [Source documentation](documentation-style.md) explains how implementation contracts are written, and [Wiki publishing](wiki-publishing.md) explains how repository Markdown becomes the reader manual.
+
+Code, CLI help, profiles, tutorials, and the Wiki describe one system. A change is incomplete while any affected layer still describes the previous behavior.

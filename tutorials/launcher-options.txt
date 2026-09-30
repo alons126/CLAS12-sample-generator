@@ -1,12 +1,10 @@
 # Launcher option examples
 #
-# Run these commands from the repository root. The launcher options control
-# configuring, building, and starting a LUND application. They do not configure
-# detector submission. Replace /path/to/... values before running an example.
-# Except for help and argument-validation exits, run.csh treats the checkout as
-# disposable: it removes untracked files except build/, discards tracked changes,
-# pulls the configured branch, and updates submodules. Commit and push valuable
-# changes from a development checkout before running the workflow examples.
+# Run these commands from the repository root in csh/tcsh. Launcher options control
+# configuration, compilation, and execution of a selected LUND application; they do
+# not define sample physics or detector submission. A normal run refreshes the
+# disposable ifarm checkout, so commit and push valuable development changes first.
+# Replace every /path/to/... value before use.
 
 #########################################################################################
 # Print launcher help without updating, building, creating output, or submitting jobs

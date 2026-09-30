@@ -1,74 +1,49 @@
-# Launcher build and execution defaults
+# Launcher settings
 
-## Purpose
+[`config/run.json`](run.json) contains stable build and execution defaults for `src/launcher/workflow.py`. It does not select a workflow, LUND source, sample profile, physical input, or output path; those choices remain visible on the command line.
 
-[run.json](run.json) supplies stable build controls to `src/launcher/workflow.py`. It deliberately does not select a user-facing workflow, a LUND source, a sample profile, input data, or output location. Those choices remain visible in every `source run.csh` command.
+The file is strict JSON. Unknown keys fail, so explanations live here rather than in invented comment fields.
 
-This is strict JSON. Its consumer rejects unknown keys, so explanations live in this adjacent Markdown file rather than comment properties inside the JSON object.
+## Settings
 
-## Required command selections
+| Key | Checked-in value | CLI override |
+| --- | --- | --- |
+| `build` | `true` | `--build true|false` |
+| `run` | `true` | `--run true|false` |
+| `build_dir` | `build/release` | `--build-dir DIRECTORY` |
+| `build_type` | `Release` | `--build-type Debug|Release|RelWithDebInfo|MinSizeRel` |
+| `jobs` | `4` | `--jobs N` with a positive integer |
 
-Create a uniform LUND sample by naming both the source and its sample profile:
+Resolution is built-in launcher defaults, then the selected JSON file, then explicit launcher options.
+
+Use another file only by naming it:
+
+```tcsh
+source run.csh \
+    --run-settings /path/to/run-settings.json \
+    --workflow create-lund \
+    --source uniform \
+    --build true \
+    --run false
+```
+
+There is no implicit `run.local.json`. An untracked file inside the disposable ifarm checkout could be removed immediately before it was read.
+
+## Launcher and child options
+
+`--workflow create-lund|submit` is always required. For `create-lund`, launcher-owned `--source uniform|physical` selects the LUND application. Submission bypasses this build launcher; its resolver accepts the same `--source` spelling only as truth metadata for input without a completion manifest. Other unrecognized creation options are forwarded unchanged to the selected LUND executable.
+
+Use `--` when forwarding help or any argument that should be unambiguously treated as a child option:
 
 ```tcsh
 source run.csh \
     --workflow create-lund \
     --source uniform \
-    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-    --output OUTPUT_PARENT
+    --build false \
+    -- \
+    --help
 ```
 
-Convert physical generator output by naming the physical source, profile, input and output:
+Submission bypasses `workflow.py` and does not read this JSON. Its settings come from the LUND manifest, an optional submission config, CLI overrides, and submission defaults.
 
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source physical \
-    --config config/samples/physical-lund-creation/genie-gst.conf \
-    --input 'GST_GLOB' \
-    --output OUTPUT_PARENT
-```
-
-Select a LUND run using `--lund-dir`, then submit:
-
-```tcsh
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/sample/lundfiles
-```
-
-`--workflow` is always required. `--source uniform|physical` is required for `create-lund` and is rejected for `submit`. Child options are forwarded exactly as written; the launcher no longer injects a hidden sample profile or output path.
-
-## Available keys
-
-| JSON key | Checked-in value | CLI override and purpose |
-| --- | --- | --- |
-| `build` | `true` for `create-lund` | `--build true` or `--build false` explicitly selects whether to configure/build |
-| `run` | `true` | `--run false` stops after the requested build stage |
-| `build_dir` | `build/release` | `--build-dir PATH` selects the CMake binary directory |
-| `build_type` | `Release` | `--build-type Debug|Release|RelWithDebInfo|MinSizeRel` |
-| `jobs` | `4` | `--jobs N` selects positive parallel build-worker count |
-
-Precedence is:
-
-```text
-workflow.py built-in build defaults
-    -> selected run JSON
-    -> explicit launcher options
-```
-
-For `--workflow submit`, [`run.csh`](../run.csh) directly sources the shell setup script. Build/run settings do not apply to submission.
-
-Use `--run-settings FILE` to select a different strict JSON build profile explicitly. There is no automatic `config/run.local.json`: normal ifarm synchronization removes untracked files, so an implicit local profile would be unreliable.
-
-The [launcher option tutorial](../tutorials/launcher-options.txt) demonstrates every launcher-owned CLI option, including a custom build directory/type, build-only and run-only forms, help forwarding, and the `--run-settings` override.
-
-## Why this file remains
-
-The file keeps stable operational defaults out of scientific sample profiles and avoids repeating build controls in every command. It does not hide the action being performed. A reader can determine the selected workflow, source, sample definition, input and output directly from the command line.
-
-Sample physics and generation settings belong in [samples](samples). Submission settings come from the completion manifest plus optional key=value configuration and CLI overrides; scheduler defaults remain in the external payload. Protected GCARD and reconstruction resources belong in [detector](detector).
-
-## Failure behavior
-
-Unknown keys, non-Boolean stage controls, unsupported build types, empty build paths, and nonpositive job counts fail before CMake or a child workflow runs. A failed checked build prevents LUND creation. Submission bypasses these build controls.
+Invalid Booleans, build types, paths, or worker counts fail before CMake or a child application runs. A failed build prevents LUND creation.

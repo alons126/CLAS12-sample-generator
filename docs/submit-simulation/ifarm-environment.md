@@ -1,10 +1,10 @@
-# Local editing and SSH execution
+# Ifarm environment and checkout model
 
-Edit and validate the checkout locally, commit the changes, then transfer them through your normal Git remote or file-copy workflow. On the SSH server, load the site's compiler, ROOT, CMake and Python 3.9+ environment. For submission, initialize the CLAS12 reconstruction environment in the login shell and use shared storage visible to workers. The submission coordinator then selects and verifies the requested GEMC module in its child environment. The launcher does not SSH or install software.
+Edit, build, and review changes in a development checkout. Commit and push them through the collaboration's normal Git workflow, then run production commands from an ifarm checkout on storage visible to Slurm workers. The launcher does not SSH to ifarm or install site software.
 
-## Ifarm login environment
+## Login environment
 
-When logging in to Jefferson Lab's ifarm, keep the following file at `~/environment.csh`:
+Keep this setup in `~/environment.csh`:
 
 ```tcsh
 #!/bin/csh
@@ -15,139 +15,47 @@ module load clas12
 module switch coatjava/10.0.7
 ```
 
-Always source this file from `~/.cshrc` so every ifarm shell receives the required CLAS12 environment:
+See [RG-M repository](https://github.com/awild7/rgm) for any updates for `~/environment.csh`. Source it from `~/.cshrc` so every ifarm login receives the expected CLAS12 environment:
 
 ```tcsh
 source ~/environment.csh
 ```
 
-This setup provides the CLAS12 reconstruction command used by the Slurm worker and selects COATJAVA 10.0.7. That release is close to the COATJAVA version used to cook RG-M data and is the reconstruction version currently used by this project. An [`environment.csh` copy is available in the RG-M repository](https://github.com/awild7/rgm/blob/main/environment.csh); access to that repository must be granted by RG-M.
+This selects the COATJAVA release used by the reconstruction worker. See the [COATJAVA repository](https://github.com/JeffersonLab/coatjava) for its source and other releases. Changing the release changes reconstruction software and requires campaign validation. The submission coordinator separately loads and verifies the requested GEMC module in its child environment; GEMC defaults to 5.14. Module changes made there do not alter the interactive shell.
 
-The login setup selects COATJAVA, while the submission workflow separately loads the requested GEMC version. GEMC defaults to 5.14; an explicit `--gemc-version` override is resolved and verified before `sbatch` receives the environment.
+## Disposable checkout
 
-## Sourced entry point
+For a normal non-help command, `run.csh` verifies the checkout, removes untracked files except documented build exclusions, discards tracked changes, pulls the configured upstream branch, and synchronizes submodules. This is intentional. Never keep the only copy of code, configuration, or output inside the ifarm checkout.
 
-In a **csh/tcsh** session on the server, select the workflow, source, sample profile and output explicitly:
+Place LUND and HIPO data on shared storage outside the checkout. Commit and push valuable repository changes before invoking `run.csh`. Help and argument-validation failures return before synchronization.
 
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-    --output runs/electron-001
-```
-
-The server checkout is intentionally disposable. Before building, `run.csh` verifies the repository root, removes untracked files except the documented build exclusions, resets tracked changes, pulls the remote revision, and initializes configured submodules at their pinned revisions. Commit and push every valuable edit from the local VS Code/GitHub clone first. It then reads build defaults from `config/run.json` and dispatches the action written in the command. Existing resolved run directories are removed and recreated after the safety checks described in the workflow guide.
-
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --config config/samples/uniform-lund-creation/uniform-enFD-5986MeV.conf \
-    --output runs/en-001
-
-source run.csh \
-    --workflow create-lund \
-    --source physical \
-    --config config/samples/physical-lund-creation/genie-gst.conf \
-    --input '/data/genie/*.root' \
-    --output runs/physical
-
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --build true \
-    --run false
-```
-
-GENIE glob patterns must be quoted so they reach ROOT unchanged. Options after `--config` override matching sample-profile values. `workflow.py` forwards child options exactly as written and does not inject a hidden sample profile or output path. All workflow paths are interpreted from the repository root, including when the wrapper is launched elsewhere. This differs from directly invoking the C++ executables, which use the caller's directory.
-
-Use `source run.csh --help` for launcher options. Use `source run.csh --workflow create-lund --source uniform --build false -- --help` for the selected executable's help. Bash users can execute `./run.csh` with tcsh installed, or call `python3 src/launcher/workflow.py`; do not source csh syntax into Bash.
-
-An empty `source run.csh` prints uniform, physical, submission, and build examples in copyable multiline shell form and returns status 2. Both the empty-command guidance and `source run.csh --help` run before the disposable-clone synchronization, so asking for usage does not clean, reset, pull, build, create output, or submit jobs. A nonempty command that omits `--workflow` receives the same examples from `workflow.py`.
-
-To source from another directory, first set `CLAS12_SAMPLES_DIR` to the absolute checkout path:
-
-```tcsh
-unset CLAS12_SAMPLES_DIR
-unsetenv CLAS12_SAMPLES_DIR
-setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
-source "$CLAS12_SAMPLES_DIR/run.csh" \
-    --workflow create-lund \
-    --source uniform \
-    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-    --output runs/electron-003
-```
-
-`CLAS12_SAMPLES_DIR` is an optional user-defined environment variable; the project does not create it. The example clears both tcsh namespaces before assignment for the same reason as project-owned exports. It overrides automatic checkout discovery so the launcher can be sourced from any working directory. When the shell is already in the repository root, it is unnecessary:
-
-```tcsh
-cd /shared/path/CLAS12-sample-generator
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
-    --output runs/electron-001
-```
-
-Because `setenv` stores the value in the current shell, it remains available for later commands and sessions descended from that shell. Remove it when it should no longer override checkout discovery:
-
-```tcsh
-unsetenv CLAS12_SAMPLES_DIR
-```
-
-A failed command stops subsequent stages and returns a nonzero `$status` without exiting the sourced parent shell. `CLAS12_SAMPLE_STATUS` also retains the wrapper's result. Read `$status` immediately because the next shell command replaces it. `CLAS12_SKIP_SERVER_SYNC=1` is reserved for launcher development; routine ifarm use must keep synchronization enabled.
-
-### Environment replacement contract
-
-Tcsh maintains local variables created by `set` separately from exported environment variables created by `setenv`. Both may have the same name, and `$NAME` expands the local value even after `setenv NAME ...` replaces the exported value. A stale local value can therefore make a freshly sourced workflow appear to ignore its configuration until a new terminal session is opened.
-
-Every project-owned environment assignment clears both shell namespaces immediately before setting its value: `unset NAME`, then `unsetenv NAME`, then `setenv NAME VALUE`. This applies to the shared color and project environment. Submission settings are resolved in Python, which overwrites its child-process environment directly before calling `sbatch`; stale shell locals cannot shadow them. User inputs such as `CLAS12_SAMPLES_DIR` and values established by external site modules are not rewritten unless a workflow explicitly owns an override. Per-sample submission values are not written back into the login shell.
-
-## Run settings and build controls
-
-`config/run.json` contains only LUND build controls; submission does not read it. Use `--run-settings path/to/settings.json` to select another strict JSON build profile explicitly. Workflow, source, sample configuration, input and output remain visible on the command line. Use `--key value` syntax, not `--key=value`.
-
-There is no automatic `config/run.local.json`. The normal ifarm refresh removes untracked files, so an implicit local profile could disappear immediately before execution. Keep a reusable alternative profile in a deliberate location and select it with `--run-settings FILE`.
-
-| JSON key | Default | CLI override and purpose |
-| --- | --- | --- |
-| `build` | `true` for `create-lund` | `--build true` or `--build false`: explicitly select compilation behavior |
-| `run` | `true` | `--run false`: build only |
-| `build_dir` | `build/release` | `--build-dir build/debug` or an absolute path |
-| `build_type` | `Release` | `--build-type Debug` (also Release, RelWithDebInfo, MinSizeRel) |
-| `jobs` | `4` | `--jobs 8`: positive build parallelism |
-
-`--workflow create-lund|submit` is required. `--source uniform|physical` is required for `create-lund` and invalid for `submit`.
-
-`workflow.py` separates build options from LUND application options and preserves argument boundaries. Submission instead sources `src/workflows/slurm-submission/setup_and_submit.csh` directly; its Python coordinator accepts `--lund-dir`, `--config` and CLI overrides without invoking the LUND build driver. See the [submission guide](guide.md).
-
-Building always invokes CMake dependency checking, so replacing an uncommitted `src/workflows/lund-creation/external/targets.h` is sufficient to trigger rebuilding.
-
-After transferring committed changes to the remote, a server refresh/build is:
-
-```tcsh
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --build true \
-    --run false
-```
-
-The refresh requires a configured Git upstream and network access to any not-yet-initialized submodule. It intentionally discards server-side edits and untracked files, retaining the updater's documented build exclusions. It stops before building if cleanup, reset, pull, submodule synchronization, or submodule checkout fails.
-
-## Detector processing and submission
-
-First create the LUND files and completion manifest. Pass the run's `lundfiles/` directory; use optional config/CLI overrides for detector settings. Commit and push any in-checkout configuration changes locally first. Then, from a csh/tcsh login shell on ifarm:
+Use a csh/tcsh login shell:
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/sample/lundfiles
+    --lund-dir /shared/path/to/run/lundfiles
 ```
 
-This previews setup and the Slurm command in copyable multiline shell form. Add `--execute` to submit the selected arrays and clear and recreate the simulation output directories, preserving LUND input. Preview still performs the documented server-checkout refresh and environment loading. At the output-directory stage it inspects both exact paths before changing either one, preserves existing sample outputs and farm logs, reports what execution would clear, and creates and verifies `mchipo/` or `reconhipo/` if either directory is missing. Execution warns before deleting existing simulation output and recreates both directories empty. The setup checks inputs and prints the report before calling `sbatch`; execution then reports the accepted `SLURM_JOB_ID` and records it in the sample's submission log. Preview and execution finish with the same shared success/stop artwork used by LUND creation. See the [submission guide](guide.md) for settings and failure behavior.
+Bash users may execute `./run.csh` when tcsh is installed, but must not source csh syntax into Bash.
 
-## Supporting shell files
+## Run from another directory
 
-`run.csh` owns the disposable-clone refresh, then sources submission or calls the LUND Python driver. `src/launcher/checkout/code_updater.csh` performs checked Git operations in a child shell. The sourced submission bridge invokes Python with the preloaded environment and returns its status without exiting the login shell. Python passes resolved settings directly to `sbatch`.
+When the shell is not in the repository root, point the launcher to the checkout:
+
+```tcsh
+unset CLAS12_SAMPLES_DIR
+unsetenv CLAS12_SAMPLES_DIR
+setenv CLAS12_SAMPLES_DIR /shared/path/to/CLAS12-sample-generator
+source "$CLAS12_SAMPLES_DIR/run.csh" \
+    --workflow submit \
+    --lund-dir /shared/path/to/run/lundfiles
+```
+
+`CLAS12_SAMPLES_DIR` is a user-owned override and remains in that shell until removed with `unsetenv CLAS12_SAMPLES_DIR`.
+
+## Exit status
+
+Because the entry point is sourced, a handled failure returns a nonzero `$status` without closing the login shell. Read `$status` immediately; the next shell command replaces it. `CLAS12_SAMPLE_STATUS` also retains the wrapper result.
+
+`CLAS12_SKIP_SERVER_SYNC=1` exists only for launcher development. Routine ifarm operation must leave synchronization enabled.

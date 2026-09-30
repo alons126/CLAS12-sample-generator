@@ -1,10 +1,10 @@
-# Concepts and data contracts
+# Concepts and contracts
 
-This section explains why the workflows behave as documented. It is reference material, not a prerequisite for the quickstart.
+These pages explain the design that the user guides rely on:
 
-- [Architecture](architecture.md): components, targets, and call chains.
-- [Sampling models](sampling-models.md): uniform distributions, correlations, and random streams.
-- [LUND data contract](lund-data-contract.md): header/particle fields, precision, splitting, and manifests.
-- [External inputs](external-inputs.md): external target geometry and detector resources.
+- [Architecture](architecture.md): workflow boundaries, control flow, and extension rules.
+- [Sampling models](sampling-models.md): exact uniform distributions, correlations, and random streams.
+- [LUND data contract](lund-data-contract.md): in-memory records, serialized fields, splitting, and manifests.
+- [External inputs](external-inputs.md): protected geometry, detector resources, and worker payload.
 
-The central boundary is LUND: creation produces truth-level particle records; submission sends those records through GEMC/Geant4 detector transport and CLAS12 reconstruction. Acceptance extraction and physics analysis remain downstream.
+LUND is the central interface. Creation owns truth preparation; submission owns the handoff to GEMC and COATJAVA. Downstream analysis is outside both workflows.

@@ -1,112 +1,61 @@
 # Submission examples
 
-Run these commands on ifarm from a csh/tcsh login shell. Preview is the default and is the recommended first step for every sample.
+Run these commands on ifarm. Preview is the default and should be the first action for every sample.
 
-## Preview one completed sample
+## Preview a completed run
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/runs/Uniform__1e__5986MeV/lundfiles
+    --lund-dir /shared/path/to/run/lundfiles
 ```
 
-Preview first inspects both `mchipo/` and `reconhipo/` paths. It preserves files in an existing directory and says that `--execute` would delete and recreate it. It creates and verifies either directory when missing. It does not call `sbatch`.
-
-## Submit only the first five LUND files
+## Submit the first five files
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/runs/Uniform__1e__5986MeV/lundfiles \
+    --lund-dir /shared/path/to/run/lundfiles \
     --num-jobs 5 \
     --execute
 ```
 
-`--execute` warns before deleting an existing `mchipo/` or `reconhipo/` directory and all its contents, then recreates both directories empty while preserving `lundfiles/`.
+Execution replaces this run's `mchipo/` and `reconhipo/`, but preserves `lundfiles/`.
 
-## Override the shared per-task event limit
-
-```tcsh
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/runs/Uniform__enFD__4029MeV/lundfiles \
-    --num-jobs 3 \
-    --events-per-job 5000
-```
-
-Without the override, the largest selected manifest file count becomes the shared GEMC/reconstruction limit.
-
-## Preview several samples in one invocation
+## Override detector inputs
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/runs/Uniform__1e__2070MeV/lundfiles \
-    --lund-dir /shared/runs/Uniform__epFD__2070MeV/lundfiles \
-    --lund-dir /shared/runs/Uniform__enFD__2070MeV/lundfiles \
-    --num-jobs 2
-```
-
-Each distinct sample becomes a separate Slurm array.
-
-## Use a submission profile with explicit overrides
-
-```tcsh
-source run.csh \
-    --workflow submit \
-    --config config/submission.conf \
-    --lund-dir /shared/runs/physical/lundfiles \
+    --lund-dir /shared/path/to/run/lundfiles \
     --gemc-version 5.14 \
-    --torus -1.0 \
-    --job-name C12_GENIE_validation
-```
-
-## Select detector and reconstruction resources explicitly
-
-```tcsh
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/runs/physical/lundfiles \
     --gemc-target-variation rgm_fall2021_Ar \
     --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
-    --yaml config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml
+    --yaml config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
+    --torus -1.0
 ```
 
-Use paths that exist in the refreshed ifarm checkout. The GCARD controls detector simulation; the YAML controls reconstruction.
+The GCARD controls GEMC detector simulation. The YAML controls COATJAVA reconstruction.
+
+## Preview two independent arrays
+
+```tcsh
+source run.csh \
+    --workflow submit \
+    --lund-dir /shared/run-a/lundfiles \
+    --lund-dir /shared/run-b/lundfiles \
+    --num-jobs 2
+```
 
 ## Test a custom clas12Tags checkout
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/runs/physical/lundfiles \
+    --lund-dir /shared/path/to/run/lundfiles \
     --clas12tags-dir /shared/development/clas12Tags
 ```
 
-This changes `GEMC_DATA_DIR` for detector-development testing while retaining the selected GEMC executable checks.
+Use this only for a reviewed detector-development study. It changes the GEMC data directory passed to Slurm.
 
-## Optional direct farm-log cleanup
-
-```tcsh
-source run.csh \
-    --workflow submit \
-    --lund-dir /shared/runs/physical/lundfiles \
-    --clear-farm-out true \
-    --farm-out /shared/farm_out \
-    --execute
-```
-
-Use cleanup only with an exact reviewed directory. It deletes files directly inside that directory once per invocation; it does not broaden simulation-output replacement.
-The `--farm-out DIRECTORY` option is required whenever `--clear-farm-out true` is selected. Omit both options to preserve existing Slurm logs.
-
-## Verify reconstructed output
-
-The workflow does not monitor array tasks after `sbatch` accepts them. Once the jobs finish, review the Slurm states and logs and test at least one file under the run's `reconhipo/` directory:
-
-```tcsh
-hipo-utils -dump /shared/runs/physical/reconhipo/<hipo-file-name>.hipo
-```
-
-Confirm that `hipo-utils` opens the file and displays CLAS12 data banks. Also check the remaining task states and output inventory; one valid HIPO file does not guarantee that the complete array succeeded.
-
-The repository also contains a matched [uniform submission command list](../../tutorials/slurm-submission/uniform-slurm-submission.txt) for 1e, enFD, and epFD at the three supported beam energies. The [submission all-options tutorial](../../tutorials/slurm-submission/all-options.txt) reproduces these documented patterns and demonstrates every public submission option, including manual metadata, custom detector inputs, farm cleanup, preview, and execution.
+The [submission all-options tutorial](../../tutorials/slurm-submission/all-options.txt) demonstrates every public option, including manual metadata and farm-log cleanup. The production command lists pair the uniform and physical creation examples with their corresponding submissions.

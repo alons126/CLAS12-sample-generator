@@ -1,11 +1,8 @@
 # Corresponding creation commands: uniform-lund-creation.txt
-# Run on ifarm after the matching LUND creation finishes.
-# Each command submits only the first 5 LUND files (array 1-5), rather than all 40 files.
-# At 25000 events per file, that is 125000 events per sample; the manifest supplies the event limit.
-# GEMC defaults to 5.14; the manifest supplies sample metadata and detector defaults.
-# Omit --execute to preview without sbatch, output replacement, or farm-log cleanup.
-# With --execute, existing simulation output directories are replaced; LUND inputs are preserved.
-# Both preview and execution retain run.csh's normal disposable-server-checkout refresh.
+# Run on ifarm after each matching manifest is published. These examples submit the
+# first 5 of the 40 files produced by a 1,000,000-event run at 25,000 events per file.
+# The manifest supplies metadata and the event limit; GEMC defaults to 5.14. Remove
+# --execute to preview. Execution replaces simulation output but preserves LUND input.
 
 #########################################################################################
 # Uniform (e,e') sample Slurm submission

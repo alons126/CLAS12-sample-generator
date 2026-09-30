@@ -1,45 +1,32 @@
 # Workflow command examples
 
-The command lists are grouped by user-facing workflow:
+The tutorial text files are copyable command collections. They complement the Wiki: the Wiki explains behavior and safety; the tutorials show complete invocations.
 
-- [`launcher-options.txt`](launcher-options.txt) demonstrates every launcher-owned build/run option, help routing, child-option forwarding, and submission selection.
-- [`uniform-lund-creation.txt`](lund-creation/uniform-lund-creation.txt) creates nine uniform LUND samples: `1e`, `enFD`, and `epFD` at 2070, 4029, and 5986 MeV.
-- [`uniform-all-options.txt`](lund-creation/uniform-all-options.txt) demonstrates every uniform LUND creator option through valid arbitrary studies and the examples from the LUND-creation documentation.
-- [`uniform-slurm-submission.txt`](slurm-submission/uniform-slurm-submission.txt) consumes those LUND run directories and submits the corresponding GEMC and reconstruction jobs.
-- [`genie-gst-lund-creation.txt`](lund-creation/genie-gst-lund-creation.txt) converts physical C12 GENIE GST samples at 2070, 4029, and 5986 MeV, plus the run-15733 target-variation exception.
-- [`physical-all-options.txt`](lund-creation/physical-all-options.txt) demonstrates every physical LUND converter option, an arbitrary metadata-layout study, and the documented provenance examples.
-- [`genie-gst-slurm-submission.txt`](slurm-submission/genie-gst-slurm-submission.txt) consumes those physical LUND run directories and submits the corresponding GEMC and reconstruction jobs.
-- [`all-options.txt`](slurm-submission/all-options.txt) demonstrates every public submission option for manifest-backed and manually described uniform and physical inputs.
+## Start with the matching pair
 
-Run the commands from the repository root in a csh/tcsh login shell on ifarm. `run.csh`
-treats that checkout as disposable: before a workflow runs, it removes untracked files
-except the reusable `build/` tree, discards tracked changes, pulls the configured remote
-branch, and updates submodules. Commit and push valuable changes from a development
-checkout first. For local LUND creation, build with CMake and invoke the compiled
-executables directly. LUND creation and simulation submission remain separate workflows.
-Each submission example selects only the first five LUND files from each run, producing
-a five-task Slurm array.
+| Work | Create | Submit |
+| --- | --- | --- |
+| Uniform 1e, epFD, and enFD at the three standard beams | [`lund-creation/uniform-lund-creation.txt`](lund-creation/uniform-lund-creation.txt) | [`slurm-submission/uniform-slurm-submission.txt`](slurm-submission/uniform-slurm-submission.txt) |
+| C12 GENIE GST at the three standard beams and the run-15733 exception | [`lund-creation/genie-gst-lund-creation.txt`](lund-creation/genie-gst-lund-creation.txt) | [`slurm-submission/genie-gst-slurm-submission.txt`](slurm-submission/genie-gst-slurm-submission.txt) |
 
-Replace every `/path/to/...` value with a reviewed location that is visible in the
-environment where the command will run. Keep LUND and simulation output on shared
-storage when Slurm workers must read or write it.
+## Complete option demonstrations
 
-The `all-options` files are interface inventories, not recommended production
-profiles. Their arbitrary values are chosen to exercise validation and show syntax.
-Use the checked-in sample profiles for reviewed production settings. A public option
-is considered covered when at least one tutorial command shows its exact CLI spelling;
-the tutorials do not attempt every possible value of each option.
+- [`launcher-options.txt`](launcher-options.txt) shows every launcher-owned build/run option, workflow selection, help forwarding, and run-settings override.
+- [`lund-creation/uniform-all-options.txt`](lund-creation/uniform-all-options.txt) shows every uniform LUND creator option.
+- [`lund-creation/physical-all-options.txt`](lund-creation/physical-all-options.txt) shows every physical LUND converter option.
+- [`slurm-submission/all-options.txt`](slurm-submission/all-options.txt) shows every public submission option, both manifest-backed and manually described input.
 
-Submission previews by default. The checked-in submission examples include
-`--execute`; remove that flag to validate the resolved settings and print the
-`sbatch` command without replacing simulation outputs or submitting jobs.
+The arbitrary commands in the all-options files are interface demonstrations, not production recommendations. Use checked-in sample profiles for reviewed settings.
 
-The submission workflow reads sample metadata, filename prefix, completed file
-counts, and the default event limit from the LUND manifest. GEMC defaults to 5.14.
-See the [submission guide](../docs/submit-simulation/guide.md) for
-configuration overrides, validation, output replacement, and ifarm synchronization.
+## Before running a command
 
-The GENIE examples assume each GST directory has this layout:
+Replace every `/path/to/...` placeholder with a reviewed path. LUND and HIPO data used by Slurm must live on storage visible to the workers. Quote physical-input globs so ROOT receives them unchanged.
+
+Run `run.csh` commands from a csh/tcsh login shell on ifarm. The checkout is disposable: a normal workflow refresh discards checkout edits and untracked files except documented build exclusions. Commit and push valuable development changes first. For local development, build with CMake and run the compiled LUND executable directly.
+
+Submission previews by default. Some production command lists include `--execute`; remove it to inspect settings and actions without replacing simulation output or calling `sbatch`.
+
+The GENIE examples assume:
 
 ```text
 SAMPLE_DIRECTORY/
@@ -48,6 +35,4 @@ SAMPLE_DIRECTORY/
     └── *.root
 ```
 
-With `tune = auto`, LUND conversion reads the exact `TUNE` entry from
-`input_options.txt`. The shown resolved output paths assume that the metadata contains
-`TUNE GEM21_11a_00_000` and that the default nested output layout is used.
+With `tune = auto`, the converter reads `TUNE` from `input_options.txt`. The shown nested output paths assume the value `GEM21_11a_00_000`.

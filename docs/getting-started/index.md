@@ -1,9 +1,9 @@
 # Getting started
 
-Use this section when first installing the project or when you want the shortest path to a verified sample.
+This section gives the shortest safe path from a checkout to a small verified LUND run.
 
-1. [Check dependencies and choose a build path](installation.md).
-2. Follow the [quickstart](quickstart.md) for the uniform LUND creator, physical LUND converter, or submission preview.
-3. Learn the [run-directory and output layout](outputs.md).
+1. [Check dependencies and choose an execution environment](installation.md).
+2. [Run the quickstart](quickstart.md).
+3. [Learn what each output directory means](outputs.md).
 
-For detailed options, move next to [Create LUND files](../create-lund/index.md) or [Submit simulation](../submit-simulation/index.md). For implementation details, use the [Development guide](../development/index.md).
+Then read the guide for the work you intend to do: [create LUND files](../create-lund/index.md) or [submit simulation](../submit-simulation/index.md). Contributors should continue with the [architecture guide](../concepts/architecture.md).
