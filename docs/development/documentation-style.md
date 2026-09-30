@@ -22,13 +22,13 @@ Protected external inputs are excluded from routine edits: `src/workflows/lund-c
 
 ## Citations and references
 
-Use `docs/references.bib` to identify the project BibTeX key and citation details. Markdown pages use footnote citations that render in GitHub and the generated wiki; they do not show raw LaTeX `\cite{...}` commands and do not send readers to the bibliography file. Put each citation marker directly after the text it supports and before the closing punctuation:
+Use `docs/references.bib` to identify the project BibTeX key and citation details. Repository Markdown pages use GitHub footnote syntax; they do not show raw LaTeX `\cite{...}` commands and do not send readers to the bibliography file. GitHub Wikis do not support footnotes, so the Wiki generator converts those markers and definitions into linked numbered citations and a **References** section. Put each citation marker directly after the text it supports and before the closing punctuation:
 
 ```markdown
 This statement is supported by the target note[^sportes-2026-rgm].
 ```
 
-Place the complete footnote definition at the bottom of every page that uses it. Copy its author, title, institution, report number, date and URL from the matching BibTeX entry, and update both together when those details change.
+Place each complete footnote definition on one line at the bottom of every page that uses it. Copy its author, title, institution, report number, date and URL from the matching BibTeX entry, and update both together when those details change. The generator rejects missing, duplicate, or unused definitions so a publication cannot silently drop a reference.
 
 ## Build and JSON configuration
 

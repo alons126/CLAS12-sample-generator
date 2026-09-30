@@ -6,8 +6,9 @@ Purpose:
     Keep one editable documentation source and publish a linked copy to the GitHub Wiki.
 
 Execution flow:
-    Find source pages -> collect file and function locations -> choose unique wiki names -> rewrite
-    links -> write pages, sidebar, and footer -> remove old generated Markdown pages.
+    Find source pages -> collect file and function locations -> choose unique wiki names -> convert
+    citations and rewrite links -> write pages, sidebar, and footer -> remove old generated Markdown
+    pages.
 
 Inputs:
     The repository README, docs/**/*.md, tutorial index, sample-profile reference, and build/launcher
@@ -81,7 +82,10 @@ SIDEBAR_SECTIONS = (
 
 LINK = re.compile(r"(?P<prefix>!?\[[^\]]*\]\()(?P<target><[^>]+>|[^)\s]+)(?P<suffix>[^)]*\))")
 INLINE_CODE = re.compile(r"`(?P<code>[^`\n]+)`")
+INLINE_CODE_SPAN = re.compile(r"(`[^`\n]+`)")
 FENCED_CODE = re.compile(r"(^```[^\n]*\n.*?^```[ \t]*$)", re.MULTILINE | re.DOTALL)
+FOOTNOTE_DEFINITION = re.compile(r"^\[\^(?P<label>[^\]\n]+)\]:[ \t]*(?P<body>.+)$", re.MULTILINE)
+FOOTNOTE_REFERENCE = re.compile(r"\[\^(?P<label>[^\]\n]+)\]")
 PYTHON_FUNCTION = re.compile(r"^[ \t]*(?:async[ \t]+)?def[ \t]+(?P<name>[A-Za-z_][A-Za-z0-9_]*)[ \t]*\(", re.MULTILINE)
 SHELL_FUNCTION = re.compile(r"^[ \t]*(?:function[ \t]+)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)[ \t]*\(\)[ \t]*\{", re.MULTILINE)
 CPP_FUNCTION = re.compile(
@@ -184,6 +188,97 @@ def repository_url(repository, branch, relative, fragment="", image=False):
 
     kind = "tree" if (ROOT / relative).is_dir() else "blob"
     return f"https://github.com/{repository}/{kind}/{quoted_branch}/{path}{fragment}"
+
+
+def convert_citations(text, source):
+    """Convert GitHub footnotes into linked references supported by GitHub Wikis.
+
+    Workflow:
+        Read one-line footnote definitions outside fenced examples -> number citations by first use ->
+        replace each marker with a linked superscript -> append a linked References section.
+
+    Args:
+        text: Complete source Markdown before link rewriting.
+        source: Absolute Markdown source path used in validation diagnostics.
+
+    Returns:
+        Markdown with Wiki-compatible citations. Pages without citations are unchanged.
+
+    Raises:
+        ValueError: If a definition is duplicated or if a citation and definition do not match.
+
+    Notes:
+        Repository Markdown keeps native footnotes. This conversion affects only generated Wiki pages
+        because GitHub does not support footnote rendering in Wikis. Fenced examples stay unchanged.
+    """
+
+    segments = FENCED_CODE.split(text)
+    definitions = {}
+
+    def remove_definition(match):
+        """Store and remove one source footnote definition."""
+
+        label = match.group("label")
+
+        if label in definitions:
+            raise ValueError(f"Duplicate footnote definition in {source.relative_to(ROOT)}: {label}")
+
+        definitions[label] = match.group("body")
+        return ""
+
+    for index in range(0, len(segments), 2):
+        segments[index] = FOOTNOTE_DEFINITION.sub(remove_definition, segments[index])
+
+    order = []
+    numbers = {}
+    occurrences = defaultdict(int)
+
+    def replace_reference(match):
+        """Replace one source marker with its numbered Wiki link."""
+
+        label = match.group("label")
+
+        if label not in definitions:
+            raise ValueError(f"Undefined footnote in {source.relative_to(ROOT)}: {label}")
+
+        if label not in numbers:
+            numbers[label] = len(order) + 1
+            order.append(label)
+
+        number = numbers[label]
+        occurrences[label] += 1
+        anchor = f'<a name="citation-{number}"></a>' if occurrences[label] == 1 else ""
+        return f'{anchor}[<sup>{number}</sup>](#reference-{number})'
+
+    for index in range(0, len(segments), 2):
+        spans = INLINE_CODE_SPAN.split(segments[index])
+
+        for span_index in range(0, len(spans), 2):
+            spans[span_index] = FOOTNOTE_REFERENCE.sub(replace_reference, spans[span_index])
+
+        segments[index] = "".join(spans)
+
+    unused = set(definitions) - set(order)
+
+    if unused:
+        labels = ", ".join(sorted(unused))
+        raise ValueError(f"Unused footnote definition in {source.relative_to(ROOT)}: {labels}")
+
+    converted = "".join(segments).rstrip()
+
+    if not order:
+        return converted + "\n"
+
+    references = ["## References"]
+
+    for label in order:
+        number = numbers[label]
+        references.append(
+            f'<a name="reference-{number}"></a>**{number}.** {definitions[label]} '
+            f'[&#8617;](#citation-{number})'
+        )
+
+    return converted + "\n\n" + "\n\n".join(references) + "\n"
 
 
 def repository_references():
@@ -456,7 +551,8 @@ def build(output, repository, branch):
     for source, wiki_name in pages.items():
         original = source.read_text(encoding="utf-8")
         titles[wiki_name] = page_title(original, wiki_name)
-        converted = rewrite_links(original, source, pages, repository, branch)
+        converted = convert_citations(original, source)
+        converted = rewrite_links(converted, source, pages, repository, branch)
         converted = link_code_references(converted, source, repository, branch, paths, suffixes, definitions)
         (output / wiki_name).write_text(generated_notice(repository, branch, source) + converted, encoding="utf-8")
 
