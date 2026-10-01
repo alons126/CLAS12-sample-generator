@@ -419,7 +419,7 @@ class Report:
             self.text()
 
 def format_command(command, colored=False):
-    """Return a safely quoted command in copyable multiline shell form.
+    """Return a safely quoted command, using one line for module commands.
 
     Args:
         command: Executable followed by its arguments.
@@ -430,6 +430,7 @@ def format_command(command, colored=False):
         Display text with the executable or ``source SCRIPT`` entry point on the first line. Each
         option and its value or each positional argument occupies one continued, four-space-indented
         line. Color markers do not change the copyable shell text shown by the terminal.
+        Module commands are the exception: their executable and arguments stay on one line.
 
     Assumptions:
         The command is nonempty. Formatting changes only its display copy, not the values passed to
@@ -438,6 +439,11 @@ def format_command(command, colored=False):
 
     system = '{SYSTEM}' if colored else ''
     reset = '{RESET}' if colored else ''
+
+    # Module inspection commands are short and remain on one copyable line.
+    if str(command[0]) == 'module':
+        return system + shlex.quote(str(command[0])) + reset + ''.join(' ' + shlex.quote(str(argument)) for argument in command[1:])
+
     index = 1
     first_line = system + shlex.quote(str(command[0])) + reset
 

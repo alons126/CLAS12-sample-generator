@@ -123,6 +123,8 @@ When `--clas12tags-dir` is absent, GEMC uses the shared versioned clas12Tags dir
 
 Each array task also prints `Used modules:` and runs `module list` before GEMC, so the scheduler logs show the modules loaded inside the job. Check both `.out` and `.err` files because the module list may appear in the error stream. See the [worker reference](worker-reference.md#environment-interface).
 
+Module commands in the submission report appear on one line, such as `module show gemc/5.14`, `module show coatjava/10.0.7`, and `module list`. Other copyable commands use multiline shell form.
+
 ## Submit several runs
 
 Repeat `--lund-dir`:

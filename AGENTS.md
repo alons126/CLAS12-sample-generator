@@ -69,6 +69,8 @@ Use `src/launcher/presentation/set_colors.csh` as the single definition of ANSI 
 
 Whenever maintained code prints a copyable terminal command, use multiline shell form. Put the executable or shell entry point on the first line followed by `\`, then put each option and its value on its own four-space-indented line. End every continued line with `\` and leave the final line without a continuation marker. Apply this format to execution notices, previews, failure diagnostics, and usage examples. Quote displayed arguments safely without changing the argument list passed to the program. Do not print a complete command with arguments on one line.
 
+Exception: print `module` commands on one line, including `module show gemc/<version>`, `module show coatjava/<version>`, and `module list`. Keep their arguments safely quoted. All other command printouts retain the multiline format above.
+
 Every maintained error diagnostic that the project prints before returning or exiting with failure must have exactly this visible form: `ERROR_COLOR + "Error:" + RESET_COLOR + " " + message`. Every maintained warning diagnostic must have exactly this visible form: `WARNING_COLOR + "Warning:" + RESET_COLOR + " " + message`. Use the shared semantic colors from `src/workflows/support/environment.h` in C++ and the inherited environment-variable palette from `src/launcher/presentation/set_colors.csh` in shell, Python, and CMake. Keep exception payloads and validation messages free of `Error:` and `Warning:`; the final printing boundary adds the prefix exactly once. Preserve diagnostics emitted by external commands, but follow them with a standardized project-owned error when their failure stops a maintained workflow.
 
 # Project architecture and scope
