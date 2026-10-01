@@ -9,30 +9,31 @@
 #SBATCH --error=//farm_out/%u/%x-%j-%N.err                                                                           
 
 JOB_TARGET=${SAMPLE_TARGET_NUCLEUS}
-echo "JOB_TARGET:             ${JOB_TARGET}"
+# Align non-path values in column 29; keep path printouts in their existing format.
+printf '%-28s%s\n' 'JOB_TARGET:' "$JOB_TARGET"
 JOB_GENERATOR=${SAMPLE_GENERATOR}
-echo "JOB_GENERATOR:          ${JOB_GENERATOR}"
+printf '%-28s%s\n' 'JOB_GENERATOR:' "$JOB_GENERATOR"
 JOB_GENERATOR_TUNE=${GENERATOR_TUNE}
-echo "JOB_GENERATOR_TUNE:     ${JOB_GENERATOR_TUNE}"
+printf '%-28s%s\n' 'JOB_GENERATOR_TUNE:' "$JOB_GENERATOR_TUNE"
 JOB_Q2_CUT=${Q2_CUT}
-echo "JOB_Q2_CUT:             ${JOB_Q2_CUT}"
-echo "BEAM_ENERGY_LABEL:      ${BEAM_ENERGY_LABEL}"
+printf '%-28s%s\n' 'JOB_Q2_CUT:' "$JOB_Q2_CUT"
+printf '%-28s%s\n' 'BEAM_ENERGY_LABEL:' "$BEAM_ENERGY_LABEL"
 echo "GEMC_DATA_DIR:          ${GEMC_DATA_DIR}"
-echo "UNIFORM_SAMPLE_CHANNEL: ${UNIFORM_SAMPLE_CHANNEL}"
+printf '%-28s%s\n' 'UNIFORM_SAMPLE_CHANNEL:' "$UNIFORM_SAMPLE_CHANNEL"
 echo
 
 #Change file prefix for your simulation
 FILE_PREFIX=${SAMPLE_FILE_PREFIX}
-echo "FILE_PREFIX:            ${FILE_PREFIX}"
+printf '%-28s%s\n' 'FILE_PREFIX:' "$FILE_PREFIX"
 echo
 
 NEVENTS=${JOB_NEVENTS:?JOB_NEVENTS is required}
-echo "NEVENTS:                ${NEVENTS}"
+printf '%-28s%s\n' 'NEVENTS:' "$NEVENTS"
 echo
 
 #-1.0 for inbending (6,4 GeV) 0.5 for outbending (2 Gev)
 TORUS=${TORUS_FIELD}
-echo "TORUS:                  ${TORUS}"
+printf '%-28s%s\n' 'TORUS:' "$TORUS"
 echo
 
 #set output file path location, don't forget to set up dir using setupdir.sh
@@ -50,9 +51,9 @@ echo
 
 # Report the inherited selections and executable paths without requiring the module shell function.
 # Requested releases and module names describe the environment, not binary version queries.
-printf 'Requested GEMC version: %s\n' "$GEMC_VERSION"
-printf 'Requested COATJAVA version: %s\n' "$COATJAVA_VERSION"
-printf 'Inherited module selections: %s\n' "$LOADEDMODULES"
+printf '%-28s%s\n' 'Requested GEMC version:' "$GEMC_VERSION"
+printf '%-28s%s\n' 'Requested COATJAVA version:' "$COATJAVA_VERSION"
+printf '%-28s%s\n' 'Inherited module selections:' "$LOADEDMODULES"
 printf 'GEMC executable: %s\n' "$(command -v gemc)"
 printf 'COATJAVA reconstruction executable: %s\n' "$(command -v recon-util)"
 echo
