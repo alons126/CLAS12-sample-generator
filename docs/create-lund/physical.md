@@ -30,7 +30,14 @@ The adapter checks every required branch, stored type, and current array length 
 
 ## Selection and translation
 
-The adapter keeps QE, MEC, RES, and DIS events. It writes their process codes as 1, 2, 3, and 4 in LUND header field 10, using that priority if malformed input sets more than one flag. This field is a process tag, not a cross-section weight. GST `resid` is written in header field 4, following the pinned RG-M GENIE-to-LUND converter where `RES_ID` replaced the earlier `targP` polarization value[^rgm-resid]. This preserves an established compatibility convention; it does not treat `resid` as polarization. The zero-based GST entry number is written in field 9.
+The adapter keeps events carrying one of four GENIE interaction-mechanism flags[^electrons-for-neutrinos]:
+
+- **QE, quasielastic scattering:** the lepton scatters from one bound nucleon, normally ejecting it unless final-state interactions reabsorb it.
+- **MEC, meson-exchange currents:** the lepton couples to a meson exchanged between two nucleons, contributing to a two-nucleon knockout or two-particle–two-hole (2p2h) response.
+- **RES, resonance production:** the lepton excites a nucleon to a baryon resonance, which then decays, typically to a nucleon and one or more mesons.
+- **DIS, deep-inelastic scattering:** the lepton scatters from a quark inside the nucleon; GENIE also uses its DIS treatment for nonresonant inelastic hadron production.
+
+These are input-generator classifications. The physical LUND converter does not infer a mechanism from final-state particles or recalculate it. It writes QE, MEC, RES, and DIS as process codes 1, 2, 3, and 4 in LUND header field 10, using that priority if malformed input sets more than one flag. This field is a process tag, not a cross-section weight. GST `resid` is written in header field 4, following the pinned RG-M GENIE-to-LUND converter where `RES_ID` replaced the earlier `targP` polarization value[^rgm-resid]. This preserves an established compatibility convention; it does not treat `resid` as polarization. The zero-based GST entry number is written in field 9.
 
 Within each accepted event, the scattered electron is first. Protons, neutrons, charged pions, and photons then follow in GST order. Other species are skipped. Neutral pions must be decayed during upstream GENIE production so their daughter photons are present in GST; a residual PDG 111 entry is skipped because the physical LUND converter cannot reconstruct missing daughter four-momenta.
 

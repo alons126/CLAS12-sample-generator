@@ -1,6 +1,14 @@
 # CLAS12 sample generator documentation
 
-This project prepares truth-level particle samples and sends them through the CLAS12[^clas12-spectrometer] detector-simulation chain used by the e4ν collaboration. It makes the boundary between event preparation and detector processing explicit:
+This project prepares simulation samples for the e4ν collaboration using the CLAS12 spectrometer[^clas12-spectrometer] simulation chain. It provides separate workflows for preparing truth-level particles and submitting detector simulation and reconstruction.
+
+Neutrino oscillation experiments infer the incident neutrino energy from the particles measured after a neutrino interacts with a nucleus, so uncertainties in nuclear-interaction models can distort the reconstructed energy distribution. Electron beams instead provide a precise, known incident energy, while electron- and neutrino-nucleus scattering share the same nuclear ground state and many reaction and final-state effects. Electron-scattering data can therefore constrain the vector-current part of neutrino-interaction models and their energy-reconstruction performance[^electrons-for-neutrinos][^electron-beam-energy-reconstruction].
+
+The first workflow creates [LUND files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html), used as the generated event input to CLAS12's simulation chain. The **uniform LUND creator** samples configured kinematics for detector-acceptance studies. These events are deliberately unphysical. The **physical LUND converter** copies supported truth-level particles from existing event-generator output; the current adapter reads [ROOT](https://github.com/root-project/root) trees in the [GENIE](https://github.com/GENIE-MC/Generator) GST format and does not run GENIE. Successful creation produces LUND files and a completion manifest.
+
+The second workflow submits those LUND files to Slurm on Jefferson Lab's ifarm. Each task runs GEMC detector simulation[^gemc-simulation], followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction]. The result is reconstructed [HIPO](https://github.com/gavalian/hipo) data, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master).
+
+The diagram summarizes the path from event preparation to reconstructed output. Creation and submission are separate user actions:
 
 ```mermaid
 flowchart LR
@@ -11,9 +19,6 @@ flowchart LR
     R --> H["Reconstructed HIPO files"]
 ```
 
-The **uniform LUND creator** samples configured kinematics for detector-acceptance studies. These events are deliberately unphysical. The **physical LUND converter** copies supported truth-level particles from an existing input; the current adapter reads [GENIE](https://github.com/GENIE-MC/Generator) GST [ROOT](https://github.com/root-project/root) trees and does not run GENIE. A successful creation run publishes a manifest that records its settings, provenance, event counts, and exact LUND file inventory.
-
-The separate submission workflow consumes those LUND files on Jefferson Lab's ifarm. Each Slurm task runs GEMC[^gemc-simulation], then runs CLAS12 reconstruction through COATJAVA's `recon-util` command[^coatjava-reconstruction]. The result is reconstructed [HIPO](https://github.com/gavalian/hipo) data, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). The project hands the array to Slurm but does not monitor it to completion or perform that downstream analysis.
 
 ## Reading order
 
@@ -37,12 +42,14 @@ Use the [workflow command examples](../tutorials/README.md) as a copyable option
 
 ## Scope
 
-The repository currently implements only LUND creation and ifarm simulation submission. Acceptance calculation, reconstructed-HIPO skimming, analysis-NTuple creation, and physics analysis are downstream work. When one of those becomes implemented, it should enter the source tree as a peer workflow with its own input, output, and configuration contract.
-
-The long-form Wiki is generated from this repository. Edit these source files, not the published Wiki. Internal development notes, publication planning, and historical comparisons are intentionally excluded.
+The repository currently implements LUND creation and ifarm simulation submission. Submission ends when Slurm accepts the jobs; users then follow their progress and inspect the output. Acceptance calculation, reconstructed-HIPO skimming, analysis-NTuple creation, and physics analysis are downstream work. Future implementations belong in separate peer workflows with their own input, output, and configuration contracts.
 
 [^clas12-spectrometer]: V. D. Burkert et al., “The CLAS12 Spectrometer at Jefferson Laboratory,” *Nucl. Instrum. Meth. A* **959**, 163419 (2020). [doi:10.1016/j.nima.2020.163419](https://doi.org/10.1016/j.nima.2020.163419)
 
 [^gemc-simulation]: M. Ungaro et al., “The CLAS12 Geant4 simulation,” *Nucl. Instrum. Meth. A* **959**, 163422 (2020). [doi:10.1016/j.nima.2020.163422](https://doi.org/10.1016/j.nima.2020.163422)
 
 [^coatjava-reconstruction]: V. Ziegler et al., “The CLAS12 software framework and event reconstruction,” *Nucl. Instrum. Meth. A* **959**, 163472 (2020). [doi:10.1016/j.nima.2020.163472](https://doi.org/10.1016/j.nima.2020.163472)
+
+[^electrons-for-neutrinos]: A. Papadopoulou et al. (electrons for neutrinos Collaboration), “Inclusive Electron Scattering And The GENIE Neutrino Event Generator,” *Phys. Rev. D* **103**, 113003 (2021). [doi:10.1103/PhysRevD.103.113003](https://doi.org/10.1103/PhysRevD.103.113003)
+
+[^electron-beam-energy-reconstruction]: M. Khachatryan et al. (CLAS and e4ν Collaborations), “Electron-beam energy reconstruction for neutrino oscillation measurements,” *Nature* **599**, 565–570 (2021). [doi:10.1038/s41586-021-04046-5](https://doi.org/10.1038/s41586-021-04046-5)

@@ -82,6 +82,18 @@ For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For 
 
 ### Magnetic-field consistency
 
+For simulation matched to a data campaign, the torus and solenoid scales must match the data, including their signs. Check a reconstructed data HIPO file before selecting the simulation settings:
+
+1. Go to the directory containing the data's HIPO files. Run `hipo-utils` to see the available commands.
+2. Open a representative file, for example:
+
+   ```bash
+   hipo-utils -dump rec_clas_015652.evio.00100-00104.hipo
+   ```
+
+3. At the interactive bank prompt, type `RUN::config`.
+4. Read the `torus` and `solenoid` fields. These are signed relative field scales, not magnetic-field strengths in tesla[^run-field-scales]. Check each run configuration used by the campaign.
+
 The selected GCARD and the Slurm job must use the same torus scale. The checked-in $2\,\mathrm{GeV}$ cards describe the outbending configuration and match the submission default `--torus 0.5`:
 
 ```xml
@@ -98,7 +110,7 @@ The checked-in $4\,\mathrm{GeV}$ and $6\,\mathrm{GeV}$ cards describe the inbend
 <option name="SCALE_FIELD" value="binary_solenoid, -1"/>
 ```
 
-When using a custom GCARD or overriding `--torus`, inspect its `SCALE_FIELD` entries and change them together. Keep the solenoid at $-1.0$ unless a separately reviewed detector configuration requires another value. A mismatch means the selected card and submitted command no longer document the same magnetic-field setup.
+When using a custom GCARD or overriding `--torus`, inspect its `SCALE_FIELD` entries and change them together. The current worker fixes the solenoid scale at $-1.0$ and exposes no solenoid override. If the data uses another solenoid scale, updating only the GCARD is insufficient: the worker configuration must also be changed and validated before submission. A mismatch means the data, selected card, and submitted command describe different magnetic-field setups.
 
 The coordinator distinguishes the nearest-MeV sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). These are naming and lookup values, not alternate beam energies.
 
@@ -172,3 +184,5 @@ Jefferson Lab's [Slurm batch user guide](https://scicomp.jlab.org/docs/farm_slur
 Cancel-all acts on every job owned by the named account, so use it only when that full scope is intended.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)
+
+[^run-field-scales]: COATJAVA's [`RUN::config` bank definition](https://github.com/JeffersonLab/coatjava/blob/development/etc/bankdefs/hipo4/header.json) defines the `torus` and `solenoid` fields as relative field settings.

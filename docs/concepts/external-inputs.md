@@ -36,7 +36,9 @@ The target implementations and RG-M variations are described in CLAS12 Note 2026
 
 ## Detector resources
 
-Files under `config/detector/` are fixed snapshots, not files downloaded from the current upstream branch at runtime. Their GCARD source is the [`gemc` directory in `JeffersonLab/clas12-config`](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). The GCARD controls GEMC geometry and detector configuration. The YAML controls COATJAVA reconstruction. The submission record hashes both selected files.
+Files under `config/detector/` are fixed campaign snapshots. GCARD files define GEMC detector geometry and configuration; YAML files define COATJAVA reconstruction settings. The submission record hashes both selected files.
+
+GCARD configurations come from the [`gemc` directory in `JeffersonLab/clas12-config`](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). Reconstruction YAML configurations are available in its [`coatjava` directory](https://github.com/JeffersonLab/clas12-config/tree/main/coatjava). The current checked-in YAML files were obtained through the [RG-M repository](https://github.com/awild7/rgm). These snapshots are read locally during submission rather than downloaded from upstream at runtime.
 
 Standard field policy is:
 
@@ -46,7 +48,7 @@ Standard field policy is:
 | $4\,\mathrm{GeV}$ | inbending | $-1.0$ | $-1.0$ |
 | $6\,\mathrm{GeV}$ | inbending | $-1.0$ | $-1.0$ |
 
-The worker passes torus and solenoid scales on the GEMC command line. The selected GCARD must declare the same scales so the card and Slurm job describe one magnetic-field configuration. The [submission guide](../submit-simulation/guide.md#magnetic-field-consistency) gives the required GCARD entries. Scientific settings are never inferred from a LUND filename.
+For a simulation campaign matched to data, both torus and solenoid scales must match the values recorded in the data. The worker passes these scales on the GEMC command line, and the selected GCARD must declare the same values. The [submission guide](../submit-simulation/guide.md#magnetic-field-consistency) explains how to inspect the data's `RUN::config` bank and gives the required GCARD entries. Scientific settings are never inferred from a LUND filename.
 
 ## Worker payload
 
