@@ -16,7 +16,7 @@ Inputs:
     and the ifarm shell environment containing the module command, Slurm, software installations,
     and the shared ``*_COLOR`` settings. Standard GEMC selections also require the matching shared
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
-    COATJAVA selections require the matching installation under the site's noarch/coatjava directory.
+    COATJAVA selection is checked through LOADEDMODULES, without assuming an installation layout.
 
 Outputs:
     Preview groups OUTPATH and simulation-directory checks with their planned actions, prints commands
@@ -180,8 +180,8 @@ def write_submission_log(values, environment, root, executables, command, job_id
 
     parameters = dict(values)
     parameters.update({key: environment[key] for key in (
-        'RUNNING_DIR', 'SUBMIT_SCRIPT_FILE', 'GEMC_DATA_DIR', 'COATJAVA', 'ARRAY', 'SBATCH_EXPORT', 'SLURM_EXPORT_ENV')})
-    parameters.update({key: environment[key] for key in ('CLAS12DIR', 'LOADEDMODULES') if key in environment})
+        'RUNNING_DIR', 'SUBMIT_SCRIPT_FILE', 'GEMC_DATA_DIR', 'ARRAY', 'SBATCH_EXPORT', 'SLURM_EXPORT_ENV')})
+    parameters['LOADEDMODULES'] = environment['LOADEDMODULES']
     parameters.update({name: str(path) for name, path in executables.items()})
     payload = Path(environment['SUBMIT_SCRIPT_FILE'])
     inputs = {
@@ -491,9 +491,6 @@ def format_command(command, colored=False):
 # the same base path. Custom --clas12tags-dir values do not use this default.
 IFARM_CLAS12TAGS_BASE = Path('/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags')
 
-# COATJAVA is Java software under the CLAS12 noarch tree, not the GEMC data tree.
-IFARM_COATJAVA_BASE = Path('/scigroup/cvmfs/hallb/clas12/sw/noarch/coatjava')
-
 def check_gemc_version(version, environment, report):
     """Check that the requested ifarm clas12Tags version exists before changing modules.
 
@@ -530,45 +527,6 @@ def check_gemc_version(version, environment, report):
     # load_module() changes the private environment; verify_gemc() checks the result against this path.
     return requested
 
-def check_coatjava_version(version, environment, report):
-    """Check the requested COATJAVA installation before changing modules.
-
-    Purpose:
-        Reject an unavailable reconstruction release before simulation output can change.
-
-    Execution flow:
-        Use the loaded COATJAVA installation's parent, or CLAS12_HOME/noarch/coatjava when available,
-        or the standard ifarm base -> check the base and requested release -> return the expected path.
-
-    Args:
-        version: Validated COATJAVA version selected for this sample.
-        environment: Copied ifarm environment before loading modules.
-        report: Helper that prints the installation checks.
-
-    Returns:
-        Version-specific installation path to compare with the loaded COATJAVA environment.
-
-    Failure:
-        Missing base or version directories raise before either software module is changed.
-    """
-
-    active_home = environment.get('COATJAVA')
-    clas12_home = environment.get('CLAS12_HOME')
-
-    if active_home:
-        base = Path(active_home).parent
-    elif clas12_home:
-        base = Path(clas12_home) / 'noarch/coatjava'
-    else:
-        base = IFARM_COATJAVA_BASE
-
-    requested = base / version
-
-    report.check('COATJAVA_BASE_DIR', str(base), directory=True)
-    report.check('REQUESTED_COATJAVA_DIR', str(requested), directory=True)
-
-    return requested
-
 def load_module(name, version, environment, report):
     """Load a selected GEMC or COATJAVA module into Slurm's private environment.
 
@@ -578,8 +536,9 @@ def load_module(name, version, environment, report):
 
     Execution flow:
         Find modulecmd in PATH -> start a small Python process with the copied environment -> ask
-        modulecmd to switch COATJAVA or unload and load GEMC -> apply those changes -> return its final
-        environment as JSON -> check the JSON and replace the copied dictionary. Module messages stay
+        modulecmd to show the requested module definition, then switch COATJAVA or unload and load GEMC
+        -> apply those changes -> return its final environment as JSON -> check the JSON and replace
+        the copied dictionary. Module messages stay
         connected to the terminal, so their original text and colors remain visible.
 
     Args:
@@ -589,13 +548,15 @@ def load_module(name, version, environment, report):
         report: Helper that prints the version change.
 
     Failure:
-        A missing module command, failed switch or unload/load, or invalid JSON raises ValueError before output
+        A missing module command, failed show/switch/unload/load, or invalid JSON raises ValueError before output
         replacement or job submission. The dictionary changes only after the complete result passes
         validation, so a failed helper cannot leave a partly changed environment.
     """
 
     # Print the requested version before module commands can fail.
     label = name.upper()
+    report.text('{SYSTEM}Selected ' + label + ' module definition:{RESET}')
+    report.text(format_command(['module', 'show', name + '/' + version], colored=True))
     report.text('{SYSTEM}Switching ' + label + ' version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}...{RESET}')
 
     # Find modulecmd because the interactive `module` name is a shell function.
@@ -604,11 +565,12 @@ def load_module(name, version, environment, report):
     if modulecmd is None:
         raise ValueError(f'modulecmd is unavailable; the selected {label} module cannot be loaded.')
 
-    # A helper process switches COATJAVA or unloads and loads GEMC, then prints its environment as JSON. Module messages
-    # remain visible on stderr.
+    # A helper process shows the definition, switches COATJAVA or unloads and loads GEMC, and returns
+    # its environment as JSON. Native module descriptions and messages remain visible on stderr.
     helper = ('import json, os, subprocess, sys\n'
               'selected = sys.argv[2] + "/" + sys.argv[3]\n'
-              'commands = (("switch", selected),) if sys.argv[2] == "coatjava" else (("unload", sys.argv[2]), ("load", selected))\n'
+              'changes = (("switch", selected),) if sys.argv[2] == "coatjava" else (("unload", sys.argv[2]), ("load", selected))\n'
+              'commands = (("show", selected),) + changes\n'
               'for arguments in commands:\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
               '    if result.returncode:\n'
@@ -628,7 +590,7 @@ def load_module(name, version, environment, report):
 
     # On failure, keep the copied environment unchanged.
     if result.returncode:
-        raise ValueError(f'failed to load {label} module {version}.')
+        raise ValueError(f'failed to show or apply {label} module {version}.')
 
     # Read the new environment only after all requested module commands succeed.
     try:
@@ -646,6 +608,47 @@ def load_module(name, version, environment, report):
     environment.update(loaded)
 
     # Separate module messages from the next report section.
+    report.text()
+
+def print_loaded_modules(environment, report):
+    """Print module list for the private environment that Slurm will inherit.
+
+    Execution flow:
+        Find modulecmd -> run its list command in a separate Python process with the selected
+        environment -> print its native output and check its status. The login shell stays unchanged.
+
+    Args:
+        environment: Environment after GEMC and COATJAVA selection.
+        report: Helper that labels the module list and displays the command.
+
+    Failure:
+        A missing modulecmd or failed list command raises before output replacement or submission.
+    """
+
+    report.text('{SYSTEM}Loaded modules for Slurm submission:{RESET}')
+    report.text(format_command(['module', 'list'], colored=True))
+    modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
+
+    if modulecmd is None:
+        raise ValueError('modulecmd is unavailable; loaded modules cannot be listed.')
+
+    # Interpret the module system's status in an isolated process, as when loading modules.
+    helper = ('import os, subprocess, sys\n'
+              'result = subprocess.run([sys.argv[1], "python", "list"], stdout=subprocess.PIPE, text=True)\n'
+              'if result.returncode:\n'
+              '    raise SystemExit(result.returncode)\n'
+              'scope = {"os": os}\n'
+              'exec(compile(result.stdout, sys.argv[1], "exec"), scope)\n'
+              'if scope.get("_mlstatus") is False:\n'
+              '    raise SystemExit(1)\n')
+
+    sys.stdout.flush()
+    result = subprocess.run([sys.executable, '-c', helper, modulecmd], env=environment,
+                            stderr=sys.stdout, text=True)
+
+    if result.returncode:
+        raise ValueError('failed to list loaded modules for Slurm submission.')
+
     report.text()
 
 def verify_gemc(version, expected_data, environment, report):
@@ -712,54 +715,43 @@ def verify_gemc(version, expected_data, environment, report):
     # Return the checked absolute program path.
     return executable
 
-def verify_coatjava(version, expected_home, environment, report):
-    """Verify the loaded COATJAVA installation and reconstruction program.
+def verify_coatjava(version, environment, report):
+    """Check and print the selected COATJAVA module and require recon-util in PATH.
 
     Purpose:
-        Prevent an old recon-util in PATH from silently using another reconstruction release.
+        Confirm that the module switch selected the requested reconstruction release.
 
     Execution flow:
-        Require COATJAVA -> compare its resolved path with the prechecked release -> check CLAS12DIR
-        when present -> find recon-util in the loaded PATH -> require it to belong to that installation.
+        Check LOADEDMODULES for exactly the requested COATJAVA release -> print that release ->
+        check recon-util is available. Installation directory names are not used to identify versions.
 
     Args:
         version: Requested COATJAVA module version.
-        expected_home: Version-specific installation checked before loading modules.
-        environment: Final environment after both software modules have been loaded.
-        report: Helper that prints the installation and executable checks.
+        environment: Final environment after both software modules have been applied.
+        report: Helper that prints the selected release and executable availability.
 
     Returns:
-        Checked absolute recon-util path inherited by the Slurm worker.
+        Absolute recon-util path inherited by the Slurm worker.
 
     Failure:
-        Missing or mismatched installation variables, absent recon-util, or an executable outside
-        the requested release raises before simulation outputs are replaced or jobs are submitted.
+        A missing or conflicting loaded release or unavailable recon-util raises before simulation
+        outputs are replaced or jobs are submitted.
     """
 
-    loaded_home_text = environment.get('COATJAVA')
+    loaded_modules = environment.get('LOADEDMODULES', '').split(':')
+    selected = 'coatjava/' + version
 
-    if not loaded_home_text:
-        raise ValueError(f'loading COATJAVA {version} did not set COATJAVA.')
+    if [module for module in loaded_modules if module.startswith('coatjava/')] != [selected]:
+        raise ValueError(f'loading COATJAVA {version} did not select exactly {selected} in LOADEDMODULES.')
 
-    loaded_home = Path(loaded_home_text).resolve()
-
-    if loaded_home != expected_home.resolve() or loaded_home.name != version:
-        raise ValueError(f'loading COATJAVA {version} selected unexpected COATJAVA directory: {loaded_home}')
-
-    if environment.get('CLAS12DIR') and Path(environment['CLAS12DIR']).resolve() != loaded_home:
-        raise ValueError(f'loading COATJAVA {version} selected mismatched CLAS12DIR: {environment["CLAS12DIR"]}')
-
+    report.value('Loaded COATJAVA module', selected, value_color='INFO')
     executable_text = shutil.which('recon-util', path=environment.get('PATH'))
 
     if executable_text is None:
         raise ValueError(f'recon-util is unavailable after loading COATJAVA module {version}.')
 
-    executable = Path(executable_text).resolve()
+    executable = Path(executable_text).absolute()
 
-    if loaded_home not in executable.parents:
-        raise ValueError(f'loading COATJAVA {version} selected an executable outside {loaded_home}: {executable}')
-
-    report.check('COATJAVA', str(loaded_home), directory=True)
     report.check('SLURM_RECON_EXECUTABLE', str(executable))
     report.text()
 
@@ -968,7 +960,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     Execution flow:
         1. Add the checked sample settings and fixed checkout paths to the environment dictionary.
         2. Print the sample details and handle the optional one-time farm-log cleanup.
-        3. Check both installations, load GEMC and COATJAVA, and verify both final program paths.
+        3. Check GEMC data, show both module definitions, load GEMC and COATJAVA, list loaded modules,
+           and verify their programs.
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output preparation.
         6. Inspect both mchipo/reconhipo paths before either changes, then create missing directories
@@ -1031,13 +1024,12 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     if not values['CLAS12TAGS_DIR']:
         expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
 
-    expected_coatjava_home = check_coatjava_version(values['COATJAVA_VERSION'], environment, report)
-
     # Load both modules before verifying either, so dependency changes cannot bypass the checks.
     load_module('gemc', values['GEMC_VERSION'], environment, report)
     load_module('coatjava', values['COATJAVA_VERSION'], environment, report)
+    print_loaded_modules(environment, report)
     gemc_executable = verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
-    recon_executable = verify_coatjava(values['COATJAVA_VERSION'], expected_coatjava_home, environment, report)
+    recon_executable = verify_coatjava(values['COATJAVA_VERSION'], environment, report)
 
     # Reapply checked sample values after the module changes the environment.
     environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
@@ -1111,7 +1103,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
                      'recon-util': 'SLURM_RECON_EXECUTABLE',
                      'sbatch': 'SBATCH_EXECUTABLE'}[executable]] = resolved_executable
 
-    # Both verifiers proved that the programs belong to the requested installations.
+    # Keep the checked GEMC path and available reconstruction command in the submission record.
     executables['SLURM_GEMC_EXECUTABLE'] = gemc_executable
     executables['SLURM_RECON_EXECUTABLE'] = recon_executable
 

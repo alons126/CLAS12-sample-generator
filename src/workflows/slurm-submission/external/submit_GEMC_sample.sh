@@ -48,6 +48,11 @@ YAML=${YAML_FILE}
 echo "YAML:                   ${YAML}"
 echo
 
+#Used modules
+echo "Used modules:"
+module list
+echo 
+
 #------DONT NEED TO TOUCH UNDER HERE UNLESS YOU NEED TOO------
 LUNDOUT=${JOB_OUT_PATH}/lundfiles
 MCOUT=${JOB_OUT_PATH}/mchipo

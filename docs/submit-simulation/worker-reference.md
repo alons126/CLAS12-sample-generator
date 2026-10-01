@@ -33,7 +33,6 @@ The same `JOB_NEVENTS` limit is passed to GEMC and reconstruction. A shorter LUN
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction inputs |
 | `TORUS_FIELD` | Torus scale; the worker fixes the solenoid at $-1.0$ |
 | `GEMC_DATA_DIR` | Selected standard or custom clas12Tags data directory |
-| `COATJAVA`, `CLAS12DIR` | Installation paths set by the selected COATJAVA module |
 | `GEMC_VERSION`, `COATJAVA_VERSION` | Requested releases, reported and recorded by the coordinator |
 | `SAMPLE_GENERATOR`, `GENERATOR_TUNE`, `SAMPLE_TARGET_NUCLEUS`, `Q2_CUT` | Physical provenance printed in the task log |
 | `BEAM_ENERGY_LABEL`, `UNIFORM_SAMPLE_CHANNEL` | Beam and uniform-channel labels printed in the task log |
@@ -41,6 +40,8 @@ The same `JOB_NEVENTS` limit is passed to GEMC and reconstruction. A shorter LUN
 The worker inherits the verified `PATH` and module environment. It does not load modules or select software versions itself. The coordinator exports both version values, reports them before submission, and records them with verified executable paths in the submission log. The current worker does not echo those version values. The coordinator also resolves and reports `DETECTOR_ENERGY_GROUP` while selecting detector resources; the worker does not read that value.
 
 The echo statements make received values visible in the scheduler log; they do not perform validation. Validation belongs to the coordinator.
+
+Before running GEMC, each array task prints `Used modules:` and runs `module list`. This shows the modules loaded inside the job, complementing the coordinator's module list printed before submission. Check both scheduler log streams: the module system may write its list to standard error rather than standard output. This printout reports the job environment; it does not load modules or validate their versions.
 
 ## Maintenance boundary
 

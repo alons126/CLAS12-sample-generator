@@ -117,9 +117,11 @@ When using a custom GCARD or overriding `--torus`, inspect its `SCALE_FIELD` ent
 
 The coordinator distinguishes the nearest-MeV sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). These are naming and lookup values, not alternate beam energies.
 
-The coordinator checks both requested installations, then unloads and loads GEMC and uses `module switch coatjava/<version>` for COATJAVA in a private child environment. After both loads, it verifies that `GEMC_DATA_DIR` and `COATJAVA` match the requested releases and that `gemc` and `recon-util` belong to those installations. If `CLAS12DIR` is set, it must also point to the selected COATJAVA installation. Missing releases, failed module loads, or mismatched paths stop submission before simulation output is replaced.
+The coordinator prints `module show` output for the selected GEMC and COATJAVA modules in both preview and execution, then unloads and loads GEMC and uses `module switch coatjava/<version>` for COATJAVA in a private child environment. After both selections, it prints `module list` from that environment so you can see all loaded modules, including dependencies, that Slurm will inherit. It checks and prints the loaded COATJAVA release using `LOADEDMODULES` and confirms that `recon-util` is available in `PATH`. It does not predict, compare, or validate COATJAVA installation directories. GEMC's data and executable checks remain unchanged. Missing or conflicting releases, failed module commands, or unavailable programs stop submission before simulation output is replaced.
 
 When `--clas12tags-dir` is absent, GEMC uses the shared versioned clas12Tags directory. A custom clas12Tags checkout replaces the data directory but not the selected GEMC executable checks. The verified child environment is exported to Slurm; the interactive login shell stays unchanged. Default job names include both `GEMC<version>` and `COATJAVA<version>` for uniform and physical samples; `--job-name` overrides the name without changing either release.
+
+Each array task also prints `Used modules:` and runs `module list` before GEMC, so the scheduler logs show the modules loaded inside the job. Check both `.out` and `.err` files because the module list may appear in the error stream. See the [worker reference](worker-reference.md#environment-interface).
 
 ## Submit several runs
 
@@ -158,7 +160,7 @@ Uniform input needs `channel`; `eh` also needs hadron and region. Physical input
 
 ## Submission record and failures
 
-After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the numeric job ID and atomically writes `RUN/reconhipo/slurm-submission-log.json`. It records the ID, exact command, resolved parameters, both requested software versions, verified executable paths, GEMC and COATJAVA installation paths, loaded-module names when available, runtime Git state, and SHA-256 hashes of the GCARD, YAML, and worker payload.
+After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the numeric job ID and atomically writes `RUN/reconhipo/slurm-submission-log.json`. It records the ID, exact command, resolved parameters, both requested software versions, executable paths, GEMC's data directory, loaded-module names, runtime Git state, and SHA-256 hashes of the GCARD, YAML, and worker payload.
 
 If Slurm accepts an array but its response cannot be parsed, or writing the submission log fails afterward, inspect Slurm before retrying. Retrying blindly can create a duplicate array. An earlier accepted array is never cancelled automatically when a later sample fails.
 
