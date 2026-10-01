@@ -32,7 +32,7 @@ To update the header:
 5. Review target mappings, vertex bounds, monitoring ranges, and affected documentation.
 6. Validate generated distributions and the matching detector configuration before production use.
 
-The target implementations and RG-M variations are described in CLAS12 Note 2026-001.[^sportes-2026-rgm]
+The target implementations and RG-M variations are described in CLAS12 Note 2026-001[^sportes-2026-rgm].
 
 ## Detector resources
 

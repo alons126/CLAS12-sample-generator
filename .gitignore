@@ -39,6 +39,12 @@ output/
 /CMakeUserPresets.json
 /config/run.local.json
 
+# Development-only parity profiles ------------------------------------------
+# Keep local comparison inputs available while excluding them from published
+# repository history and source archives.
+/config/samples/uniform-lund-creation/legacy-coderun.conf
+/config/samples/physical-lund-creation/legacy-genie-wrapper.conf
+
 # Editor and operating-system files ------------------------------------------
 # Ignore editor backups and macOS directory metadata wherever they appear.
 *~

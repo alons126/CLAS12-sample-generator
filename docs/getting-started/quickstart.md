@@ -15,7 +15,7 @@ source run.csh \
     --output /path/to/output
 ```
 
-The final run directory is `/path/to/output/Uniform__1e__5986MeV`. The creator prints that resolved path before replacing or writing it.
+The final run directory is `/path/to/output/Uniform__1e__5986MeV`. The uniform LUND creator prints that resolved path before replacing or writing it.
 
 `run.csh` treats its ifarm checkout as disposable. A normal workflow run removes untracked files except documented build exclusions, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first.
 

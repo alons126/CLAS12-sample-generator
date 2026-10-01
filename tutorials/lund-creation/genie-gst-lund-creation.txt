@@ -1,12 +1,13 @@
 # Reviewed GENIE GST conversions for the LUND inputs consumed by
 # genie-gst-slurm-submission.txt. Run on ifarm from a disposable checkout and commit
-# development changes before use. For local development, invoke the built converter.
+# development changes before use. For local development, invoke the built
+# event-generator-to-lund-converter executable.
 #
 # Expected input layout for each quoted glob:
 #   SAMPLE_DIRECTORY/input_options.txt
 #   SAMPLE_DIRECTORY/master-routine_validation_01-eScattering/*.root
 #
-# The profile uses tune=auto. The converter reads the exact TUNE value from
+# The profile uses tune=auto. The physical LUND converter reads the exact TUNE value from
 # input_options.txt and falls back to unknown when discovery fails. The explicit
 # target and beam energy select the normal GEMC target variation and vertex geometry.
 # Replace every /path/to/... placeholder before running these commands.

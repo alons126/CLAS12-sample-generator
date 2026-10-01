@@ -1,10 +1,11 @@
 # Physical LUND converter option inventory
 #
-# Together these commands show every public physical-conversion option. The converter
+# Together these commands show every public physical-conversion option. The physical LUND converter
 # reads existing GENIE GST truth; it does not run GENIE. Arbitrary values demonstrate
 # syntax, not production settings. Quote input globs so ROOT receives them unchanged,
 # replace every /path/to/... placeholder, and commit changes before using run.csh on
-# the disposable ifarm checkout. Use the built converter for local development.
+# the disposable ifarm checkout. Use the built event-generator-to-lund-converter
+# executable for local development.
 
 #########################################################################################
 # Print the current physical LUND converter interface

@@ -76,7 +76,7 @@ Use `source run.csh --workflow submit --help` for the live interface. [`config/s
 
 ## Detector defaults
 
-GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this project.[^sportes-2026-rgm] CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). The default detector resources are selected from the manifest's target variation, beam energy, and submission-time GEMC version.
+GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this project[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). The default detector resources are selected from the manifest's target variation, beam energy, and submission-time GEMC version.
 
 For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Other beam energies require explicit `--gcard`, `--yaml`, and `--torus` values.
 
@@ -161,6 +161,14 @@ The coordinator does not poll task states, retry failures, reconcile outputs, or
 
 The file must open and display CLAS12 data banks. This is a smoke test only; one readable file does not establish that the remaining tasks succeeded or that the campaign is scientifically valid.
 
-Useful Slurm commands include `squeue -u <username>` and `scancel <job-id>`. Use `scancel --user=<username>` only when intentionally cancelling all jobs owned by that account.
+Jefferson Lab's [Slurm batch user guide](https://scicomp.jlab.org/docs/farm_slurm_batch) explains `sbatch` and farm batch operation. Useful commands are:
+
+- Submit a GEMC job: `sbatch <submit-script>`
+- Cancel one job: `scancel <job-id>`
+- Cancel all of your jobs: `scancel --user=<username>`
+- Check your jobs: `squeue -u <username>`; see also the [active-jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob)
+- Print the current priority for all pending production jobs: `squeue -t pd -p production -o "%.8Q %.10u/%10a" | uniq -c`
+
+Cancel-all acts on every job owned by the named account, so use it only when that full scope is intended.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)

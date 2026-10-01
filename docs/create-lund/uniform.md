@@ -46,9 +46,9 @@ The automatic run name and filename prefix are `Uniform__<label>__<beam-MeV>MeV`
 
 ## Production definitions
 
-The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $P$ and uniform in $1/P$, from $0.7\,\mathrm{GeV}/c$ to $P_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are project generation bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts.[^burkert-clas12][^asryan-ecal]
+The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $P$ and uniform in $1/P$, from $0.7\,\mathrm{GeV}/c$ to $P_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are project generation bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts[^burkert-clas12][^asryan-ecal].
 
-Electron–hadron samples use a beam-momentum trigger electron at $\theta_e=25^\circ$. Its $\phi$ is placed at the CLAS12 sector center closest to the direction opposite the hadron, then shifted by $\Delta\phi=16^\circ$ at $2.07052\,\mathrm{GeV}$, $7^\circ$ at $4.02962\,\mathrm{GeV}$, $5^\circ$ at $5.98636\,\mathrm{GeV}$, and $0^\circ$ at other beam energies unless overridden. This separation rule is retained for CD samples even though the CD geometry does not require it. The hadron generation bounds below were chosen to cover the relevant CLAS12 forward-detector and central-detector regions described by the spectrometer and reconstruction system.[^burkert-clas12][^ziegler-reconstruction]
+Electron–hadron samples use a beam-momentum trigger electron at $\theta_e=25^\circ$. Its $\phi$ is placed at the CLAS12 sector center closest to the direction opposite the hadron, then shifted by $\Delta\phi=16^\circ$ at $2.07052\,\mathrm{GeV}$, $7^\circ$ at $4.02962\,\mathrm{GeV}$, $5^\circ$ at $5.98636\,\mathrm{GeV}$, and $0^\circ$ at other beam energies unless overridden. This separation rule is retained for CD samples even though the CD geometry does not require it. The hadron generation bounds below were chosen to cover the relevant CLAS12 forward-detector and central-detector regions described by the spectrometer and reconstruction system[^burkert-clas12][^ziegler-reconstruction].
 
 | Hadron | FD $\theta$ | CD $\theta$ | FD $P_{\min}$ | CD $P_{\min}$ | Default momentum model |
 | --- | --- | --- | ---: | ---: | --- |
@@ -74,7 +74,7 @@ Electron, proton, neutron, and charged-pion masses come from the protected targe
 
 ## Results
 
-The creator writes split LUND files, a completion manifest, one ROOT monitoring file, one combined PDF, and individual PNG plots. It also prepares empty `mchipo/` and `reconhipo/` directories for later submission. See [uniform monitoring](monitoring.md) and [run directories](../getting-started/outputs.md).
+The uniform LUND creator writes split LUND files, a completion manifest, one ROOT monitoring file, one combined PDF, and individual PNG plots. It also prepares empty `mchipo/` and `reconhipo/` directories for later submission. See [uniform monitoring](monitoring.md) and [run directories](../getting-started/outputs.md).
 
 [^burkert-clas12]: V. D. Burkert et al., “The CLAS12 Spectrometer at Jefferson Laboratory,” *Nucl. Instrum. Meth. A* **959**, 163419 (2020). [doi:10.1016/j.nima.2020.163419](https://doi.org/10.1016/j.nima.2020.163419)
 

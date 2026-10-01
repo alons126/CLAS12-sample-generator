@@ -25,9 +25,9 @@ Electron, proton, neutron, and charged-pion masses come through `TargetGeometry`
 | 9 | Zero-based generated-event ID | Zero-based GST entry index |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
 
-For GENIE GST conversion, field 4 is the LUND slot otherwise used for target polarization. Storing `resid` there follows the pinned RG-M GENIE-to-LUND converter, in which `RES_ID` replaced the earlier `targP` polarization value.[^rgm-resid] This is a compatibility mapping: `resid` remains the GENIE resonance identifier and is not interpreted as polarization.
+For GENIE GST conversion, field 4 is the LUND slot otherwise used for target polarization. Storing `resid` there follows the pinned RG-M GENIE-to-LUND converter, in which `RES_ID` replaced the earlier `targP` polarization value[^rgm-resid]. This is a compatibility mapping: `resid` remains the GENIE resonance identifier and is not interpreted as polarization.
 
-Field 8 is always the literal value `1`. GEMC lists this user-defined column as the interacted-nucleon ID, but RG-M LUND-writing code widely uses `1` for uniform particles, GENIE events, and GCF events.[^rgm-field-8] This project preserves that RG-M convention. The value is not an interaction count and is not interpreted as a proton or neutron PDG identifier; GEMC retains this user-defined header value but does not use it for particle transport.
+Field 8 is always the literal value `1`. GEMC lists this user-defined column as the interacted-nucleon ID, but RG-M LUND-writing code widely uses `1` for uniform particles, GENIE events, and GCF events[^rgm-field-8]. This project preserves that RG-M convention. The value is not an interaction count and is not interpreted as a proton or neutron PDG identifier; GEMC retains this user-defined header value but does not use it for particle transport.
 
 Field 10 is a process tag for converted GENIE input, not an event weight or cross section.
 
@@ -57,7 +57,7 @@ Momentum, energy, mass, and vertex values have five digits after the decimal poi
 
 ### Auxiliary truth records (not yet tested)
 
-For convenience, a LUND file can in principle include additional truth-level quantities encoded as particle records whose field 3 is `0`. GEMC propagates only records whose field 3 is `1` through Geant4. The pinned RG-M GCF-to-LUND converter demonstrates the `type = 0` convention for a non-propagated truth-level record.[^rgm-type-zero]
+For convenience, a LUND file can in principle include additional truth-level quantities encoded as particle records whose field 3 is `0`. GEMC propagates only records whose field 3 is `1` through Geant4. The pinned RG-M GCF-to-LUND converter demonstrates the `type = 0` convention for a non-propagated truth-level record[^rgm-type-zero].
 
 This project has not yet tested this technique or verified how a field-3 value of `0` is preserved through GEMC output, HIPO, and reconstruction. The current `LundWriter` always writes `1` and provides no option for auxiliary records. Treat `type = 0` as an experimental extension: validate the resulting files and downstream banks before production use, and include every added record in the event-header particle count.
 
@@ -65,7 +65,7 @@ This project has not yet tested this technique or verified how a field-3 value o
 
 Supported physical output species are the electron $e^-$ (11), photon $\gamma$ (22), charged pions $\pi^\pm$ ($\pm211$), neutron $n$ (2112), and proton $p$ (2212). The scattered electron is first. Supported final-state particles retain GST order.
 
-Neutral pions are not written. The input production must decay them upstream so their photons exist in GST. The converter skips a residual PDG 111 instead of inventing daughter momenta.
+Neutral pions are not written. The input production must decay them upstream so their photons exist in GST. The physical LUND converter skips a residual PDG 111 instead of inventing daughter momenta. The [physical-conversion guide](../create-lund/physical.md#selection-and-translation) identifies the GENIE decay setting required during input production.
 
 The serialized masses are:
 

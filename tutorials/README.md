@@ -35,4 +35,4 @@ SAMPLE_DIRECTORY/
     └── *.root
 ```
 
-With `tune = auto`, the converter reads `TUNE` from `input_options.txt`. The shown nested output paths assume the value `GEM21_11a_00_000`.
+With `tune = auto`, the physical LUND converter reads `TUNE` from `input_options.txt`. The shown nested output paths assume the value `GEM21_11a_00_000`.

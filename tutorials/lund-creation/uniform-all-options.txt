@@ -1,6 +1,6 @@
 # Uniform LUND creator option inventory
 #
-# Together these commands show every public creator option and the launcher choices
+# Together these commands show every public uniform LUND creator option and the launcher choices
 # needed to reach it. Arbitrary values demonstrate syntax and validation; they are
 # not production recommendations. Replace every /path/to/... placeholder. Run the
 # launcher on ifarm from a disposable checkout, or use the built executable locally.
