@@ -21,7 +21,7 @@ This page maps implementation files to responsibilities. The [architecture guide
 | Path or type | Responsibility |
 | --- | --- |
 | `core/config/RunConfig` | Merge defaults/profile/CLI, resolve automatic values, validate, and expose final settings |
-| `core/config/TargetCatalog` | Map target identity to A/Z and compatible beam-dependent GEMC variation/geometry |
+| `core/config/TargetCatalog` | Map target identity to $A$/$Z$ and compatible beam-dependent GEMC variation/geometry |
 | `core/geometry/TargetGeometry` | Sole project adapter to external `targets.h`; vertex sampling and supported mass lookup |
 | `core/lund/Particle` and `Event` | Generator-independent in-memory record passed to the writer |
 | `core/lund/LundWriter` | Guarded run replacement, file rotation, exact serialization, counts, manifest, and summaries |

@@ -7,7 +7,7 @@
 The coordinator resolves and validates configuration, prepares output directories, loads the GEMC environment, and calls `sbatch`. Slurm supplies `SLURM_ARRAY_TASK_ID`. The worker then:
 
 1. reads one numbered LUND file;
-2. runs GEMC with the chosen GCARD, torus scale, fixed solenoid −1.0, and shared event limit;
+2. runs GEMC with the chosen GCARD, torus scale, fixed solenoid $-1.0$, and shared event limit;
 3. writes simulated HIPO under `mchipo/`;
 4. runs COATJAVA reconstruction with `recon-util` and the selected YAML; and
 5. writes reconstructed HIPO under `reconhipo/`.
@@ -31,7 +31,7 @@ The same `JOB_NEVENTS` limit is passed to GEMC and reconstruction. A shorter LUN
 | `JOB_NEVENTS` | Required event limit shared by GEMC and reconstruction |
 | `SLURM_ARRAY_TASK_ID` | One-based file/task index supplied by Slurm |
 | `GCARD_FILE`, `YAML_FILE` | Detector and reconstruction inputs |
-| `TORUS_FIELD` | Torus scale; the worker fixes the solenoid at −1.0 |
+| `TORUS_FIELD` | Torus scale; the worker fixes the solenoid at $-1.0$ |
 | `GEMC_DATA_DIR` | Selected standard or custom clas12Tags data directory |
 | `SAMPLE_GENERATOR`, `GENERATOR_TUNE`, `SAMPLE_TARGET_NUCLEUS`, `Q2_CUT` | Physical provenance printed in the task log |
 | `BEAM_ENERGY_LABEL`, `UNIFORM_SAMPLE_CHANNEL` | Beam and uniform-channel labels printed in the task log |

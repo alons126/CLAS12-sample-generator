@@ -78,7 +78,27 @@ Use `source run.csh --workflow submit --help` for the live interface. [`config/s
 
 GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this project.[^sportes-2026-rgm] CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). The default detector resources are selected from the manifest's target variation, beam energy, and submission-time GEMC version.
 
-For 2.07052 GeV, the torus default is +0.5. For 4.02962 and 5.98636 GeV, it is −1.0. The worker always applies solenoid −1.0. Other beam energies require explicit `--gcard`, `--yaml`, and `--torus` values.
+For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Other beam energies require explicit `--gcard`, `--yaml`, and `--torus` values.
+
+### Magnetic-field consistency
+
+The selected GCARD and the Slurm job must use the same torus scale. The checked-in $2\,\mathrm{GeV}$ cards describe the outbending configuration and match the submission default `--torus 0.5`:
+
+```xml
+<!-- you can scale the fields here. Remember torus -1 means e- INBENDING  -->
+<option name="SCALE_FIELD" value="binary_torus, 0.5"/>
+<option name="SCALE_FIELD" value="binary_solenoid, -1"/>
+```
+
+The checked-in $4\,\mathrm{GeV}$ and $6\,\mathrm{GeV}$ cards describe the inbending configuration and match the submission default `--torus -1.0`:
+
+```xml
+<!-- you can scale the fields here. Remember torus -1 means e- INBENDING  -->
+<option name="SCALE_FIELD" value="binary_torus, -1"/>
+<option name="SCALE_FIELD" value="binary_solenoid, -1"/>
+```
+
+When using a custom GCARD or overriding `--torus`, inspect its `SCALE_FIELD` entries and change them together. Keep the solenoid at $-1.0$ unless a separately reviewed detector configuration requires another value. A mismatch means the selected card and submitted command no longer document the same magnetic-field setup.
 
 The coordinator distinguishes the nearest-MeV sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). These are naming and lookup values, not alternate beam energies.
 

@@ -11,7 +11,7 @@ Production validation must also establish that the complete campaign is suitable
 - Uniform samples are acceptance probes, not physical interactions.
 - A physical adapter copies supported truth and does not invent missing kinematics.
 - `TRandom3(0)` is not reproducible from the recorded zero.
-- Target geometry and LUND A/Z metadata are independently configurable.
+- Target geometry and LUND $A$/$Z$ metadata are independently configurable.
 - The GENIE process code in LUND field 10 is not a cross-section weight.
 - Physical file cutoff counts remaining input entries, not remaining accepted events.
 - Uniform monitoring checks generated distributions; it is not reconstructed acceptance.

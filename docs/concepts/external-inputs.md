@@ -40,13 +40,13 @@ Files under `config/detector/` are fixed snapshots, not files downloaded from th
 
 Standard field policy is:
 
-| Nominal beam | Electron bending | Torus | Solenoid |
+| Nominal beam | Torus field configuration | Torus | Solenoid |
 | --- | --- | ---: | ---: |
-| 2 GeV | outbending | +0.5 | −1.0 |
-| 4 GeV | inbending | −1.0 | −1.0 |
-| 6 GeV | inbending | −1.0 | −1.0 |
+| $2\,\mathrm{GeV}$ | outbending | $+0.5$ | $-1.0$ |
+| $4\,\mathrm{GeV}$ | inbending | $-1.0$ | $-1.0$ |
+| $6\,\mathrm{GeV}$ | inbending | $-1.0$ | $-1.0$ |
 
-The worker passes torus and solenoid scales on the GEMC command line, so review them together with the selected card. Scientific settings are never inferred from a LUND filename.
+The worker passes torus and solenoid scales on the GEMC command line. The selected GCARD must declare the same scales so the card and Slurm job describe one magnetic-field configuration. The [submission guide](../submit-simulation/guide.md#magnetic-field-consistency) gives the required GCARD entries. Scientific settings are never inferred from a LUND filename.
 
 ## Worker payload
 

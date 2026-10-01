@@ -13,7 +13,7 @@ source run.csh \
     --output /path/to/output
 ```
 
-The checked-in profile provides the sample definition. The explicit `--events 100` makes this a smoke test; production profiles request 50,000,000 events, while electron-tester profiles request 1,000,000. Command-line values override matching profile values. The [sample-profile inventory](../../config/samples/README.md) lists the profile pattern for every implemented channel at 2.07052, 4.02962, and 5.98636 GeV.
+The checked-in profile provides the sample definition. The explicit `--events 100` makes this a smoke test; production profiles request 50,000,000 events, while electron-tester profiles request 1,000,000. Command-line values override matching profile values. The [sample-profile inventory](../../config/samples/README.md) lists the profile pattern for every implemented channel at $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$.
 
 ## Available channels
 
@@ -52,9 +52,9 @@ Electron–hadron samples use a beam-momentum trigger electron at $\theta_e=25^\
 
 | Hadron | FD $\theta$ | CD $\theta$ | FD $p_{\min}$ | CD $p_{\min}$ | Default momentum model |
 | --- | --- | --- | ---: | ---: | --- |
-| proton | $5^\circ$–$45^\circ$ | $35^\circ$–$145^\circ$ | $0.3\,\mathrm{GeV}/c$ | $0.2\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
-| neutron | $5^\circ$–$35^\circ$ | $35^\circ$–$145^\circ$ | 0 | 0 | uniform in $p$ |
-| $\pi^{+}$ or $\pi^{-}$ | $5^\circ$–$45^\circ$ | $35^\circ$–$140^\circ$ | $0.2\,\mathrm{GeV}/c$ | $0.1\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
+| proton | $[5^\circ,45^\circ]$ | $[35^\circ,145^\circ]$ | $0.3\,\mathrm{GeV}/c$ | $0.2\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
+| neutron | $[5^\circ,35^\circ]$ | $[35^\circ,145^\circ]$ | 0 | 0 | uniform in $p$ |
+| $\pi^{+}$ or $\pi^{-}$ | $[5^\circ,45^\circ]$ | $[35^\circ,140^\circ]$ | $0.2\,\mathrm{GeV}/c$ | $0.1\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
 
 Every hadron momentum range ends at $p_{\mathrm{beam}}$. Hadron $\theta$ is uniform within its configured range and $\phi\in[-180^\circ,180^\circ]$, so equal-width angular bins receive comparable generated statistics. The optional fixed-momentum mode is neutron-only and defaults to $1\,\mathrm{GeV}/c$. The [sampling model](../concepts/sampling-models.md) gives the exact distributions, trigger correlation, and random-stream rules.
 

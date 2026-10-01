@@ -4,7 +4,7 @@ The common record and writer separate source-specific event logic from the [LUND
 
 ## In-memory records
 
-`Particle` stores a PDG identifier, mass, three-momentum, and vertex. `Event` stores an event ID, A, Z, beam energy, two source-specific header values, and an ordered particle vector.
+`Particle` stores a PDG identifier, mass, three-momentum, and vertex. `Event` stores an event ID, $A$, $Z$, beam energy, two source-specific header values, and an ordered particle vector.
 
 Uniform events contain one electron or an electron followed by one hadron. Physical GENIE events contain the scattered electron followed by supported GST particles in input order. Every particle in one event has the same vertex.
 
@@ -15,8 +15,8 @@ Electron, proton, neutron, and charged-pion masses come through `TargetGeometry`
 | Field | Uniform | GENIE GST conversion |
 | --- | --- | --- |
 | 1 | Particle count | Retained particle count, including electron |
-| 2 | Configured A | Configured A |
-| 3 | Configured Z | Configured Z |
+| 2 | Configured $A$ | Configured $A$ |
+| 3 | Configured $Z$ | Configured $Z$ |
 | 4 | 0 | GST `resid` |
 | 5 | 0 | 0 |
 | 6 | 11 | 11 |
@@ -37,7 +37,7 @@ Every header uses this exact format:
 %i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %d \t %.2f \n
 ```
 
-Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 has two. A 5.98636 GeV beam is written as `5.986360`.
+Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 has two. A $5.98636\,\mathrm{GeV}$ beam is written as `5.986360`.
 
 ## Fourteen-field particle record
 
