@@ -21,7 +21,7 @@ See [RG-M repository](https://github.com/awild7/rgm) for any updates for `~/envi
 source ~/environment.csh
 ```
 
-This prepares the login environment. Submission then explicitly loads and verifies its requested GEMC and COATJAVA modules in a private child environment, defaulting to GEMC 5.14 and COATJAVA 10.0.7. Use `--gemc-version` and `--coatjava-version`, or their configuration-file keys, to change those selections. A different login-shell release does not override submission defaults, and submission does not alter the interactive shell. See the [COATJAVA repository](https://github.com/JeffersonLab/coatjava) for its source and other releases. Changing a release requires compatible configuration files and campaign validation.
+This prepares the login environment. Submission then explicitly unloads and loads its requested GEMC module, switches COATJAVA with `module switch coatjava/<version>`, and verifies both selections in a private child environment, defaulting to GEMC 5.14 and COATJAVA 10.0.7. Use `--gemc-version` and `--coatjava-version`, or their configuration-file keys, to change those selections. A different login-shell release does not override submission defaults, and submission does not alter the interactive shell. See the [COATJAVA repository](https://github.com/JeffersonLab/coatjava) for its source and other releases. Changing a release requires compatible configuration files and campaign validation.
 
 ## Disposable checkout
 

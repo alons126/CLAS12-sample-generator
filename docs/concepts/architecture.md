@@ -101,7 +101,7 @@ To add another format, create a sibling adapter and one explicit dispatcher bran
 
 `resolve_inputs.py` is a pure resolution and validation layer: CLI, optional config, manifest, and defaults become one checked settings record per sample. GEMC and COATJAVA versions are separate submission settings: each selects its software module and corresponding configuration directory. Explicit GCARD or YAML files override file lookup without changing software selection.
 
-`submit.py` loads both modules in a private environment and verifies both installations and executable paths after the loads. It also owns reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
+`submit.py` unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<version>` in a private environment and verifies both installations and executable paths after the loads. It also owns reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
 
 This division prevents shell variables, path-name guesses, or worker-specific branches from becoming hidden configuration. It also keeps preview and execution on the same resolution path.
 

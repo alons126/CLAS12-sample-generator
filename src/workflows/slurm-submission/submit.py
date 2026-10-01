@@ -573,12 +573,12 @@ def load_module(name, version, environment, report):
     """Load a selected GEMC or COATJAVA module into Slurm's private environment.
 
     Purpose:
-        Unload the named module, then load NAME/VERSION without
+        Switch COATJAVA to coatjava/VERSION, or unload and load GEMC, without
         modifying the interactive shell that sourced run.csh.
 
     Execution flow:
         Find modulecmd in PATH -> start a small Python process with the copied environment -> ask
-        modulecmd to unload and load the selected package -> apply those changes -> return its final
+        modulecmd to switch COATJAVA or unload and load GEMC -> apply those changes -> return its final
         environment as JSON -> check the JSON and replace the copied dictionary. Module messages stay
         connected to the terminal, so their original text and colors remain visible.
 
@@ -589,7 +589,7 @@ def load_module(name, version, environment, report):
         report: Helper that prints the version change.
 
     Failure:
-        A missing module command, failed unload/load, or invalid JSON raises ValueError before output
+        A missing module command, failed switch or unload/load, or invalid JSON raises ValueError before output
         replacement or job submission. The dictionary changes only after the complete result passes
         validation, so a failed helper cannot leave a partly changed environment.
     """
@@ -604,10 +604,12 @@ def load_module(name, version, environment, report):
     if modulecmd is None:
         raise ValueError(f'modulecmd is unavailable; the selected {label} module cannot be loaded.')
 
-    # A helper process runs unload and load, then prints its final environment as JSON. Module messages
+    # A helper process switches COATJAVA or unloads and loads GEMC, then prints its environment as JSON. Module messages
     # remain visible on stderr.
     helper = ('import json, os, subprocess, sys\n'
-              'for arguments in (("unload", sys.argv[2]), ("load", sys.argv[2] + "/" + sys.argv[3])):\n'
+              'selected = sys.argv[2] + "/" + sys.argv[3]\n'
+              'commands = (("switch", selected),) if sys.argv[2] == "coatjava" else (("unload", sys.argv[2]), ("load", selected))\n'
+              'for arguments in commands:\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
               '    if result.returncode:\n'
               '        raise SystemExit(result.returncode)\n'
@@ -628,7 +630,7 @@ def load_module(name, version, environment, report):
     if result.returncode:
         raise ValueError(f'failed to load {label} module {version}.')
 
-    # Read the new environment only after both module commands succeed.
+    # Read the new environment only after all requested module commands succeed.
     try:
         loaded = json.loads(result.stdout)
     except json.JSONDecodeError as error:
