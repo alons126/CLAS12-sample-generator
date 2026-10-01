@@ -561,12 +561,12 @@ def load_module(name, version, environment, report):
 
     # Print the requested version before module commands can fail.
     label = name.upper()
+    report.text('{SYSTEM}Switching ' + label + ' version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}...{RESET}')
+
     report.text('{SYSTEM}Selected ' + label + ' module definition:{RESET}')
     report.text(format_command(['module', 'show', name + '/{INFO}' + version + '{RESET}'], colored=True))
     report.text()
     
-    report.text('{SYSTEM}Switching ' + label + ' version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}...{RESET}')
-
     # Find modulecmd because the interactive `module` name is a shell function.
     modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
 
