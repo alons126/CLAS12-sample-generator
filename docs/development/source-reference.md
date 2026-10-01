@@ -56,7 +56,7 @@ The GENIE adapter reads a `TChain("gst")` with typed `TTreeReader` values and ar
 | --- | --- |
 | `slurm-submission/setup_and_submit.csh` | Sourced shell bridge, shared colors, argument forwarding, and return status |
 | `slurm-submission/resolve_inputs.py` | CLI/config/manifest/default resolution and truth-conflict validation |
-| `slurm-submission/submit.py` | GEMC environment, reports, path checks, preview/execute actions, `sbatch`, submission record |
+| `slurm-submission/submit.py` | GEMC and COATJAVA module loading and verification, reports, path checks, preview/execute actions, `sbatch`, submission record |
 | `slurm-submission/external/submit_GEMC_sample.sh` | Per-task GEMC then COATJAVA commands and scheduler directives |
 
 Resolution completes for all selected samples before the coordinator changes output or submits the first array. Preview and execution use the same resolved data. The worker receives values through the Slurm environment and does not reimplement resolution.

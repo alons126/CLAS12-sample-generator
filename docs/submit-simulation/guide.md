@@ -10,7 +10,7 @@ source run.csh \
     --lund-dir /shared/path/to/run/lundfiles
 ```
 
-Preview is the default. It resolves the sample, loads and verifies the selected GEMC environment, checks COATJAVA and all detector inputs, inspects both simulation-output paths, creates a missing `mchipo/` or `reconhipo/` directory, and prints the exact `sbatch` command. It preserves existing output and does not call `sbatch` or write a submission log.
+Preview is the default. It resolves the sample, loads and verifies the selected GEMC and COATJAVA environments, checks all detector inputs, inspects both simulation-output paths, creates a missing `mchipo/` or `reconhipo/` directory, and prints the exact `sbatch` command. It preserves existing output and does not call `sbatch` or write a submission log.
 
 Add `--execute` only after reviewing that report:
 
@@ -37,7 +37,7 @@ Paths forwarded to the external worker may contain only letters, digits, `/`, `_
 
 The manifest supplies the exact LUND inventory and per-file event counts. The array size defaults to the selected file count, and the shared `JOB_NEVENTS` limit defaults to the largest selected file count. `--num-jobs N` selects the first N files. `--events-per-job N` replaces the shared event limit; it does not rewrite or recount the files.
 
-Truth metadata from a manifest cannot be contradicted by an override. Detector policy can be changed independently: GEMC version, compatible detector target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name.
+Truth metadata from a manifest cannot be contradicted by an override. Detector policy can be changed independently: GEMC and COATJAVA versions, compatible detector target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name. Neither software version is inherited from LUND-creation metadata.
 
 ## Submission options
 
@@ -47,7 +47,8 @@ Truth metadata from a manifest cannot be contradicted by an override. Detector p
 | `--config FILE` | Optional submission `key = value` file |
 | `--num-jobs N` | Select the first N LUND files |
 | `--events-per-job N` | Override the common GEMC/reconstruction event limit |
-| `--gemc-version VERSION` | Select GEMC resources; default 5.14 |
+| `--gemc-version VERSION` | Select GEMC software and GCARD resources; default 5.14 |
+| `--coatjava-version VERSION` | Select COATJAVA software and YAML resources; default 10.0.7 |
 | `--gemc-target-variation NAME` | Override simulation target variation without relabeling truth target |
 | `--gcard FILE` | Explicit GEMC detector card |
 | `--yaml FILE` | Explicit COATJAVA reconstruction settings |
@@ -76,7 +77,9 @@ Use `source run.csh --workflow submit --help` for the live interface. [`config/s
 
 ## Detector defaults
 
-GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this project[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). The default detector resources are selected from the manifest's target variation, beam energy, and submission-time GEMC version.
+GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this project[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). GCARD defaults are selected from the manifest's target variation, beam energy, and submission-time GEMC version under `config/detector/GEMC_GCARDs_<beam-group>/<GEMC-version>/`.
+
+COATJAVA defaults to 10.0.7. Its version independently selects the reconstruction software and the YAML directory, `config/detector/COATJAVA_YAML_configs_<beam-group>/<COATJAVA-version>/`. Only 10.0.7 YAML snapshots are currently checked in. Another release needs a reviewed YAML supplied with `--yaml` if its default file is absent. Explicit `--gcard` and `--yaml` paths override resource lookup, not software selection. Check that the selected files are compatible with the requested releases.
 
 For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Other beam energies require explicit `--gcard`, `--yaml`, and `--torus` values.
 
@@ -114,7 +117,9 @@ When using a custom GCARD or overriding `--torus`, inspect its `SCALE_FIELD` ent
 
 The coordinator distinguishes the nearest-MeV sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). These are naming and lookup values, not alternate beam energies.
 
-When `--clas12tags-dir` is absent, the coordinator checks the shared versioned clas12Tags directory, loads `gemc/<version>`, confirms that `GEMC_DATA_DIR` matches the request, and verifies that the resolved `gemc` executable belongs to it. A custom clas12Tags checkout replaces the data directory but not the selected GEMC executable checks. The verified child environment is exported to Slurm.
+The coordinator checks both requested installations, then loads `gemc/<version>` and `coatjava/<version>` in a private child environment. After both loads, it verifies that `GEMC_DATA_DIR` and `COATJAVA` match the requested releases and that `gemc` and `recon-util` belong to those installations. If `CLAS12DIR` is set, it must also point to the selected COATJAVA installation. Missing releases, failed module loads, or mismatched paths stop submission before simulation output is replaced.
+
+When `--clas12tags-dir` is absent, GEMC uses the shared versioned clas12Tags directory. A custom clas12Tags checkout replaces the data directory but not the selected GEMC executable checks. The verified child environment is exported to Slurm; the interactive login shell stays unchanged. Default job names include both `GEMC<version>` and `COATJAVA<version>` for uniform and physical samples; `--job-name` overrides the name without changing either release.
 
 ## Submit several runs
 
@@ -153,7 +158,7 @@ Uniform input needs `channel`; `eh` also needs hadron and region. Physical input
 
 ## Submission record and failures
 
-After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the numeric job ID and atomically writes `RUN/reconhipo/slurm-submission-log.json`. It records the ID, exact command, resolved parameters, runtime Git state, and SHA-256 hashes of the GCARD, YAML, and worker payload.
+After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the numeric job ID and atomically writes `RUN/reconhipo/slurm-submission-log.json`. It records the ID, exact command, resolved parameters, both requested software versions, verified executable paths, GEMC and COATJAVA installation paths, loaded-module names when available, runtime Git state, and SHA-256 hashes of the GCARD, YAML, and worker payload.
 
 If Slurm accepts an array but its response cannot be parsed, or writing the submission log fails afterward, inspect Slurm before retrying. Retrying blindly can create a duplicate array. An earlier accepted array is never cancelled automatically when a later sample fails.
 

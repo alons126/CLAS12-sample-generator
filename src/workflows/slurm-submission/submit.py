@@ -6,16 +6,17 @@ Purpose:
     Pass checked LUND and detector settings to the external GEMC/reconstruction worker through Slurm.
 
 Execution flow:
-    Resolve inputs -> check and load GEMC -> check worker inputs -> ensure simulation output directories
+    Resolve inputs -> check and load GEMC and COATJAVA -> check worker inputs -> ensure output directories
     -> with --execute, submit one array per sample and record each accepted Slurm job ID.
     Python changes a separate copy of the shell environment, so the user's interactive module setup
     stays unchanged. Detector commands remain in the external worker.
 
 Inputs:
     LUND files and completion manifests, optional config/CLI overrides, GCARD and YAML files,
-    and the ifarm shell environment containing the module command, Slurm, reconstruction tools,
+    and the ifarm shell environment containing the module command, Slurm, software installations,
     and the shared ``*_COLOR`` settings. Standard GEMC selections also require the matching shared
     clas12Tags version directory; --clas12tags-dir supplies an explicit data override.
+    COATJAVA selections require the matching installation under the site's noarch/coatjava directory.
 
 Outputs:
     Preview groups OUTPATH and simulation-directory checks with their planned actions, prints commands
@@ -37,7 +38,8 @@ CLI options (parsed by resolve_inputs.py):
     --tune NAME                   Set physical tune; default: unknown without a manifest.
     --q2-cut NAME                 Record physical input Q2 label; no cut is applied here.
     --prefix NAME                 Set LUND filename prefix; required without a manifest.
-    --gemc-version VERSION        Select GEMC resources; fallback default: 5.14.
+    --gemc-version VERSION        Select GEMC software and GCARD resources; default: 5.14.
+    --coatjava-version VERSION    Select COATJAVA software and YAML resources; default: 10.0.7.
     --gemc-target-variation NAME  Select detector target variation.
     --gcard FILE / --yaml FILE    Override detector and reconstruction inputs.
     --torus SCALE                 Override the beam-dependent torus default.
@@ -50,7 +52,7 @@ CLI options (parsed by resolve_inputs.py):
     --help                        Print submission help before any server synchronization.
 
 Failure:
-    Missing module versions, inconsistent GEMC paths, missing inputs, unsafe outputs, and rejected
+    Missing module versions, inconsistent software paths, missing inputs, unsafe outputs, and rejected
     submissions return nonzero and stop subsequent samples. Arrays already accepted by Slurm are
     never canceled. Invoke through run.csh so colors and the ifarm environment are available.
 """
@@ -178,7 +180,8 @@ def write_submission_log(values, environment, root, executables, command, job_id
 
     parameters = dict(values)
     parameters.update({key: environment[key] for key in (
-        'RUNNING_DIR', 'SUBMIT_SCRIPT_FILE', 'GEMC_DATA_DIR', 'ARRAY', 'SBATCH_EXPORT', 'SLURM_EXPORT_ENV')})
+        'RUNNING_DIR', 'SUBMIT_SCRIPT_FILE', 'GEMC_DATA_DIR', 'COATJAVA', 'ARRAY', 'SBATCH_EXPORT', 'SLURM_EXPORT_ENV')})
+    parameters.update({key: environment[key] for key in ('CLAS12DIR', 'LOADEDMODULES') if key in environment})
     parameters.update({name: str(path) for name, path in executables.items()})
     payload = Path(environment['SUBMIT_SCRIPT_FILE'])
     inputs = {
@@ -488,6 +491,9 @@ def format_command(command, colored=False):
 # the same base path. Custom --clas12tags-dir values do not use this default.
 IFARM_CLAS12TAGS_BASE = Path('/u/scigroup/cvmfs/geant4/almalinux9-gcc11/clas12Tags')
 
+# COATJAVA is Java software under the CLAS12 noarch tree, not the GEMC data tree.
+IFARM_COATJAVA_BASE = Path('/scigroup/cvmfs/hallb/clas12/sw/noarch/coatjava')
+
 def check_gemc_version(version, environment, report):
     """Check that the requested ifarm clas12Tags version exists before changing modules.
 
@@ -521,24 +527,64 @@ def check_gemc_version(version, environment, report):
     report.check('CLAS12TAGS_BASE_DIR', str(base), directory=True)
     report.check('REQUESTED_GEMC_DATA_DIR', str(requested), directory=True)
 
-    # load_gemc() changes the private environment; verify_gemc() checks the result against this path.
+    # load_module() changes the private environment; verify_gemc() checks the result against this path.
     return requested
 
-def load_gemc(version, environment, report):
-    """Load one GEMC module into the environment dictionary passed to Slurm.
+def check_coatjava_version(version, environment, report):
+    """Check the requested COATJAVA installation before changing modules.
 
     Purpose:
-        Reproduce ``module unload gemc`` followed by ``module load gemc/VERSION`` without
+        Reject an unavailable reconstruction release before simulation output can change.
+
+    Execution flow:
+        Use the loaded COATJAVA installation's parent, or CLAS12_HOME/noarch/coatjava when available,
+        or the standard ifarm base -> check the base and requested release -> return the expected path.
+
+    Args:
+        version: Validated COATJAVA version selected for this sample.
+        environment: Copied ifarm environment before loading modules.
+        report: Helper that prints the installation checks.
+
+    Returns:
+        Version-specific installation path to compare with the loaded COATJAVA environment.
+
+    Failure:
+        Missing base or version directories raise before either software module is changed.
+    """
+
+    active_home = environment.get('COATJAVA')
+    clas12_home = environment.get('CLAS12_HOME')
+
+    if active_home:
+        base = Path(active_home).parent
+    elif clas12_home:
+        base = Path(clas12_home) / 'noarch/coatjava'
+    else:
+        base = IFARM_COATJAVA_BASE
+
+    requested = base / version
+
+    report.check('COATJAVA_BASE_DIR', str(base), directory=True)
+    report.check('REQUESTED_COATJAVA_DIR', str(requested), directory=True)
+
+    return requested
+
+def load_module(name, version, environment, report):
+    """Load a selected GEMC or COATJAVA module into Slurm's private environment.
+
+    Purpose:
+        Unload the named module, then load NAME/VERSION without
         modifying the interactive shell that sourced run.csh.
 
     Execution flow:
         Find modulecmd in PATH -> start a small Python process with the copied environment -> ask
-        modulecmd to unload and load GEMC -> apply those changes in that process -> return its final
+        modulecmd to unload and load the selected package -> apply those changes -> return its final
         environment as JSON -> check the JSON and replace the copied dictionary. Module messages stay
         connected to the terminal, so their original text and colors remain visible.
 
     Args:
-        version: Validated GEMC module version selected for this sample.
+        name: Internal module name, gemc or coatjava.
+        version: Validated module version selected for this sample.
         environment: Environment dictionary updated in place for this command.
         report: Helper that prints the version change.
 
@@ -549,45 +595,49 @@ def load_gemc(version, environment, report):
     """
 
     # Print the requested version before module commands can fail.
-    report.text('{SYSTEM}Switching GEMC version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}...{RESET}')
+    label = name.upper()
+    report.text('{SYSTEM}Switching ' + label + ' version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}...{RESET}')
 
     # Find modulecmd because the interactive `module` name is a shell function.
     modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
 
     if modulecmd is None:
-        raise ValueError('modulecmd is unavailable; the selected GEMC module cannot be loaded.')
+        raise ValueError(f'modulecmd is unavailable; the selected {label} module cannot be loaded.')
 
     # A helper process runs unload and load, then prints its final environment as JSON. Module messages
     # remain visible on stderr.
     helper = ('import json, os, subprocess, sys\n'
-              'for arguments in (("unload", "gemc"), ("load", "gemc/" + sys.argv[2])):\n'
+              'for arguments in (("unload", sys.argv[2]), ("load", sys.argv[2] + "/" + sys.argv[3])):\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
               '    if result.returncode:\n'
               '        raise SystemExit(result.returncode)\n'
-              '    exec(compile(result.stdout, sys.argv[1], "exec"), {"os": os})\n'
+              '    scope = {"os": os}\n'
+              '    exec(compile(result.stdout, sys.argv[1], "exec"), scope)\n'
+              '    if scope.get("_mlstatus") is False:\n'
+              '        raise SystemExit(1)\n'
               'print(json.dumps(dict(os.environ)))\n')
 
     # Flush the report before module messages are printed.
     sys.stdout.flush()
 
     # Give the helper the copied environment and capture its final JSON output.
-    result = subprocess.run([sys.executable, '-c', helper, modulecmd, version], env=environment,
+    result = subprocess.run([sys.executable, '-c', helper, modulecmd, name, version], env=environment,
                             stdout=subprocess.PIPE, stderr=sys.stdout, text=True)
 
     # On failure, keep the copied environment unchanged.
     if result.returncode:
-        raise ValueError('failed to load GEMC module ' + version + '.')
+        raise ValueError(f'failed to load {label} module {version}.')
 
     # Read the new environment only after both module commands succeed.
     try:
         loaded = json.loads(result.stdout)
     except json.JSONDecodeError as error:
-        raise ValueError('GEMC module loading returned an invalid environment.') from error
+        raise ValueError(f'{label} module loading returned an invalid environment.') from error
 
     # Require a dictionary of strings before replacing the working environment.
     if not isinstance(loaded, dict) or not all(isinstance(key, str) and isinstance(value, str)
                                                for key, value in loaded.items()):
-        raise ValueError('GEMC module loading returned an invalid environment.')
+        raise ValueError(f'{label} module loading returned an invalid environment.')
 
     # Replace the dictionary in place so later checks and sbatch use the loaded module.
     environment.clear()
@@ -658,6 +708,59 @@ def verify_gemc(version, expected_data, environment, report):
     report.text()
 
     # Return the checked absolute program path.
+    return executable
+
+def verify_coatjava(version, expected_home, environment, report):
+    """Verify the loaded COATJAVA installation and reconstruction program.
+
+    Purpose:
+        Prevent an old recon-util in PATH from silently using another reconstruction release.
+
+    Execution flow:
+        Require COATJAVA -> compare its resolved path with the prechecked release -> check CLAS12DIR
+        when present -> find recon-util in the loaded PATH -> require it to belong to that installation.
+
+    Args:
+        version: Requested COATJAVA module version.
+        expected_home: Version-specific installation checked before loading modules.
+        environment: Final environment after both software modules have been loaded.
+        report: Helper that prints the installation and executable checks.
+
+    Returns:
+        Checked absolute recon-util path inherited by the Slurm worker.
+
+    Failure:
+        Missing or mismatched installation variables, absent recon-util, or an executable outside
+        the requested release raises before simulation outputs are replaced or jobs are submitted.
+    """
+
+    loaded_home_text = environment.get('COATJAVA')
+
+    if not loaded_home_text:
+        raise ValueError(f'loading COATJAVA {version} did not set COATJAVA.')
+
+    loaded_home = Path(loaded_home_text).resolve()
+
+    if loaded_home != expected_home.resolve() or loaded_home.name != version:
+        raise ValueError(f'loading COATJAVA {version} selected unexpected COATJAVA directory: {loaded_home}')
+
+    if environment.get('CLAS12DIR') and Path(environment['CLAS12DIR']).resolve() != loaded_home:
+        raise ValueError(f'loading COATJAVA {version} selected mismatched CLAS12DIR: {environment["CLAS12DIR"]}')
+
+    executable_text = shutil.which('recon-util', path=environment.get('PATH'))
+
+    if executable_text is None:
+        raise ValueError(f'recon-util is unavailable after loading COATJAVA module {version}.')
+
+    executable = Path(executable_text).resolve()
+
+    if loaded_home not in executable.parents:
+        raise ValueError(f'loading COATJAVA {version} selected an executable outside {loaded_home}: {executable}')
+
+    report.check('COATJAVA', str(loaded_home), directory=True)
+    report.check('SLURM_RECON_EXECUTABLE', str(executable))
+    report.text()
+
     return executable
 
 def clear_farm(values, root, execute, report, cleared):
@@ -863,7 +966,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     Execution flow:
         1. Add the checked sample settings and fixed checkout paths to the environment dictionary.
         2. Print the sample details and handle the optional one-time farm-log cleanup.
-        3. Check standard GEMC data, load the selected module, and verify its data and program.
+        3. Check both installations, load GEMC and COATJAVA, and verify both final program paths.
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output preparation.
         6. Inspect both mchipo/reconhipo paths before either changes, then create missing directories
@@ -874,7 +977,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     Args:
         values: One validated sample dictionary returned by resolve_samples().
         environment: Copy of os.environ used only by this command. Sample settings and the selected
-            GEMC module replace matching values. The same copy is reused for later samples.
+            GEMC and COATJAVA modules replace matching values. The same copy is reused for later samples.
         root: Checkout directory containing the external worker script.
         execute: False to preserve existing output and create only missing directories; true for
             output replacement, cleanup, and Slurm submission.
@@ -907,8 +1010,8 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
 
     report.banner('Slurm submission workflow parameters')
 
-    # Show the checkout, cleanup choice, and GEMC version before output can change.
-    for key in ('RUNNING_DIR', 'CLEAR_FAR_OUT', 'GEMC_VERSION'):
+    # Show the checkout, cleanup choice, and both software versions before output can change.
+    for key in ('RUNNING_DIR', 'CLEAR_FAR_OUT', 'GEMC_VERSION', 'COATJAVA_VERSION'):
         report.value(key, environment[key])
 
     identity = 'uniform' if uniform else 'physical (' + values['SAMPLE_GENERATOR'] + ')'
@@ -926,9 +1029,13 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     if not values['CLAS12TAGS_DIR']:
         expected_gemc_data = check_gemc_version(values['GEMC_VERSION'], environment, report)
 
-    # Load the module only after its files are found, then check its data path and program.
-    load_gemc(values['GEMC_VERSION'], environment, report)
+    expected_coatjava_home = check_coatjava_version(values['COATJAVA_VERSION'], environment, report)
+
+    # Load both modules before verifying either, so dependency changes cannot bypass the checks.
+    load_module('gemc', values['GEMC_VERSION'], environment, report)
+    load_module('coatjava', values['COATJAVA_VERSION'], environment, report)
     gemc_executable = verify_gemc(values['GEMC_VERSION'], expected_gemc_data, environment, report)
+    recon_executable = verify_coatjava(values['COATJAVA_VERSION'], expected_coatjava_home, environment, report)
 
     # Reapply checked sample values after the module changes the environment.
     environment.update({key: value for key, value in values.items() if key not in ('source', 'farm_out')})
@@ -1002,8 +1109,9 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
                      'recon-util': 'SLURM_RECON_EXECUTABLE',
                      'sbatch': 'SBATCH_EXECUTABLE'}[executable]] = resolved_executable
 
-    # verify_gemc() already proved that GEMC belongs to the requested installation.
+    # Both verifiers proved that the programs belong to the requested installations.
     executables['SLURM_GEMC_EXECUTABLE'] = gemc_executable
+    executables['SLURM_RECON_EXECUTABLE'] = recon_executable
 
     # Inspect both exact child paths before reporting or changing either one.
     output_dirs = [run / name for name in ('mchipo', 'reconhipo')]

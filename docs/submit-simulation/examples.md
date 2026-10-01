@@ -29,9 +29,10 @@ source run.csh \
     --workflow submit \
     --lund-dir /shared/path/to/run/lundfiles \
     --gemc-version 5.14 \
+    --coatjava-version 10.0.7 \
     --gemc-target-variation rgm_fall2021_Ar \
-    --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
-    --yaml config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
+    --gcard config/detector/GEMC_GCARDs_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
+    --yaml config/detector/COATJAVA_YAML_configs_6GeV/10.0.7/rgm_fall2021-ai_6Gev.yaml \
     --torus -1.0
 ```
 

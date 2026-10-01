@@ -10,7 +10,7 @@ The imported sources are retained under `legacy/` and recorded by the `legacy-co
 | `Uniform_sample_generator_e_tester.C` | `electron-tester-{2070,4029,5986}MeV.conf` |
 | `GENIE_to_LUND_converter.csh` → ROOT macro | `event-generator-to-lund-converter --event-generator genie-gst --input ... --config ... --output ...` |
 | Sourced `setup_and_submit_jobs.csh` → selected setup script | `source run.csh --workflow submit` → small sourced bridge → Python setup → one Slurm array per sample |
-| Per-energy detector resources | `config/detector/Generation_files_*` |
+| Per-energy detector resources | `config/detector/GEMC_GCARDs_*` and `config/detector/COATJAVA_YAML_configs_*` |
 | Current-directory-dependent output rewrites | Explicit output path |
 
 ## Legacy-compatible settings

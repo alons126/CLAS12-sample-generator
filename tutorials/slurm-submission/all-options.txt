@@ -30,9 +30,10 @@ source run.csh \
     --config config/submission.conf \
     --lund-dir /path/to/lund-run/lundfiles \
     --gemc-version 5.14 \
+    --coatjava-version 10.0.7 \
     --gemc-target-variation rgm_fall2021_Ar \
-    --gcard config/detector/Generation_files_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
-    --yaml config/detector/Generation_files_6GeV/5.14/rgm_fall2021-ai_6Gev.yaml \
+    --gcard config/detector/GEMC_GCARDs_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard \
+    --yaml config/detector/COATJAVA_YAML_configs_6GeV/10.0.7/rgm_fall2021-ai_6Gev.yaml \
     --torus -1.0 \
     --num-jobs 3 \
     --events-per-job 5000 \
@@ -57,6 +58,7 @@ source run.csh \
     --hadron-region CD \
     --prefix arbitrary-enCD \
     --gemc-version 5.14 \
+    --coatjava-version 10.0.7 \
     --gemc-target-variation rgm_fall2021_Ar \
     --gcard /path/to/custom-detector.gcard \
     --yaml /path/to/custom-reconstruction.yaml \
@@ -87,6 +89,7 @@ source run.csh \
     --q2-cut study-Q2-0.17 \
     --prefix arbitrary-physical \
     --gemc-version 5.14 \
+    --coatjava-version 10.0.7 \
     --gemc-target-variation rgm_fall2021_Cx4 \
     --num-jobs 2 \
     --events-per-job 777 \

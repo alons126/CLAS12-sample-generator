@@ -13,6 +13,8 @@ Execution flow:
 Inputs:
     One or more RUN/lundfiles directories, optional flat key = value configuration, CLI overrides,
     and completion manifests in lund-creation-log.json when available.
+    Default GCARDs are grouped by beam energy and GEMC version. Default reconstruction YAMLs are
+    grouped by beam energy and COATJAVA version, independently of the GEMC version.
 
 Outputs:
     Checked values for preview or execution. This file does not load software, clean output, run
@@ -36,7 +38,8 @@ CLI options:
     --tune NAME                   Set physical tune; default: unknown without a manifest.
     --q2-cut NAME                 Record physical input Q2 label; no cut is applied here.
     --prefix NAME                 Set LUND filename prefix; required without a manifest.
-    --gemc-version VERSION        Select GEMC resources; fallback default: 5.14.
+    --gemc-version VERSION        Select GEMC software and GCARD resources; default: 5.14.
+    --coatjava-version VERSION    Select COATJAVA software and YAML resources; default: 10.0.7.
     --gemc-target-variation NAME  Select detector target variation.
     --gcard FILE / --yaml FILE    Override detector and reconstruction inputs.
     --torus SCALE                 Override the beam-dependent torus default.
@@ -97,10 +100,11 @@ OPTIONS = {
     'tune': 'Physical tune label (default: unknown for physical, none for uniform)',
     'q2-cut': 'Physical input Q2 label, not a cut applied here',
     'prefix': 'Filename prefix before _INDEX.txt; required without a manifest',
-    'gemc-version': 'GEMC resource version (fallback default: 5.14)',
+    'gemc-version': 'GEMC software and GCARD version (default: 5.14)',
+    'coatjava-version': 'COATJAVA software and reconstruction YAML version (default: 10.0.7)',
     'gemc-target-variation': 'Detector target variation; normally supplied by the manifest',
     'gcard': 'Explicit detector GCARD; otherwise selected from beam/variation/version',
-    'yaml': 'Explicit reconstruction YAML; otherwise selected from beam/version',
+    'yaml': 'Explicit reconstruction YAML; otherwise selected from beam/COATJAVA version',
     'torus': 'Torus scale; defaults to +0.5 at 2 GeV and -1.0 at 4/6 GeV',
     'num-jobs': 'Submit the first N files (default: all completed files)',
     'events-per-job': 'Shared event limit (default: maximum selected manifest file count)',
@@ -153,7 +157,7 @@ def parser():
                'Preview inspects both output paths, preserves existing contents while reporting what '
                '--execute would clear, and creates missing mchipo/reconhipo directories. '
                'With --execute, submission replaces both while preserving lundfiles. '
-               'GEMC defaults to 5.14. Use:\n'
+               'GEMC defaults to 5.14; COATJAVA defaults to 10.0.7. Use:\n'
                '  source run.csh \\\n'
                '    --workflow submit \\\n'
                '    --lund-dir RUN/lundfiles')
@@ -418,8 +422,7 @@ def resolve(lund_directory, explicit, root):
         if run == protected or protected in run.parents:
             raise ValueError(f'Protected output directory: {run}')
 
-    # Read only sample settings from the run log. GEMC version belongs to submission and is never
-    # inherited from LUND creation, including manifests that record it.
+    # Software versions belong to submission, not LUND creation. Ignore both in creation manifests.
     manifest = read_manifest(lund_dir)
     inherited = {}
 
@@ -427,6 +430,7 @@ def resolve(lund_directory, explicit, root):
         # Ignore unrelated run-log keys and keep its recorded source type.
         inherited = {key: value for key, value in manifest['config'].items() if key in OPTIONS}
         inherited.pop('gemc-version', None)
+        inherited.pop('coatjava-version', None)
         inherited['source'] = manifest['workflow']
 
         # Overrides may change simulation choices but cannot relabel existing truth.
@@ -438,7 +442,7 @@ def resolve(lund_directory, explicit, root):
                     raise ValueError(f'--{key} conflicts with manifest value {inherited[key]!r}')
 
     # Apply setting priority, then require the main sample identity fields.
-    values = {'gemc-version': '5.14', 'clear-farm-out': 'false', **inherited, **explicit}
+    values = {'gemc-version': '5.14', 'coatjava-version': '10.0.7', 'clear-farm-out': 'false', **inherited, **explicit}
 
     for key in ('source', 'beam-energy', 'target', 'prefix'):
         if not values.get(key):
@@ -533,17 +537,19 @@ def resolve(lund_directory, explicit, root):
 
     limit = positive(limit, 'events-per-job')
 
-    # Use explicit detector files or derive them from beam, variation, and GEMC version.
+    # Each stage selects its own software version and matching beam-dependent configuration.
     version = token(values['gemc-version'], 'gemc-version')
+    coatjava_version = token(values['coatjava-version'], 'coatjava-version')
     variation = token(values.get('gemc-target-variation', 'none'), 'gemc-target-variation')
-    requirements = root / f'config/detector/Generation_files_{rounded}/{version}'
+    requirements = root / f'config/detector/GEMC_GCARDs_{rounded}/{version}'
+    reconstruction_configs = root / f'config/detector/COATJAVA_YAML_configs_{rounded}/{coatjava_version}'
 
     # Without an explicit GCARD, a detector variation is needed to form its filename.
     if variation == 'none' and 'gcard' not in values:
         raise ValueError('Specify --gemc-target-variation or an explicit --gcard')
 
     card = path_value(values.get('gcard', requirements / f'{variation}_{rounded}.gcard'), 'gcard')
-    yaml = path_value(values.get('yaml', requirements / yaml_name), 'yaml')
+    yaml = path_value(values.get('yaml', reconstruction_configs / yaml_name), 'yaml')
 
     # Check the final detector paths without changing their files.
     for name, path in (('GCARD', card), ('YAML', yaml)):
@@ -577,7 +583,8 @@ def resolve(lund_directory, explicit, root):
     tune = token(values.get('tune', 'unknown' if source == 'physical' else 'none'), 'tune')
     q2 = token(values.get('q2-cut', 'unknown' if source == 'physical' else 'none'), 'q2-cut')
     beam = f'{mev}MeV'
-    default_job = f'Uniform__{channel}__{beam}' if source == 'uniform' else f'{target}__{generator}__{tune}__{q2}__{beam}__GEMC{version}'
+    sample_job = f'Uniform__{channel}__{beam}' if source == 'uniform' else f'{target}__{generator}__{tune}__{q2}__{beam}'
+    default_job = f'{sample_job}__GEMC{version}__COATJAVA{coatjava_version}'
     job = token(values.get('job-name', default_job), 'job-name')
 
     # Return only values used by submit.py and the external worker. OUTPATH always uses the local run.
@@ -585,7 +592,7 @@ def resolve(lund_directory, explicit, root):
                 DETECTOR_ENERGY_GROUP=rounded, UNIFORM_SAMPLE_CHANNEL=channel, TARGET_VARIATION=variation,
                 SAMPLE_TARGET_NUCLEUS=target, SAMPLE_GENERATOR=generator, GENERATOR_TUNE=tune, Q2_CUT=q2,
                 OUTPATH=str(run), SAMPLE_FILE_PREFIX=prefix, SLURM_JOB_NAME=job,
-                GEMC_VERSION=version, CLEAR_FAR_OUT=values['clear-farm-out'],
+                GEMC_VERSION=version, COATJAVA_VERSION=coatjava_version, CLEAR_FAR_OUT=values['clear-farm-out'],
                 CLAS12TAGS_DIR=optional_paths['clas12tags-dir'], farm_out=optional_paths['farm-out'],
                 TORUS_FIELD=torus_text,
                 REQUIREMENTS_DIR=str(card.parent), GCARD_FILE=str(card), YAML_FILE=str(yaml))

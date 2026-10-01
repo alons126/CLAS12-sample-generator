@@ -63,7 +63,7 @@ Create a format-specific library and link only its parser/runtime dependencies. 
 
 ## 7. Preserve names and provenance
 
-Physical output names include target, adapter, optional generator version, tune or model label, input-selection label, and beam energy. Use explicit `none` or `unknown` when a field does not apply. Keep every unsanitized resolved value separately in the manifest. GEMC version remains a later submission choice.
+Physical output names include target, adapter, optional generator version, tune or model label, input-selection label, and beam energy. Use explicit `none` or `unknown` when a field does not apply. Keep every unsanitized resolved value separately in the manifest. GEMC and COATJAVA versions remain later submission choices.
 
 ## 8. Validate the boundary
 

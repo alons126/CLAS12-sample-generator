@@ -26,7 +26,8 @@
 #     --tune NAME                   Physical tune; default: unknown without a manifest.
 #     --q2-cut NAME                 Physical input Q2 label; no cut is applied here.
 #     --prefix NAME                 LUND filename prefix; required without a manifest.
-#     --gemc-version VERSION        GEMC resources; fallback default: 5.14.
+#     --gemc-version VERSION        GEMC software and GCARD resources; default: 5.14.
+#     --coatjava-version VERSION    COATJAVA software and YAML resources; default: 10.0.7.
 #     --gemc-target-variation NAME  Detector target variation.
 #     --gcard FILE / --yaml FILE    Detector and reconstruction input overrides.
 #     --torus SCALE                 Beam-dependent torus override.
@@ -39,7 +40,7 @@
 #     --help                        Print submission help before synchronization.
 #
 # Execution flow:
-#     Load colors -> check settings -> load the selected GEMC module -> call sbatch -> read the accepted
+#     Load colors -> check settings -> load and verify GEMC and COATJAVA -> call sbatch -> read the accepted
 #     job ID -> write the submission log -> print the shared final status.
 #
 # Inputs:
