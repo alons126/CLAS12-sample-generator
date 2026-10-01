@@ -9,7 +9,7 @@ The project has two separate workflows:
 | `create-lund` | Creates [LUND](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html) input from random acceptance-test kinematics or converts existing event-generator truth | LUND files and a completion manifest |
 | `submit` | Submits those LUND files to ifarm Slurm | GEMC[^gemc-simulation] detector simulation followed by COATJAVA[^coatjava-reconstruction] reconstruction |
 
-The **uniform LUND creator** makes deliberately unphysical samples that cover configured momentum and angle ranges. The **physical LUND converter** preserves supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) GST ROOT trees and does not run GENIE. Both paths use the same target geometry, LUND writer, file splitting, provenance, and completion rules where their meanings agree.
+The **uniform LUND creator** makes deliberately unphysical samples that cover configured momentum and angle ranges. The **physical LUND converter** preserves supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) GST [ROOT](https://github.com/root-project/root) trees and does not run GENIE. Both paths use the same target geometry, LUND writer, file splitting, provenance, and completion rules where their meanings agree.
 
 The workflows stop at reconstructed [HIPO](https://github.com/gavalian/hipo) output, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). They do not generate physical interactions, calculate detector acceptance, skim reconstructed data, or perform physics analysis.
 

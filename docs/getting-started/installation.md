@@ -6,7 +6,7 @@ LUND creation requires:
 
 - CMake 3.20 or later;
 - a C++ compiler compatible with the selected ROOT installation;
-- ROOT with Core, Physics, and RIO;
+- [ROOT](https://github.com/root-project/root) with Core, Physics, and RIO;
 - ROOT Hist, Graf, and Gpad for the uniform LUND creator;
 - ROOT Tree and TreePlayer for the physical LUND converter; and
 - Python 3.9 or later for the launcher and submission tools.

@@ -69,14 +69,14 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `input` | required | GENIE GST ROOT file, quoted local pattern, or ROOT-supported remote address |
+| `input` | required | GENIE GST [ROOT](https://github.com/root-project/root) file, quoted local pattern, or ROOT-supported remote address |
 | `event-generator` | `genie-gst` | Generator/format adapter; this is the only implemented value |
 | `event-generator-version` | `unknown` | Recorded provenance and optional prefix component |
 | `tune` | `auto` | Discover `TUNE` from the standard production layout or record `unknown` |
-| `q2-cut` | beam-based | Provenance label only; no $Q^2$ cut is applied during conversion |
+| `q2-cut` | beam-based | Assert the upstream minimum-$Q^2$ cut for provenance; conversion neither applies nor verifies it |
 | `output-layout` | `nested` | `nested` or `metadata` |
 
-Automatic minimal $Q^2$ cut labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
+Automatic minimum-$Q^2$ cut labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Selecting or accepting one of these labels asserts that the supplied truth-level sample was generated with that minimum cut. The code assumes the assertion is correct: it does not calculate $Q^2$, inspect the input distribution, or remove events. An incorrect label therefore records incorrect provenance. The [physical-conversion guide](physical.md#why-upstream-samples-use-q2-cuts) explains the cuts' relation to the electron cross section and CLAS12 angular acceptance. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
 
 The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<beam-MeV>MeV`. The metadata directory is `OUTPUT/<GEMC-variation>__<event-generator>-<version>__<tune>__<Q2-label>__<beam-MeV>MeV`. Every component is sanitized for use as a path while the manifest retains each original resolved value. GEMC version is selected during simulation submission and is not part of LUND creation.
 

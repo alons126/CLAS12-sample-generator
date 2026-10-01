@@ -11,7 +11,7 @@ flowchart LR
     R --> H["Reconstructed HIPO files"]
 ```
 
-The **uniform LUND creator** samples configured kinematics for detector-acceptance studies. These events are deliberately unphysical. The **physical LUND converter** copies supported truth-level particles from an existing input; the current adapter reads [GENIE](https://github.com/GENIE-MC/Generator) GST ROOT trees and does not run GENIE. A successful creation run publishes a manifest that records its settings, provenance, event counts, and exact LUND file inventory.
+The **uniform LUND creator** samples configured kinematics for detector-acceptance studies. These events are deliberately unphysical. The **physical LUND converter** copies supported truth-level particles from an existing input; the current adapter reads [GENIE](https://github.com/GENIE-MC/Generator) GST [ROOT](https://github.com/root-project/root) trees and does not run GENIE. A successful creation run publishes a manifest that records its settings, provenance, event counts, and exact LUND file inventory.
 
 The separate submission workflow consumes those LUND files on Jefferson Lab's ifarm. Each Slurm task runs GEMC[^gemc-simulation], then runs CLAS12 reconstruction through COATJAVA's `recon-util` command.[^coatjava-reconstruction] The result is reconstructed [HIPO](https://github.com/gavalian/hipo) data, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). The project hands the array to Slurm but does not monitor it to completion or perform that downstream analysis.
 
