@@ -34,7 +34,7 @@ The adapter keeps QE, MEC, RES, and DIS events. It writes their process codes as
 
 Within each accepted event, the scattered electron is first. Protons, neutrons, charged pions, and photons then follow in GST order. Other species are skipped. Neutral pions must be decayed during upstream GENIE production so their daughter photons are present in GST; a residual PDG 111 entry is skipped because the converter cannot reconstruct missing daughter four-momenta.
 
-The converter copies momentum and chooses one target vertex for the event. Every retained particle receives that same vertex. Particle energy is recalculated from the copied momentum and the project's mass source. No fiducial or Q² cut is applied. `q2-cut` is provenance describing the input selection.
+The converter copies momentum and chooses one target vertex for the event. Every retained particle receives that same vertex. Particle energy is recalculated from the copied momentum and the project's mass source. No fiducial or $Q^2$ cut is applied. `q2-cut` is provenance describing the input selection.
 
 ## File cutoff
 
@@ -44,7 +44,7 @@ The cutoff counts input entries, not accepted events. Unsupported reactions insi
 
 ## Provenance and output names
 
-The converter never derives scientific metadata from a filename. Set target, beam, generator version, tune, and Q² label explicitly or through a profile. With `tune = auto`, it looks for the exact `TUNE` entry in `input_options.txt` above the standard `master-routine_validation_01-eScattering/` directory and otherwise records `unknown`.
+The converter never derives scientific metadata from a filename. Set target, beam, generator version, tune, and $Q^2$ label explicitly or through a profile. With `tune = auto`, it looks for the exact `TUNE` entry in `input_options.txt` above the standard `master-routine_validation_01-eScattering/` directory and otherwise records `unknown`.
 
 The default nested layout is:
 

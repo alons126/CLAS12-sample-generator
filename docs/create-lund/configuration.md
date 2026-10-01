@@ -20,7 +20,7 @@ The launcher does not choose a sample profile. Name one explicitly, or supply ev
 | `beam-energy` | `5.98636` | Positive beam energy in GeV |
 | `target` | `Ar40` | Target identity used to resolve A, Z, GEMC variation, and vertex geometry |
 | `gemc-target-variation` | `auto` | Compatible target-variation override; changes the resolved geometry with it |
-| `A`, `Z` | `auto` | Independent LUND-header overrides; require 1 ≤ A ≤ 300 and 0 ≤ Z ≤ A |
+| `A`, `Z` | `auto` | Independent LUND-header overrides; require $1\le A\le 300$ and $0\le Z\le A$ |
 | `seed` | `67890` | Uniform-kinematics seed; accepted but unused for physical input |
 | `vertex-seed` | `12345` | Target-position seed |
 | `prefix` | `auto` | LUND filename prefix using letters, numbers, `_`, `-`, and `.` |
@@ -31,7 +31,7 @@ Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable w
 
 ## Target catalog
 
-| Target | A | Z | Automatic GEMC variation | Vertex geometry |
+| Target | $A$ | $Z$ | Automatic GEMC variation | Vertex geometry |
 | --- | ---: | ---: | --- | --- |
 | `H1` | 1 | 1 | `rga_spring2019` | `liquid` |
 | `D2` | 2 | 1 | `rgb_fall2019` | `liquid` |
@@ -53,15 +53,15 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `channel` | `1e` | `1e`, `electron-tester`, or `eh` |
 | `hadron` | `proton` | `proton`, `neutron`, `pip` ($\pi^{+}$), or `pim` ($\pi^{-}$); used by `eh`. See the [electron-hadron label definitions](uniform.md#electron-hadron-labels). |
 | `hadron-region` | `FD` | `FD` or `CD`; used by `eh` |
-| `electron-theta-min/max` | `5` / `40` | Electron-only theta bounds in degrees |
+| `electron-theta-min/max` | `5` / `40` | Electron-only $\theta$ bounds in degrees |
 | `electron-momentum` | `auto` | `auto`, `uniform`, `mixed`, or `beam` |
-| `electron-p-min/max` | `0.7` / beam | Electron momentum bounds in GeV/c |
-| `hadron-theta-min/max` | `auto` | Bounds resolved from hadron species and region |
+| `electron-p-min/max` | `0.7` / beam | Electron momentum bounds in $\mathrm{GeV}/c$ |
+| `hadron-theta-min/max` | `auto` | $\theta$ bounds resolved from hadron species and region |
 | `hadron-momentum` | `auto` | `auto`, compatibility alias `sampled`, `uniform`, `mixed`, or neutron-only `fixed` |
 | `hadron-p-min` | `auto` | Species/region minimum; maximum is always beam momentum |
-| `hadron-p` | `1` | Fixed neutron momentum in GeV/c |
-| `trigger-theta` | `25` | Trigger-electron theta in degrees |
-| `trigger-phi-offset` | `auto` | 16°, 7°, or 5° at the three standard beams; otherwise 0° |
+| `hadron-p` | `1` | Fixed neutron momentum in $\mathrm{GeV}/c$ |
+| `trigger-theta` | `25` | Trigger-electron $\theta$ in degrees |
+| `trigger-phi-offset` | `auto` | $\Delta\phi=16^\circ$, $7^\circ$, or $5^\circ$ at the three standard beams; otherwise $0^\circ$ |
 
 `auto` resolves electron momentum to `mixed` for 1e and `beam` for the other channels. It resolves charged-hadron momentum to `mixed` and neutron momentum to `uniform`. The [uniform guide](uniform.md) owns the production ranges; the [sampling model](../concepts/sampling-models.md) owns the mathematical definitions.
 
@@ -73,10 +73,10 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `event-generator` | `genie-gst` | Generator/format adapter; this is the only implemented value |
 | `event-generator-version` | `unknown` | Recorded provenance and optional prefix component |
 | `tune` | `auto` | Discover `TUNE` from the standard production layout or record `unknown` |
-| `q2-cut` | beam-based | Provenance label only; no Q² cut is applied during conversion |
+| `q2-cut` | beam-based | Provenance label only; no $Q^2$ cut is applied during conversion |
 | `output-layout` | `nested` | `nested` or `metadata` |
 
-Automatic Q² labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for 2.07052, 4.02962, and 5.98636 GeV. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
+Automatic $Q^2$ labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for 2.07052, 4.02962, and 5.98636 GeV. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
 
 The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<beam-MeV>MeV`. The metadata directory is `OUTPUT/<GEMC-variation>__<event-generator>-<version>__<tune>__<Q2-label>__<beam-MeV>MeV`. Every component is sanitized for use as a path while the manifest retains each original resolved value. GEMC version is selected during simulation submission and is not part of LUND creation.
 

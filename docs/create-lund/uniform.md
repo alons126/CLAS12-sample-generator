@@ -46,19 +46,19 @@ The automatic run name and filename prefix are `Uniform__<label>__<beam-MeV>MeV`
 
 ## Production definitions
 
-The 1e sample draws theta from 5–40° and phi from the full azimuth. Its default momentum alternates between uniform-p and uniform-1/p from 0.7 GeV/c to the beam momentum. The 2.07052 GeV outbending profile deliberately extends theta down to 2°. These are project generation bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts.[^burkert-clas12][^asryan-ecal]
+The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $p$ and uniform in $1/p$, from $0.7\,\mathrm{GeV}/c$ to $p_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are project generation bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts.[^burkert-clas12][^asryan-ecal]
 
-Electron–hadron samples use a beam-momentum trigger electron at 25°. Its phi is placed at the CLAS12 sector center closest to the direction opposite the hadron, then shifted by 16° at 2.07052 GeV, 7° at 4.02962 GeV, 5° at 5.98636 GeV, and 0° at other beam energies unless overridden. This separation rule is retained for CD samples even though the CD geometry does not require it. The hadron generation bounds below were chosen to cover the relevant CLAS12 forward-detector and central-detector regions described by the spectrometer and reconstruction system.[^burkert-clas12][^ziegler-reconstruction]
+Electron–hadron samples use a beam-momentum trigger electron at $\theta_e=25^\circ$. Its $\phi$ is placed at the CLAS12 sector center closest to the direction opposite the hadron, then shifted by $\Delta\phi=16^\circ$ at $2.07052\,\mathrm{GeV}$, $7^\circ$ at $4.02962\,\mathrm{GeV}$, $5^\circ$ at $5.98636\,\mathrm{GeV}$, and $0^\circ$ at other beam energies unless overridden. This separation rule is retained for CD samples even though the CD geometry does not require it. The hadron generation bounds below were chosen to cover the relevant CLAS12 forward-detector and central-detector regions described by the spectrometer and reconstruction system.[^burkert-clas12][^ziegler-reconstruction]
 
-| Hadron | FD theta | CD theta | FD p minimum | CD p minimum | Default momentum model |
+| Hadron | FD $\theta$ | CD $\theta$ | FD $p_{\min}$ | CD $p_{\min}$ | Default momentum model |
 | --- | --- | --- | ---: | ---: | --- |
-| proton | 5–45° | 35–145° | 0.3 GeV/c | 0.2 GeV/c | mixed uniform-p / uniform-1/p |
-| neutron | 5–35° | 35–145° | 0 | 0 | uniform-p |
-| $\pi^{+}$ or $\pi^{-}$ | 5–45° | 35–140° | 0.2 GeV/c | 0.1 GeV/c | mixed uniform-p / uniform-1/p |
+| proton | $5^\circ$–$45^\circ$ | $35^\circ$–$145^\circ$ | $0.3\,\mathrm{GeV}/c$ | $0.2\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
+| neutron | $5^\circ$–$35^\circ$ | $35^\circ$–$145^\circ$ | 0 | 0 | uniform in $p$ |
+| $\pi^{+}$ or $\pi^{-}$ | $5^\circ$–$45^\circ$ | $35^\circ$–$140^\circ$ | $0.2\,\mathrm{GeV}/c$ | $0.1\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
 
-Every hadron momentum range ends at the beam momentum. Hadron theta is uniform within its configured range and phi is uniform from −180° to 180°, so equal-width angular bins receive comparable generated statistics. The optional fixed-momentum mode is neutron-only and defaults to 1 GeV/c. The [sampling model](../concepts/sampling-models.md) gives the exact distributions, trigger correlation, and random-stream rules.
+Every hadron momentum range ends at $p_{\mathrm{beam}}$. Hadron $\theta$ is uniform within its configured range and $\phi\in[-180^\circ,180^\circ]$, so equal-width angular bins receive comparable generated statistics. The optional fixed-momentum mode is neutron-only and defaults to $1\,\mathrm{GeV}/c$. The [sampling model](../concepts/sampling-models.md) gives the exact distributions, trigger correlation, and random-stream rules.
 
-The electron tester scans 5–40° and full phi at beam momentum while sampling the selected target geometry. It is the rough angular study from which the 25° trigger-electron prescription was selected.
+The electron tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $p=p_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
 
 ## Validation status
 
@@ -66,7 +66,7 @@ The 1e, epFD, enFD, and electron-tester modes are the production-tested uniform 
 
 ## Targets and repeatability
 
-The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, `A = 40`, `Z = 18`, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. A/Z are separate LUND-header metadata and do not silently change geometry.
+The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, $A=40$, $Z=18$, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. $A$/$Z$ are separate LUND-header metadata and do not silently change geometry.
 
 The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls target positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. `TRandom3(0)` requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
 

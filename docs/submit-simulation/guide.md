@@ -117,7 +117,7 @@ source run.csh \
     --gemc-target-variation rgm_fall2021_Ar
 ```
 
-Uniform input needs `channel`; `eh` also needs hadron and region. Physical input may supply event generator, tune, and Q² label, defaulting to `genie-gst`, `unknown`, and `unknown`. A detector variation or explicit GCARD is required.
+Uniform input needs `channel`; `eh` also needs hadron and region. Physical input may supply event generator, tune, and $Q^2$ label, defaulting to `genie-gst`, `unknown`, and `unknown`. A detector variation or explicit GCARD is required.
 
 ## Submission record and failures
 

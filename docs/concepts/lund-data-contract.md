@@ -8,7 +8,7 @@ The common record and writer separate source-specific event logic from the [LUND
 
 Uniform events contain one electron or an electron followed by one hadron. Physical GENIE events contain the scattered electron followed by supported GST particles in input order. Every particle in one event has the same vertex.
 
-Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as sqrt(p²+m²).
+Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as $E=\sqrt{p^2+m^2}$.
 
 ## Ten-field event header
 
@@ -48,10 +48,10 @@ Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 h
 | 3 | 1, propagated particle |
 | 4 | PDG identifier |
 | 5–6 | 0, 0, reserved parent/status fields |
-| 7–9 | px, py, pz in GeV/c |
-| 10 | Calculated energy in GeV |
-| 11 | Mass in GeV/c² |
-| 12–14 | Vx, Vy, Vz in cm |
+| 7–9 | $p_x$, $p_y$, $p_z$ in $\mathrm{GeV}/c$ |
+| 10 | Calculated energy $E$ in $\mathrm{GeV}$ |
+| 11 | Mass $m$ in $\mathrm{GeV}/c^2$ |
+| 12–14 | $V_x$, $V_y$, $V_z$ in $\mathrm{cm}$ |
 
 Momentum, energy, mass, and vertex values have five digits after the decimal point. The writer rejects empty events and non-finite energy or vertex data.
 
@@ -63,19 +63,19 @@ This project has not yet tested this technique or verified how a field-3 value o
 
 ## Supported species and order
 
-Supported physical output species are electron (11), photon (22), charged pions (±211), neutron (2112), and proton (2212). The scattered electron is first. Supported final-state particles retain GST order.
+Supported physical output species are the electron $e^-$ (11), photon $\gamma$ (22), charged pions $\pi^\pm$ ($\pm211$), neutron $n$ (2112), and proton $p$ (2212). The scattered electron is first. Supported final-state particles retain GST order.
 
 Neutral pions are not written. The input production must decay them upstream so their photons exist in GST. The converter skips a residual PDG 111 instead of inventing daughter momenta.
 
 The serialized masses are:
 
-| Species | Mass in GeV/c² |
+| Species | $m$ ($\mathrm{GeV}/c^2$) |
 | --- | ---: |
-| electron | 0.00051 |
-| proton | 0.93827 |
-| neutron | 0.93957 |
+| $e^-$ | 0.00051 |
+| $p$ | 0.93827 |
+| $n$ | 0.93957 |
 | $\pi^{+}$ / $\pi^{-}$ | 0.13957 |
-| photon | 0.00000 |
+| $\gamma$ | 0.00000 |
 
 These are the five-decimal LUND values. Energy is calculated before serialization from the source precision in `targets.h` (for example, electron 0.000511 and proton 0.938272); photon mass is exactly zero.
 
