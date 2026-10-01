@@ -121,7 +121,7 @@ The coordinator unloads and loads GEMC and uses `module switch coatjava/<version
 
 When `--clas12tags-dir` is absent, GEMC uses the shared versioned clas12Tags directory. A custom clas12Tags checkout replaces the data directory but not the selected GEMC executable checks. The verified child environment is exported to Slurm; the interactive login shell stays unchanged. Default job names include both `GEMC<version>` and `COATJAVA<version>` for uniform and physical samples; `--job-name` overrides the name without changing either release.
 
-Each array task also prints `Used modules:` and runs `module list` before GEMC, so the scheduler logs show the modules loaded inside the job. Check both `.out` and `.err` files because the module list may appear in the error stream. See the [worker reference](worker-reference.md#environment-interface).
+Before GEMC, each array task prints the requested software versions, inherited module selections, and paths of `gemc` and `recon-util` to its `.out` file. This reports the job environment without requiring the `module` shell function or querying the binaries' versions. See the [worker reference](worker-reference.md#environment-interface).
 
 Module commands in the submission report appear on one line, such as `module show gemc/5.14`, `module show coatjava/10.0.7`, and `module list`. Other copyable commands use multiline shell form.
 

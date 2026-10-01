@@ -48,10 +48,14 @@ YAML=${YAML_FILE}
 echo "YAML:                   ${YAML}"
 echo
 
-#Used modules
-echo "Used modules:"
-module list
-echo 
+# Report the inherited selections and executable paths without requiring the module shell function.
+# Requested releases and module names describe the environment, not binary version queries.
+printf 'Requested GEMC version: %s\n' "$GEMC_VERSION"
+printf 'Requested COATJAVA version: %s\n' "$COATJAVA_VERSION"
+printf 'Inherited module selections: %s\n' "$LOADEDMODULES"
+printf 'GEMC executable: %s\n' "$(command -v gemc)"
+printf 'COATJAVA reconstruction executable: %s\n' "$(command -v recon-util)"
+echo
 
 #------DONT NEED TO TOUCH UNDER HERE UNLESS YOU NEED TOO------
 LUNDOUT=${JOB_OUT_PATH}/lundfiles

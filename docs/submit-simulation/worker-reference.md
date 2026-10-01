@@ -41,7 +41,7 @@ The worker inherits the verified `PATH` and module environment. It does not load
 
 The echo statements make received values visible in the scheduler log; they do not perform validation. Validation belongs to the coordinator.
 
-Before running GEMC, each array task prints `Used modules:` and runs `module list`. This shows the modules loaded inside the job, complementing the coordinator's module list printed before submission. Check both scheduler log streams: the module system may write its list to standard error rather than standard output. This printout reports the job environment; it does not load modules or validate their versions.
+Before running GEMC, each array task prints the requested GEMC and COATJAVA versions, inherited `LOADEDMODULES` value, and executable paths found with `command -v` for `gemc` and `recon-util`. These appear in the scheduler's `.out` file without requiring the `module` shell function, which may be unavailable in the job's Bash shell. Requested versions and inherited module names describe the selected environment; executable paths show which commands the worker will invoke. These printouts are not independent binary version queries and do not load modules or validate their versions.
 
 ## Maintenance boundary
 
