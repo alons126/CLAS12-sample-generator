@@ -577,7 +577,7 @@ def load_module(name, version, environment, report):
               'commands = changes + (("show", selected),)\n'
               'for arguments in commands:\n'
               '    if arguments[0] == "show":\n'
-              '        print("\\n" + selected + " module configuration:", file=sys.stderr, flush=True)\n'
+              '        print("\\n{INFO}" + selected + "{SYSTEM} module configuration:{RESET}", file=sys.stderr, flush=True)\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
               '    if result.returncode:\n'
               '        raise SystemExit(result.returncode)\n'
