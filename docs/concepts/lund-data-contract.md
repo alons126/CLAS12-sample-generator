@@ -21,9 +21,13 @@ Electron, proton, neutron, and charged-pion masses come through `TargetGeometry`
 | 5 | 0 | 0 |
 | 6 | 11 | 11 |
 | 7 | Beam energy | Beam energy |
-| 8 | 1 | 1 |
+| 8 | RG-M convention: 1 | RG-M convention: 1 |
 | 9 | Zero-based generated-event ID | Zero-based GST entry index |
 | 10 | 1 | QE=1, MEC=2, RES=3, DIS=4 |
+
+For GENIE GST conversion, field 4 is the LUND slot otherwise used for target polarization. Storing `resid` there follows the pinned RG-M GENIE-to-LUND converter, in which `RES_ID` replaced the earlier `targP` polarization value.[^rgm-resid] This is a compatibility mapping: `resid` remains the GENIE resonance identifier and is not interpreted as polarization.
+
+Field 8 is always the literal value `1`. GEMC lists this user-defined column as the interacted-nucleon ID, but RG-M LUND-writing code widely uses `1` for uniform particles, GENIE events, and GCF events.[^rgm-field-8] This project preserves that RG-M convention. The value is not an interaction count and is not interpreted as a proton or neutron PDG identifier; GEMC retains this user-defined header value but does not use it for particle transport.
 
 Field 10 is a process tag for converted GENIE input, not an event weight or cross section.
 
@@ -41,7 +45,7 @@ Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 h
 | --- | --- |
 | 1 | One-based particle index |
 | 2 | 0, reserved |
-| 3 | 1, active particle |
+| 3 | 1, propagated particle |
 | 4 | PDG identifier |
 | 5–6 | 0, 0, reserved parent/status fields |
 | 7–9 | px, py, pz in GeV/c |
@@ -50,6 +54,12 @@ Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 h
 | 12–14 | Vx, Vy, Vz in cm |
 
 Momentum, energy, mass, and vertex values have five digits after the decimal point. The writer rejects empty events and non-finite energy or vertex data.
+
+### Auxiliary truth records (not yet tested)
+
+For convenience, a LUND file can in principle include additional truth-level quantities encoded as particle records whose field 3 is `0`. GEMC propagates only records whose field 3 is `1` through Geant4. The pinned RG-M GCF-to-LUND converter demonstrates the `type = 0` convention for a non-propagated truth-level record.[^rgm-type-zero]
+
+This project has not yet tested this technique or verified how a field-3 value of `0` is preserved through GEMC output, HIPO, and reconstruction. The current `LundWriter` always writes `1` and provides no option for auxiliary records. Treat `type = 0` as an experimental extension: validate the resulting files and downstream banks before production use, and include every added record in the event-header particle count.
 
 ## Supported species and order
 
@@ -101,3 +111,9 @@ Git fields describe the checkout when CMake configured the executable. Reusing a
 ## Submission record
 
 After `sbatch` accepts an array, the separate `reconhipo/slurm-submission-log.json` records the returned job ID, exact command, resolved worker environment, runtime Git state, and hashes of the GCARD, YAML, and worker payload. It records the handoff to Slurm, not task completion, detector database state, or scientific validity.
+
+[^rgm-resid]: RG-M, *GENIE to LUND converter*, pinned revision `d0d6050`, [source line defining `RES_ID` in place of `targP`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GENIE_to_LUND.C#L25).
+
+[^rgm-field-8]: Examples at pinned RG-M revision `d0d6050`: [`p_LUND.cpp`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Ana/Q2_Ana/p_LUND.cpp#L93); [`iso_p_LUND.cpp`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Ana/Q2_Ana/iso_p_LUND.cpp#L88); [`GENIE_to_LUND.C`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GENIE_to_LUND.C#L27); [`GCF_to_LUND.C`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GCF_to_LUND.C#L27); Neutron Veto [`generate_neutrons.C`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/NeutronVeto/Simulation/generate_neutrons.C#L32) and [`generate_protons.C`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/NeutronVeto/Simulation/generate_protons.C#L32); and Simulation [`generate_neutrons.C`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/generate_neutrons.C#L33).
+
+[^rgm-type-zero]: RG-M, *GCF to LUND converter*, pinned revision `d0d6050`, [non-propagated truth record with particle type `0`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GCF_to_LUND.C#L103).

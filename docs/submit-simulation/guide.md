@@ -66,7 +66,7 @@ The following options describe LUND input that has no manifest. With a manifest,
 | `--beam-energy GeV` | Required truth beam energy |
 | `--target ID` | Required truth target identity |
 | `--prefix NAME` | Required filename prefix before `_INDEX.txt` |
-| `--channel NAME` | Uniform `1e`, `electron-tester`, `eh`, or a complete label such as `epFD` |
+| `--channel NAME` | Uniform `1e`, `electron-tester`, `eh`, or a [complete electron-hadron label](../create-lund/uniform.md#electron-hadron-labels) such as `epFD` |
 | `--hadron NAME`, `--hadron-region FD|CD` | Particle and region required when `channel=eh` |
 | `--event-generator NAME` | Physical adapter label; default `genie-gst` |
 | `--tune NAME` | Physical tune/model label; default `unknown` |

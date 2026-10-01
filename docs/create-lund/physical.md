@@ -30,7 +30,7 @@ The adapter checks every required branch, stored type, and current array length 
 
 ## Selection and translation
 
-The adapter keeps QE, MEC, RES, and DIS events. It writes their process codes as 1, 2, 3, and 4 in LUND header field 10, using that priority if malformed input sets more than one flag. This field is a process tag, not a cross-section weight. GST `resid` is written in header field 4, and the zero-based GST entry number is written in field 9.
+The adapter keeps QE, MEC, RES, and DIS events. It writes their process codes as 1, 2, 3, and 4 in LUND header field 10, using that priority if malformed input sets more than one flag. This field is a process tag, not a cross-section weight. GST `resid` is written in header field 4, following the pinned RG-M GENIE-to-LUND converter where `RES_ID` replaced the earlier `targP` polarization value.[^rgm-resid] This preserves an established compatibility convention; it does not treat `resid` as polarization. The zero-based GST entry number is written in field 9.
 
 Within each accepted event, the scattered electron is first. Protons, neutrons, charged pions, and photons then follow in GST order. Other species are skipped. Neutral pions must be decayed during upstream GENIE production so their daughter photons are present in GST; a residual PDG 111 entry is skipped because the converter cannot reconstruct missing daughter four-momenta.
 
@@ -55,3 +55,5 @@ OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<beam-MeV>MeV/
 The automatic file prefix is `<target>__<event-generator>[-<version>]__<tune>__<Q2-label>__<beam-MeV>MeV`. `output-layout = metadata` instead puts target variation, generator/version, tune, selection, and beam into one directory name. The [configuration reference](configuration.md) defines both forms.
 
 Physical conversion produces no ROOT/PDF/PNG monitoring. It writes LUND files, the completion manifest, and empty simulation-output directories.
+
+[^rgm-resid]: RG-M, *GENIE to LUND converter*, pinned revision `d0d6050`, [source line defining `RES_ID` in place of `targP`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GENIE_to_LUND.C#L25).

@@ -21,9 +21,24 @@ The checked-in profile provides the sample definition. The explicit `--events 10
 | --- | --- | --- |
 | `1e` | One sampled electron | `1e` |
 | `electron-tester` | One beam-momentum electron in an angular scan | `electron-tester` |
-| `eh` | One trigger electron followed by one selected hadron | `epFD`, `enFD`, `epipFD`, `epimFD`, `epCD`, `enCD`, `epipCD`, or `epimCD` |
+| `eh` | One trigger electron followed by one selected hadron | One of the electron-hadron labels defined below |
 
-For `eh`, select `--hadron proton|neutron|pip|pim` and `--hadron-region FD|CD`. The electron is always written first. Both particles receive the same sampled vertex position.
+For `eh`, select `--hadron proton|neutron|pip|pim` and `--hadron-region FD|CD`. In these command-line values, `pip` means a positively charged pion ($\pi^{+}$) and `pim` means a negatively charged pion ($\pi^{-}$). `FD` means the forward-detector sampling region and `CD` means the central-detector sampling region. These names describe the generated angular range; they do not claim that GEMC or reconstruction will detect the particle.
+
+### Electron-hadron labels
+
+Each output label joins `e` for the trigger electron, the selected hadron, and the detector-region abbreviation. The electron is always written first, followed by the hadron, and both particles receive the same sampled vertex position.
+
+| Label | Hadron option | Region | Event content |
+| --- | --- | --- | --- |
+| `epFD` | `proton` | Forward detector (`FD`) | Electron and proton |
+| `enFD` | `neutron` | Forward detector (`FD`) | Electron and neutron |
+| `epipFD` | `pip` | Forward detector (`FD`) | Electron and $\pi^{+}$ |
+| `epimFD` | `pim` | Forward detector (`FD`) | Electron and $\pi^{-}$ |
+| `epCD` | `proton` | Central detector (`CD`) | Electron and proton |
+| `enCD` | `neutron` | Central detector (`CD`) | Electron and neutron |
+| `epipCD` | `pip` | Central detector (`CD`) | Electron and $\pi^{+}$ |
+| `epimCD` | `pim` | Central detector (`CD`) | Electron and $\pi^{-}$ |
 
 The automatic run name and filename prefix are `Uniform__<label>__<beam-MeV>MeV`. File splitting does not restart the zero-based event-number sequence.
 

@@ -86,10 +86,12 @@ struct Particle {
  *
  * Header semantics:
  *   A and Z describe the target nucleus but do not choose the vertex geometry (liquid, 1-foil, 4-foil,
- *   etc.). Physical conversion stores GST `resid` in header field 4; uniform events store zero there.
- *   Uniform events use weight 1. Physical conversion uses that field for process codes 1, 2, 3, and 4
- *   for the QE, MEC, RES, and DIS reaction mechanisms, respectively. LundWriter also writes zero beam
- *   polarization, electron beam PID 11, and one interaction.
+ *   etc.). Physical conversion stores GST `resid` in header field 4, the slot otherwise used for target
+ *   polarization. This follows the RG-M GENIE-to-LUND file convention and does not identify `resid` as
+ *   polarization. Uniform events store zero there. Uniform events use weight 1. Physical conversion uses
+ *   that field for process codes 1, 2, 3, and 4 for the QE, MEC, RES, and DIS reaction mechanisms,
+ *   respectively. LundWriter also writes zero for field 5, electron beam PID 11 in field 6, and the
+ *   widely used RG-M compatibility value 1 in field 8. That value is not an interaction count.
  *
  * Ordering and invariants:
  *   particles must not be empty and all stored numbers must be finite. The electron comes first in the LUND format.
@@ -99,7 +101,7 @@ struct Event {
     int A = 1;                        ///< Target mass number written in the LUND header.
     int Z = 1;                        ///< Target charge number, configured separately from the vertex geometry.
     double beam_energy = 0;           ///< Incident-electron energy in GeV.
-    double resonance_id = 0;          ///< Header field 4; stores GST `resid` for physical events.
+    double resonance_id = 0;          ///< Field 4; GST `resid` under the RG-M convention, not polarization.
     double weight = 1;                ///< Uniform value 1 or physical process code.
     std::vector<Particle> particles;  ///< Particles in output order; the writer rejects an empty list.
 };

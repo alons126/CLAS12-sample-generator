@@ -126,9 +126,11 @@ void LundWriter::writeEvent(const Event& e) {
     if (e.id > static_cast<std::uint64_t>(std::numeric_limits<int>::max())) { throw std::runtime_error("Event ID exceeds the LUND header integer range"); }
     const auto id = static_cast<int>(e.id);
 
-    // Use this one exact header format for every event. `%f` writes six digits after the decimal point, so
-    // a beam energy such as 5.98636 becomes 5.986360 instead of 6.0. The last field uses two digits after
-    // the decimal point and stores the physical interaction code in e.weight.
+    // Use this one exact header format for every event. For physical events, e.resonance_id contains GST
+    // `resid` under the documented RG-M compatibility convention; uniform events supply zero. Field 8 is
+    // the fixed value 1 widely used by RG-M LUND writers, not an interaction count. `%f` writes six digits
+    // after the decimal point, so a beam energy such as 5.98636 becomes 5.986360 instead of 6.0. The last
+    // field uses two digits after the decimal point and stores the physical interaction code in e.weight.
     stream_ << TString::Format("%i \t %i \t %i \t %f \t %f \t %i \t %f \t %i \t %d \t %.2f \n", static_cast<int>(e.particles.size()), e.A, e.Z, e.resonance_id, 0., constants::electron_pdg,
                                e.beam_energy, 1, id, e.weight);
 

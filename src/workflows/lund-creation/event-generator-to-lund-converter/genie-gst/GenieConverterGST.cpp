@@ -28,6 +28,12 @@
  *   (quasi-elastic), MEC (meson-exchange current), RES (resonance production), and DIS (deep-inelastic
  *   scattering).
  *
+ * Compatibility:
+ *   Header field 4 stores GST `resid` instead of target polarization. This follows the pinned RG-M
+ *   GENIE-to-LUND converter, where `RES_ID` replaced the earlier `targP` polarization value:
+ *   https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GENIE_to_LUND.C#L25
+ *   The mapping preserves the established file contract; it does not mean that `resid` is polarization.
+ *
  * Failure:
  *   Empty input, missing fields, wrong field types, different array lengths, an input with no supported
  *   events, ROOT read failures, and output failures stop the run with an exception.
@@ -148,8 +154,8 @@ void convertGenieGST(const RunConfig& c) {
             break;
         }
 
-        // Fill the LUND event header. The established file layout stores the GST resonance number in the
-        // target-polarization field and stores the interaction code in the weight field.
+        // Fill the LUND event header. Following the RG-M GENIE-to-LUND convention documented above, field 4
+        // stores GST `resid` in the slot otherwise used for target polarization. Field 10 stores the interaction code.
         Event event;
         event.id = scanned - 1;
         event.A = A;
