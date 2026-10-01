@@ -51,7 +51,7 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `channel` | `1e` | `1e`, `electron-tester`, or `eh` |
-| `hadron` | `proton` | `proton`, `neutron`, `pip` ($\pi^{+}$), or `pim` ($\pi^{-}$); used by `eh`. See the [electron-hadron label definitions](uniform.md#electron-hadron-labels). |
+| `hadron` | `proton` | `proton` ($p$), `neutron` ($n$), `pip` ($\pi^{+}$), or `pim` ($\pi^{-}$); used by `eh`. See the [electron-hadron label definitions](uniform.md#electron-hadron-labels). |
 | `hadron-region` | `FD` | `FD` or `CD`; used by `eh` |
 | `electron-theta-min/max` | `5` / `40` | Electron-only $\theta$ bounds, in degrees |
 | `electron-momentum` | `auto` | `auto`, `uniform`, `mixed`, or `beam` |
@@ -76,7 +76,7 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `q2-cut` | beam-based | Provenance label only; no $Q^2$ cut is applied during conversion |
 | `output-layout` | `nested` | `nested` or `metadata` |
 
-Automatic $Q^2$ labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
+Automatic minimal $Q^2$ cut labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
 
 The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<beam-MeV>MeV`. The metadata directory is `OUTPUT/<GEMC-variation>__<event-generator>-<version>__<tune>__<Q2-label>__<beam-MeV>MeV`. Every component is sanitized for use as a path while the manifest retains each original resolved value. GEMC version is selected during simulation submission and is not part of LUND creation.
 

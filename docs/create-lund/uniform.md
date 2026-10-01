@@ -31,14 +31,14 @@ Each output label joins `e` for the trigger electron, the selected hadron, and t
 
 | Label | Hadron option | Region | Event content |
 | --- | --- | --- | --- |
-| `epFD` | `proton` | Forward detector (`FD`) | Electron and proton |
-| `enFD` | `neutron` | Forward detector (`FD`) | Electron and neutron |
-| `epipFD` | `pip` | Forward detector (`FD`) | Electron and $\pi^{+}$ |
-| `epimFD` | `pim` | Forward detector (`FD`) | Electron and $\pi^{-}$ |
-| `epCD` | `proton` | Central detector (`CD`) | Electron and proton |
-| `enCD` | `neutron` | Central detector (`CD`) | Electron and neutron |
-| `epipCD` | `pip` | Central detector (`CD`) | Electron and $\pi^{+}$ |
-| `epimCD` | `pim` | Central detector (`CD`) | Electron and $\pi^{-}$ |
+| `epFD` | `proton` | Forward detector (`FD`) | $e^-p$ |
+| `enFD` | `neutron` | Forward detector (`FD`) | $e^-n$ |
+| `epipFD` | `pip` | Forward detector (`FD`) | $e^-\pi^{+}$ |
+| `epimFD` | `pim` | Forward detector (`FD`) | $e^-\pi^{-}$ |
+| `epCD` | `proton` | Central detector (`CD`) | $e^-p$ |
+| `enCD` | `neutron` | Central detector (`CD`) | $e^-n$ |
+| `epipCD` | `pip` | Central detector (`CD`) | $e^-\pi^{+}$ |
+| `epimCD` | `pim` | Central detector (`CD`) | $e^-\pi^{-}$ |
 
 The automatic run name and filename prefix are `Uniform__<label>__<beam-MeV>MeV`. File splitting does not restart the zero-based event-number sequence.
 
@@ -46,19 +46,19 @@ The automatic run name and filename prefix are `Uniform__<label>__<beam-MeV>MeV`
 
 ## Production definitions
 
-The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $p$ and uniform in $1/p$, from $0.7\,\mathrm{GeV}/c$ to $p_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are project generation bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts.[^burkert-clas12][^asryan-ecal]
+The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $P$ and uniform in $1/P$, from $0.7\,\mathrm{GeV}/c$ to $P_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are project generation bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts.[^burkert-clas12][^asryan-ecal]
 
 Electron–hadron samples use a beam-momentum trigger electron at $\theta_e=25^\circ$. Its $\phi$ is placed at the CLAS12 sector center closest to the direction opposite the hadron, then shifted by $\Delta\phi=16^\circ$ at $2.07052\,\mathrm{GeV}$, $7^\circ$ at $4.02962\,\mathrm{GeV}$, $5^\circ$ at $5.98636\,\mathrm{GeV}$, and $0^\circ$ at other beam energies unless overridden. This separation rule is retained for CD samples even though the CD geometry does not require it. The hadron generation bounds below were chosen to cover the relevant CLAS12 forward-detector and central-detector regions described by the spectrometer and reconstruction system.[^burkert-clas12][^ziegler-reconstruction]
 
-| Hadron | FD $\theta$ | CD $\theta$ | FD $p_{\min}$ | CD $p_{\min}$ | Default momentum model |
+| Hadron | FD $\theta$ | CD $\theta$ | FD $P_{\min}$ | CD $P_{\min}$ | Default momentum model |
 | --- | --- | --- | ---: | ---: | --- |
-| proton | $[5^\circ,45^\circ]$ | $[35^\circ,145^\circ]$ | $0.3\,\mathrm{GeV}/c$ | $0.2\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
-| neutron | $[5^\circ,35^\circ]$ | $[35^\circ,145^\circ]$ | 0 | 0 | uniform in $p$ |
-| $\pi^{+}$ or $\pi^{-}$ | $[5^\circ,45^\circ]$ | $[35^\circ,140^\circ]$ | $0.2\,\mathrm{GeV}/c$ | $0.1\,\mathrm{GeV}/c$ | mixed uniform in $p$ / uniform in $1/p$ |
+| $p$ | $[5^\circ,45^\circ]$ | $[35^\circ,145^\circ]$ | $0.3\,\mathrm{GeV}/c$ | $0.2\,\mathrm{GeV}/c$ | mixed uniform in $P$ / uniform in $1/P$ |
+| $n$ | $[5^\circ,35^\circ]$ | $[35^\circ,145^\circ]$ | 0 | 0 | uniform in $P$ |
+| $\pi^{+}$ or $\pi^{-}$ | $[5^\circ,45^\circ]$ | $[35^\circ,140^\circ]$ | $0.2\,\mathrm{GeV}/c$ | $0.1\,\mathrm{GeV}/c$ | mixed uniform in $P$ / uniform in $1/P$ |
 
-Every hadron momentum range ends at $p_{\mathrm{beam}}$. Hadron $\theta$ is uniform within its configured range and $\phi\in[-180^\circ,180^\circ]$, so equal-width angular bins receive comparable generated statistics. The optional fixed-momentum mode is neutron-only and defaults to $1\,\mathrm{GeV}/c$. The [sampling model](../concepts/sampling-models.md) gives the exact distributions, trigger correlation, and random-stream rules.
+Every hadron momentum range ends at $P_{\mathrm{beam}}$. Hadron $\theta$ is uniform within its configured range and $\phi\in[-180^\circ,180^\circ]$, so equal-width angular bins receive comparable generated statistics. The optional fixed-momentum mode is neutron-only and defaults to $1\,\mathrm{GeV}/c$. The [sampling model](../concepts/sampling-models.md) gives the exact distributions, trigger correlation, and random-stream rules.
 
-The electron tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $p=p_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
+The electron tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $P=P_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
 
 ## Validation status
 

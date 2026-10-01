@@ -1,27 +1,27 @@
 # Sampling models and random numbers
 
-The uniform LUND creator uses angles in degrees, momentum in $\mathrm{GeV}/c$, mass in $\mathrm{GeV}/c^2$, energy in $\mathrm{GeV}$, and vertex coordinates in centimeters. For momentum magnitude $p$ and direction $(\theta,\phi)$, ROOT constructs
+The uniform LUND creator uses angles in degrees, momentum in $\mathrm{GeV}/c$, mass in $\mathrm{GeV}/c^2$, energy in $\mathrm{GeV}$, and vertex coordinates in centimeters. For momentum magnitude $P$ and direction $(\theta,\phi)$, ROOT constructs
 
 $$
-(p_x,p_y,p_z) = p(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta),\qquad E = \sqrt{p^2+m^2}.
+(P_x,P_y,P_z) = P(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta),\qquad E = \sqrt{P^2+m^2}.
 $$
 
 ## Electron-only events
 
 For `channel=1e`, $\theta$ and $\phi$ are uniform inside the configured ranges. The default momentum is a deterministic 50/50 mixture over bounds $a$ and $b$:
 
-- even run-global event IDs draw $p\sim\mathcal{U}(a,b)$;
-- odd IDs draw $q\sim\mathcal{U}(b^{-1},a^{-1})$ and use $p=q^{-1}$.
+- even run-global event IDs draw $P\sim\mathcal{U}(a,b)$;
+- odd IDs draw $q\sim\mathcal{U}(b^{-1},a^{-1})$ and use $P=q^{-1}$.
 
-The production bounds are $a=0.7\,\mathrm{GeV}/c$ and $b=p_{\mathrm{beam}}$. `electron-momentum=uniform` selects only the first distribution. The $2.07052\,\mathrm{GeV}$ production profile changes the $\theta$ minimum from $5^\circ$ to $2^\circ$; this is a profile choice rather than a hidden beam rule.
+The production bounds are $a=0.7\,\mathrm{GeV}/c$ and $b=P_{\mathrm{beam}}$. `electron-momentum=uniform` selects only the first distribution. The $2.07052\,\mathrm{GeV}$ production profile changes the $\theta$ minimum from $5^\circ$ to $2^\circ$; this is a profile choice rather than a hidden beam rule.
 
-The electron tester fixes $p=p_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range.
+The electron tester fixes $P=P_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range.
 
 ## Electron–hadron events
 
-For `channel=eh`, hadron $\theta$ is uniform inside the configured FD or CD range and $\phi\in[-180^\circ,180^\circ]$. The upper momentum bound is $p_{\mathrm{beam}}$.
+For `channel=eh`, hadron $\theta$ is uniform inside the configured FD or CD range and $\phi\in[-180^\circ,180^\circ]$. The upper momentum bound is $P_{\mathrm{beam}}$.
 
-Charged hadrons use the same run-global even/odd mixture of distributions uniform in $p$ and uniform in $1/p$. Neutrons use a distribution uniform in $p$, including a lower bound of zero. The optional fixed mode is neutron-only.
+Charged hadrons use the same run-global even/odd mixture of distributions uniform in $P$ and uniform in $1/P$. Neutrons use a distribution uniform in $P$, including a lower bound of zero. The optional fixed mode is neutron-only.
 
 The trigger electron has beam momentum and configured $\theta$, normally $25^\circ$. Its $\phi$ is determined rather than sampled: find the center in $\{-120^\circ,-60^\circ,0^\circ,60^\circ,120^\circ,180^\circ\}$ closest to the direction opposite the hadron, then add the configured offset $\Delta\phi$. Equal-distance ties keep the first center checked. The same separation rule is retained for CD samples even though the CD geometry does not require it.
 

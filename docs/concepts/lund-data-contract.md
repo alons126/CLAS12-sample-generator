@@ -8,7 +8,7 @@ The common record and writer separate source-specific event logic from the [LUND
 
 Uniform events contain one electron or an electron followed by one hadron. Physical GENIE events contain the scattered electron followed by supported GST particles in input order. Every particle in one event has the same vertex.
 
-Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as $E=\sqrt{p^2+m^2}$.
+Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as $E=\sqrt{P^2+m^2}$.
 
 ## Ten-field event header
 
@@ -48,7 +48,7 @@ Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 h
 | 3 | 1, propagated particle |
 | 4 | PDG identifier |
 | 5–6 | 0, 0, reserved parent/status fields |
-| 7–9 | $p_x$, $p_y$, $p_z$ in $\mathrm{GeV}/c$ |
+| 7–9 | $P_x$, $P_y$, $P_z$ in $\mathrm{GeV}/c$ |
 | 10 | Calculated energy $E$ in $\mathrm{GeV}$ |
 | 11 | Mass $m$ in $\mathrm{GeV}/c^2$ |
 | 12–14 | $V_x$, $V_y$, $V_z$ in $\mathrm{cm}$ |
