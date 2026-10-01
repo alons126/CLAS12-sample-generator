@@ -546,6 +546,7 @@ def load_module(name, version, environment, report):
         -> return its final environment as JSON -> check the JSON and replace
         the copied dictionary. Module messages stay
         connected to the terminal, so their original text and colors remain visible.
+        The configuration heading uses the report's decoded shared colors, not literal placeholders.
 
     Args:
         name: Internal module name, gemc or coatjava.
@@ -569,6 +570,10 @@ def load_module(name, version, environment, report):
     if modulecmd is None:
         raise ValueError(f'modulecmd is unavailable; the selected {label} module cannot be loaded.')
 
+    # Pass actual colors to the helper because its plain print does not interpret report markers.
+    configuration_heading = (report.colors['INFO'] + name + '/' + version + report.colors['SYSTEM']
+                             + ' module configuration:' + report.colors['RESET'])
+
     # A helper process switches COATJAVA or unloads and loads GEMC, shows the definition, and returns
     # its environment as JSON. Native module descriptions and messages remain visible on stderr.
     helper = ('import json, os, subprocess, sys\n'
@@ -577,7 +582,7 @@ def load_module(name, version, environment, report):
               'commands = changes + (("show", selected),)\n'
               'for arguments in commands:\n'
               '    if arguments[0] == "show":\n'
-              '        print("\\n{INFO}" + selected + "{SYSTEM} module configuration:{RESET}", file=sys.stderr, flush=True)\n'
+              '        print("\\n" + sys.argv[4], file=sys.stderr, flush=True)\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
               '    if result.returncode:\n'
               '        raise SystemExit(result.returncode)\n'
@@ -591,7 +596,7 @@ def load_module(name, version, environment, report):
     sys.stdout.flush()
 
     # Give the helper the copied environment and capture its final JSON output.
-    result = subprocess.run([sys.executable, '-c', helper, modulecmd, name, version], env=environment,
+    result = subprocess.run([sys.executable, '-c', helper, modulecmd, name, version, configuration_heading], env=environment,
                             stdout=subprocess.PIPE, stderr=sys.stdout, text=True)
 
     # On failure, keep the copied environment unchanged.
