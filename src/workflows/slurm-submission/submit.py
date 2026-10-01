@@ -566,7 +566,7 @@ def load_module(name, version, environment, report):
 
 
     report.text('{SYSTEM}Selected ' + label + ' module configuration:{RESET}')
-    report.text(format_command(['module', 'show', name + '/{INFO}' + version + '{RESET}'], colored=True))
+    # report.text(format_command(['module', 'show', name + '/{INFO}' + version + '{RESET}'], colored=True))
     report.text()
     
     # Find modulecmd because the interactive `module` name is a shell function.
