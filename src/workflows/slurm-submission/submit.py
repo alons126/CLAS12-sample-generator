@@ -542,8 +542,8 @@ def load_module(name, version, environment, report):
 
     Execution flow:
         Find modulecmd in PATH -> start a small Python process with the copied environment -> ask
-        modulecmd to show the requested module definition, then switch COATJAVA or unload and load GEMC
-        -> apply those changes -> return its final environment as JSON -> check the JSON and replace
+        modulecmd to switch COATJAVA or unload and load GEMC, then show the selected module definition
+        -> return its final environment as JSON -> check the JSON and replace
         the copied dictionary. Module messages stay
         connected to the terminal, so their original text and colors remain visible.
 
@@ -561,21 +561,23 @@ def load_module(name, version, environment, report):
 
     # Print the requested version before module commands can fail.
     label = name.upper()
-    report.text('{SYSTEM}Switching ' + label + ' version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}. Module configuration:{RESET}')
-    
+    report.text('{SYSTEM}Switching ' + label + ' version to {RESET}{INFO}' + version + '{RESET}{SYSTEM}...{RESET}')
+
     # Find modulecmd because the interactive `module` name is a shell function.
     modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
 
     if modulecmd is None:
         raise ValueError(f'modulecmd is unavailable; the selected {label} module cannot be loaded.')
 
-    # A helper process shows the definition, switches COATJAVA or unloads and loads GEMC, and returns
+    # A helper process switches COATJAVA or unloads and loads GEMC, shows the definition, and returns
     # its environment as JSON. Native module descriptions and messages remain visible on stderr.
     helper = ('import json, os, subprocess, sys\n'
               'selected = sys.argv[2] + "/" + sys.argv[3]\n'
               'changes = (("switch", selected),) if sys.argv[2] == "coatjava" else (("unload", sys.argv[2]), ("load", selected))\n'
-              'commands = (("show", selected),) + changes\n'
+              'commands = changes + (("show", selected),)\n'
               'for arguments in commands:\n'
+              '    if arguments[0] == "show":\n'
+              '        print("\\n" + selected + " module configuration:", file=sys.stderr, flush=True)\n'
               '    result = subprocess.run([sys.argv[1], "python", *arguments], stdout=subprocess.PIPE, text=True)\n'
               '    if result.returncode:\n'
               '        raise SystemExit(result.returncode)\n'
@@ -630,7 +632,6 @@ def print_loaded_modules(environment, report):
     """
 
     report.text('{SYSTEM}Loaded modules for Slurm submission:{RESET}')
-    report.text(format_command(['module', 'list'], colored=True))
     modulecmd = shutil.which('modulecmd', path=environment.get('PATH'))
 
     if modulecmd is None:
@@ -964,7 +965,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
     Execution flow:
         1. Add the checked sample settings and fixed checkout paths to the environment dictionary.
         2. Print the sample details and handle the optional one-time farm-log cleanup.
-        3. Check GEMC data, show both module definitions, load GEMC and COATJAVA, list loaded modules,
+        3. Check GEMC data, load each module then show its definition, list loaded modules,
            and verify their programs.
         4. Apply an optional custom clas12Tags data override and validate detector inputs.
         5. Recheck every selected LUND input and required executable before output preparation.
