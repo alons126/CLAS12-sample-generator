@@ -1051,7 +1051,7 @@ def submit_sample(values, environment, root, execute, report, farm_cleared):
         environment['GEMC_DATA_DIR'] = values['CLAS12TAGS_DIR']
 
     if 'GEMC_DATA_DIR' not in environment:
-        raise ValueError('GEMC_DATA_DIR is missing from the preloaded GEMC environment; select --clas12tags-dir for a custom checkout.')
+        raise ValueError('GEMC_DATA_DIR is missing after the selected GEMC module and optional data override were applied.')
 
     report.check('GEMC_DATA_DIR', environment['GEMC_DATA_DIR'], directory=True)
 

@@ -40,7 +40,8 @@
 #   --tune NAME                    Set physical tune; default: unknown without a manifest.
 #   --q2-cut NAME                  Set physical Q2 label; no cut is applied here.
 #   --prefix NAME                  Set LUND filename prefix; required without a manifest.
-#   --gemc-version VERSION         Select GEMC resources; fallback default: 5.14.
+#   --gemc-version VERSION         Select GEMC software and GCARD resources; default: 5.14.
+#   --coatjava-version VERSION     Select COATJAVA software and YAML resources; default: 10.0.7.
 #   --gemc-target-variation NAME   Select detector target variation.
 #   --gcard FILE / --yaml FILE     Override detector and reconstruction inputs.
 #   --torus SCALE                  Override the beam-dependent torus default.

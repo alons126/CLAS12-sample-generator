@@ -1,8 +1,8 @@
 # Corresponding creation commands: genie-gst-lund-creation.txt
 # Run on ifarm after each matching manifest is published. Each example submits the
 # first 5 LUND files. The manifest supplies truth metadata, inventory, prefix, and the
-# event limit; GEMC defaults to 5.14. Remove --execute to preview, and replace every
-# /path/to/... placeholder before use.
+# event limit. Submission defaults to GEMC 5.14 and COATJAVA 10.0.7. Remove --execute to
+# preview, and replace every /path/to/... placeholder before use.
 #
 # These directory names assume TUNE GEM21_11a_00_000 was discovered from
 # input_options.txt and the default nested output layout was used.

@@ -1,8 +1,9 @@
 # Corresponding creation commands: uniform-lund-creation.txt
 # Run on ifarm after each matching manifest is published. These examples submit the
 # first 5 of the 40 files produced by a 1,000,000-event run at 25,000 events per file.
-# The manifest supplies metadata and the event limit; GEMC defaults to 5.14. Remove
-# --execute to preview. Execution replaces simulation output but preserves LUND input.
+# The manifest supplies metadata and the event limit. Submission defaults to GEMC 5.14
+# and COATJAVA 10.0.7. Remove --execute to preview. Execution replaces simulation output
+# but preserves LUND input.
 
 #########################################################################################
 # Uniform (e,e') sample Slurm submission

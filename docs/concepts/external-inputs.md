@@ -40,7 +40,7 @@ Files under `config/detector/` are fixed campaign snapshots. GCARD files define 
 
 For each beam group (`2GeV`, `4GeV`, or `6GeV`), `GEMC_GCARDs_<beam-group>/<GEMC-version>/` holds GCARDs, while `COATJAVA_YAML_configs_<beam-group>/<COATJAVA-version>/` holds reconstruction YAMLs. The checked-in YAML release is 10.0.7. Submission selects each directory using its corresponding software-version option. Reconstruction configurations are shared across GEMC versions rather than duplicated inside their directories.
 
-GCARD configurations come from the [`gemc` directory in `JeffersonLab/clas12-config`](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). Reconstruction YAML configurations are available in its [`coatjava` directory](https://github.com/JeffersonLab/clas12-config/tree/main/coatjava). The current checked-in YAML files were obtained through the [RG-M repository](https://github.com/awild7/rgm). These snapshots are read locally during submission rather than downloaded from upstream at runtime.
+GCARD configurations come from the [`gemc` directory in `JeffersonLab/clas12-config`](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). The checked-in COATJAVA 10.0.7 reconstruction YAML files were obtained from its [`coatjava/10.0.7` directory](https://github.com/JeffersonLab/clas12-config/tree/main/coatjava/10.0.7). These snapshots are read locally during submission rather than downloaded from upstream at runtime.
 
 Standard field policy is:
 
