@@ -105,7 +105,7 @@ To read another input format, add a directory beside [`genie-gst/`](../../src/wo
 
 Both preview and execution use the same checked settings. The worker receives those settings from the submission program rather than guessing them from directory names or choosing its own defaults.
 
-## Protected external boundaries
+## External boundaries
 
 Two imported sources sit behind small interfaces:
 

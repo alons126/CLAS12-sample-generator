@@ -2,7 +2,7 @@
 
 The target header, detector files, and job script come from external projects and are stored in this repository. Do not change them during a general code cleanup: their contents determine where particles start, how the detector responds, how reconstruction runs, and how jobs execute.
 
-## Protected inputs
+## External inputs
 
 | Path | Origin and role | Repository boundary |
 | --- | --- | --- |

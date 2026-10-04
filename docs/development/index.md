@@ -7,7 +7,7 @@ Read these pages in this order when changing the code:
 3. [LUND data contract and provenance](../concepts/lund-data-contract.md)
 4. [Sampling models and random numbers](../concepts/sampling-models.md)
 5. [External geometry and detector inputs](../concepts/external-inputs.md)
-6. [Contributing](contributing.md) and [source documentation conventions](documentation-style.md)
+6. [Contributing](contributing.md)
 7. [Developer build reference](building.md)
 8. [Scientific validation boundaries](validation.md)
 

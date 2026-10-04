@@ -3,13 +3,13 @@
 #     Install the external worker used by submitted array tasks.
 #
 # Purpose:
-#     Publish the protected detector worker without duplicating its commands.
+#     Publish the external detector worker without duplicating its commands.
 #
 # Execution flow:
 #     run.csh -> setup_and_submit.csh -> submit.py -> sbatch array -> external payload.
 #
 # Inputs:
-#     The protected external worker script.
+#     The external worker script.
 #
 # Outputs:
 #     The worker is installed under bin.

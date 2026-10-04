@@ -418,9 +418,9 @@ def resolve(lund_directory, explicit, root):
         raise ValueError(f'Unsafe simulation output directory: {run}')
 
     # Repository inputs cannot be simulation output directories.
-    for protected in (root / 'legacy', root / 'config/detector', root / 'src/workflows/slurm-submission/external', root / 'src/workflows/lund-creation/external'):
-        if run == protected or protected in run.parents:
-            raise ValueError(f'Protected output directory: {run}')
+    for external_directory in (root / 'legacy', root / 'config/detector', root / 'src/workflows/slurm-submission/external', root / 'src/workflows/lund-creation/external'):
+        if run == external_directory or external_directory in run.parents:
+            raise ValueError(f'Simulation output cannot replace external or archived source files: {run}')
 
     # Software versions belong to submission, not LUND creation. Ignore both in creation manifests.
     manifest = read_manifest(lund_dir)

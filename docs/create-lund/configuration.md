@@ -48,7 +48,7 @@ Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable w
 | `Sn120` | 120 | 50 | `rgm_fall2021_Sn_L` | `1-foil-large` |
 | `Sn-nat` | 119 | 50 | `rgm_fall2021_Snx4` | `4-foil` |
 
-C12 at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. `Sn-nat` represents natural tin using the code's header value $A=119$, not a pure tin-119 isotope. The geometry rules come from the protected external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md). A supported LUND target does not guarantee that a matching GCARD is included for every beam and software release; check detector resources separately before submission.
+C12 at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. `Sn-nat` represents natural tin using the code's header value $A=119$, not a pure tin-119 isotope. The geometry rules come from the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md). A supported LUND target does not guarantee that a matching GCARD is included for every beam and software release; check detector resources separately before submission.
 
 ## Uniform settings
 

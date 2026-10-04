@@ -6,7 +6,7 @@ Keep each change focused. Make sure the code, help, profiles, and documentation 
 
 Read the [architecture](../concepts/architecture.md), the user guide for the affected workflow, and the [validation boundaries](validation.md). Discuss a new workflow, scientific convention, file format, or output contract before implementing it; those choices affect collaborators and existing campaign data.
 
-Do not casually edit protected external inputs:
+Do not casually edit external inputs:
 
 - [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h)
 - [`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh)

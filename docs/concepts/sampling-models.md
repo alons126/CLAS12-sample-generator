@@ -55,7 +55,7 @@ $V_z$ follows the resolved geometry:
 | `1-foil-large` | $V_z=-2.32$ |
 | `Ca` | $V_z=-3.0$ |
 
-These values describe the checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) snapshot. Recheck this table whenever that protected source is replaced.
+These values describe the checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) snapshot. Recheck this table whenever that external source is replaced.
 
 Target identity, geometry, and LUND $A$ / $Z$ metadata are distinct values. An $A$ / $Z$ override does not change the vertex distribution.
 

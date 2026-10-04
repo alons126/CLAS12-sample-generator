@@ -72,6 +72,6 @@ The submission program reads and checks settings for all selected samples before
 - [`config/samples/uniform-lund-creation/`](../../config/samples/uniform-lund-creation) contains complete beam/channel profiles.
 - [`config/samples/physical-lund-creation/genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf) is the current physical example.
 - [`config/submission.conf`](../../config/submission.conf) is an optional submission example, not an automatic site file.
-- [`config/detector/`](../../config/detector) contains protected GCARD and YAML snapshots.
+- [`config/detector/`](../../config/detector) contains external GCARD and YAML snapshots.
 
 Look up accepted creation settings in the [LUND configuration reference](../create-lund/configuration.md), and submission settings in the [submission configuration reference](../submit-simulation/configuration.md). Do not repeat option defaults in source-overview descriptions unless readers need the value to understand that component.
