@@ -1,6 +1,8 @@
 # Reviewed GENIE GST conversions for the LUND inputs consumed by
-# genie-gst-slurm-submission.txt. Run on ifarm from a disposable checkout and commit
-# development changes before use. For local development, invoke the built
+# genie-gst-slurm-submission.txt. Run on ifarm. Before starting, run.csh discards
+# uncommitted edits and deletes untracked and ignored files except build/.
+# Commit and push development changes from your local copy first. Keep output
+# outside the ifarm checkout. For local development, run the built
 # event-generator-to-lund-converter executable.
 #
 # Expected input layout for each quoted glob:

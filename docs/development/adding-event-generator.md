@@ -1,6 +1,6 @@
 # Adding a physical-input adapter
 
-Add another generator/format reader behind `event-generator-to-lund-converter`. Do not create a new top-level workflow or copy common target, writer, naming, splitting, provenance, or completion code.
+For example, to convert another event generator's output, add a reader that turns its events into the project's `Event` records. This reader is called a physical-input adapter. Select it through `event-generator-to-lund-converter`; do not add another user-facing workflow or copy the shared target, writer, naming, splitting, logging, or completion code.
 
 ## 1. Define the scientific input contract
 
@@ -28,7 +28,7 @@ src/workflows/lund-creation/event-generator-to-lund-converter/
     └── MyGeneratorConverter.cpp
 ```
 
-Expose one synchronous function that borrows the resolved `RunConfig` and either completes the run or throws. Use an adapter name that includes the format when a generator has several outputs.
+Provide one function that reads the already-checked `RunConfig` without taking ownership of it. The function should return only after the run finishes, or throw an exception on failure. Include the input format in the adapter name when the event generator has several output formats.
 
 ## 3. Validate before reading indexed data
 
@@ -47,13 +47,13 @@ For each accepted input event:
 5. give every particle the same vertex; and
 6. call `LundWriter::writeEvent()`.
 
-The adapter owns input traversal and scanned/written accounting. `LundWriter` owns accepted-event capacity, filenames, rollover, serialization, guarded output replacement, and the final manifest. Physical adapters do not create uniform monitoring products.
+The adapter reads input in order and counts entries examined and events written. `LundWriter` enforces the output event limit, chooses filenames, starts new files, writes LUND text, checks paths before deleting output, and writes the final manifest. Physical adapters do not create uniform monitoring histograms or plots.
 
 ## 5. Register settings and dispatch
 
 Add the adapter identifier to the physical branch of `RunConfig`. Add only settings that are genuinely format-specific; keep input, target, output, capacity, splitting, and provenance in the common physical contract.
 
-Add one explicit branch in `convertPhysical()`. The current supported set is small, so a direct dispatcher is clearer than a speculative plugin lifecycle.
+Add a branch in `convertPhysical()` that calls the new adapter when its name is selected. There are few adapters, so a direct function call is sufficient; do not add a plugin-loading system for this change.
 
 Update CLI help and add a checked-in example profile with explicit metadata. Preserve the public executable name and `--event-generator` interface.
 
@@ -67,6 +67,6 @@ Physical output names include target, adapter, optional generator version, tune 
 
 ## 8. Validate the boundary
 
-Exercise every retained process and particle, ordering, shared vertices, malformed records, skipped content, unsupported-only input, capacity, rollover, short input, exact block boundaries, later-file read failures, counts, provenance, and failure without a manifest. Confirm that physical conversion produces no uniform monitoring products.
+Check every supported process and particle, particle order, and shared vertex. Also check malformed records, skipped particles, input with no supported events, the event limit, file splitting, short input, and input ending exactly at a file boundary. Test read failures in later files, event counts, recorded settings, and failures leaving no final manifest. Confirm that physical conversion produces no uniform monitoring histograms or plots.
 
 Update the physical user guide, configuration reference, data contract, source map, tutorials, and scientific validation status in the same change.

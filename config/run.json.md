@@ -14,7 +14,7 @@ The file is strict JSON. Unknown keys fail, so explanations live here rather tha
 | `build_type` | `Release` | `--build-type Debug\|Release\|RelWithDebInfo\|MinSizeRel` |
 | `jobs` | `4` | `--jobs N` with a positive integer |
 
-Resolution is built-in launcher defaults, then the selected JSON file, then explicit launcher options.
+The launcher starts with built-in defaults, replaces them with values from the selected JSON file, then applies command-line overrides. For example, `--jobs 2` replaces the checked-in value of 4.
 
 Use another file by passing it to [`run.csh`](../run.csh) with `--run-settings`:
 
@@ -27,7 +27,7 @@ source run.csh \
     --run false
 ```
 
-There is no implicit `run.local.json`. An untracked file inside the disposable ifarm checkout could be removed immediately before it was read.
+The launcher does not look for `run.local.json` automatically. Name an alternative file with `--run-settings`. Store an untracked settings file outside the ifarm checkout, because cleanup can delete it before the launcher reads it.
 
 ## Launcher and child options
 
@@ -46,6 +46,6 @@ source run.csh \
 
 Submission bypasses [`workflow.py`](../src/launcher/workflow.py) and does not read this JSON. Its settings come from the LUND manifest, an optional submission config, CLI overrides, and submission defaults.
 
-Forwarded application help still follows the disposable-checkout refresh. Only bare launcher help and the limited submission precheck can return before that refresh; see the [checkout model](../docs/submit-simulation/ifarm-environment.md#disposable-checkout). For local development, ask the compiled executable for `--help` directly.
+Even a command forwarding `--help` to a LUND application first cleans and updates the ifarm checkout. Only bare launcher help and limited early submission checks can return before cleanup; see the [checkout model](../docs/submit-simulation/ifarm-environment.md#disposable-checkout). During local development, run the compiled application's `--help` directly.
 
 Invalid Booleans, build types, paths, or worker counts fail before CMake or a child application runs. A failed build prevents LUND creation.

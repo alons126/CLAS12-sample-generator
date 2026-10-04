@@ -4,7 +4,7 @@ Edit, build, and review changes in a development checkout. Commit and push them 
 
 ## Login environment
 
-Keep this setup in `~/environment.csh`:
+Keep this setup in `~/environment.csh`, a file in your ifarm home directory. The `module` commands select installed software versions and set the paths and environment variables needed to run them:
 
 ```tcsh
 #!/bin/csh
@@ -25,11 +25,13 @@ This prepares the login environment. Submission then explicitly unloads and load
 
 ## Disposable checkout
 
-For a normal workflow command, [`run.csh`](../../run.csh) verifies the checkout, removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and synchronizes submodules. This is intentional. Never keep the only copy of code, configuration, or output inside the ifarm checkout. A custom build directory outside `build/` is not protected by that exclusion.
+Use the ifarm repository copy to run code, not to keep development edits. Before a normal workflow starts, [`run.csh`](../../run.csh) checks the repository location, deletes untracked and ignored files except `build/`, discards uncommitted edits to tracked files, pulls the configured Git branch, and updates the included external repositories (submodules).
+
+For example, an untracked profile you saved inside the ifarm checkout can be deleted before the workflow tries to read it. A custom build directory is also deleted unless it is inside `build/`. Keep the only copy of valuable code, configuration, and output elsewhere.
 
 Place LUND and HIPO data on shared storage outside the checkout. Commit and push valuable repository changes before invoking [`run.csh`](../../run.csh).
 
-Only limited checks happen before synchronization. A bare [`source run.csh --help`](../../run.csh) returns without updating. Submission help and argument-syntax checks also run early when `--workflow submit` (or `--workflow=submit`) is the first option. Full submission input checks and LUND-creation option validation happen after synchronization. Forwarded LUND help (`-- --help`) also runs after synchronization; use the compiled application's `--help` directly in a development checkout.
+The cleanup can happen even when the requested workflow later fails its checks. Only a few checks run first: bare [`source run.csh --help`](../../run.csh) returns without cleanup or updating, and submission help and argument-syntax checks run early when `--workflow submit` (or `--workflow=submit`) is the first option. Full input and sample-setting checks run after cleanup and updating. Forwarded LUND help (`-- --help`) also runs afterward. In a development checkout, use the compiled application's `--help` directly.
 
 Use a csh/tcsh login shell:
 
@@ -58,6 +60,6 @@ source "$CLAS12_SAMPLES_DIR/run.csh" \
 
 ## Exit status
 
-Because the entry point is sourced, a handled failure returns a nonzero `$status` without closing the login shell. Read `$status` immediately; the next shell command replaces it. `CLAS12_SAMPLE_STATUS` also retains the wrapper result.
+Using `source` runs the script in your current shell. If the script handles a failure, it returns a nonzero `$status` instead of closing that shell. Zero means success; a nonzero value means failure. Read `$status` immediately, because the next command replaces it. `CLAS12_SAMPLE_STATUS` also stores the script's result.
 
 `CLAS12_SKIP_SERVER_SYNC=1` exists only for launcher development. Routine ifarm operation must leave synchronization enabled.

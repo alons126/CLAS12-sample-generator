@@ -6,7 +6,7 @@
 # reviewed directory. Replace every /path/to/... placeholder before use.
 
 #########################################################################################
-# Print every current submission option without server synchronization
+# Print every current submission option without cleaning or updating the checkout
 #########################################################################################
 
 source run.csh \

@@ -1,10 +1,10 @@
 # Uniform LUND creation
 
-The uniform LUND creator makes controlled acceptance-test events. It samples configured momentum and angle ranges but does not model an electron–nucleus interaction or enforce exclusive energy-momentum conservation.
+The uniform LUND creator randomly chooses particle momenta and angles within configured ranges. These samples help study which particles CLAS12 can detect and reconstruct. They do not model real electron–nucleus interactions: the particles in an event are not required to satisfy an interaction's energy and momentum balance.
 
 ## Run a reviewed profile
 
-Use [`run.csh`](../../run.csh) with the [`uniform-1e-5986MeV.conf`](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
+Use [`run.csh`](../../run.csh) with the profile [`uniform-1e-5986MeV.conf`](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
 
 ```tcsh
 source run.csh \
@@ -15,7 +15,7 @@ source run.csh \
     --output /path/to/quickstart-output
 ```
 
-The checked-in profile provides the sample definition. The explicit `--events 100` makes this a smoke test; production profiles request 50,000,000 events, while electron-tester profiles request 1,000,000. Command-line values override matching profile values. The [sample-profile inventory](../../config/samples/README.md) lists the profile pattern for every implemented channel at $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$.
+The profile is a text file containing the sample settings. `--events 100` replaces its event count with a small number for a basic check. Without that override, production profiles request 50,000,000 events and electron-tester profiles request 1,000,000. Command-line values take priority over profile values. The [sample-profile inventory](../../config/samples/README.md) lists the files for every implemented channel at $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$.
 
 ## Available channels
 
@@ -42,7 +42,7 @@ Each output label joins `e` for the trigger electron, the selected hadron, and t
 | `epipCD` | `pip` | Central detector (`CD`) | $e^-\pi^{+}$ |
 | `epimCD` | `pim` | Central detector (`CD`) | $e^-\pi^{-}$ |
 
-The automatic run name and filename prefix are `Uniform__<channel-label>__<beam-label>`. File splitting does not restart the zero-based event-number sequence.
+The automatic run name and filename prefix are `Uniform__<channel-label>__<beam-label>`. Events are numbered from zero across the whole run. Starting a new output file does not restart those event numbers.
 
 `events` is the total run size. `events-per-file` defaults to 25,000 and controls LUND file splitting. The completion manifest records the exact count in every file; submission uses the largest event count among the selected files as the common GEMC/reconstruction event limit.
 
@@ -70,7 +70,7 @@ The 1e, epFD, enFD, and electron-tester modes are the production-tested uniform 
 
 The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, $A=40$, $Z=18$, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. $A$/$Z$ are separate LUND-header metadata and do not silently change geometry.
 
-The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls target positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. `TRandom3(0)` requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
+The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls vertex positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. `TRandom3(0)` requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
 
 Electron, proton, neutron, and charged-pion masses come from the protected target source; photon mass is exactly zero. The [LUND data contract](../concepts/lund-data-contract.md) lists their serialized values and precision.
 

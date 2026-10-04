@@ -4,7 +4,7 @@ These examples use small event counts. Replace every `/path/to/...` value before
 
 ## Create uniform LUND files on ifarm
 
-From a csh/tcsh login shell in the repository root, select the [`uniform-1e-5986MeV.conf`](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
+From a csh/tcsh login shell in the repository root, select the profile [`uniform-1e-5986MeV.conf`](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
 
 ```tcsh
 source run.csh \
@@ -17,7 +17,7 @@ source run.csh \
 
 The final run directory is `/path/to/quickstart-output/Uniform__1e__5986MeV`. The uniform LUND creator prints that resolved path before replacing or writing it.
 
-[`run.csh`](../../run.csh) treats its ifarm checkout as disposable. A normal workflow run removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first, and keep production output outside that checkout.
+Before running the workflow, [`run.csh`](../../run.csh) discards uncommitted edits to tracked files and deletes untracked and ignored files, except `build/`. It then pulls the configured Git branch and updates submodules (external repositories included in this project). Commit and push development changes from your local copy first. Keep generated samples outside the ifarm repository directory so cleanup cannot delete them.
 
 ## Run locally during development
 
@@ -30,7 +30,7 @@ build/debug/apps/uniform-lund-creator \
     --output runs/quickstart
 ```
 
-To convert existing physical truth, select the [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
+To copy particles from existing GENIE GST output, select the profile [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
 
 ```bash
 build/debug/apps/event-generator-to-lund-converter \
@@ -50,7 +50,7 @@ A successful run contains:
 RUN/lundfiles/lund-creation-monitoring/lund-creation-log.json
 ```
 
-The manifest is written last. Partial LUND files without this manifest do not form a completed run and should not be submitted.
+This JSON file is the completion manifest: it lists the settings, LUND filenames, and event counts. The application writes it only after all required output succeeds. If it is missing, creation did not finish successfully, even if some LUND files exist. Do not submit those partial files.
 
 ## Preview simulation submission
 

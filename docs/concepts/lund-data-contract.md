@@ -1,6 +1,6 @@
 # LUND data contract and provenance
 
-The common record and writer separate source-specific event logic from the [LUND format consumed by GEMC](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html).
+For example, a uniform electron–proton event is written as one header line followed by two particle lines. The source code chooses the particles; the common writer formats their records for the [LUND reader in GEMC](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). This page defines those fields and the logs that record how the files were made. These settings, input details, and source versions are called provenance.
 
 ## In-memory records
 
@@ -80,17 +80,17 @@ The serialized masses are:
 | $\pi^{+}$ / $\pi^{-}$ | 0.13957 |
 | $\gamma$ | 0.00000 |
 
-These are the five-decimal LUND values. Energy is calculated before serialization from the source precision in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) (for example, electron 0.000511 and proton 0.938272); photon mass is exactly zero.
+These are the masses after formatting with five decimal places for LUND. Energy is calculated before that rounding, using the values in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) (for example, electron 0.000511 and proton 0.938272). Photon mass is exactly zero.
 
 ## Splitting and file names
 
 LUND filenames are `lundfiles/<PREFIX>_<INDEX>.txt`, with one-based file indexes. A file opens only when an event is ready, so a successful run has no empty rollover file. Uniform event IDs remain continuous across files.
 
-The writer rotates at `events-per-file`. Physical conversion also uses that number for its follow-up-file input-tail rule, as defined in the [physical guide](../create-lund/physical.md). Actual per-file counts, including a short final file, are recorded in the manifest.
+After writing `events-per-file` events, the writer starts another file when the next event is ready. Physical conversion also uses this setting to decide whether enough input remains to start a later file, as explained in the [physical guide](../create-lund/physical.md). The manifest records the actual count in every file, including a short final file.
 
 ## Completion manifest
 
-After all required output succeeds, the writer closes the LUND stream, writes `lund-creation-log.json.tmp`, and atomically renames it to `lund-creation-log.json`. The final name marks completion.
+After all required output succeeds, the writer closes the LUND file and writes the JSON log to `lund-creation-log.json.tmp`. Only after that write succeeds does it rename the log to `lund-creation-log.json`. This rename is atomic: the final name appears in one filesystem operation, so submission does not read a half-written final log. The final name marks successful creation.
 
 Schema version 1 contains:
 
@@ -107,7 +107,7 @@ Schema version 1 contains:
 
 The `git` object includes the repository, branch, commit message, complete commit hash, commit date and author, working-tree status summary, nearest tag, detached-HEAD state, tracking branch, ahead/behind counts, and an exact-commit GitHub source link when the repository address permits one.
 
-For uniform creation, scanned and written counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The manifest does not hash the original GST input or capture a dirty checkout as a restorable source snapshot. Preserve source input, checkout revision, and campaign records separately.
+For uniform creation, examined and written counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The manifest does not hash the original GST input or save uncommitted source edits for later recovery. Keep the original input, the source revision, and the records for your simulation campaign separately.
 
 Git fields describe the checkout when CMake configured the executable. Reusing a build after changing the working tree does not update them automatically; reconfigure with CMake and rebuild when provenance must reflect new source.
 

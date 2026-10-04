@@ -1,6 +1,6 @@
 # External geometry and detector inputs
 
-Some files are versioned in this repository but owned by an external scientific or operational source. They are protected from routine refactoring because changing them can change generated vertices, detector response, reconstruction, or batch behavior.
+The target header, detector files, and job script come from external projects and are stored in this repository. Do not change them during a general code cleanup: their contents determine where particles start, how the detector responds, how reconstruction runs, and how jobs execute.
 
 ## Protected inputs
 
@@ -16,12 +16,12 @@ Do not edit these as part of a general cleanup. Treat a change as a reviewed sou
 
 The checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) is kept as an exact source copy from the [RG-M repository](https://github.com/awild7/rgm). That repository also contains RG-M analysis and utility code that may be useful for downstream work, but it is not a runtime dependency of this project. [`TargetGeometry.cpp`](../../src/workflows/lund-creation/core/geometry/TargetGeometry.cpp) is the only project source that includes the header. The adapter:
 
-- validates a resolved geometry name;
-- samples one position in centimeters;
-- isolates the external global RNG behind caller-owned state and a mutex; and
+- checks the selected geometry name;
+- samples one vertex position in centimeters;
+- uses the caller's random-number state while locking access to the external global random-number generator, so two calls cannot change that shared state at once; and
 - exposes the external electron, proton, neutron, and charged-pion masses.
 
-Project code does not copy the geometry table or mass constants. The target catalog maps user-facing target variations to geometry keys. Every manifest records a SHA-256 hash of the header compiled into the executable.
+Project code does not duplicate the geometry table or mass constants. The target catalog translates target variations into geometry names accepted by the header. Every manifest records a SHA-256 hash of the header used to build the application. This hash is a content fingerprint for checking which header was used.
 
 To update the header:
 
@@ -36,7 +36,7 @@ The target implementations and RG-M variations are described in CLAS12 Note 2026
 
 ## Detector resources
 
-Files under [`config/detector/`](../../config/detector) are fixed campaign snapshots. GCARD files define GEMC detector geometry and configuration; YAML files define COATJAVA reconstruction settings. The submission record hashes both selected files.
+Files under [`config/detector/`](../../config/detector) are saved copies of configurations for particular data campaigns. GCARD files define GEMC detector geometry and settings; YAML files define COATJAVA reconstruction settings. The submission log records content hashes of both selected files.
 
 For each beam group (`2GeV`, `4GeV`, or `6GeV`), `GEMC_GCARDs_<beam-group>/<gemc-version>/` holds GCARDs, while `COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/` holds reconstruction YAMLs. The checked-in YAML release is 10.0.7. Submission selects each directory using its corresponding software-version option. Reconstruction configurations are shared across GEMC versions rather than duplicated inside their directories.
 

@@ -1,24 +1,24 @@
 # Create LUND files
 
-`create-lund` prepares truth-level particle records for GEMC. It has two sources behind one common output contract:
+`create-lund` writes LUND text files containing particles before detector simulation. You choose where those particles come from with `--source`:
 
 | Source | Program | Use |
 | --- | --- | --- |
 | `uniform` | `uniform-lund-creator` | Sample deliberately unphysical momentum and angle ranges for detector-acceptance studies |
 | `physical` | `event-generator-to-lund-converter` | Copy supported particles from existing physical event-generator truth |
 
-The paths share configuration parsing, target geometry, event and particle records, LUND serialization, splitting, output naming, provenance, and completion behavior. They differ where the science differs: the uniform LUND creator generates kinematics and monitoring histograms; a physical adapter reads event content and must not invent missing kinematics.
+Both applications use the same code to read settings, sample vertex positions in the target, write LUND records, split files, name directories, and record the settings and counts. The uniform LUND creator randomly chooses momenta and angles and saves plots of them. The physical LUND converter reads those momenta from existing input; its format-specific reader, called an adapter, must not invent missing particle kinematics (momenta and angles).
 
 ## Creation lifecycle
 
 1. Read built-in defaults, an optional `key = value` profile, and command-line overrides.
-2. Resolve automatic values and validate the complete configuration.
-3. Validate source-specific input before replacing output when possible.
-4. Print the exact resolved run directory. If it exists, warn, remove that directory, and recreate it.
-5. Write numbered LUND files and source-specific products.
-6. Publish `lund-creation-log.json` last.
+2. Replace `auto` settings with their calculated values and check all settings.
+3. Check the input required by the selected source before deleting output where possible.
+4. Print the complete run directory. If it exists, warn, delete it and everything inside it, and recreate it.
+5. Write numbered LUND files; uniform creation also saves monitoring histograms and plots.
+6. Write `lund-creation-log.json` last, listing the settings, files, and event counts.
 
-The manifest is the completion boundary. A failed run may leave partial files, but without the final manifest it is not ready for submission.
+That final JSON log is the completion manifest. Its presence marks successful creation. A failed run may leave partial LUND files; without the final manifest, do not submit them.
 
 ## Reading order
 

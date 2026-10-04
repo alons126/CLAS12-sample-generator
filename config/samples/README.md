@@ -1,8 +1,8 @@
 # Sample profiles
 
-Profiles under [`config/samples/`](.) describe a LUND sample. They do not choose a workflow, control CMake, or submit detector jobs.
+A profile is a text file of `key = value` settings for a LUND sample. The files under [`config/samples/`](.) specify particles, beam energy, target, and sampling or conversion settings. They do not choose a workflow, control the build, or submit detector jobs.
 
-The examples use [`run.csh`](../../run.csh) on a disposable ifarm checkout. Its refresh discards tracked edits and removes untracked and ignored files except `build/`. Commit and push valuable changes first; for local development, invoke the compiled application directly. Keep output outside the ifarm checkout. Select a profile explicitly:
+These examples use [`run.csh`](../../run.csh) on ifarm. Before running, it discards uncommitted edits and deletes untracked and ignored files except `build/`. Commit and push development changes from your local copy first, and keep generated samples outside the ifarm repository directory. During local development, run the compiled application directly to avoid cleanup. Select a profile with `--config`:
 
 ```tcsh
 source run.csh \
@@ -14,7 +14,7 @@ source run.csh \
 
 The example selects [`uniform-1e-5986MeV.conf`](uniform-lund-creation/uniform-1e-5986MeV.conf). The application applies built-in defaults, reads the profile, then applies command-line overrides. Profiles use plain `key = value` lines with blank lines and full-line comments. Unknown or repeated keys fail.
 
-`output` is normally supplied at runtime so a checked-in profile contains no machine-specific path. Every resolved value, including defaults and CLI overrides, is recorded in the completion manifest.
+Supply `--output` when running the command so profiles do not need paths specific to your machine. After creation succeeds, the application records every final setting in a JSON log called the completion manifest, including defaults and command-line overrides.
 
 ## Uniform profiles
 
@@ -29,7 +29,7 @@ Each supported uniform mode has a complete Ar40 profile for the three RG-M beam 
 | epipCD / epimCD | `uniform-{epipCD,epimCD}-{2070,4029,5986}MeV.conf` |
 | electron tester | `electron-tester-{2070,4029,5986}MeV.conf` |
 
-Production profiles request 50,000,000 events and tester profiles request 1,000,000, with 25,000 events per file. Override `--events` for a smoke test.
+Production profiles request 50,000,000 events and tester profiles request 1,000,000, with 25,000 events per file. Use `--events 100` for a small check before a long run.
 
 The 1e, epFD, enFD, and electron-tester profiles are the production-tested modes. FD pion and all CD profiles are clearly marked as not yet production-validated. Their settings describe implemented behavior, not a validation claim.
 

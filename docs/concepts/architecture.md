@@ -1,6 +1,6 @@
 # Architecture
 
-The source tree follows the two user-facing workflows instead of one monolithic pipeline:
+LUND creation and simulation submission have separate directories because users run them separately:
 
 ```text
 src/
@@ -15,7 +15,7 @@ Future user-facing workflows belong beside the existing workflow directories. Th
 
 ## Entry points and control flow
 
-[`run.csh`](../../run.csh) is the operational front door. It refreshes the disposable ifarm checkout and selects a workflow. Bare launcher help and limited submission syntax checks can return before refresh; full workflow validation happens afterward. The [checkout model](../submit-simulation/ifarm-environment.md#disposable-checkout) defines that boundary.
+Users start an ifarm workflow with [`run.csh`](../../run.csh). It cleans and updates the repository copy, then starts the selected workflow. Bare launcher help and limited submission syntax checks can return before cleanup; full workflow checks run afterward. Read the [checkout model](../submit-simulation/ifarm-environment.md#disposable-checkout) for the exact deletion rules and exceptions.
 
 For LUND creation, [`workflow.py`](../../src/launcher/workflow.py) coordinates the build and application launch:
 
@@ -44,7 +44,7 @@ run.csh
        -> recon-util (COATJAVA)
 ```
 
-The launcher never turns LUND creation into implicit submission. The submission coordinator never runs GEMC locally.
+Creating LUND files never submits jobs automatically. The submission program asks Slurm to run GEMC on computing nodes; it does not run GEMC in the login shell or on the development workstation.
 
 ## LUND-creation layers
 
@@ -63,7 +63,7 @@ The launcher never turns LUND creation into implicit submission. The submission 
 
 ## Configuration boundary
 
-Each executable constructs one `RunConfig` for its source. Resolution is deterministic:
+For example, `--events 100` replaces the profile's event count before creation starts. Each executable uses one `RunConfig` to combine settings in this order:
 
 ```text
 built-in common and source defaults
@@ -74,11 +74,11 @@ built-in common and source defaults
   -> normalized input and final output paths
 ```
 
-The object stores final values as strings for provenance and exposes checked typed readers to the event code. It does not generate events, advance random streams, modify output, or submit jobs. Source-specific keys are rejected in the wrong source instead of being ignored.
+`RunConfig` stores the final settings as strings so they can be copied into the log. Its accessors convert checked values to the types the event code needs. It does not generate events, draw random numbers, change output files, or submit jobs. An option belonging only to the other source causes an error rather than being ignored.
 
 ## Common event boundary
 
-Source-specific code produces `Event` objects containing ordered `Particle` records. That boundary keeps scientific input logic away from text serialization:
+The uniform LUND creator and each physical-input adapter build `Event` objects containing particles in the order they should be written. `LundWriter` then converts those objects into LUND text. This keeps the decision about which particles exist separate from file formatting:
 
 - the uniform LUND creator decides which random particles exist;
 - a physical adapter decides which input events and particles are supported;
@@ -89,21 +89,21 @@ This separation is the main extension rule. A new input adapter should translate
 
 ## Uniform path
 
-`generateUniform()` converts resolved settings into a typed `UniformConfig`, creates separate kinematic and vertex RNGs, and generates events until the requested written count is reached. It writes each event before adding it to `UniformMonitoring`, so diagnostics never count an event that failed to reach LUND. Monitoring is saved before the manifest is published.
+`generateUniform()` copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. Monitoring files are saved before the final manifest is written.
 
 ## Physical path
 
-`convertPhysical()` dispatches the selected adapter. `convertGenieGST()` validates the ROOT tree and branch types, scans entries in order, selects supported interactions, copies supported truth particles, and calls the common writer. It owns scanned-versus-written accounting and the input-tail cutoff. It creates no monitoring histograms.
+`convertPhysical()` calls the selected input adapter. `convertGenieGST()` checks the ROOT tree and branch types, reads entries in order, selects supported interactions, copies supported particles, and calls the common writer. It separately counts entries examined and events written, and decides whether enough input remains to start another file. It creates no monitoring histograms.
 
-To add another format, create a sibling adapter and one explicit dispatcher branch. Keep the public executable and shared output contract. The [adapter guide](../development/adding-event-generator.md) lists the required scientific and software decisions.
+To read another input format, add a directory beside `genie-gst/` and a branch in `convertPhysical()` that calls its reader. Keep the same command-line executable and use the common writer for output. The [adapter guide](../development/adding-event-generator.md) lists the decisions and checks needed.
 
 ## Submission boundary
 
-[`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) is a pure resolution and validation layer: CLI, optional config, manifest, and defaults become one checked settings record per sample. GEMC and COATJAVA versions are separate submission settings: each selects its software module and corresponding configuration directory. Explicit GCARD or YAML files override file lookup without changing software selection.
+[`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) combines command-line options, an optional config, the manifest, and defaults into one checked settings record per sample. It does not submit jobs or change output directories. The GEMC and COATJAVA version settings independently select the software and its default configuration directory. Supplying a GCARD or YAML changes the selected file, not the software version.
 
 [`submit.py`](../../src/workflows/slurm-submission/submit.py) unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<coatjava-version>` in a private environment. It verifies GEMC's installation, checks and prints the loaded COATJAVA release, and checks that the required programs are available. COATJAVA version validation does not depend on installation-directory names. It also owns reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
 
-This division prevents shell variables, path-name guesses, or worker-specific branches from becoming hidden configuration. It also keeps preview and execution on the same resolution path.
+Both preview and execution use the same checked settings. The worker receives those settings from the submission program rather than guessing them from directory names or choosing its own defaults.
 
 ## Protected external boundaries
 
@@ -116,4 +116,4 @@ Detector GCARD and YAML files under [`config/detector/`](../../config/detector) 
 
 ## Rules for future workflows
 
-A new workflow needs one clear entry point, input contract, output contract, configuration path, and owning directory. Keep workflow-specific file formats and physics inside that directory. Do not create empty placeholders or a generic orchestration framework for planned work. Reuse current components only when their contract genuinely matches the new workflow.
+A new workflow needs its own directory, command users run, settings, accepted inputs, and documented outputs. Keep its file formats and physics code there. Do not create empty directories or a general-purpose controller for workflows that do not exist yet. Reuse a current component only when it already does what the new workflow needs.

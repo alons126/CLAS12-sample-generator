@@ -10,7 +10,7 @@ The code converts degree-valued angles to radians before calling trigonometric f
 
 ## Electron-only events
 
-For `channel=1e`, $\theta$ and $\phi$ are uniform inside the configured ranges. The default momentum is a deterministic 50/50 mixture over bounds $a$ and $b$:
+For `channel=1e`, $\theta$ and $\phi$ are uniform inside the configured ranges. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
 
 - even run-global event IDs draw $P\sim\mathcal{U}(a,b)$;
 - odd IDs draw $q\sim\mathcal{U}(b^{-1},a^{-1})$ and use $P=q^{-1}$.
@@ -60,8 +60,8 @@ Target identity, geometry, and LUND $A$/$Z$ metadata are distinct values. An $A$
 Uniform creation owns two `TRandom3` objects:
 
 - `seed` controls particle momentum and angles;
-- `vertex-seed` controls target positions.
+- `vertex-seed` controls vertex positions.
 
-The streams remain separate, so a geometry change does not consume values from the kinematic sequence. The geometry adapter temporarily transfers the vertex RNG state through the external header's global generator under a mutex, then returns the updated state to the caller.
+Each `TRandom3` object is a random-number generator (RNG) with its own sequence. Changing the target geometry draws from the vertex sequence, not the momentum-and-angle sequence. To use the external header, the geometry adapter temporarily copies the caller's vertex RNG state into the header's global RNG and copies the updated state back afterward. A mutex, a lock preventing simultaneous access, protects that shared global state.
 
 A nonzero seed repeats a sequence only when the complete configuration, software, ROOT version, and draw order also match. `TRandom3(0)` requests automatic seeding. A manifest containing zero therefore cannot reproduce the sequence from that value alone.

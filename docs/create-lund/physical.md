@@ -1,10 +1,10 @@
 # Physical LUND conversion
 
-The physical LUND converter translates existing event-generator truth into the project's common LUND output. Truth-level particles are the simulated particles before detector transport and reconstruction. The physical LUND converter does not run an event generator, resample particle kinematics, compute cross sections, or apply acceptance cuts. The implemented adapter reads [GENIE](https://github.com/GENIE-MC/Generator) GST (generator summary tree) [ROOT](https://github.com/root-project/root) files and is selected as `genie-gst`.
+The physical LUND converter copies supported particles from existing event-generator output into LUND files. Truth-level particles are the simulated particles before detector simulation and reconstruction. The physical LUND converter does not run an event generator, randomly choose replacement momenta, compute cross sections, or apply detector-acceptance cuts. Its current input reader, called an adapter, reads [GENIE](https://github.com/GENIE-MC/Generator) GST (generator summary tree) data stored in [ROOT](https://github.com/root-project/root) files. Select it with `--event-generator genie-gst`.
 
 ## Convert GENIE GST input
 
-Use [`run.csh`](../../run.csh) with the [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
+Use [`run.csh`](../../run.csh) with the profile [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
 
 ```tcsh
 source run.csh \
@@ -16,7 +16,7 @@ source run.csh \
     --output /path/to/physical-output
 ```
 
-Quote filename patterns so ROOT receives them unchanged. The input must contain a tree named `gst`; files matching the pattern are read as one ordered chain.
+Quote patterns such as `'/path/to/gst*.root'` so your shell passes the pattern to ROOT instead of expanding it. Each input file must contain a ROOT tree named `gst`, a table with one entry per event. ROOT reads matching files in sequence as one chain.
 
 Supply electron-scattering GST, not neutrino-scattering GST. The adapter always labels `pxl`, `pyl`, and `pzl` as a scattered electron and uses the configured beam energy and target metadata. It does not check those labels against incoming-lepton, beam-energy, or target branches. A matching tree schema alone does not establish that the input describes the intended campaign.
 
@@ -30,7 +30,7 @@ Supply electron-scattering GST, not neutrino-scattering GST. The adapter always 
 | `pdgf[nf]` | `Int_t` array |
 | `pxf[nf]`, `pyf[nf]`, `pzf[nf]` | `Double_t` arrays |
 
-The adapter checks every required branch, stored type, and current array length before indexed access. Empty input, malformed records, read errors, and input containing no supported event all fail without a completion manifest.
+A branch is a named field in the ROOT tree. The adapter checks that required branches exist, have the expected types, and provide enough array elements before reading particles by index. Empty input, malformed records, read errors, or input with no supported events cause failure. No completion manifest is written in those cases.
 
 ## Selection and translation
 
@@ -47,7 +47,7 @@ Within each accepted event, the scattered electron is first. Protons, neutrons, 
 
 GENIE inhibits $\pi^0$ decay by default in the relevant decay configuration. When producing GST input for this project, set [`DecayParticleWithCode=111` to `true` in `CommonDecay.xml`](https://github.com/GENIE-MC/Generator/blob/6a91779ea7443dc7b6ea31ad89985f23be127e4d/config/CommonDecay.xml#L29). This makes GENIE place the daughter photons in the truth record before conversion.
 
-The physical LUND converter copies momentum and chooses one target vertex for the event. Every retained particle receives that same vertex. Particle energy is recalculated from the copied momentum and the project's mass source. No fiducial or $Q^2$ cut is applied. `q2-cut` is provenance describing the input selection.
+The physical LUND converter copies momentum and samples one vertex position for each event, the position in the target assigned to its particles. All retained particles share it. It calculates particle energy from the copied momentum and the particle mass. It applies neither a fiducial cut (a selection by detector position or angle) nor a $Q^2$ cut. The `q2-cut` setting records the cut used when the input was generated; it does not perform that cut during conversion.
 
 ### Why upstream samples use $Q^2$ cuts
 
@@ -65,9 +65,9 @@ The project's truth-level GENIE production uses beam-dependent minimum-$Q^2$ cut
 
 For example, with 250 supported input entries, `events = 300`, and `events-per-file = 100`, conversion writes two 100-event files. It scans entry 201 but does not write it: only 50 input entries remain, too few to start a third file.
 
-`events` limits written events. `events-per-file`, default 10,000, controls both file rollover and the physical-input tail rule. Before an accepted event would start a second or later file, the physical LUND converter requires at least one full `events-per-file` block of input entries beginning with that entry. The first file is always allowed. The tail rule does not interrupt a file already started; the requested event limit or input exhaustion can still end it early.
+`events` limits how many events are written. `events-per-file`, default 10,000, sets when to start a new file and when to stop near the end of the input. Before starting a second or later file, the physical LUND converter requires at least `events-per-file` input entries from the current entry onward. This check does not prevent starting the first file or interrupt a file already started. Reaching the event limit or the end of the input can still leave a short file.
 
-The cutoff counts input entries, not accepted events. Unsupported reactions inside an allowed block can therefore produce a short LUND file. The completion manifest records scanned and written counts plus every per-file count. The difference includes skipped input and, at a tail cutoff, the supported entry that was scanned but not written. It is not solely a rejected-interaction count. The final progress line names the stop reason.
+The check counts input entries, including reactions that may later be skipped. Having enough input entries therefore does not guarantee a full output file. The manifest records entries examined, events written, and the count in each LUND file. Examined entries minus written events includes skipped reactions and, when this end-of-input rule stops conversion, the supported entry examined but not written. The final progress line states why conversion stopped.
 
 ## Provenance and output names
 

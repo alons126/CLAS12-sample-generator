@@ -3,11 +3,12 @@
 # Together these commands show every public physical-conversion option. The physical LUND converter
 # reads existing GENIE GST truth; it does not run GENIE. Arbitrary values demonstrate
 # syntax, not production settings. Quote input globs so ROOT receives them unchanged,
-# replace every /path/to/... placeholder, and commit changes before using run.csh on
-# the disposable ifarm checkout. Use the built event-generator-to-lund-converter
-# executable for local development.
-# Commit and push valuable changes first. Refresh removes tracked edits and untracked
-# or ignored files except build/. Forwarded application help also follows this refresh.
+# replace every /path/to/... placeholder, and use the built
+# event-generator-to-lund-converter executable for local development.
+# Before starting, run.csh discards uncommitted edits and deletes untracked and
+# ignored files except build/, then updates from Git. Commit and push development
+# changes from your local copy first. Even forwarding application help runs after
+# this cleanup.
 
 #########################################################################################
 # Print the current physical LUND converter interface
@@ -25,7 +26,7 @@ source run.csh \
 #
 # seed is accepted and recorded by the shared configuration layer but is unused by
 # physical conversion because GST supplies particle kinematics. vertex-seed controls
-# the independently sampled target position.
+# the independently sampled vertex position.
 #########################################################################################
 
 source run.csh \

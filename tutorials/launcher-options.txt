@@ -2,8 +2,9 @@
 #
 # Run these commands from the repository root in csh/tcsh. Launcher options control
 # configuration, compilation, and execution of a selected LUND application; they do
-# not define sample physics or detector submission. A normal run refreshes the
-# disposable ifarm checkout, so commit and push valuable development changes first.
+# not define sample physics or detector submission. Before running, run.csh discards
+# uncommitted edits and deletes untracked and ignored files except build/, then
+# updates from Git. Commit and push development changes from your local copy first.
 # Replace every /path/to/... value before use.
 
 #########################################################################################

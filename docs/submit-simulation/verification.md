@@ -4,17 +4,17 @@ Start here after Slurm accepts an array. `RUN` is the resolved sample run direct
 
 ## Verify the finished array
 
-The coordinator does not poll task states, retry failures, reconcile outputs, or inspect HIPO content. After the array finishes:
+The submission program does not keep checking jobs, retry failed tasks, count their output files, or open HIPO files. You must check these yourself. After the array finishes:
 
 1. Review every array task in Slurm or the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob), and inspect its `.out` and `.err` files. Use `squeue -u <username>` to check your queued or running jobs.
-2. Compare the submitted task range with `RUN/mchipo/` and `RUN/reconhipo/`.
+2. Check that every submitted task has both a GEMC file in `RUN/mchipo/` and a reconstructed file in `RUN/reconhipo/`. For example, a five-task array should produce files with indexes 1 through 5 in each directory.
 3. Open at least one reconstructed file:
 
    ```text
    hipo-utils -dump RUN/reconhipo/<file>.hipo
    ```
 
-The file must open and display CLAS12 data banks. This is a smoke test only; one readable file does not establish that the remaining tasks succeeded or that the campaign is scientifically valid.
+The file must open and display CLAS12 data banks, the named groups of records inside a HIPO file. Opening one file is only a basic check. It does not show that the other tasks succeeded or that the simulation is suitable for your analysis.
 
 `squeue` and the active-jobs dashboard are for following current jobs. A job disappearing from the queue is not proof of success. Where Slurm accounting is available, inspect finished array tasks with [`sacct`](https://slurm.schedmd.com/sacct.html):
 

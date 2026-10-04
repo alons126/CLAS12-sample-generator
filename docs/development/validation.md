@@ -1,10 +1,10 @@
 # Scientific validation boundaries
 
-Software validation and detector-level scientific validation answer different questions.
+Two different checks are needed: does the code do what its documentation says, and does the resulting simulation suit the intended physics analysis?
 
-Software validation establishes that the implementation follows its documented contract: accepted options, event selection, sampling rules, record fields, units, ordering, file splitting, manifests, path safety, and submission handoff. It can show that a file is readable and that configured values were propagated correctly.
+Software checks cover accepted options, event selection, sampling rules, record fields, units, particle order, file splitting, logs, safe deletion paths, and job submission. For example, they can show that a LUND file contains the requested particles and uses the configured beam energy. They do not show whether the detector model matches data.
 
-Production validation must also establish that the complete campaign is suitable for its analysis. That requires the intended GEMC and COATJAVA versions, GCARD and YAML resources, external databases, detector random state, target implementation, input dataset, reconstruction conditions, and statistically meaningful comparisons.
+Before using results in an analysis, check the complete simulation campaign. Use the intended GEMC and COATJAVA versions, GCARD and YAML files, external databases, detector random settings, target code, input dataset, and reconstruction conditions. Compare output distributions with enough statistics to judge whether differences are meaningful.
 
 ## Important software boundaries
 

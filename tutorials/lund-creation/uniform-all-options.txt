@@ -3,9 +3,10 @@
 # Together these commands show every public uniform LUND creator option and the launcher choices
 # needed to reach it. Arbitrary values demonstrate syntax and validation; they are
 # not production recommendations. Replace every /path/to/... placeholder. Run the
-# launcher on ifarm from a disposable checkout, or use the built executable locally.
-# Commit and push valuable changes first; refresh removes tracked edits and untracked
-# or ignored files except build/. Forwarded application help also follows this refresh.
+# launcher on ifarm, or use the built executable locally. Before starting, run.csh
+# discards uncommitted edits and deletes untracked and ignored files except build/,
+# then updates from Git. Commit and push development changes from your local copy
+# first. Even forwarding application help runs after this cleanup.
 
 #########################################################################################
 # Print the current uniform LUND creator interface

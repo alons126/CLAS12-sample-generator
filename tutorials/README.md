@@ -18,13 +18,13 @@ For the explanation before the commands, follow the [getting-started reading ord
 - [`lund-creation/physical-all-options.txt`](lund-creation/physical-all-options.txt) shows every physical LUND converter option.
 - [`slurm-submission/all-options.txt`](slurm-submission/all-options.txt) shows every public submission option, both manifest-backed and manually described input.
 
-The arbitrary commands in the all-options files are interface demonstrations, not production recommendations. Use checked-in sample profiles for reviewed settings.
+The all-options files use deliberately arbitrary values to show how to spell and combine options. Do not treat those values as recommended physics settings. Start with the sample profiles included in the repository.
 
 ## Before running a command
 
 Replace every `/path/to/...` placeholder with a reviewed path. LUND and HIPO data used by Slurm must live on storage visible to the workers. Quote physical-input globs so ROOT receives them unchanged.
 
-Run [`run.csh`](../run.csh) commands from a csh/tcsh login shell on ifarm. The checkout is disposable: a normal workflow refresh discards tracked edits and removes untracked and ignored files except the checkout's `build/` tree. Commit and push valuable development changes first, and keep production output outside that checkout. For local development, build with CMake and run the compiled LUND executable directly.
+Run [`run.csh`](../run.csh) from a csh/tcsh login shell on ifarm. Before starting the workflow, it discards uncommitted edits and deletes untracked and ignored files except `build/`. Commit and push development changes from your local copy first. Keep generated samples outside the ifarm repository directory so cleanup cannot delete them. For local development, build with CMake and run the compiled LUND application directly.
 
 Submission previews by default. Some production command lists include `--execute`; remove it to inspect settings and actions without replacing simulation output or calling `sbatch`.
 

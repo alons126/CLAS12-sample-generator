@@ -1,6 +1,6 @@
 # Run directories and outputs
 
-Both LUND sources create the same run boundary. LUND creation fills `lundfiles/`; the later Slurm tasks fill `mchipo/` and `reconhipo/`:
+For example, creating a uniform 1e sample with `--output /path/to/quickstart-output` produces the run directory `/path/to/quickstart-output/Uniform__1e__5986MeV` at the quickstart's beam energy. We call that complete directory `RUN` below. Both LUND applications use the same directory structure: creation writes `lundfiles/`, and the submitted Slurm jobs later write `mchipo/` and `reconhipo/`:
 
 ```text
 RUN/
@@ -37,7 +37,9 @@ These names are placeholders, not shell variables. Replace them before running a
 
 The generic directory formulas in configuration references use lowercase placeholders named after settings, such as `<target>`, `<tune>`, and `<q2-cut>`. `<beam-label>` is the complete campaign label, including `MeV` (for example, `5986MeV`); `<beam-group>` is the detector lookup group (for example, `6GeV`). Neither replaces the precise `beam-energy` setting. Angle-bracketed `<username>` denotes your login name, not a checked-in personal account.
 
-Creation takes `OUTPUT`; submission takes `RUN/lundfiles`, not `OUTPUT` or `RUN`. Keep each study's `OUTPUT` parent distinct when preserving earlier runs. CLI paths start at the repository root when using [`run.csh`](../../run.csh); direct application paths start at the caller's working directory. Creation-profile paths follow that working directory, while submission-config paths start at the config file's directory.
+Pass the parent `OUTPUT` to creation's `--output`, then pass the resulting `RUN/lundfiles` to submission's `--lund-dir`. To keep separate studies, use different output parents when their run names would match.
+
+Relative paths, such as `runs/example`, need a starting directory. With [`run.csh`](../../run.csh), that directory is the repository root. When running a compiled application directly, it is the directory your shell is currently in. Paths in a creation profile use that same starting directory; paths in a submission config instead start at the config file's directory.
 
 ## Output lifecycle
 
@@ -51,7 +53,7 @@ The contents appear in stages:
 
 The final manifest name is a completion marker. A failed or interrupted creation may leave partial files and a temporary `.json.tmp` file. Do not submit those files as a completed run: normal submission needs the final manifest, and the resolver rejects input with only a temporary manifest. A separate [manual-input interface](../submit-simulation/configuration.md#lund-input-without-a-manifest) supports independently prepared files without a manifest; it does not establish that an interrupted creation succeeded. The [LUND data contract](../concepts/lund-data-contract.md) defines the text records and manifest fields.
 
-The creation workflow replaces an existing resolved `RUN/` directory after warning. Submission has a different boundary: preview preserves existing simulation output, while `--execute` replaces only `mchipo/` and `reconhipo/` and preserves `lundfiles/`. The [submission guide](../submit-simulation/guide.md) defines those actions and the recovery implications.
+If creation finds the same `RUN/` directory, it warns, deletes that directory and everything inside it, then recreates it. Submission deletes less: preview keeps existing files, while `--execute` deletes and recreates only `mchipo/` and `reconhipo/`. It leaves `lundfiles/` untouched. Read the [submission guide](../submit-simulation/guide.md) before replacing earlier simulation output.
 
 Each Slurm task also writes scheduler `.out` and `.err` files outside `RUN`, to the farm-output path configured by the worker. See [follow jobs and verify output](../submit-simulation/verification.md) for log locations, Slurm commands, failure indicators, and HIPO checks.
 

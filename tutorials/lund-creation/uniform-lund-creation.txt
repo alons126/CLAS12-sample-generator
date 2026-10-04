@@ -1,6 +1,8 @@
 # Reviewed uniform command matrix for the LUND inputs consumed by
-# uniform-slurm-submission.txt. Run on ifarm from a disposable checkout and commit
-# development changes before use. For local development, invoke the built executable.
+# uniform-slurm-submission.txt. Run on ifarm. Before starting, run.csh discards
+# uncommitted edits and deletes untracked and ignored files except build/.
+# Commit and push development changes from your local copy first. Keep output
+# outside the ifarm checkout. For local development, run the built executable.
 # Replace /path/to/uniform-output with the intended output parent.
 
 #########################################################################################

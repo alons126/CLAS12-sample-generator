@@ -1,23 +1,21 @@
 # CLAS12 sample generator
 
-This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). It prepares truth-level particles as LUND files and submits them for GEMC[^gemc-simulation] detector simulation and COATJAVA[^coatjava-reconstruction] reconstruction, with explicit sample and detector settings. The project provides two workflows: creating LUND files and submitting CLAS12 detector simulation and reconstruction jobs.
+This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). First, it writes particles' momenta and vertex coordinates (the event's position in the target) to LUND text files. These are truth-level particles: the particles before detector simulation. In a separate step, it submits jobs that run GEMC[^gemc-simulation] detector simulation and COATJAVA[^coatjava-reconstruction] reconstruction. GEMC simulates the detector response; reconstruction uses that response to determine the measured particles.
 
 | Workflow | What it does | Main result |
 | --- | --- | --- |
-| `create-lund` | Creates [LUND](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html) input from random acceptance-test kinematics or converts existing event-generator truth-level data | LUND files and a completion manifest log |
-| `submit` | Submit simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | GEMC detector simulation followed by COATJAVA reconstruction |
+| `create-lund` | Writes [LUND](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html) input from randomly sampled particles or existing event-generator output | LUND files and a JSON log listing their settings and event counts; this log marks successful creation |
+| `submit` | Submits simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | A job ID; the submitted jobs later write simulated and reconstructed HIPO files |
 
-The **uniform LUND creator** makes deliberately unphysical samples that cover configured momentum and angle ranges. The **physical LUND converter** preserves supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) GST [ROOT](https://github.com/root-project/root) trees and does not run GENIE. Both paths use the same target geometry, LUND writer, file splitting, provenance, and completion rules where their meanings agree.
+The **uniform LUND creator** randomly chooses particle momenta and angles within your configured ranges. Its samples are deliberately unphysical and are used to study which particles the detector can detect and reconstruct. The **physical LUND converter** copies supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) GST (generator summary tree) data stored in [ROOT](https://github.com/root-project/root) files. It does not run GENIE. Both applications use the same code to sample one vertex position in the target per event and assign it to every particle, write and split LUND files, and record the settings used.
 
-The workflows stop at reconstructed [HIPO](https://github.com/gavalian/hipo) output, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). They do not generate physical interactions, calculate detector acceptance, skim reconstructed data, or perform physics analysis.
-
-**For the legacy code:** see `legacy-code-archive` tag.
+The submitted jobs produce reconstructed [HIPO](https://github.com/gavalian/hipo) files, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). This project does not run a physical event generator, calculate detector acceptance, select events from reconstructed files, or perform physics analysis. Creating LUND files never submits jobs automatically.
 
 ## Start here
 
 The [code Wiki](../../wiki) is the user and developer manual. Its [home page](../../wiki/Home) gives separate reading paths for running the software and extending it.
 
-For a small uniform run on the ifarm, use the [`uniform-1e-5986MeV.conf`](config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
+For a small uniform run on ifarm, use the profile [`uniform-1e-5986MeV.conf`](config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf). A profile is a text file containing the sample settings:
 
 ```tcsh
 source run.csh \
@@ -28,7 +26,9 @@ source run.csh \
     --output /path/to/quickstart-output
 ```
 
-[`run.csh`](run.csh) is designed for a disposable ifarm checkout: it discards tracked changes and removes untracked and ignored files, preserving only the checkout's `build/` tree, then updates from Git and builds when needed. Full workflow validation happens after this refresh. Commit and push valuable development work before running it, and keep sample output outside the checkout. Local developers should build with CMake and invoke the compiled executables directly.
+Use [`run.csh`](run.csh) in an ifarm copy of the repository used for running code, not editing it. Before running the selected workflow, the script discards uncommitted edits to files tracked by Git and deletes files Git does not track, including ignored files. It preserves the `build/` directory, then updates the code from Git and builds when needed. It checks the full sample settings only afterward, so an invalid command can still clean the checkout before failing.
+
+Commit and push development changes from your local copy first. Store generated samples outside the ifarm repository directory so the next cleanup cannot delete them. For local development, build with CMake and run the compiled applications directly; those commands do not clean or update the checkout.
 
 After LUND creation succeeds, preview simulation submission with the run's `lundfiles/` directory:
 
@@ -38,7 +38,7 @@ source run.csh \
     --lund-dir /path/to/quickstart-output/Uniform__1e__5986MeV/lundfiles
 ```
 
-Preview is the default. Add `--execute` only after reviewing the resolved detector settings and output actions.
+Without `--execute`, the command checks and prints the settings but does not submit jobs. Review the detector settings and the directories it would delete before adding `--execute`.
 
 Useful entry points:
 

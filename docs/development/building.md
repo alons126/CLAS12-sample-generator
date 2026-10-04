@@ -15,7 +15,7 @@ cmake \
     --parallel 4
 ```
 
-`-S` selects the source checkout. `-B` selects a separate binary tree. Keep separate build directories for different compilers, ROOT installations, and build types rather than reusing an incompatible cache.
+`-S .` tells CMake to read the source from your current directory. `-B build/debug` puts generated build files and compiled code in that separate directory. CMake saves its selected compiler, libraries, and options there in a cache. Use different build directories for different compilers, ROOT installations, or build types so an old cache does not select the wrong settings.
 
 The project adopts the C++ standard published by ROOT and requires at least C++17. It does not force a different standard that might be incompatible with the selected ROOT build.
 
@@ -71,4 +71,4 @@ build/debug/apps/uniform-lund-creator --help
 build/debug/apps/event-generator-to-lund-converter --help
 ```
 
-Then run a small deterministic sample through the path you changed and inspect its files, counts, manifest, and diagnostics. Build commands alone never create LUND files or submit simulation.
+Then run a small sample using fixed nonzero seeds through the code you changed. Inspect its files, event counts, manifest, and printed messages. Build commands alone never create LUND files or submit simulation.

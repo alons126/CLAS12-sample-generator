@@ -1,10 +1,16 @@
 # Source documentation conventions
 
-Source explanations are part of the implementation contract. They should help a contributor understand what a component owns, why it exists, what enters and leaves it, and how it fails.
+Source explanations must describe what the code actually does. Tell contributors why a component exists, which work it performs, what inputs it reads, what it returns or writes, and what happens on failure.
 
 ## General writing
 
 Use simple, direct language. Begin unfamiliar behavior with a concrete action and visible result. Keep exact technical terms when they name a real API, data format, scientific quantity, or language rule, and explain them where they first matter.
+
+For example, say “deletes untracked files, then updates from Git,” not just “refreshes the checkout.” Say “writes the final JSON log only after output succeeds,” not just “publishes the completion boundary.” Name the actor, action, affected files, and result. Define necessary terms such as manifest, adapter, job array, and provenance before relying on them.
+
+Use this style in the README, user and developer guides, configuration references, tutorial notes, and source explanations. State when checks and deletion happen, what failure leaves behind, and what the user should do next. Simplify the wording without changing scientific meanings, API names, options, units, numerical limits, or assumptions.
+
+Name scientific objects and quantities explicitly, then explain them. Use “vertex position” for an event's position in the target and “vertex coordinates” for $V_x$, $V_y$, and $V_z$; do not replace those terms with “starting positions” or “target positions.” This project samples one vertex per written event and assigns its coordinates to every particle in that event. Physical target-cell and foil positions are separate geometry descriptions, not alternative names for the event vertex.
 
 Do not describe project code as “maintained” or make current behavior depend on readers knowing historical implementations. Keep historical comparisons outside the reader documentation. When the documentation needs to identify the historical code, direct readers only to the plain `legacy-code-archive` tag name. Do not link the tag or name archived checkout paths.
 
@@ -43,6 +49,8 @@ Use the shared [path notation](../getting-started/outputs.md#path-notation): `OU
 Preserve exact CLI, configuration, and environment-variable names. Explain aliases where they cross an interface rather than renaming them in prose. Do not treat placeholders such as `<INDEX>` as shell variables.
 
 Link every repository file or directory reference in prose and tables with a repository-relative Markdown link, including [`run.csh`](../../run.csh). Keep fenced commands and diagrams unchanged, and provide file links in the surrounding text. Generated output names, external input paths, and placeholders are not repository files; do not give them invented links. The Wiki builder converts repository links to the publishing fork's URLs.
+
+After editing documentation, check local links and heading anchors, tables, code fences, inline markup, and footnotes. Build the Wiki and check its generated links and formatting too. During prose-only edits, verify that commands and scientific details stayed unchanged. Report only checks that actually ran. Leave changes unstaged and uncommitted unless that Git action was explicitly requested, and preserve any edits already staged by the user.
 
 ## Protected sources
 

@@ -1,6 +1,6 @@
 # Simulation submission guide
 
-Run submission with [`run.csh`](../../run.csh) from a csh/tcsh login shell on ifarm after LUND creation has published its completion manifest.
+After LUND creation writes its final JSON log, run submission with [`run.csh`](../../run.csh) from a csh/tcsh login shell on ifarm. That log is the completion manifest: it tells submission which files were written and what settings created them.
 
 ## Preview one run
 
@@ -10,7 +10,7 @@ source run.csh \
     --lund-dir /path/to/run/lundfiles
 ```
 
-Preview is the default. It resolves the sample, loads and verifies the selected GEMC and COATJAVA environments, checks all detector inputs, inspects both simulation-output paths, creates a missing `mchipo/` or `reconhipo/` directory, and prints the exact `sbatch` command. It preserves existing output and does not call `sbatch` or write a submission log.
+Without `--execute`, submission runs a preview. It reads the sample settings, selects and checks the GEMC and COATJAVA versions, checks the detector files, and prints the exact `sbatch` command it would use. It keeps existing output files, but creates `mchipo/` or `reconhipo/` if either directory is missing. It does not submit jobs or write a submission log.
 
 Add `--execute` only after reviewing that report:
 
@@ -21,7 +21,7 @@ source run.csh \
     --execute
 ```
 
-Execution warns, removes the exact existing `mchipo/` and `reconhipo/` directories recursively, recreates them empty, and submits the array. It never removes `lundfiles/`. The `--execute` switch is CLI-only; a configuration file cannot enable it.
+With `--execute`, submission warns, deletes `mchipo/` and `reconhipo/` and everything inside them, recreates both directories empty, and submits the jobs. It never deletes `lundfiles/`. You must put `--execute` on the command line; a configuration file cannot enable it.
 
 This replacement covers both entire directories even when `--num-jobs` selects only some files. Preserve any earlier HIPO output elsewhere first. Do not resubmit into the same run while earlier tasks are still writing there; the coordinator does not detect or stop those tasks.
 
@@ -43,7 +43,7 @@ source run.csh \
     --num-jobs 5
 ```
 
-Every sample is fully resolved before any output replacement or submission begins. The coordinator then processes samples in order and creates one independent array per sample. If a later sample fails, later samples are skipped, but arrays already accepted by Slurm remain submitted.
+The submission program first reads and checks the settings for every sample. It then prepares output and submits one job array per sample, in the order given. If processing one sample fails, it stops without processing the remaining samples. Jobs submitted earlier are not cancelled.
 
 ## Submission record and failures
 
@@ -51,8 +51,8 @@ After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the 
 
 If Slurm accepts an array but its response cannot be parsed, or writing the submission log fails afterward, inspect Slurm before retrying. Retrying blindly can create a duplicate array. An earlier accepted array is never cancelled automatically when a later sample fails.
 
-Optional farm-output cleanup deletes only direct regular files in the exact reviewed directory and runs once per invocation. Subdirectories and symbolic links are left alone. It requires both `--clear-farm-out true` and `--farm-out DIRECTORY`; omit both to preserve scheduler logs. With execution enabled, this cleanup happens before the software-module checks, so a later validation failure does not restore deleted logs.
+To delete old scheduler logs, supply both `--clear-farm-out true` and `--farm-out DIRECTORY`. With `--execute`, cleanup runs once and deletes ordinary files directly inside that directory. It does not enter subdirectories or delete symbolic links (paths that point to other files or directories). Omit these options to keep the logs. Cleanup happens before the software-module checks; if a later check fails, the deleted logs are not restored.
 
 ## Follow the submitted array
 
-An accepted job ID is the handoff to Slurm, not a completion result. Continue with [follow jobs and verify output](verification.md) to check task states, scheduler logs, and expected HIPO files. The coordinator neither waits for tasks nor retries failures.
+The job ID confirms that Slurm accepted the submission. The submission program does not wait for jobs to finish or retry failed tasks. Continue with [follow jobs and verify output](verification.md) to check task states, logs, and HIPO files.

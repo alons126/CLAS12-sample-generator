@@ -4,7 +4,7 @@ Both LUND applications accept `--key value` pairs and at most one `--config FILE
 
 The parser trims whitespace and splits at the first `=`. It does not interpret inline comments, quotes, sections, or shell variables. Quotes and an inline `#` become literal parts of the value, so do not use shell syntax in profiles. Relative input and output paths start at the application's working directory, not at the profile's directory.
 
-Resolution order is:
+The application first reads defaults, then the profile, then the command line. Later values replace earlier ones. It then calculates `auto` values and checks the result:
 
 ```text
 built-in defaults -> configuration file -> command line -> automatic values -> validation
@@ -18,13 +18,13 @@ The launcher does not choose a sample profile. Name one explicitly, or supply ev
 | --- | --- | --- |
 | `output` | required | Parent output directory; the program adds the final run name |
 | `events` | required | Maximum number of events written, from 1 to 4294967295 |
-| `events-per-file` | 25000 uniform; 10000 physical | Split size; also the physical follow-up-file cutoff scale |
+| `events-per-file` | 25000 uniform; 10000 physical | Maximum events per file; also the minimum remaining input entries needed to start a later physical-output file |
 | `beam-energy` | `5.98636` | Positive beam energy $E_{\mathrm{beam}}$ in $\mathrm{GeV}$ |
 | `target` | `Ar40` | Target identity used to resolve `A`, `Z`, GEMC variation, and vertex geometry |
 | `gemc-target-variation` | `auto` | Compatible target-variation override; changes the resolved geometry with it |
 | `A`, `Z` | `auto` | Independent LUND-header overrides; require $1\le A\le 300$ and $0\le Z\le A$ |
 | `seed` | `67890` | Uniform-kinematics seed; accepted but unused for physical input |
-| `vertex-seed` | `12345` | Target-position seed |
+| `vertex-seed` | `12345` | Seed for vertex-position sampling |
 | `prefix` | `auto` | LUND filename prefix using letters, numbers, `_`, `-`, and `.` |
 
 The parser accepts the event-count range shown above, but serialized event IDs must also fit a signed 32-bit integer. Uniform IDs start at zero, so no run can write more than 2147483648 events. Physical IDs use GST entry indexes and must not exceed 2147483647 even when few events are retained. The writer fails without a completion manifest if an ID exceeds that limit. Submission additionally requires each file's count to fit its positive signed 32-bit event limit.
@@ -75,18 +75,18 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | --- | --- | --- |
 | `input` | required | GENIE GST [ROOT](https://github.com/root-project/root) file, quoted local pattern, or ROOT-supported remote address |
 | `event-generator` | `genie-gst` | Generator/format adapter; this is the only implemented value |
-| `event-generator-version` | `unknown` | Recorded provenance and optional prefix component |
+| `event-generator-version` | `unknown` | Generator version recorded in the log and optionally included in the filename prefix |
 | `tune` | `auto` | Discover `TUNE` from the standard production layout or record `unknown` |
-| `q2-cut` | beam-based | Assert the upstream minimum-$Q^2$ cut for provenance; conversion neither applies nor verifies it |
+| `q2-cut` | beam-based | Record the minimum-$Q^2$ cut used to generate the input; conversion neither applies nor checks it |
 | `output-layout` | `nested` | `nested` or `metadata` |
 
 Automatic minimum-$Q^2$ cut labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Selecting or accepting one of these labels asserts that the supplied truth-level sample was generated with that minimum cut. The code assumes the assertion is correct: it does not calculate $Q^2$, inspect the input distribution, or remove events. An incorrect label therefore records incorrect provenance. The [physical-conversion guide](physical.md#why-upstream-samples-use-q2-cuts) explains the cuts' relation to the electron cross section and CLAS12 angular acceptance. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
 
-The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<q2-cut>__<beam-label>`. The metadata directory is `OUTPUT/<gemc-target-variation>__<event-generator>-<event-generator-version>__<tune>__<q2-cut>__<beam-label>`. Every component is sanitized for use as a path while the manifest retains each original resolved value. GEMC and COATJAVA versions are selected during simulation submission and are not part of LUND creation.
+The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<q2-cut>__<beam-label>`. The metadata directory is `OUTPUT/<gemc-target-variation>__<event-generator>-<event-generator-version>__<tune>__<q2-cut>__<beam-label>`. Unsafe characters in each directory-name component are replaced; the manifest also keeps the original setting values. GEMC and COATJAVA versions are selected during simulation submission and are not part of LUND creation.
 
 ## Output replacement
 
-Configuration is fully resolved and validated before the writer changes output. The writer converts the final run path to an absolute normalized path and refuses broad or unsafe targets such as the filesystem root, home directory, current directory, or a path containing the source checkout. If the exact run directory exists, it warns, removes it recursively, and recreates it. Rerunning the same resolved configuration therefore replaces partial and completed output at that path.
+The application calculates and checks all settings before the writer changes output. The writer turns the run path into a complete absolute path and rejects unsafe deletion targets: the filesystem root, home directory, current directory, or a directory containing the source checkout. If the exact run directory exists, it warns, deletes that directory and everything inside it, and recreates it. Rerunning with the same run path therefore replaces both partial and successful earlier output.
 
 Different settings can resolve to the same directory. Uniform run names include only channel and beam; changing target, seeds, counts, or `prefix` does not make a new run directory. The physical nested layout omits generator version and detector variation. Use a different `output` parent when preserving distinct studies; changing only `prefix` does not protect earlier output. These writer checks are separate from the launcher's earlier disposable-checkout refresh.
 

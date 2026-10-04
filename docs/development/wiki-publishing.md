@@ -1,6 +1,6 @@
 # Publishing the GitHub Wiki
 
-The GitHub Wiki is the long-form reader manual. Repository Markdown is its version-controlled source; it is not a competing documentation set. [`README.md`](../../README.md) introduces the project, and [`docs/index.md`](../index.md) becomes the Wiki home page.
+Edit the repository's Markdown files to change the manual. The publication workflow copies those files into the GitHub Wiki, where readers can browse them. There is only one set of editable documentation, not separate repository and Wiki manuals. [`README.md`](../../README.md) introduces the project, and [`docs/index.md`](../index.md) becomes the Wiki home page.
 
 Never edit a generated Wiki page directly. Change the repository source and let publication replace the generated Wiki.
 
@@ -14,7 +14,7 @@ Never edit a generated Wiki page directly. Change the repository source and let 
 - [`config/samples/README.md`](../../config/samples/README.md); and
 - [`config/run.json.md`](../../config/run.json.md).
 
-It maps the nested sources into GitHub Wiki's flat page namespace, builds the sidebar and footer, converts local documentation links to Wiki links, converts code/configuration links to repository URLs, and converts Markdown footnotes to linked numbered references.
+For example, [`docs/getting-started/quickstart.md`](../getting-started/quickstart.md) becomes the Wiki page `getting-started-quickstart`. The builder gives each source a unique page name because Wiki pages do not use the repository's directory structure. It also creates the sidebar and footer, changes documentation links to Wiki links, changes code and configuration links to repository URLs, and converts footnotes to numbered references.
 
 Each sidebar section starts with its overview, then follows the local page links in that section's [`index.md`](index.md). Unlisted pages appear afterward in Wiki-name order. Update the section index when changing its reading order; there is no separate sidebar order to maintain.
 
@@ -34,7 +34,7 @@ Use the current fork's `OWNER/NAME`. The Wiki builder rejects unsafe output loca
 
 ## GitHub publication
 
-The `Publish documentation wiki` action validates matching pull requests. After matching files reach `dev` or `main`, it generates the Wiki with the triggering repository and branch, checks out the separate `<repository>.wiki.git` repository, synchronizes generated content, and pushes only when it changed. No definitive fork URL is stored in the documentation.
+The `Publish documentation wiki` action checks documentation-related pull requests. When files covered by the action's filters reach `dev` or `main`, it builds the Wiki from that repository and branch, copies the generated pages into GitHub's separate `<repository>.wiki.git` repository, and pushes them if they changed. Links use the repository running the action, so a fork does not need to replace a hard-coded project URL.
 
 There is one Wiki per repository, not one per branch. Publications from `dev` and `main` replace the same pages; the last successful publication determines which branch's documentation and source links readers see. A code-only push does not trigger this workflow. If source changes move automatically linked function definitions without changing documentation, run the action manually to refresh their line links.
 
@@ -44,7 +44,7 @@ GitHub creates the separate Wiki Git repository only after the repository Wiki h
 2. Save one initial Wiki page so `<repository>.wiki.git` exists.
 3. Push a matching documentation change to `dev` or `main`; the workflow replaces that initial page with generated content.
 
-After bootstrap, collaborators edit only repository source files. If repository policy prevents the normal `GITHUB_TOKEN` from pushing the Wiki repository, add a narrowly scoped repository secret named `WIKI_TOKEN`; the workflow prefers it automatically.
+After this one-time setup, collaborators edit only the repository Markdown files. If the normal `GITHUB_TOKEN` cannot push to the Wiki repository, add a repository secret named `WIKI_TOKEN` with the required access. The workflow uses that token when present.
 
 ## Link conventions
 

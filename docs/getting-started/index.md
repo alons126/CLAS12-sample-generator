@@ -1,6 +1,6 @@
 # Getting started
 
-This section gives the shortest safe path from a checkout to a small verified LUND run.
+Start here to build or run the code, create a small LUND sample, and check its output. A checkout is a local copy of the Git repository. Use a local development checkout for editing and a separate ifarm checkout for production commands.
 
 1. [Check dependencies and choose an execution environment](installation.md).
 2. [Run the quickstart](quickstart.md).

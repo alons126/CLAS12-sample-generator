@@ -1,6 +1,6 @@
 # GEMC and reconstruction worker
 
-[`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) is the per-array-task boundary. It is adapted from RG-M submission code and is intentionally kept separate from the Python coordinator. Routine users should run [`source run.csh --workflow submit`](../../run.csh); they should not call this file directly.
+For each array task, Slurm runs [`submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) to process one LUND file. We call this script the worker. The Python submission program, or coordinator, checks settings and submits the array; the worker runs GEMC and COATJAVA on the allocated computing node. The worker was adapted from RG-M code. Routine users should use [`source run.csh --workflow submit`](../../run.csh), not run the worker directly.
 
 ## Responsibility split
 
@@ -41,7 +41,7 @@ Here `RUN` is `OUTPATH`, `<PREFIX>` is `SAMPLE_FILE_PREFIX`, `<INDEX>` is `SLURM
 
 The worker inherits the verified `PATH` and module environment. It does not load modules or select software versions itself. The coordinator exports both version values, reports them before submission, and records them with executable paths in the submission log. The coordinator also resolves and reports `DETECTOR_ENERGY_GROUP` while selecting detector resources; the worker does not read that value.
 
-The settings printouts make received values visible in the scheduler log; they do not perform validation. Validation belongs to the coordinator.
+The worker prints the settings it received into the scheduler log. Printing a value does not check whether it is correct; the submission program performs the checks before submitting jobs.
 
 The worker uses shorter local names in its commands and printouts. These are aliases, not additional settings:
 
@@ -58,6 +58,6 @@ Before running GEMC, each array task prints the requested GEMC and COATJAVA vers
 
 ## Maintenance boundary
 
-The worker owns the concrete GEMC and `recon-util` commands plus the Slurm header. It does not parse user options, discover files, create directories, preview actions, call `sbatch`, monitor task completion, or validate output. It also does not use `set -e`; if GEMC fails, Bash may continue to the reconstruction command. Operators must therefore inspect Slurm status and both log streams.
+The worker contains the GEMC and `recon-util` commands and the `#SBATCH` directives that tell Slurm how to run it. It does not read user options, find input files, create directories, preview actions, submit jobs, check task completion, or validate output. It does not use Bash's `set -e` option to stop on a failed command, so it may run reconstruction after GEMC fails. Check Slurm status and both `.out` and `.err` logs.
 
 When adopting an upstream RG-M worker change, compare the detector commands and scheduler directives while preserving this project's generator-independent environment interface and filenames. Update the coordinator, this reference, and production validation together if that interface changes.

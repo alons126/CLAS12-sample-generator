@@ -24,9 +24,9 @@ cd CLAS12-sample-generator
 
 ## Choose the right entry point
 
-Use [`run.csh`](../../run.csh) for normal ifarm operation. It is a csh/tcsh entry point that refreshes a disposable checkout, configures and builds LUND applications when requested, and starts the selected workflow. The checked-in build defaults are Release, `build/release`, and four build workers.
+Use [`run.csh`](../../run.csh) to run workflows on ifarm from a csh/tcsh shell. Before starting, it discards uncommitted changes and deletes untracked and ignored files, except the `build/` directory. It then updates the code from Git and builds the LUND applications when requested. Keep your development edits in a separate local copy and your generated samples outside the ifarm repository directory. The default build uses Release mode, stores compiled files in `build/release`, and runs four build tasks in parallel.
 
-Use CMake and the compiled executables directly for local development. This avoids the disposable-checkout refresh and makes build failures easier to inspect:
+For local development, use CMake to build, then run the compiled applications. These commands do not delete files or update the checkout:
 
 ```bash
 cmake \

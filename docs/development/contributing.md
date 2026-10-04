@@ -1,6 +1,6 @@
 # Contributing
 
-Keep changes focused and leave the repository describing one coherent workflow.
+Keep each change focused. Make sure the code, help, profiles, and documentation all describe the same behavior.
 
 ## Before changing code
 
@@ -28,7 +28,7 @@ Use the terms **uniform LUND creator** and **physical LUND converter** when the 
 
 Configure a fresh development build, compile the affected targets, inspect current `--help`, and run the smallest meaningful example. For submission changes, use preview first and verify that resolved settings and planned actions are correct. For format or output changes, inspect the generated records and manifest rather than relying only on process exit status.
 
-A successful build verifies software integration, not detector-level equivalence. Record any production validation that remains and follow the [scientific validation guide](validation.md).
+A successful build shows that the code compiles and links. It does not show that GEMC and reconstruction produce scientifically correct results. Record the production checks still needed and follow the [scientific validation guide](validation.md).
 
 ## Update the complete contract
 

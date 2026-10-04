@@ -2,11 +2,11 @@
 
 Use these as patterns. Checked-in profiles are the starting point for reviewed settings; command-line values intentionally override a profile for a particular run.
 
-The [`run.csh`](../../run.csh) examples are for a disposable ifarm checkout: refresh discards tracked edits and removes untracked and ignored files except `build/`. Commit and push valuable changes first, and keep output outside that checkout. During local development, use the compiled application directly.
+Run these [`run.csh`](../../run.csh) examples on ifarm. The script discards uncommitted edits and deletes untracked and ignored files except `build/` before starting the workflow. Commit and push development changes from your local copy first, and keep generated samples outside the ifarm repository directory. During local development, run the compiled application directly to avoid cleanup.
 
 ## Small uniform run on ifarm
 
-This uses the [`uniform-enFD-2070MeV.conf`](../../config/samples/uniform-lund-creation/uniform-enFD-2070MeV.conf):
+This uses the profile [`uniform-enFD-2070MeV.conf`](../../config/samples/uniform-lund-creation/uniform-enFD-2070MeV.conf):
 
 ```tcsh
 source run.csh \
@@ -64,4 +64,4 @@ source run.csh \
 
 For local debugging, call the built program directly. Relative paths then start from the caller's current directory; [`run.csh`](../../run.csh) anchors workflow paths to the repository root.
 
-The [tutorial index](../../tutorials/README.md) links to the production command matrices and three all-options files. Those files demonstrate every public launcher, creation, and submission option, including arbitrary non-production values chosen only to show syntax.
+The [tutorial index](../../tutorials/README.md) links to command collections for the supported samples and to all-options examples for the launcher, both LUND applications, and submission. The arbitrary values in the all-options examples show syntax, not recommended production settings.

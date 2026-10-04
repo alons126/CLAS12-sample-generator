@@ -4,19 +4,19 @@ Use this page when selecting submission settings, software releases, detector re
 
 ## How inputs are resolved
 
-Settings follow this precedence:
+The command line has the highest priority. If a setting is absent there, submission looks in the optional config, then the completion manifest, then defaults:
 
 ```text
 command line -> optional submission config -> completion manifest -> defaults
 ```
 
-CLI paths are resolved from the repository root. Paths inside a submission config are resolved from that config file. The parser accepts plain `key = value` lines, blank lines, and full-line comments. Unknown, duplicate, and empty keys fail.
+Relative command-line paths start at the repository root. Relative paths inside a submission config start at that file's directory. Use plain `key = value` lines, blank lines, and full-line comments. Unknown, duplicate, and empty keys cause an error.
 
 Paths forwarded to the external worker may contain only letters, digits, `/`, `_`, `-`, and `.`. This restriction is checked before submission because the worker passes those paths to external commands.
 
 The manifest supplies the exact LUND inventory and per-file event counts. The array size defaults to the number of selected files, and the shared `JOB_NEVENTS` limit defaults to the largest event count among them. `--num-jobs N` selects the first N files. `--events-per-job N` replaces the shared event limit; it does not rewrite or recount the files. A limit smaller than a file's event count leaves later events unprocessed; a larger limit does not add events to a shorter file.
 
-Truth metadata from a manifest cannot be contradicted by an override. Detector policy can be changed independently: GEMC and COATJAVA versions, compatible detector target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name. Neither software version is inherited from LUND-creation metadata.
+If the manifest says the sample used one beam energy or target, an option claiming another is rejected. You can still change the detector setup: GEMC and COATJAVA versions, a compatible target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name. Select both software versions during submission; LUND creation does not select them.
 
 ## Submission options
 
@@ -98,11 +98,11 @@ The coordinator distinguishes the campaign sample label (`2070MeV`, `4029MeV`, o
 
 ## Software selection and version reports
 
-The coordinator unloads and loads GEMC and uses `module switch coatjava/<coatjava-version>` for COATJAVA in a private child environment. For each selection, it first prints the switching notice and native module-change messages, then a blank line, the module configuration heading, and `module show` output. The heading identifies `gemc/<gemc-version>` or `coatjava/<coatjava-version>`. This order applies in both preview and execution. After both selections, it prints `module list` so you can see all loaded modules, including dependencies, that Slurm will inherit.
+The submission program starts a separate shell process to select software; it does not change your login shell's settings. It unloads and loads GEMC and uses `module switch coatjava/<coatjava-version>` for COATJAVA. For each version, it prints the switching notice and the module system's messages, then a blank line, a configuration heading, and `module show` output. The heading identifies `gemc/<gemc-version>` or `coatjava/<coatjava-version>`. Preview and execution use this same order. After both selections, `module list` shows all modules that will be passed to the jobs, including dependencies.
 
-It checks and prints the loaded COATJAVA release using `LOADEDMODULES` and confirms that `recon-util` is available in `PATH`. It does not predict or validate COATJAVA installation directories. For GEMC, it checks the versioned installation, executable path, and selected data directory. Missing or conflicting releases, failed module commands, or unavailable programs stop submission before simulation output is replaced.
+`LOADEDMODULES` lists loaded module names. The submission program uses that list to check and print the COATJAVA release. It also finds `recon-util` through `PATH`, the list of directories searched for commands. It does not assume a particular COATJAVA installation directory. For GEMC, it checks the versioned installation, executable path, and selected data directory. Missing or conflicting releases, failed module commands, or missing programs stop submission before simulation-output directories are deleted.
 
-These checks establish software selection, file existence, and safe argument values, not scientific compatibility between GCARD geometry, YAML settings, and magnetic fields. Review those together for the data campaign.
+Passing these checks means the requested software was selected, required files exist, and arguments can be passed safely to the worker. It does not prove that the GCARD geometry, YAML reconstruction settings, and magnetic fields match your data. Review those together before a production run.
 
 When `--clas12tags-dir` is absent, GEMC uses the shared versioned clas12Tags directory. A custom clas12Tags checkout replaces the data directory but not the selected GEMC executable checks. The verified child environment is exported to Slurm; the interactive login shell stays unchanged. Default job names include both `GEMC<gemc-version>` and `COATJAVA<coatjava-version>` for uniform and physical samples; `--job-name` overrides the name without changing either release.
 
@@ -112,7 +112,7 @@ Module commands in the submission report appear on one line, such as `module sho
 
 ## LUND input without a manifest
 
-Manifest-free input is supported for archived files. Supply `source`, beam energy, target, prefix, event limit, and source-specific metadata explicitly. Files must be contiguous from `PREFIX_1.txt` through `PREFIX_N.txt` because the resolver will not guess gaps or scan every file to count events.
+You can submit independently prepared LUND files that have no completion manifest. In that case, supply the source, beam energy, target, filename prefix, event limit, and other required sample settings yourself. Number files consecutively from `PREFIX_1.txt` through `PREFIX_N.txt`, without gaps. The submission program does not read every file to count events or guess missing indexes.
 
 ```tcsh
 source run.csh \
