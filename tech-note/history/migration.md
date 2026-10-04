@@ -25,7 +25,7 @@ The unified external worker has one output-naming contract: `mc_LUNDSTEM_torusFI
 
 The beam-specific production profiles select the requested modes directly; `sampled` remains an accepted CLI compatibility alias:
 
-- 1e: half uniform p and half uniform 1/p from 0.7 GeV/c to beam momentum, retaining 5–40° flat theta.
+- 1e: half uniform p and half uniform 1/p from 0.7 GeV/c to beam momentum, using 5–40° flat theta except for the 2.07052 GeV profile's explicit 2° lower bound.
 - en: uniform p from zero to beam momentum and flat theta within the original 5–35° window.
 - ep: half uniform p and half uniform 1/p from 0.3 GeV/c to beam momentum, retaining the original 5–45° flat-theta prescription.
 

@@ -4,6 +4,19 @@
 # Replace /path/to/uniform-output with the intended output parent.
 
 #########################################################################################
+# Quickstart smoke test: one file with 100 events; preview it with the paired example
+# at the start of slurm-submission/uniform-slurm-submission.txt.
+# Use a separate parent from production runs so this does not replace their output.
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 100 \
+    --output /path/to/quickstart-output
+
+#########################################################################################
 # Uniform (e,e') sample generation
 #########################################################################################
 

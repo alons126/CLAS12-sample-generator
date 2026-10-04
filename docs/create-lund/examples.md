@@ -2,6 +2,8 @@
 
 Use these as patterns. Checked-in profiles are the starting point for reviewed settings; command-line values intentionally override a profile for a particular run.
 
+The `run.csh` examples are for a disposable ifarm checkout: refresh discards tracked edits and removes untracked and ignored files except `build/`. Commit and push valuable changes first, and keep output outside that checkout. During local development, use the compiled application directly.
+
 ## Small uniform run on ifarm
 
 ```tcsh

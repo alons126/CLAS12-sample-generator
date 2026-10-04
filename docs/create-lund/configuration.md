@@ -1,6 +1,8 @@
 # LUND-creation configuration reference
 
-Both LUND applications accept `--key value` pairs and at most one `--config FILE`. A configuration file uses plain `key = value` lines. Blank lines and full-line `#` comments are accepted; inline comments, quoting, sections, shell expansion, duplicate keys, and unknown keys are rejected.
+Both LUND applications accept `--key value` pairs and at most one `--config FILE`. A configuration file uses plain `key = value` lines. Blank lines and full-line `#` comments are accepted. Duplicate and unknown keys are rejected.
+
+The parser trims whitespace and splits at the first `=`. It does not interpret inline comments, quotes, sections, or shell variables. Quotes and an inline `#` become literal parts of the value, so do not use shell syntax in profiles. Relative input and output paths start at the application's working directory, not at the profile's directory.
 
 Resolution order is:
 
@@ -25,6 +27,8 @@ The launcher does not choose a sample profile. Name one explicitly, or supply ev
 | `vertex-seed` | `12345` | Target-position seed |
 | `prefix` | `auto` | LUND filename prefix using letters, numbers, `_`, `-`, and `.` |
 
+The parser accepts the event-count range shown above, but serialized event IDs must also fit a signed 32-bit integer. Uniform IDs start at zero, so no run can write more than 2147483648 events. Physical IDs use GST entry indexes and must not exceed 2147483647 even when few events are retained. The writer fails without a completion manifest if an ID exceeds that limit. Submission additionally requires each file's count to fit its positive signed 32-bit event limit.
+
 Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable when software, configuration, and draw order match. Seed 0 asks ROOT for automatic, nonrepeatable seeding; the manifest records the configured zero, not the internally chosen value.
 
 `target`, `A`, and `Z` are related but not interchangeable configuration keys. The target and variation select spatial geometry. The `A` and `Z` values are written to the LUND header. Explicit `A`/`Z` overrides never silently change geometry.
@@ -44,7 +48,7 @@ Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable w
 | `Sn120` | 120 | 50 | `rgm_fall2021_Sn_L` | `1-foil-large` |
 | `Sn-nat` | 119 | 50 | `rgm_fall2021_Snx4` | `4-foil` |
 
-C12 at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. The geometry rules come from the protected external `targets.h`; see [external inputs](../concepts/external-inputs.md).
+C12 at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. `Sn-nat` represents natural tin using the project's header value $A=119$, not a pure tin-119 isotope. The geometry rules come from the protected external `targets.h`; see [external inputs](../concepts/external-inputs.md). A supported LUND target does not guarantee that a matching GCARD is included for every beam and software release; check detector resources separately before submission.
 
 ## Uniform settings
 
@@ -83,5 +87,7 @@ The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<
 ## Output replacement
 
 Configuration is fully resolved and validated before the writer changes output. The writer converts the final run path to an absolute normalized path and refuses broad or unsafe targets such as the filesystem root, home directory, current directory, or a path containing the source checkout. If the exact run directory exists, it warns, removes it recursively, and recreates it. Rerunning the same resolved configuration therefore replaces partial and completed output at that path.
+
+Different settings can resolve to the same directory. Uniform run names include only channel and beam; changing target, seeds, counts, or `prefix` does not make a new run directory. The physical nested layout omits generator version and detector variation. Use a different `output` parent when preserving distinct studies; changing only `prefix` does not protect earlier output. These writer checks are separate from the launcher's earlier disposable-checkout refresh.
 
 [^sportes-2026-rgm]: Alon Sportes, *Technical Note: Implementation of New RG-M Targets in GEMC*, CLAS12 Note 2026-001, Jefferson Lab, CLAS12, February 2026. [Note PDF](https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185)

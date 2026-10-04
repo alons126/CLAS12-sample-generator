@@ -6,6 +6,14 @@
 # but preserves LUND input.
 
 #########################################################################################
+# Preview the 100-event quickstart run: one LUND file, not the five-file selection below
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/quickstart-output/Uniform__1e__5986MeV/lundfiles
+
+#########################################################################################
 # Uniform (e,e') sample Slurm submission
 #########################################################################################
 

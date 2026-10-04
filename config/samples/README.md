@@ -1,6 +1,8 @@
 # Sample profiles
 
-Profiles under `config/samples/` describe a LUND sample. They do not choose a workflow, control CMake, or submit detector jobs. Select one explicitly:
+Profiles under `config/samples/` describe a LUND sample. They do not choose a workflow, control CMake, or submit detector jobs.
+
+The examples use `run.csh` on a disposable ifarm checkout. Its refresh discards tracked edits and removes untracked and ignored files except `build/`. Commit and push valuable changes first; for local development, invoke the compiled application directly. Keep output outside the ifarm checkout. Select a profile explicitly:
 
 ```tcsh
 source run.csh \

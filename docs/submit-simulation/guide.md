@@ -23,6 +23,8 @@ source run.csh \
 
 Execution warns, removes the exact existing `mchipo/` and `reconhipo/` directories recursively, recreates them empty, and submits the array. It never removes `lundfiles/`. The `--execute` switch is CLI-only; a configuration file cannot enable it.
 
+This replacement covers both entire directories even when `--num-jobs` selects only some files. Preserve any earlier HIPO output elsewhere first. Do not resubmit into the same run while earlier tasks are still writing there; the coordinator does not detect or stop those tasks.
+
 ## How inputs are resolved
 
 Settings follow this precedence:
@@ -35,7 +37,7 @@ CLI paths are resolved from the repository root. Paths inside a submission confi
 
 Paths forwarded to the external worker may contain only letters, digits, `/`, `_`, `-`, and `.`. This restriction is checked before submission because the worker passes those paths to external commands.
 
-The manifest supplies the exact LUND inventory and per-file event counts. The array size defaults to the selected file count, and the shared `JOB_NEVENTS` limit defaults to the largest selected file count. `--num-jobs N` selects the first N files. `--events-per-job N` replaces the shared event limit; it does not rewrite or recount the files.
+The manifest supplies the exact LUND inventory and per-file event counts. The array size defaults to the selected file count, and the shared `JOB_NEVENTS` limit defaults to the largest selected file count. `--num-jobs N` selects the first N files. `--events-per-job N` replaces the shared event limit; it does not rewrite or recount the files. A limit smaller than a file's count leaves later events unprocessed; a larger limit does not add events to a shorter file.
 
 Truth metadata from a manifest cannot be contradicted by an override. Detector policy can be changed independently: GEMC and COATJAVA versions, compatible detector target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name. Neither software version is inherited from LUND-creation metadata.
 
@@ -81,7 +83,7 @@ GEMC defaults to 5.14 because that release contains the RG-M argon target and co
 
 COATJAVA defaults to 10.0.7. Its version independently selects the reconstruction software and the YAML directory, `config/detector/COATJAVA_YAML_configs_<beam-group>/<COATJAVA-version>/`. Only 10.0.7 YAML snapshots are currently checked in. Another release needs a reviewed YAML supplied with `--yaml` if its default file is absent. Explicit `--gcard` and `--yaml` paths override resource lookup, not software selection. Check that the selected files are compatible with the requested releases.
 
-For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Other beam energies require explicit `--gcard`, `--yaml`, and `--torus` values.
+For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Beam labels outside the three supported lookup groups require explicit `--gcard`, `--yaml`, and `--torus` values.
 
 ### Magnetic-field consistency
 
@@ -115,9 +117,13 @@ The checked-in $4\,\mathrm{GeV}$ and $6\,\mathrm{GeV}$ cards describe the inbend
 
 When using a custom GCARD or overriding `--torus`, inspect its `SCALE_FIELD` entries and change them together. The current worker fixes the solenoid scale at $-1.0$ and exposes no solenoid override. If the data uses another solenoid scale, updating only the GCARD is insufficient: the worker configuration must also be changed and validated before submission. A mismatch means the data, selected card, and submitted command describe different magnetic-field setups.
 
-The coordinator distinguishes the nearest-MeV sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). These are naming and lookup values, not alternate beam energies.
+The coordinator distinguishes the campaign sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). The three standard beam energies use these fixed labels; other energies are rounded to the nearest MeV for naming. Detector defaults are looked up using the resolved MeV label. These are naming and lookup values, not alternate beam energies.
 
-The coordinator unloads and loads GEMC and uses `module switch coatjava/<version>` for COATJAVA in a private child environment. For each selection, it first prints the switching notice and native module-change messages, then a blank line, the `<module>/<version> module configuration:` heading, and `module show` output. This order applies in both preview and execution. After both selections, it prints `module list` from that environment so you can see all loaded modules, including dependencies, that Slurm will inherit. It checks and prints the loaded COATJAVA release using `LOADEDMODULES` and confirms that `recon-util` is available in `PATH`. It does not predict, compare, or validate COATJAVA installation directories. GEMC's data and executable checks remain unchanged. Missing or conflicting releases, failed module commands, or unavailable programs stop submission before simulation output is replaced.
+The coordinator unloads and loads GEMC and uses `module switch coatjava/<version>` for COATJAVA in a private child environment. For each selection, it first prints the switching notice and native module-change messages, then a blank line, the `<module>/<version> module configuration:` heading, and `module show` output. This order applies in both preview and execution. After both selections, it prints `module list` so you can see all loaded modules, including dependencies, that Slurm will inherit.
+
+It checks and prints the loaded COATJAVA release using `LOADEDMODULES` and confirms that `recon-util` is available in `PATH`. It does not predict or validate COATJAVA installation directories. For GEMC, it checks the versioned installation, executable path, and selected data directory. Missing or conflicting releases, failed module commands, or unavailable programs stop submission before simulation output is replaced.
+
+These checks establish software selection, file existence, and safe argument values, not scientific compatibility between GCARD geometry, YAML settings, and magnetic fields. Review those together for the data campaign.
 
 When `--clas12tags-dir` is absent, GEMC uses the shared versioned clas12Tags directory. A custom clas12Tags checkout replaces the data directory but not the selected GEMC executable checks. The verified child environment is exported to Slurm; the interactive login shell stays unchanged. Default job names include both `GEMC<version>` and `COATJAVA<version>` for uniform and physical samples; `--job-name` overrides the name without changing either release.
 
@@ -166,7 +172,7 @@ After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the 
 
 If Slurm accepts an array but its response cannot be parsed, or writing the submission log fails afterward, inspect Slurm before retrying. Retrying blindly can create a duplicate array. An earlier accepted array is never cancelled automatically when a later sample fails.
 
-Optional farm-output cleanup deletes only direct files in the exact reviewed directory and runs once per invocation. It requires both `--clear-farm-out true` and `--farm-out DIRECTORY`; omit both to preserve scheduler logs.
+Optional farm-output cleanup deletes only direct regular files in the exact reviewed directory and runs once per invocation. Subdirectories and symbolic links are left alone. It requires both `--clear-farm-out true` and `--farm-out DIRECTORY`; omit both to preserve scheduler logs. With execution enabled, this cleanup happens before the software-module checks, so a later validation failure does not restore deleted logs.
 
 ## Verify the finished array
 
@@ -181,6 +187,16 @@ The coordinator does not poll task states, retry failures, reconcile outputs, or
    ```
 
 The file must open and display CLAS12 data banks. This is a smoke test only; one readable file does not establish that the remaining tasks succeeded or that the campaign is scientifically valid.
+
+`squeue` and the active-jobs dashboard are for following current jobs. A job disappearing from the queue is not proof of success. Where Slurm accounting is available, inspect finished array tasks with [`sacct`](https://slurm.schedmd.com/sacct.html):
+
+```bash
+sacct \
+    -j JOB_ID \
+    --format=JobID,State,ExitCode
+```
+
+Replace `JOB_ID` with the array ID printed at submission. Read task states and exit codes alongside the worker logs and output inventory.
 
 ## Troubleshoot failed jobs
 

@@ -28,7 +28,7 @@ The contents appear in stages:
 | Accepted `sbatch` submission | `slurm-submission-log.json` records the accepted job ID and resolved submission; HIPO output may not exist yet |
 | Completed Slurm tasks | GEMC output appears under `mchipo/`, and COATJAVA reconstruction output appears under `reconhipo/` |
 
-The final manifest name is a completion marker. A failed or interrupted creation may leave partial files and a temporary `.json.tmp` file, but submission rejects that state. The [LUND data contract](../concepts/lund-data-contract.md) defines the text records and manifest fields.
+The final manifest name is a completion marker. A failed or interrupted creation may leave partial files and a temporary `.json.tmp` file. Do not submit those files as a completed run: normal submission needs the final manifest, and the resolver rejects input with only a temporary manifest. A separate [manual-input interface](../submit-simulation/guide.md#lund-input-without-a-manifest) supports independently prepared files without a manifest; it does not establish that an interrupted creation succeeded. The [LUND data contract](../concepts/lund-data-contract.md) defines the text records and manifest fields.
 
 The creation workflow replaces an existing resolved `RUN/` directory after warning. Submission has a different boundary: preview preserves existing simulation output, while `--execute` replaces only `mchipo/` and `reconhipo/` and preserves `lundfiles/`. The [submission guide](../submit-simulation/guide.md) defines those actions and the recovery implications.
 

@@ -133,7 +133,7 @@ The current archived selection is uniform submission. Its active loop is **en at
 | `TARGET_VARIATION`, `GCARD_FILE`, `YAML_FILE` | Resolved manifest values and config/CLI overrides |
 | `TORUS_FIELD` | Retained +0.5 at 2 GeV; −1.0 at 4/6 GeV |
 | Solenoid −1.0 | Unchanged in the external payload |
-| GEMC modules and `GEMC_DATA_DIR` | Preloaded on ifarm; checked by Python submission, with optional clas12Tags override |
+| GEMC/COATJAVA modules and `GEMC_DATA_DIR` | Requested modules loaded and checked in Python's child environment, with optional clas12Tags data override |
 | Scheduler resources and logs | Existing external payload directives |
 | Simulation output reset | Recreate `mchipo`/`reconhipo` for either source; preserve LUND |
 | Repository update | Guarded disposable-clone refresh in `run.csh` |

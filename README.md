@@ -30,7 +30,7 @@ source run.csh \
     --output /path/to/output
 ```
 
-`run.csh` is designed for a disposable ifarm checkout: after validating the command, it discards local checkout changes, updates from Git, and builds when needed. Commit and push valuable development work before running it. Local developers should build with CMake and invoke the compiled executables directly.
+`run.csh` is designed for a disposable ifarm checkout: it discards tracked changes and removes untracked and ignored files, preserving only the checkout's `build/` tree, then updates from Git and builds when needed. Full workflow validation happens after this refresh. Commit and push valuable development work before running it, and keep sample output outside the checkout. Local developers should build with CMake and invoke the compiled executables directly.
 
 After LUND creation succeeds, preview simulation submission with the run's `lundfiles/` directory:
 

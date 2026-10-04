@@ -26,13 +26,13 @@ User-facing entry points list every owned CLI option with its value, meaning, an
 
 `src/launcher/presentation/set_colors.csh` is the only ANSI palette. C++ reads it through `src/workflows/support/environment.h`; Python, shell, and CMake read the inherited environment. Do not define fallback palettes elsewhere.
 
-Project errors use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line.
+Project errors use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line. The exception is `module` commands: print `module show gemc/<version>`, `module show coatjava/<version>`, and `module list` on one line.
 
 Every workflow prints shared success artwork once after the complete invocation succeeds. A handled failure prints one blank line, the final error, one blank line, and shared stop artwork once while preserving the original status.
 
 ## Citations
 
-Repository Markdown uses GitHub footnotes with the marker immediately after the supported statement. Copy complete citation details from the project's internal bibliography; readers should not need to open that working file. The Wiki generator converts footnotes into numbered Wiki references and rejects missing, duplicate, or unused definitions.
+Repository Markdown uses GitHub footnotes with the marker immediately after the supported statement and before its closing punctuation. Copy complete citation details from the project's internal bibliography; readers should not need to open that working file. The Wiki generator converts footnotes into numbered Wiki references and rejects missing, duplicate, or unused definitions.
 
 ## Protected sources
 

@@ -46,4 +46,6 @@ source run.csh \
 
 Submission bypasses `workflow.py` and does not read this JSON. Its settings come from the LUND manifest, an optional submission config, CLI overrides, and submission defaults.
 
+Forwarded application help still follows the disposable-checkout refresh. Only bare launcher help and the limited submission precheck can return before that refresh; see the [checkout model](../docs/submit-simulation/ifarm-environment.md#disposable-checkout). For local development, ask the compiled executable for `--help` directly.
+
 Invalid Booleans, build types, paths, or worker counts fail before CMake or a child application runs. A failed build prevents LUND creation.

@@ -34,6 +34,8 @@ Use the current fork's `OWNER/NAME`. The Wiki builder rejects unsafe output loca
 
 The `Publish documentation wiki` action validates matching pull requests. After matching files reach `dev` or `main`, it generates the Wiki with the triggering repository and branch, checks out the separate `<repository>.wiki.git` repository, synchronizes generated content, and pushes only when it changed. No definitive fork URL is stored in the documentation.
 
+There is one Wiki per repository, not one per branch. Publications from `dev` and `main` replace the same pages; the last successful publication determines which branch's documentation and source links readers see. A code-only push does not trigger this workflow. If source changes move automatically linked function definitions without changing documentation, run the action manually to refresh their line links.
+
 GitHub creates the separate Wiki Git repository only after the repository Wiki has been enabled and one initial page has been saved. This is a one-time repository setup step:
 
 1. Enable **Wikis** under **Settings → Features**.

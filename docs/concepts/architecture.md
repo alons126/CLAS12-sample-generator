@@ -15,7 +15,7 @@ Future user-facing workflows belong beside the existing workflow directories. Th
 
 ## Entry points and control flow
 
-`run.csh` is the operational front door. After early help/argument checks, it refreshes the disposable ifarm checkout and selects a workflow.
+`run.csh` is the operational front door. It refreshes the disposable ifarm checkout and selects a workflow. Bare launcher help and limited submission syntax checks can return before refresh; full workflow validation happens afterward. The [checkout model](../submit-simulation/ifarm-environment.md#disposable-checkout) defines that boundary.
 
 For LUND creation:
 

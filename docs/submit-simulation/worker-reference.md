@@ -37,9 +37,9 @@ The same `JOB_NEVENTS` limit is passed to GEMC and reconstruction. A shorter LUN
 | `SAMPLE_GENERATOR`, `GENERATOR_TUNE`, `SAMPLE_TARGET_NUCLEUS`, `Q2_CUT` | Physical provenance printed in the task log |
 | `BEAM_ENERGY_LABEL`, `UNIFORM_SAMPLE_CHANNEL` | Beam and uniform-channel labels printed in the task log |
 
-The worker inherits the verified `PATH` and module environment. It does not load modules or select software versions itself. The coordinator exports both version values, reports them before submission, and records them with verified executable paths in the submission log. The current worker does not echo those version values. The coordinator also resolves and reports `DETECTOR_ENERGY_GROUP` while selecting detector resources; the worker does not read that value.
+The worker inherits the verified `PATH` and module environment. It does not load modules or select software versions itself. The coordinator exports both version values, reports them before submission, and records them with executable paths in the submission log. The coordinator also resolves and reports `DETECTOR_ENERGY_GROUP` while selecting detector resources; the worker does not read that value.
 
-The echo statements make received values visible in the scheduler log; they do not perform validation. Validation belongs to the coordinator.
+The settings printouts make received values visible in the scheduler log; they do not perform validation. Validation belongs to the coordinator.
 
 Before running GEMC, each array task prints the requested GEMC and COATJAVA versions, inherited `LOADEDMODULES` value, and executable paths found with `command -v` for `gemc` and `recon-util`. These appear in the scheduler's `.out` file without requiring the `module` shell function, which may be unavailable in the job's Bash shell. Requested versions and inherited module names describe the selected environment; executable paths show which commands the worker will invoke. These printouts are not independent binary version queries and do not load modules or validate their versions.
 

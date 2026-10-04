@@ -6,6 +6,8 @@
 # replace every /path/to/... placeholder, and commit changes before using run.csh on
 # the disposable ifarm checkout. Use the built event-generator-to-lund-converter
 # executable for local development.
+# Commit and push valuable changes first. Refresh removes tracked edits and untracked
+# or ignored files except build/. Forwarded application help also follows this refresh.
 
 #########################################################################################
 # Print the current physical LUND converter interface

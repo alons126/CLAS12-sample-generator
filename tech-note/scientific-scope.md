@@ -4,7 +4,7 @@
 
 ## Abstract
 
-The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A small sourced bridge invokes Python setup with the login shell's CLAS12/COATJAVA environment, loads and verifies the selected GEMC module in a child environment, and submits Slurm arrays whose external payload runs GEMC and reconstruction. Production uniform sampling balances momentum and inverse-momentum coverage for 1e electrons and charged hadrons, while neutrons cover zero to beam momentum; hadron region selects the documented FD or CD flat-theta window.
+The software prepares CLAS12 simulation inputs through uniform particle sampling or conversion of existing electron-scattering GENIE GST events. Both routes use common event records, target geometry, LUND serialization, and run manifests. A small sourced bridge invokes Python setup, which loads and verifies the requested GEMC and COATJAVA modules in a child environment and submits Slurm arrays whose external payload runs GEMC and reconstruction. Production uniform sampling balances momentum and inverse-momentum coverage for 1e electrons and charged hadrons, while neutrons cover zero to beam momentum; hadron region selects the documented FD or CD flat-theta window.
 
 ## Reading and assembly order
 
@@ -18,7 +18,7 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 | 7. Data products and provenance | [Data contracts](../docs/concepts/lund-data-contract.md), [diagnostics](../docs/create-lund/monitoring.md) | Field definitions, mass conventions, histograms, manifests |
 | 8. Detector processing | [Simulation and Slurm](../docs/submit-simulation/guide.md) | Runtime environment, filenames, arguments, failure handling |
 | 9. Verification and limitations | [Scientific validation boundaries](../docs/development/validation.md) | Intentional behavior, production evidence, and known limits |
-| Appendices | [Build guide](../docs/getting-started/installation.md), [SSH workflow](../docs/submit-simulation/ifarm-environment.md) | Reproducible build and run recipes |
+| Appendices | [Build guide](../docs/development/building.md), [ifarm environment](../docs/submit-simulation/ifarm-environment.md) | Reproducible build and run recipes |
 
 ## Boundaries and assumptions
 
@@ -26,7 +26,7 @@ The software prepares CLAS12 simulation inputs through uniform particle sampling
 - Uniform electron–hadron events are artificial acceptance probes. The trigger electron and hadron need not satisfy exclusive scattering energy/momentum conservation.
 - Hadron theta and phi are always uniform inside the configured detector window for acceptance-map coverage.
 - GENIE header field 10 retains a process code, not a physical event weight.
-- Reproducing a run requires matching beam energy, geometry, A/Z, seeds, selected mode, and file settings. Record these values together because independently selected settings do not necessarily describe one consistent campaign.
+- Reproducing a run requires matching beam energy, geometry, A/Z, nonzero seeds, selected mode, software, input, and draw order. A recorded zero seed cannot reproduce ROOT's automatically chosen random state. Record these values together because independently selected settings do not necessarily describe one consistent campaign.
 - LUND precision, target-source masses, neutral-pion handling, and the physical-input cutoff are explicit in the data/validation chapters.
 
 ## Material still needed for a publication

@@ -6,7 +6,7 @@ This page maps implementation files to responsibilities. The [architecture guide
 
 | Path | Responsibility |
 | --- | --- |
-| `run.csh` | Operational entry point; early help/argument checks, disposable-checkout refresh, and workflow selection |
+| `run.csh` | Operational entry point; bare help and limited submission syntax checks, disposable-checkout refresh, and workflow selection |
 | `src/launcher/workflow.py` | `create-lund` build settings, CMake stages, executable selection, and exact child-argument forwarding |
 | `src/launcher/checkout/` | Checked cleanup, reset, pull, and submodule synchronization |
 | `src/launcher/environment/` | Checkout and host preparation |
@@ -17,6 +17,8 @@ This page maps implementation files to responsibilities. The [architecture guide
 `config/run.json` controls only launcher build/run behavior. Sample definitions belong under `config/samples/`; detector resources belong under `config/detector/`.
 
 ## Shared LUND core
+
+Paths in the following three LUND sections are relative to `src/workflows/lund-creation/`. Paths in the submission section are relative to `src/workflows/`.
 
 | Path or type | Responsibility |
 | --- | --- |

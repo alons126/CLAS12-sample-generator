@@ -22,7 +22,7 @@ The arbitrary commands in the all-options files are interface demonstrations, no
 
 Replace every `/path/to/...` placeholder with a reviewed path. LUND and HIPO data used by Slurm must live on storage visible to the workers. Quote physical-input globs so ROOT receives them unchanged.
 
-Run `run.csh` commands from a csh/tcsh login shell on ifarm. The checkout is disposable: a normal workflow refresh discards checkout edits and untracked files except documented build exclusions. Commit and push valuable development changes first. For local development, build with CMake and run the compiled LUND executable directly.
+Run `run.csh` commands from a csh/tcsh login shell on ifarm. The checkout is disposable: a normal workflow refresh discards tracked edits and removes untracked and ignored files except the checkout's `build/` tree. Commit and push valuable development changes first, and keep production output outside that checkout. For local development, build with CMake and run the compiled LUND executable directly.
 
 Submission previews by default. Some production command lists include `--execute`; remove it to inspect settings and actions without replacing simulation output or calling `sbatch`.
 

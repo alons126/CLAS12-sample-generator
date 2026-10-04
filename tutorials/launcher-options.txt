@@ -65,8 +65,9 @@ source run.csh \
 #########################################################################################
 # Select the submission workflow
 #
-# Submission has no --source and bypasses the launcher build controls. It previews
-# by default. Its complete option inventory is in slurm-submission/all-options.txt.
+# Manifest-backed submission does not need --source and bypasses launcher build
+# controls. For manifest-free input, --source supplies truth metadata. Submission
+# previews by default; its complete inventory is in slurm-submission/all-options.txt.
 #########################################################################################
 
 source run.csh \

@@ -8,7 +8,7 @@ The common record and writer separate source-specific event logic from the [LUND
 
 Uniform events contain one electron or an electron followed by one hadron. Physical GENIE events contain the scattered electron followed by supported GST particles in input order. Every particle in one event has the same vertex.
 
-Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as $E=\sqrt{P^2+m^2}$.
+Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as $E=\sqrt{P^2+m^2}$, using natural units ($c=1$) for the numerical calculation.
 
 ## Ten-field event header
 
@@ -29,7 +29,9 @@ For GENIE GST conversion, field 4 is the LUND slot otherwise used for target pol
 
 Field 8 is always the literal value `1`. GEMC lists this user-defined column as the interacted-nucleon ID, but RG-M LUND-writing code widely uses `1` for uniform particles, GENIE events, and GCF events[^rgm-field-8]. This project preserves that RG-M convention. The value is not an interaction count and is not interpreted as a proton or neutron PDG identifier; GEMC retains this user-defined header value but does not use it for particle transport.
 
-Field 10 is a process tag for converted GENIE input, not an event weight or cross section.
+Field 5 is zero in GEMC's first-particle spin-$z$ slot. Field 6 identifies an electron beam (PDG 11), and field 7 records its energy in $\mathrm{GeV}$. This project uses field 9 for an event ID rather than the user-defined process ID in GEMC's example convention. It uses field 10 for a process tag in converted GENIE input rather than an event weight or cross section. Readers must use these project meanings instead of treating the header as a generic weighting prescription.
+
+Field 9 must fit a signed 32-bit integer (at most 2147483647); the writer rejects larger IDs. Physical IDs can have gaps because unsupported input events are skipped.
 
 Every header uses this exact format:
 
@@ -44,10 +46,11 @@ Fields 4, 5, and 7 therefore have six digits after the decimal point; field 10 h
 | Field | Meaning |
 | --- | --- |
 | 1 | One-based particle index |
-| 2 | 0, reserved |
+| 2 | 0 in GEMC's user-defined lifetime slot (nanoseconds) |
 | 3 | 1, propagated particle |
 | 4 | PDG identifier |
-| 5–6 | 0, 0, reserved parent/status fields |
+| 5 | 0 in the user-defined parent-index slot |
+| 6 | 0 in the user-defined first-daughter-index slot |
 | 7–9 | $P_x$, $P_y$, $P_z$ in $\mathrm{GeV}/c$ |
 | 10 | Calculated energy $E$ in $\mathrm{GeV}$ |
 | 11 | Mass $m$ in $\mathrm{GeV}/c^2$ |
@@ -106,7 +109,7 @@ The `git` object includes the repository, branch, commit message, complete commi
 
 For uniform creation, scanned and written counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The manifest does not hash the original GST input or capture a dirty checkout as a restorable source snapshot. Preserve source input, checkout revision, and campaign records separately.
 
-Git fields describe the checkout when CMake configured the executable. Reusing a build after changing the working tree does not update them; rebuild when provenance must reflect new source.
+Git fields describe the checkout when CMake configured the executable. Reusing a build after changing the working tree does not update them automatically; reconfigure with CMake and rebuild when provenance must reflect new source.
 
 ## Submission record
 

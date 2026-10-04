@@ -17,7 +17,7 @@ source run.csh \
 
 The final run directory is `/path/to/output/Uniform__1e__5986MeV`. The uniform LUND creator prints that resolved path before replacing or writing it.
 
-`run.csh` treats its ifarm checkout as disposable. A normal workflow run removes untracked files except documented build exclusions, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first.
+`run.csh` treats its ifarm checkout as disposable. A normal workflow run removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first, and keep production output outside that checkout.
 
 ## Run locally during development
 
@@ -54,13 +54,12 @@ The manifest is written last. Partial LUND files without this manifest do not fo
 
 ## Preview simulation submission
 
-Make the run available on storage visible from ifarm, then preview its Slurm array:
+The 100-event uniform example creates one LUND file. Make the run available on storage visible from ifarm, then preview submission of all its files:
 
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /path/to/run/lundfiles \
-    --num-jobs 2
+    --lund-dir /path/to/output/Uniform__1e__5986MeV/lundfiles
 ```
 
 Preview validates and reports the environment, detector inputs, output actions, and exact `sbatch` command. It does not call `sbatch`. Read the [submission guide](../submit-simulation/guide.md) before adding `--execute`.
