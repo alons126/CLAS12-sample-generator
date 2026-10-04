@@ -1,0 +1,39 @@
+#!/bin/tcsh
+
+# Terminal color environment --------------------------------------------------
+
+# Description:
+#   Define the terminal colors shared by shell, Python, and C++ output.
+
+# region Terminal color environment
+# Purpose:
+#   Keep terminal color values in one shell file.
+#
+# Execution flow:
+#   Remove old color values -> export the current colors -> let child programs use them.
+#
+# Inputs:
+#   None. Re-sourcing always replaces stale values.
+#
+# Outputs:
+#   Exported `*_COLOR` variables remain available to run.csh, shared printer helpers, and child processes.
+#
+# Usage:
+#   Source this file before printing with a `*_COLOR` variable.
+#
+# Notes:
+#   SYSTEM_COLOR is the normal heading color. RESET_COLOR stops color from leaking into later output.
+#   The file prints nothing.
+
+unset ERROR_COLOR COMPLETION_COLOR SYSTEM_COLOR INFO_COLOR WARNING_COLOR LOGO_COLOR STOP_COLOR RESET_COLOR
+unsetenv ERROR_COLOR COMPLETION_COLOR SYSTEM_COLOR INFO_COLOR WARNING_COLOR LOGO_COLOR STOP_COLOR RESET_COLOR
+
+setenv ERROR_COLOR      '\033[31m'  # Red
+setenv COMPLETION_COLOR "\033[32m"  # Green
+setenv SYSTEM_COLOR     '\033[33m'  # Yellow
+setenv INFO_COLOR       '\033[35m'  # Magenta
+setenv WARNING_COLOR    '\033[36m'  # Cyan
+setenv LOGO_COLOR       '\033[34m'  # Blue
+setenv STOP_COLOR       '\033[38;5;208m'  # Orange
+setenv RESET_COLOR      '\033[0m'   # Reset color
+# endregion
