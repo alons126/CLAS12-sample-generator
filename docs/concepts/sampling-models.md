@@ -57,7 +57,7 @@ $V_z$ follows the resolved geometry:
 
 These values describe the checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) snapshot. Recheck this table whenever that protected source is replaced.
 
-Target identity, geometry, and LUND $A$/$Z$ metadata are distinct values. An $A$/$Z$ override does not change the vertex distribution.
+Target identity, geometry, and LUND $A$ / $Z$ metadata are distinct values. An $A$ / $Z$ override does not change the vertex distribution.
 
 ## Random-stream ownership
 

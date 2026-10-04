@@ -23,7 +23,7 @@ Paths in the following three LUND sections are relative to [`src/workflows/lund-
 | Path or type | Responsibility |
 | --- | --- |
 | [`core/config/RunConfig.h`](../../src/workflows/lund-creation/core/config/RunConfig.h) | Combine defaults, profile, and command line; calculate automatic values; check and return final settings |
-| [`core/config/TargetCatalog.h`](../../src/workflows/lund-creation/core/config/TargetCatalog.h) | Map target identity to $A$/$Z$ and compatible beam-dependent GEMC variation/geometry |
+| [`core/config/TargetCatalog.h`](../../src/workflows/lund-creation/core/config/TargetCatalog.h) | Map target identity to $A$ / $Z$ and compatible beam-dependent GEMC variation/geometry |
 | [`core/geometry/TargetGeometry.h`](../../src/workflows/lund-creation/core/geometry/TargetGeometry.h) | Sole adapter in this repository to external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); vertex sampling and supported mass lookup |
 | [`core/lund/Event.h`](../../src/workflows/lund-creation/core/lund/Event.h) (`Particle` and `Event`) | Generator-independent in-memory record passed to the writer |
 | [`core/lund/LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h) | Check and replace the run directory, split and format LUND files, count events, and write the completion log |

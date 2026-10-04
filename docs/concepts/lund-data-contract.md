@@ -77,7 +77,7 @@ The serialized masses are:
 | $e^{-}$ | 0.00051 |
 | $p$ | 0.93827 |
 | $n$ | 0.93957 |
-| $\pi^{+}$/$\pi^{-}$ | 0.13957 |
+| $\pi^{+}$ / $\pi^{-}$ | 0.13957 |
 | $\gamma$ | 0.00000 |
 
 These are the masses after formatting with five decimal places for LUND. Energy is calculated before that rounding, using the values in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) (for example, electron 0.000511 and proton 0.938272). Photon mass is exactly zero.

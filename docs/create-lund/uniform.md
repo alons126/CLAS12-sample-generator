@@ -68,7 +68,7 @@ The electron-tester, 1e, epFD, and enFD modes are the production-tested uniform 
 
 ## Targets and repeatability
 
-The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, $A=40$, $Z=18$, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. $A$/$Z$ are separate LUND-header metadata and do not silently change geometry.
+The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, $A=40$, $Z=18$, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. $A$ / $Z$ are separate LUND-header metadata and do not silently change geometry.
 
 The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls vertex positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
 
