@@ -13,4 +13,6 @@ Read these pages in this order when changing the code:
 
 Then use [adding a physical-input adapter](adding-event-generator.md) for that specific extension, or [Wiki publishing](wiki-publishing.md) when changing documentation and its publication. The [getting-started path](../getting-started/index.md) remains the operating guide; developer pages explain the implementation behind it.
 
+Use [Preparing a publication PR](release-publication.md) to copy reviewed application files from `dev` onto `release-candidate` and open a PR into `main`.
+
 When changing behavior, update the code, command-line help, profiles, tutorials, and Wiki source together. Readers should not have to guess which description matches the current program.
