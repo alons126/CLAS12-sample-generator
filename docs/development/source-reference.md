@@ -74,4 +74,4 @@ Resolution completes for all selected samples before the coordinator changes out
 - `config/submission.conf` is an optional submission example, not an automatic site file.
 - `config/detector/` contains protected GCARD and YAML snapshots.
 
-The [configuration reference](../create-lund/configuration.md) owns accepted LUND settings. The [submission guide](../submit-simulation/guide.md) owns submission settings. Do not duplicate option defaults in implementation-overview prose unless the value is essential to understanding that component.
+The [LUND configuration reference](../create-lund/configuration.md) owns accepted creation settings. The [submission configuration reference](../submit-simulation/configuration.md) owns submission settings. Do not duplicate option defaults in implementation-overview prose unless the value is essential to understanding that component.

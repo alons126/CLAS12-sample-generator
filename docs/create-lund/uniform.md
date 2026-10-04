@@ -10,7 +10,7 @@ source run.csh \
     --source uniform \
     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
     --events 100 \
-    --output /path/to/output
+    --output /path/to/quickstart-output
 ```
 
 The checked-in profile provides the sample definition. The explicit `--events 100` makes this a smoke test; production profiles request 50,000,000 events, while electron-tester profiles request 1,000,000. Command-line values override matching profile values. The [sample-profile inventory](../../config/samples/README.md) lists the profile pattern for every implemented channel at $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$.
@@ -40,9 +40,9 @@ Each output label joins `e` for the trigger electron, the selected hadron, and t
 | `epipCD` | `pip` | Central detector (`CD`) | $e^-\pi^{+}$ |
 | `epimCD` | `pim` | Central detector (`CD`) | $e^-\pi^{-}$ |
 
-The automatic run name and filename prefix are `Uniform__<label>__<beam-MeV>MeV`. File splitting does not restart the zero-based event-number sequence.
+The automatic run name and filename prefix are `Uniform__<channel-label>__<beam-label>`. File splitting does not restart the zero-based event-number sequence.
 
-`events` is the total run size. `events-per-file` defaults to 25,000 and controls LUND file splitting. The completion manifest records the exact count in every file; submission uses the largest selected file count as the common GEMC/reconstruction event limit.
+`events` is the total run size. `events-per-file` defaults to 25,000 and controls LUND file splitting. The completion manifest records the exact count in every file; submission uses the largest event count among the selected files as the common GEMC/reconstruction event limit.
 
 ## Production definitions
 

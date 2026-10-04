@@ -27,7 +27,7 @@ source run.csh \
     --source uniform \
     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
     --events 100 \
-    --output /path/to/output
+    --output /path/to/quickstart-output
 ```
 
 `run.csh` is designed for a disposable ifarm checkout: it discards tracked changes and removes untracked and ignored files, preserving only the checkout's `build/` tree, then updates from Git and builds when needed. Full workflow validation happens after this refresh. Commit and push valuable development work before running it, and keep sample output outside the checkout. Local developers should build with CMake and invoke the compiled executables directly.
@@ -37,7 +37,7 @@ After LUND creation succeeds, preview simulation submission with the run's `lund
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /path/to/run/lundfiles
+    --lund-dir /path/to/quickstart-output/Uniform__1e__5986MeV/lundfiles
 ```
 
 Preview is the default. Add `--execute` only after reviewing the resolved detector settings and output actions.

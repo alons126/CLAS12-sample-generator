@@ -20,6 +20,13 @@ The paths share configuration parsing, target geometry, event and particle recor
 
 The manifest is the completion boundary. A failed run may leave partial files, but without the final manifest it is not ready for submission.
 
-Start with the [uniform guide](uniform.md) or [physical guide](physical.md). Use the [configuration reference](configuration.md) for exact options, [examples](examples.md) for commands, and the [LUND data contract](../concepts/lund-data-contract.md) when reading or extending the writer.
+## Reading order
+
+1. Choose the [uniform guide](uniform.md) or [physical guide](physical.md) for the source you need.
+2. Use the [configuration reference](configuration.md) to choose settings and understand their defaults.
+3. For uniform samples, read [monitoring](monitoring.md) to inspect the generated kinematics.
+4. Use [examples](examples.md) for additional commands.
+
+Read the [LUND data contract](../concepts/lund-data-contract.md) when inspecting records or extending the writer. Path placeholders follow the [output notation](../getting-started/outputs.md#path-notation).
 
 Creating LUND files never submits detector simulation. That remains a separate [ifarm submission workflow](../submit-simulation/index.md).

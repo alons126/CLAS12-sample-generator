@@ -7,7 +7,7 @@ Run these commands on ifarm. Preview is the default and should be the first acti
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/path/to/run/lundfiles
+    --lund-dir /path/to/run/lundfiles
 ```
 
 ## Submit the first five files
@@ -15,7 +15,7 @@ source run.csh \
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/path/to/run/lundfiles \
+    --lund-dir /path/to/run/lundfiles \
     --num-jobs 5 \
     --execute
 ```
@@ -27,7 +27,7 @@ Execution replaces this run's `mchipo/` and `reconhipo/`, but preserves `lundfil
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/path/to/run/lundfiles \
+    --lund-dir /path/to/run/lundfiles \
     --gemc-version 5.14 \
     --coatjava-version 10.0.7 \
     --gemc-target-variation rgm_fall2021_Ar \
@@ -43,8 +43,8 @@ The GCARD controls GEMC detector simulation. The YAML controls COATJAVA reconstr
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/run-a/lundfiles \
-    --lund-dir /shared/run-b/lundfiles \
+    --lund-dir /path/to/run-a/lundfiles \
+    --lund-dir /path/to/run-b/lundfiles \
     --num-jobs 2
 ```
 
@@ -53,8 +53,8 @@ source run.csh \
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/path/to/run/lundfiles \
-    --clas12tags-dir /shared/development/clas12Tags
+    --lund-dir /path/to/run/lundfiles \
+    --clas12tags-dir /path/to/clas12Tags
 ```
 
 Use this only for a reviewed detector-development study. It changes the GEMC data directory passed to Slurm.

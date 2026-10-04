@@ -2,6 +2,8 @@
 
 The tutorial text files are copyable command collections. They complement the Wiki: the Wiki explains behavior and safety; the tutorials show complete invocations.
 
+For the explanation before the commands, follow the [getting-started reading order](../docs/getting-started/index.md). The shared [path notation](../docs/getting-started/outputs.md#path-notation) distinguishes the creation output parent from the run directory passed to submission.
+
 ## Start with the matching pair
 
 | Work | Create | Submit |

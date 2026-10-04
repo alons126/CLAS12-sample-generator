@@ -19,24 +19,15 @@ flowchart LR
     R --> H["Reconstructed HIPO files"]
 ```
 
-
 ## Reading order
 
 If you want to run the software:
 
-1. [Dependencies and execution environments](getting-started/installation.md)
-2. [Quickstart](getting-started/quickstart.md)
-3. [Create LUND files](create-lund/index.md), followed by either the [uniform](create-lund/uniform.md) or [physical](create-lund/physical.md) guide
-4. [Submit simulation](submit-simulation/index.md)
-5. [Run directories and outputs](getting-started/outputs.md)
+Follow the [getting-started reading path](getting-started/index.md): dependencies, quickstart, run directories and outputs, the selected LUND-creation guide, then simulation submission and output verification. Read the output layout immediately after the quickstart so you know which directory to pass to submission.
 
 If you want to modify or extend the software:
 
-1. [Architecture](concepts/architecture.md)
-2. [Source and API map](development/source-reference.md)
-3. [Data contract](concepts/lund-data-contract.md) and [sampling model](concepts/sampling-models.md)
-4. [Contributing and validation](development/contributing.md)
-5. [Adding another physical-input adapter](development/adding-event-generator.md), when relevant
+Follow the [developer reading path](development/index.md). It starts with architecture and the source map, explains the scientific and data contracts, then covers contribution, builds, validation, and specific extensions. First read the user guide for the workflow you intend to change.
 
 Use the [workflow command examples](../tutorials/README.md) as a copyable option inventory, not as a substitute for understanding the selected profile and output path.
 

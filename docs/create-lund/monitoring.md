@@ -13,7 +13,7 @@ It renders the same objects into:
 ```text
 RUN/lundfiles/lund-creation-monitoring/MonitoringPlotsPath/
 ├── <PREFIX>__plots.pdf
-├── 1_<HISTOGRAM>.png
+├── <PLOT_INDEX>_<HISTOGRAM>.png
 └── ...
 ```
 

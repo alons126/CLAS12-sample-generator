@@ -21,7 +21,7 @@ See [RG-M repository](https://github.com/awild7/rgm) for any updates for `~/envi
 source ~/environment.csh
 ```
 
-This prepares the login environment. Submission then explicitly unloads and loads its requested GEMC module, switches COATJAVA with `module switch coatjava/<version>`, and verifies both selections in a private child environment, defaulting to GEMC 5.14 and COATJAVA 10.0.7. Use `--gemc-version` and `--coatjava-version`, or their configuration-file keys, to change those selections. A different login-shell release does not override submission defaults, and submission does not alter the interactive shell. See the [COATJAVA repository](https://github.com/JeffersonLab/coatjava) for its source and other releases. Changing a release requires compatible configuration files and campaign validation.
+This prepares the login environment. Submission then explicitly unloads and loads its requested GEMC module, switches COATJAVA with `module switch coatjava/<coatjava-version>`, and verifies both selections in a private child environment, defaulting to GEMC 5.14 and COATJAVA 10.0.7. Use `--gemc-version` and `--coatjava-version`, or their configuration-file keys, to change those selections. A different login-shell release does not override submission defaults, and submission does not alter the interactive shell. See the [COATJAVA repository](https://github.com/JeffersonLab/coatjava) for its source and other releases. Changing a release requires compatible configuration files and campaign validation.
 
 ## Disposable checkout
 
@@ -36,7 +36,7 @@ Use a csh/tcsh login shell:
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /shared/path/to/run/lundfiles
+    --lund-dir /path/to/run/lundfiles
 ```
 
 Bash users may execute `./run.csh` when tcsh is installed, but must not source csh syntax into Bash.
@@ -48,10 +48,10 @@ When the shell is not in the repository root, point the launcher to the checkout
 ```tcsh
 unset CLAS12_SAMPLES_DIR
 unsetenv CLAS12_SAMPLES_DIR
-setenv CLAS12_SAMPLES_DIR /shared/path/to/CLAS12-sample-generator
+setenv CLAS12_SAMPLES_DIR /path/to/CLAS12-sample-generator
 source "$CLAS12_SAMPLES_DIR/run.csh" \
     --workflow submit \
-    --lund-dir /shared/path/to/run/lundfiles
+    --lund-dir /path/to/run/lundfiles
 ```
 
 `CLAS12_SAMPLES_DIR` is a user-owned override and remains in that shell until removed with `unsetenv CLAS12_SAMPLES_DIR`.

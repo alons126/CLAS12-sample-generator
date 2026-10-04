@@ -17,7 +17,8 @@ Inputs:
 
 Outputs:
     A flat wiki directory. Existing non-Markdown files and `.git` stay in place. File links use the
-    selected branch, and function links include their current source line.
+    selected branch, and function links include their current source line. Each sidebar section
+    follows its source index's reading order, with unlisted pages placed afterward.
 
 Failure:
     Missing files, broken local links, duplicate page names, or an unsafe output path stop the build.
@@ -571,6 +572,42 @@ def validate_output(output):
     return resolved
 
 
+def ordered_section_pages(directory, pages):
+    """Order a sidebar section by its index links, then by remaining Wiki names.
+
+    Inputs:
+        A docs section directory name and the source-path-to-Wiki-name mapping.
+
+    Outputs:
+        Wiki names, each once, with the section overview first. Links outside the
+        section do not move pages from another section into this one.
+
+    Failure:
+        An unreadable section index raises the underlying file error.
+    """
+
+    section = ROOT / "docs" / directory
+    members = {source: name for source, name in pages.items() if section in source.parents}
+    index = section / "index.md"
+    ordered = [index] if index in members else []
+
+    if index in members:
+        for match in LINK.finditer(index.read_text(encoding="utf-8")):
+            target = urllib.parse.urlsplit(match.group("target").strip("<>"))
+
+            if target.scheme or target.netloc or not target.path:
+                continue
+
+            source = (section / urllib.parse.unquote(target.path)).resolve()
+
+            if source in members and source not in ordered:
+                ordered.append(source)
+
+    remaining = sorted((source for source in members if source not in ordered), key=lambda source: members[source].casefold())
+
+    return [members[source] for source in ordered + remaining]
+
+
 def build(output, repository, branch):
     """Generate all pages in the flat wiki directory.
 
@@ -601,15 +638,7 @@ def build(output, repository, branch):
     sidebar.extend((f"- [{titles['Home.md']}](Home)", f"- [{titles['Repository-Overview.md']}](Repository-Overview)"))
 
     for heading, directory in SIDEBAR_SECTIONS:
-        members = []
-
-        for source, wiki_name in pages.items():
-            relative = source.relative_to(ROOT)
-
-            if len(relative.parts) >= 3 and relative.parts[:2] == ("docs", directory):
-                members.append(wiki_name)
-
-        members.sort(key=lambda name: (not name.endswith("-overview.md"), titles[name].casefold()))
+        members = ordered_section_pages(directory, pages)
         sidebar.extend(("", f"## {heading}", ""))
         sidebar.extend(f"- [{titles[name]}]({Path(name).stem})" for name in members)
 

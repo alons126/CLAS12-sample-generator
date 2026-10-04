@@ -82,7 +82,7 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 
 Automatic minimum-$Q^2$ cut labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Selecting or accepting one of these labels asserts that the supplied truth-level sample was generated with that minimum cut. The code assumes the assertion is correct: it does not calculate $Q^2$, inspect the input distribution, or remove events. An incorrect label therefore records incorrect provenance. The [physical-conversion guide](physical.md#why-upstream-samples-use-q2-cuts) explains the cuts' relation to the electron cross section and CLAS12 angular acceptance. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
 
-The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<beam-MeV>MeV`. The metadata directory is `OUTPUT/<GEMC-variation>__<event-generator>-<version>__<tune>__<Q2-label>__<beam-MeV>MeV`. Every component is sanitized for use as a path while the manifest retains each original resolved value. GEMC and COATJAVA versions are selected during simulation submission and are not part of LUND creation.
+The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<q2-cut>__<beam-label>`. The metadata directory is `OUTPUT/<gemc-target-variation>__<event-generator>-<event-generator-version>__<tune>__<q2-cut>__<beam-label>`. Every component is sanitized for use as a path while the manifest retains each original resolved value. GEMC and COATJAVA versions are selected during simulation submission and are not part of LUND creation.
 
 ## Output replacement
 

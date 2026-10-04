@@ -26,13 +26,21 @@ User-facing entry points list every owned CLI option with its value, meaning, an
 
 `src/launcher/presentation/set_colors.csh` is the only ANSI palette. C++ reads it through `src/workflows/support/environment.h`; Python, shell, and CMake read the inherited environment. Do not define fallback palettes elsewhere.
 
-Project errors use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line. The exception is `module` commands: print `module show gemc/<version>`, `module show coatjava/<version>`, and `module list` on one line.
+Project errors use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line. The exception is `module` commands: print `module show gemc/<gemc-version>`, `module show coatjava/<coatjava-version>`, and `module list` on one line.
 
 Every workflow prints shared success artwork once after the complete invocation succeeds. A handled failure prints one blank line, the final error, one blank line, and shared stop artwork once while preserving the original status.
 
 ## Citations
 
 Repository Markdown uses GitHub footnotes with the marker immediately after the supported statement and before its closing punctuation. Copy complete citation details from the project's internal bibliography; readers should not need to open that working file. The Wiki generator converts footnotes into numbered Wiki references and rejects missing, duplicate, or unused definitions.
+
+## Reading paths and examples
+
+Keep the user reading order in the getting-started index and the contributor reading order in the development index. The Wiki home points to these routes instead of repeating them. Each workflow index orders its own pages; the generated sidebar follows those links.
+
+Use the shared [path notation](../getting-started/outputs.md#path-notation): `OUTPUT` is the parent passed to LUND creation, while `RUN` is the resolved run directory. Submission consumes `RUN/lundfiles/`. Use `/path/to/...` for replaceable example paths, and make consecutive commands use the output produced by the preceding command. Give independent studies separate output parents when their resolved run names could coincide.
+
+Preserve exact CLI, configuration, and environment-variable names. Explain aliases where they cross an interface rather than renaming them in prose. Do not treat placeholders such as `<INDEX>` as shell variables.
 
 ## Protected sources
 

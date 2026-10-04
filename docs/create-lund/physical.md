@@ -11,7 +11,7 @@ source run.csh \
     --config config/samples/physical-lund-creation/genie-gst.conf \
     --input '/path/to/gst*.root' \
     --events 100 \
-    --output /path/to/output
+    --output /path/to/physical-output
 ```
 
 Quote filename patterns so ROOT receives them unchanged. The input must contain a tree named `gst`; files matching the pattern are read as one ordered chain.
@@ -74,10 +74,10 @@ The physical LUND converter never derives scientific metadata from a filename. S
 The default nested layout is:
 
 ```text
-OUTPUT/<target>/<event-generator>__<tune>/<Q2-label>__<beam-MeV>MeV/
+OUTPUT/<target>/<event-generator>__<tune>/<q2-cut>__<beam-label>/
 ```
 
-The automatic file prefix is `<target>__<event-generator>[-<version>]__<tune>__<Q2-label>__<beam-MeV>MeV`. `output-layout = metadata` instead puts target variation, generator/version, tune, selection, and beam into one directory name. The [configuration reference](configuration.md) defines both forms.
+The automatic file prefix is `<target>__<event-generator>[-<event-generator-version>]__<tune>__<q2-cut>__<beam-label>`. `output-layout = metadata` instead puts target variation, generator/version, tune, selection, and beam into one directory name. The [configuration reference](configuration.md) defines both forms.
 
 Physical conversion produces no ROOT/PDF/PNG monitoring. It writes LUND files, the completion manifest, and empty simulation-output directories.
 

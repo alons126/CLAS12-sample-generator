@@ -15,12 +15,14 @@ The coordinator resolves and validates configuration, loads and verifies the sel
 The paths are:
 
 ```text
-RUN/lundfiles/<PREFIX>_<TASK>.txt
-RUN/mchipo/mc_<PREFIX>_<TASK>_torus<TORUS>.hipo
-RUN/reconhipo/recon_<PREFIX>_<TASK>_torus<TORUS>.hipo
+RUN/lundfiles/<PREFIX>_<INDEX>.txt
+RUN/mchipo/mc_<PREFIX>_<INDEX>_torus<TORUS>.hipo
+RUN/reconhipo/recon_<PREFIX>_<INDEX>_torus<TORUS>.hipo
 ```
 
 The same `JOB_NEVENTS` limit is passed to GEMC and reconstruction. A shorter LUND file is therefore valid input; the limit is a maximum, not a promise that every file contains that many events.
+
+Here `RUN` is `OUTPATH`, `<PREFIX>` is `SAMPLE_FILE_PREFIX`, `<INDEX>` is `SLURM_ARRAY_TASK_ID`, and `<TORUS>` is `TORUS_FIELD`, following the shared [path notation](../getting-started/outputs.md#path-notation).
 
 ## Environment interface
 
@@ -40,6 +42,17 @@ The same `JOB_NEVENTS` limit is passed to GEMC and reconstruction. A shorter LUN
 The worker inherits the verified `PATH` and module environment. It does not load modules or select software versions itself. The coordinator exports both version values, reports them before submission, and records them with executable paths in the submission log. The coordinator also resolves and reports `DETECTOR_ENERGY_GROUP` while selecting detector resources; the worker does not read that value.
 
 The settings printouts make received values visible in the scheduler log; they do not perform validation. Validation belongs to the coordinator.
+
+The worker uses shorter local names in its commands and printouts. These are aliases, not additional settings:
+
+| Coordinator variable | Worker alias |
+| --- | --- |
+| `OUTPATH` | `JOB_OUT_PATH` |
+| `SAMPLE_FILE_PREFIX` | `FILE_PREFIX` |
+| `JOB_NEVENTS` | `NEVENTS` |
+| `TORUS_FIELD` | `TORUS` |
+| `GCARD_FILE` | `GCARD` |
+| `YAML_FILE` | `YAML` |
 
 Before running GEMC, each array task prints the requested GEMC and COATJAVA versions, inherited `LOADEDMODULES` value, and executable paths found with `command -v` for `gemc` and `recon-util`. These appear in the scheduler's `.out` file without requiring the `module` shell function, which may be unavailable in the job's Bash shell. Requested versions and inherited module names describe the selected environment; executable paths show which commands the worker will invoke. These printouts are not independent binary version queries and do not load modules or validate their versions.
 

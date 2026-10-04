@@ -12,10 +12,10 @@ source run.csh \
     --source uniform \
     --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
     --events 100 \
-    --output /path/to/output
+    --output /path/to/quickstart-output
 ```
 
-The final run directory is `/path/to/output/Uniform__1e__5986MeV`. The uniform LUND creator prints that resolved path before replacing or writing it.
+The final run directory is `/path/to/quickstart-output/Uniform__1e__5986MeV`. The uniform LUND creator prints that resolved path before replacing or writing it.
 
 `run.csh` treats its ifarm checkout as disposable. A normal workflow run removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first, and keep production output outside that checkout.
 
@@ -59,7 +59,9 @@ The 100-event uniform example creates one LUND file. Make the run available on s
 ```tcsh
 source run.csh \
     --workflow submit \
-    --lund-dir /path/to/output/Uniform__1e__5986MeV/lundfiles
+    --lund-dir /path/to/quickstart-output/Uniform__1e__5986MeV/lundfiles
 ```
 
 Preview validates and reports the environment, detector inputs, output actions, and exact `sbatch` command. It does not call `sbatch`. Read the [submission guide](../submit-simulation/guide.md) before adding `--execute`.
+
+Next, read [outputs and path notation](outputs.md), then follow the guide for your chosen LUND source from the [getting-started reading order](index.md).

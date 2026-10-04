@@ -16,6 +16,8 @@ Never edit a generated Wiki page directly. Change the repository source and let 
 
 It maps the nested sources into GitHub Wiki's flat page namespace, builds the sidebar and footer, converts local documentation links to Wiki links, converts code/configuration links to repository URLs, and converts Markdown footnotes to linked numbered references.
 
+Each sidebar section starts with its overview, then follows the local page links in that section's `index.md`. Unlisted pages appear afterward in Wiki-name order. Update the section index when changing its reading order; there is no separate sidebar order to maintain.
+
 Git-ignored local drafts and copies are skipped. Development-only publication notes, bibliography material, and historical comparisons are not Wiki inputs.
 
 ## Local build
