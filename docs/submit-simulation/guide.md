@@ -172,7 +172,7 @@ Optional farm-output cleanup deletes only direct files in the exact reviewed dir
 
 The coordinator does not poll task states, retry failures, reconcile outputs, or inspect HIPO content. After the array finishes:
 
-1. Review every array task in Slurm and its `.out` and `.err` files or in the [outstanding Jobs dashboard here](https://scicomp.jlab.org/scicomp/slurmJob/activeJob); other users can adjust those filters or use `squeue -u <username>`.
+1. Review every array task in Slurm or the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob), and inspect its `.out` and `.err` files. Use `squeue -u <username>` to check your queued or running jobs.
 2. Compare the submitted task range with `RUN/mchipo/` and `RUN/reconhipo/`.
 3. Open at least one reconstructed file:
 
@@ -181,6 +181,27 @@ The coordinator does not poll task states, retry failures, reconcile outputs, or
    ```
 
 The file must open and display CLAS12 data banks. This is a smoke test only; one readable file does not establish that the remaining tasks succeeded or that the campaign is scientifically valid.
+
+## Troubleshoot failed jobs
+
+After tasks finish, possible failure indicators are:
+
+- Errors when running `hipo-utils -dump RUN/reconhipo/<file>.hipo`.
+- Missing expected files in `RUN/mchipo/` or `RUN/reconhipo/`, or both.
+- A failure status for a task in the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob).
+
+Inspect the affected task's `.out` and `.err` files and any available dashboard diagnostics to find what went wrong. The default farm-output location, `/u/scifarm/farm_out/<username>`, is indicated in [`submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) as `/farm_out/<username>`; both paths refer to the same directory. Explicitly, the script sets the destinations for the `.out` and `.err` files with:
+
+```shell
+#SBATCH --output=/farm_out/%u/%x-%j-%N.out
+#SBATCH --error=//farm_out/%u/%x-%j-%N.err
+```
+
+The `--farm-out` option selects an explicit cleanup directory, not the scheduler-log destination. Avoid clearing these logs until you have investigated the failure.
+
+Missing output while a task is still queued or running is not by itself a failure. Conversely, a successful Slurm status does not guarantee both detector stages succeeded: the worker can continue to reconstruction after GEMC fails. Check the logs and expected HIPO files together.
+
+## Slurm commands
 
 Jefferson Lab's [Slurm batch user guide](https://scicomp.jlab.org/docs/farm_slurm_batch) explains `sbatch` and farm batch operation. Useful commands are:
 
