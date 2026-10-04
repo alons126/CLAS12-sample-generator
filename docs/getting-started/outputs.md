@@ -1,15 +1,16 @@
 # Run directories and outputs
 
-For example, creating a uniform 1e sample with `--output /path/to/quickstart-output` produces the run directory `/path/to/quickstart-output/Uniform__1e__5986MeV` at the quickstart's beam energy. We call that complete directory `RUN` below. Both LUND applications use the same directory structure: creation writes `lundfiles/`, and the submitted Slurm jobs later write `mchipo/` and `reconhipo/`:
+For the [quickstart](quickstart.md) example, creating a uniform 1e sample with `--output /path/to/quickstart-output` produces the run directory `/path/to/quickstart-output/Uniform__1e__5986MeV` at the quickstart's beam energy. We call that complete directory `RUN` below. Both LUND applications use the same directory structure: creation writes `lundfiles/`, and the submitted Slurm jobs later write `mchipo/` and `reconhipo/`:
 
 ```text
 RUN/
 ├── lundfiles/
 │   ├── <PREFIX>_1.txt
 │   ├── <PREFIX>_2.txt
+│   ├── ...
 │   └── lund-creation-monitoring/
 │       ├── lund-creation-log.json
-│       ├── <PREFIX>__monitoring_plots.root   # uniform only
+│       ├── <PREFIX>__monitoring_plots.root  # uniform only
 │       └── MonitoringPlotsPath/             # uniform only
 │           ├── <PREFIX>__plots.pdf
 │           └── <PLOT_INDEX>_<HISTOGRAM>.png
@@ -47,8 +48,8 @@ The contents appear in stages:
 
 | Stage | What exists |
 | --- | --- |
-| Successful LUND creation | LUND text files, the completion manifest, empty `mchipo/` and `reconhipo/`; uniform runs also contain monitoring products |
-| Accepted `sbatch` submission | `slurm-submission-log.json` records the accepted job ID and resolved submission; HIPO output may not exist yet |
+| Successful LUND creation | LUND text files; `lund-creation-log.json` is a log file with the used parameters and Git information; empty `mchipo/` and `reconhipo/`; uniform runs also contain monitoring products |
+| Accepted `sbatch` submission | `slurm-submission-log.json` records the accepted job ID, resolved submission, GEMC version, COATJAVA version, and Git information; HIPO output may not exist yet |
 | Completed Slurm tasks | GEMC output appears under `mchipo/`, and COATJAVA reconstruction output appears under `reconhipo/` |
 
 The final manifest name is a completion marker. A failed or interrupted creation may leave partial files and a temporary `.json.tmp` file. Do not submit those files as a completed run: normal submission needs the final manifest, and the resolver rejects input with only a temporary manifest. A separate [manual-input interface](../submit-simulation/configuration.md#lund-input-without-a-manifest) supports independently prepared files without a manifest; it does not establish that an interrupted creation succeeded. The [LUND data contract](../concepts/lund-data-contract.md) defines the text records and manifest fields.
