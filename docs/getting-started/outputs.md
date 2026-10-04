@@ -10,8 +10,8 @@ RUN/
 │   ├── ...
 │   └── lund-creation-monitoring/
 │       ├── lund-creation-log.json
-│       ├── <PREFIX>__monitoring_plots.root  # uniform only
-│       └── MonitoringPlotsPath/             # uniform only
+│       ├── <PREFIX>__monitoring_plots.root       # uniform only
+│       └── MonitoringPlotsPath/                  # uniform only
 │           ├── <PREFIX>__plots.pdf
 │           └── <PLOT_INDEX>_<HISTOGRAM>.png
 ├── mchipo/
