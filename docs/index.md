@@ -12,27 +12,29 @@ The diagram summarizes the path from event preparation to reconstructed output. 
 
 ```mermaid
 flowchart LR
-    U["Uniform acceptance sampling"] --> L["LUND files"]
-    P["Existing physical event-generator truth"] --> L
-    L --> G["GEMC detector simulation"]
-    G --> R["COATJAVA reconstruction"]
-    R --> H["Reconstructed HIPO files"]
+    subgraph CREATION["LUND file creation"]
+        U["Uniform acceptance sampling"] --> L["LUND files"]
+        P["Existing physical event-generator truth"] --> L
+    end
+    subgraph SUBMISSION["Slurm job submittion"]
+        L --> G["GEMC detector simulation"]
+        G --> R["COATJAVA reconstruction"]
+        R --> H["Reconstructed HIPO files"]
+    end
 
-    classDef decision fill:#183247,color:#ffffff,stroke:#183247,stroke-width:2px;
+    classDef creation fill:#DEEBF7,color:#2E75B6,stroke:#2E75B6,stroke-width:2px;
+    class CREATION creation;
+    classDef submission fill:#E2F0D9,color:#548235,stroke:#548235,stroke-width:2px;
+    class SUBMISSION submission;
     classDef stage fill:#e8f1ef,color:#183247,stroke:#0f8492,stroke-width:2px;
-    class EXECUTE decision;
-    class INPUTS,ENTRY,VALIDATE,PREVIEW,SUBMIT,GEMC,RECON stage;
+    class U,P,L,G,R,H stage;
 ```
 
 ## Reading order
 
-If you want to run the software:
+**If you want to run the software:** follow the [getting-started reading path](getting-started/index.md): dependencies, quickstart, run directories and outputs, the selected LUND-creation guide, then simulation submission and output verification. Read the output layout immediately after the quickstart so you know which directory to pass to submission.
 
-Follow the [getting-started reading path](getting-started/index.md): dependencies, quickstart, run directories and outputs, the selected LUND-creation guide, then simulation submission and output verification. Read the output layout immediately after the quickstart so you know which directory to pass to submission.
-
-If you want to modify or extend the software:
-
-Follow the [developer reading path](development/index.md). It starts with architecture and the source map, explains the scientific and data contracts, then covers contribution, builds, validation, and specific extensions. First read the user guide for the workflow you intend to change.
+**If you want to modify or extend the software:** follow the [developer reading path](development/index.md). It starts with architecture and the source map, explains the scientific and data contracts, then covers contribution, builds, validation, and specific extensions. First read the user guide for the workflow you intend to change.
 
 Use the [workflow command examples](../tutorials/README.md) as a copyable option inventory, not as a substitute for understanding the selected profile and output path.
 
