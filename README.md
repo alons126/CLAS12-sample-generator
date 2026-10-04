@@ -1,11 +1,11 @@
 # CLAS12 sample generator
 
-This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). It prepares truth-level particles as LUND files and submits them for GEMC detector simulation and COATJAVA reconstruction, with explicit sample and detector settings. The project provides two workflows: creating LUND files and submitting CLAS12 detector simulation and reconstruction jobs.
+This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). It prepares truth-level particles as LUND files and submits them for GEMC[^gemc-simulation] detector simulation and COATJAVA[^coatjava-reconstruction] reconstruction, with explicit sample and detector settings. The project provides two workflows: creating LUND files and submitting CLAS12 detector simulation and reconstruction jobs.
 
 | Workflow | What it does | Main result |
 | --- | --- | --- |
 | `create-lund` | Creates [LUND](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html) input from random acceptance-test kinematics or converts existing event-generator truth-level data | LUND files and a completion manifest log |
-| `submit` | Submit simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | GEMC[^gemc-simulation] detector simulation followed by COATJAVA[^coatjava-reconstruction] reconstruction |
+| `submit` | Submit simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | GEMC detector simulation followed by COATJAVA reconstruction |
 
 The **uniform LUND creator** makes deliberately unphysical samples that cover configured momentum and angle ranges. The **physical LUND converter** preserves supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) GST [ROOT](https://github.com/root-project/root) trees and does not run GENIE. Both paths use the same target geometry, LUND writer, file splitting, provenance, and completion rules where their meanings agree.
 
