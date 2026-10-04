@@ -1,0 +1,89 @@
+# Physical LUND converter option inventory
+#
+# Together these commands show every public physical-conversion option. The physical LUND converter
+# reads existing GENIE GST truth; it does not run GENIE. Arbitrary values demonstrate
+# syntax, not production settings. Quote input globs so ROOT receives them unchanged,
+# replace every /path/to/... placeholder, and use the built
+# event-generator-to-lund-converter executable for local development.
+# Before starting, run.csh discards uncommitted edits and deletes untracked and
+# ignored files except build/, then updates from Git. Commit and push development
+# changes from your local copy first. Even forwarding application help runs after
+# this cleanup.
+
+#########################################################################################
+# Print the current physical LUND converter interface
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --build false \
+    -- \
+    --help
+
+#########################################################################################
+# Arbitrary metadata-layout study using every physical and common option
+#
+# seed is accepted and recorded by the shared configuration layer but is unused by
+# physical conversion because GST supplies particle kinematics. vertex-seed controls
+# the independently sampled vertex position.
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --input '/path/to/arbitrary-gst-study/*.root' \
+    --event-generator genie-gst \
+    --event-generator-version 3.8.1 \
+    --tune GTEST_42 \
+    --q2-cut study-Q2-0.17 \
+    --output-layout metadata \
+    --beam-energy 3.75 \
+    --target Ar40 \
+    --gemc-target-variation rgm_fall2021_Ar \
+    --A 40 \
+    --Z 18 \
+    --events 317 \
+    --events-per-file 83 \
+    --seed 11223 \
+    --vertex-seed 44556 \
+    --prefix arbitrary-genie-gst \
+    --output /path/to/arbitrary-physical-output
+
+#########################################################################################
+# Documented physical-conversion example with explicit provenance
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --event-generator genie-gst \
+    --event-generator-version 3.6.2 \
+    --tune GEM21_11a_00_000 \
+    --q2-cut Q2-0.40 \
+    --output-layout nested \
+    --target C12 \
+    --beam-energy 5.98636 \
+    --input '/path/to/C12/GEM21_11a_00_000/*.root' \
+    --events 50000 \
+    --events-per-file 10000 \
+    --output /path/to/documented-physical-output
+
+#########################################################################################
+# Documented run-15733 target-variation exception
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --event-generator genie-gst \
+    --output-layout nested \
+    --target C12 \
+    --beam-energy 4.02962 \
+    --gemc-target-variation rgm_fall2021_C_S \
+    --q2-cut Q2-0.25 \
+    --input '/path/to/C12/run-15733/master-routine_validation_01-eScattering/*.root' \
+    --events 1000000 \
+    --output /path/to/run-15733-physical-output

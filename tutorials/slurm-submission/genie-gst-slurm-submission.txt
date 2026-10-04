@@ -1,0 +1,51 @@
+# Corresponding creation commands: genie-gst-lund-creation.txt
+# Run on ifarm after each matching manifest is published. Each example submits the
+# first 5 LUND files. The manifest supplies truth metadata, inventory, prefix, and the
+# event limit. Submission defaults to GEMC 5.14 and COATJAVA 10.0.7. Remove --execute to
+# preview, and replace every /path/to/... placeholder before use.
+#
+# These directory names assume TUNE GEM21_11a_00_000 was discovered from
+# input_options.txt and the default nested output layout was used.
+# This GENIE metadata file is saved by eAScatteringGridSubmitter.py only when
+# --store-comitinfo is enabled. For other production methods or input layouts,
+# set --tune NAME during LUND creation and use the resulting run directory here.
+
+#########################################################################################
+# Physical C12 GENIE GST sample at 2.07052 GeV
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2-0.02__2070MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
+
+#########################################################################################
+# Physical C12 GENIE GST sample at 4.02962 GeV
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2-0.25__4029MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
+
+#########################################################################################
+# Physical C12 GENIE GST sample at 5.98636 GeV
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2-0.40__5986MeV/lundfiles \
+    --num-jobs 5 \
+    --execute
+
+#########################################################################################
+# Run 15733 exception: C12 at 4.02962 GeV with the small one-foil target
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/run-15733-physical-genie-gst-output/C12/genie-gst__GEM21_11a_00_000/Q2-0.25__4029MeV/lundfiles \
+    --num-jobs 5 \
+    --execute

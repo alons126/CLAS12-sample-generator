@@ -1,0 +1,76 @@
+# Launcher option examples
+#
+# Run these commands from the repository root in csh/tcsh. Launcher options control
+# configuration, compilation, and execution of a selected LUND application; they do
+# not define sample physics or detector submission. Before running, run.csh discards
+# uncommitted edits and deletes untracked and ignored files except build/, then
+# updates from Git. Commit and push development changes from your local copy first.
+# Replace every /path/to/... value before use.
+
+#########################################################################################
+# Print launcher help without updating, building, creating output, or submitting jobs
+#########################################################################################
+
+source run.csh \
+    --help
+
+#########################################################################################
+# Use every launcher build/run option with arbitrary development values
+#########################################################################################
+
+source run.csh \
+    --run-settings config/run.json \
+    --workflow create-lund \
+    --source uniform \
+    --build true \
+    --run false \
+    --build-dir build/tutorial-relwithdebinfo \
+    --build-type RelWithDebInfo \
+    --jobs 3
+
+#########################################################################################
+# Run an existing build without configuring or compiling it again
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --build false \
+    --run true \
+    --build-dir build/release \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 25 \
+    --output /path/to/tutorial-output
+
+#########################################################################################
+# Forward --help to one selected LUND executable
+#
+# The standalone -- token ends launcher-option parsing. It is useful when a child
+# option could otherwise be mistaken for a launcher option.
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --build false \
+    -- \
+    --help
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --build false \
+    -- \
+    --help
+
+#########################################################################################
+# Select the submission workflow
+#
+# Manifest-backed submission does not need --source and bypasses launcher build
+# controls. For manifest-free input, --source supplies truth metadata. Submission
+# previews by default; its complete inventory is in slurm-submission/all-options.txt.
+#########################################################################################
+
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/lund-run/lundfiles

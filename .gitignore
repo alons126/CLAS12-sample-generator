@@ -1,16 +1,72 @@
-# Ignore build files and generated data files
-*.root 
-*~
+# Repository ignore rules -----------------------------------------------------
+# Purpose:
+#   Keep project source and shared configuration under version control while
+#   excluding generated, machine-local, and disposable files.
+#
+# How these rules are used:
+#   A leading `/` pins a rule to the repository root. Simple names can match at
+#   any depth, while multi-part paths are relative to this file. Git continues
+#   to report changes to tracked files even when a later rule matches their path.
+
+# Build and interpreter artifacts --------------------------------------------
+# Ignore compiled libraries, dependency metadata, ROOT dictionaries, and Python
+# bytecode. ROOT data files remain eligible for version control when needed.
+# *.root
 *.so
 *.pcm
 *.d
-*#
+*.pyc
+__pycache__/
+
+# Simulation and batch-job products ------------------------------------------
+# Detector events, reconstructed data, and captured batch output are generated
+# by local or ifarm workflows and can be large.
 *.ev
 *.hipo
 *.out
 
-# Ignore build directory
-./build
+# Generated working directories ----------------------------------------------
+# Build trees, temporary workspaces, run directories, and general output are
+# disposable products of development and workflow execution.
+build/
+tmp/
+/runs/
+output/
 
-# Ignore specific generated files
+# Machine-local configuration -------------------------------------------------
+# Keep per-user CMake presets and run overrides separate from reviewed shared
+# defaults.
+/CMakeUserPresets.json
+/config/run.local.json
+
+# Development-only parity profiles ------------------------------------------
+# Keep local comparison inputs available while excluding them from published
+# repository history and source archives.
+/config/samples/uniform-lund-creation/legacy-coderun.conf
+/config/samples/physical-lund-creation/legacy-genie-wrapper.conf
+
+# Editor and operating-system files ------------------------------------------
+# Ignore editor backup names wherever they appear.
+*~
+*#
+
+# macOS Finder metadata -------------------------------------------------------
+# This basename rule ignores every `.DS_Store` at any depth in this module.
+# The parent repository cannot ignore files on behalf of this Git index.
+# Ignore rules do not untrack existing files; remove those from the index only.
+.DS_Store
+
+# Project test code -----------------------------------------------------------
+# Test implementations and fixtures below `src` are local development material.
+# Keep them on disk but outside Git tracking and published source archives.
+/src/**/tests/
+
+# Local samples and tutorial working copies ----------------------------------
+# Ignore generated comparison runs and personal copies of tutorial commands.
+legacy/GENIE-GST-test-samples/*
+**copy.txt
+**copy**
+
+# Retired-path compatibility --------------------------------------------------
+# Retain the old converter path rule for its generated ACLiC dependency file.
 GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter_C.d

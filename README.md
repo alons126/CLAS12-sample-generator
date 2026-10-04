@@ -1,83 +1,57 @@
-# CLAS12-sample-generator
+# CLAS12 sample generator
 
-This repository contains CLAS12 GEMC sample-generation helpers for:
+This code prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). First, it writes particles' momenta and vertex coordinates (the event's position in the target) to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). These are truth-level particles: the particles before detector simulation. In a separate step, it submits jobs that run GEMC[^gemc-simulation] detector simulation and COATJAVA[^coatjava-reconstruction] reconstruction. GEMC simulates the detector response; reconstruction uses that response to determine the measured particles.
 
-- GENIE-to-LUND conversion
-- Uniform $(e,e')$, $(e,e'pFD)$, $(e,e'nFD)$ samples
-- GEMC + reconstruction batch submission
+| Workflow | What it does | Main result |
+| --- | --- | --- |
+| `create-lund` | Writes LUND input from randomly sampled particles or existing event-generator output | LUND files and a JSON log listing their settings and event counts; this log marks successful creation |
+| `submit` | Submits simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | A job ID; a JSON log; the submitted jobs later write simulated and reconstructed HIPO files |
 
-## Layout
+The **uniform LUND creator** randomly chooses particle momenta and angles within your configured ranges. Its samples are deliberately unphysical and are used to study which particles the detector can detect and reconstruct. The **physical LUND converter** copies supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) production output in the GST format stored in [ROOT](https://github.com/root-project/root) files. Both applications use the same code to sample one vertex position in the target per event and assign it to every particle, write and split LUND files, and record the settings used.
 
-- `GEMC-samples/setup_and_submit_jobs.csh`
-  Top-level entry point for setup and submission.
-- `GEMC-samples/GENIE_to_LUND_converter.csh`
-  Wrapper for the ROOT GENIE-to-LUND converter macro.
-- `GEMC-samples/GENIE_to_LUND_converter/GENIE_to_LUND_converter.C`
-  ROOT macro that converts GENIE `gst` trees into LUND files.
-- `GEMC-samples/scripts/setup_and_submission_scripts/uniform_setup_and_submit.csh`
-  Uniform sample setup and submission flow.
-- `GEMC-samples/scripts/setup_and_submission_scripts/genie_job_submission_script.csh`
-  GENIE sample setup and submission flow.
-- `GEMC-samples/scripts/job_submission_scripts/*.sh`
-  Slurm batch payload scripts.
-- `GEMC-samples/Generation_files_*`
-  Beam-energy-specific `gcard` and YAML inputs.
+The submitted jobs produce reconstructed [HIPO](https://github.com/gavalian/hipo) files, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). This code does not run a physical event generator, calculate detector acceptance, select events from reconstructed files, or perform physics analysis. Creating LUND files never submits jobs automatically.
 
-## Run Assumption
+## Start here
 
-The current `csh` wrappers assume they are launched from inside `GEMC-samples/`.
+The [code Wiki](../../wiki) is the user and developer manual. Its [home page](../../wiki/Home) gives separate reading paths for running the software and extending it.
 
-Example:
+For a small uniform run on ifarm, use the profile [`uniform-1e-5986MeV.conf`](config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf). A profile is a text file containing the sample settings:
 
-```bash
-cd GEMC-samples
-source setup_and_submit_jobs.csh
+```tcsh
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf \
+    --events 100 \
+    --output /path/to/quickstart-output
 ```
 
-Running the wrappers from the repository root will fail because they use relative `source ./scripts/...` paths.
+Use [`run.csh`](run.csh) in an ifarm clone of the repository used for running code, not editing it. Edit the code locally, then update the ifarm checkout through Git. Before running the selected workflow, the script discards uncommitted edits to files tracked by Git and deletes files Git does not track, including ignored files. It preserves the `build/` directory, then updates the code from Git and builds when needed. It checks the full sample settings only afterward, so an invalid command can still clean the checkout before failing.
 
-## Current Verified State
+Commit and push development changes from your local clone first. Store generated samples outside the ifarm repository directory so the next cleanup cannot delete them. For local development, build with CMake and run the compiled applications directly; those commands do not clean or update the checkout.
 
-The shell scripts parse cleanly with `csh -n` / `bash -n`, and the YAML files parse successfully.
+After LUND creation succeeds, preview simulation submission with the run's `lundfiles/` directory:
 
-The following runtime issues were verified in this checkout:
+```tcsh
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/quickstart-output/Uniform__1e__5986MeV/lundfiles
+```
 
-- The scripts depend on hardcoded lab paths under `/lustre24/...` and `/w/hallb-scshelf2102/...`.
-- Those paths do not exist in the current local environment, so the submission scripts exit before doing useful work.
-- `GENIE_to_LUND_converter/GENIE_to_LUND_converter.C` does not compile locally because it includes absolute external headers and sources that are not present here.
-- The converter macro currently hardcodes its output path suffix to `_devGEMC_rgm_fall2021_Ar`, which is wrong for non-Ar targets.
+Without `--execute`, the command checks and prints the settings but does not submit jobs. Review the detector settings and the directories it would delete before adding `--execute`.
 
-## High-Risk Behavior
+Useful entry points:
 
-`GEMC-samples/scripts/update_script.csh` is destructive. It runs:
+- [Quickstart](../../wiki/getting-started-quickstart)
+- [Create LUND files](../../wiki/create-lund-overview)
+- [Submit simulation](../../wiki/submit-simulation-overview)
+- [Architecture](../../wiki/concepts-architecture)
+- [Contributing](CONTRIBUTING.md)
 
-- `git clean -fxd`
-- `git reset --hard`
-- `git pull`
+The longer command collections under [`tutorials/`](tutorials/) demonstrate every public option. Historical implementations are preserved in the `legacy-code-archive` tag and are not part of the current manual.
 
-Do not run `GEMC-samples/setup_and_submit_jobs.csh` unless that behavior is intended.
+[^clas12-spectrometer]: V. D. Burkert et al., “The CLAS12 Spectrometer at Jefferson Laboratory,” *Nucl. Instrum. Meth. A* **959**, 163419 (2020). [doi:10.1016/j.nima.2020.163419](https://doi.org/10.1016/j.nima.2020.163419)
 
-## Known Script Caveats
+[^gemc-simulation]: M. Ungaro et al., “The CLAS12 Geant4 simulation,” *Nucl. Instrum. Meth. A* **959**, 163422 (2020). [doi:10.1016/j.nima.2020.163422](https://doi.org/10.1016/j.nima.2020.163422)
 
-- `genie_job_submission_script.csh` now correctly uses `unsetenv TARGET_VARIATION`.
-- That block still has no final fallback `else`, so unsupported beam-energy / target combinations can leave `TARGET_VARIATION` unset and later produce a bad `GCARD_FILE` path.
-
-## Inputs Present In This Repository
-
-Beam-energy directories currently present:
-
-- `GEMC-samples/Generation_files_2GeV`
-- `GEMC-samples/Generation_files_4GeV`
-- `GEMC-samples/Generation_files_6GeV`
-
-Available config families currently present:
-
-- `devGEMC5.12`
-- `5.14`
-
-## Suggested Next Fixes
-
-- Make all wrapper scripts resolve paths relative to their own file location instead of the current shell directory.
-- Replace hardcoded site-specific paths with overridable environment variables.
-- Remove or guard destructive Git operations from the default entry point.
-- Make the GENIE converter derive its output target variation instead of hardcoding `rgm_fall2021_Ar`.
+[^coatjava-reconstruction]: V. Ziegler et al., “The CLAS12 software framework and event reconstruction,” *Nucl. Instrum. Meth. A* **959**, 163472 (2020). [doi:10.1016/j.nima.2020.163472](https://doi.org/10.1016/j.nima.2020.163472)

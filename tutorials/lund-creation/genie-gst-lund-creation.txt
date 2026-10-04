@@ -1,0 +1,93 @@
+# Reviewed GENIE GST conversions for the LUND inputs consumed by
+# genie-gst-slurm-submission.txt. Run on ifarm. Before starting, run.csh discards
+# uncommitted edits and deletes untracked and ignored files except build/.
+# Commit and push development changes from your local copy first. Keep output
+# outside the ifarm checkout. For local development, run the built
+# event-generator-to-lund-converter executable.
+#
+# Automatic tune lookup applies to GENIE samples produced with
+# eAScatteringGridSubmitter.py using --store-comitinfo (the exact GENIE spelling).
+# That option saves input_options.txt in the GENIE --jobs-topdir directory.
+# It is not an option of run.csh or the physical LUND converter.
+# Source: https://github.com/GENIE-MC/Generator/blob/3a50ba6d0918f62b023194eb2d6b5267b2815868/src/scripts/production/python/eAScatteringGridSubmitter.py
+# Expected input layout for each quoted glob, using the default production name:
+#   SAMPLE_DIRECTORY/input_options.txt
+#   SAMPLE_DIRECTORY/master-routine_validation_01-eScattering/*.root
+#
+# The profile uses tune=auto. The physical LUND converter reads the exact TUNE value from
+# input_options.txt and falls back to unknown when discovery fails. The explicit
+# target and beam energy select the normal GEMC target variation and vertex geometry.
+# For other production methods or directory names, provide --tune NAME explicitly.
+# Replace every /path/to/... placeholder before running these commands.
+
+#########################################################################################
+# Physical C12 GENIE GST conversion at 2.07052 GeV
+# Automatic target variation: rgm_fall2021_C_S (small one-foil target)
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --event-generator genie-gst \
+    --output-layout nested \
+    --target C12 \
+    --beam-energy 2.07052 \
+    --q2-cut Q2-0.02 \
+    --input '/path/to/C12/2070MeV_Q2-0.02/master-routine_validation_01-eScattering/*.root' \
+    --events 1000000 \
+    --output /path/to/physical-genie-gst-output
+
+#########################################################################################
+# Physical C12 GENIE GST conversion at 4.02962 GeV
+# Automatic target variation: rgm_fall2021_C_L (large one-foil target)
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --event-generator genie-gst \
+    --output-layout nested \
+    --target C12 \
+    --beam-energy 4.02962 \
+    --q2-cut Q2-0.25 \
+    --input '/path/to/C12/4029MeV_Q2-0.25/master-routine_validation_01-eScattering/*.root' \
+    --events 1000000 \
+    --output /path/to/physical-genie-gst-output
+
+#########################################################################################
+# Physical C12 GENIE GST conversion at 5.98636 GeV
+# Automatic target variation: rgm_fall2021_Cx4 (four-foil target)
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --event-generator genie-gst \
+    --output-layout nested \
+    --target C12 \
+    --beam-energy 5.98636 \
+    --q2-cut Q2-0.40 \
+    --input '/path/to/C12/5986MeV_Q2-0.40/master-routine_validation_01-eScattering/*.root' \
+    --events 1000000 \
+    --output /path/to/physical-genie-gst-output
+
+#########################################################################################
+# Run 15733 exception: C12 at 4.02962 GeV with the small one-foil target
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source physical \
+    --config config/samples/physical-lund-creation/genie-gst.conf \
+    --event-generator genie-gst \
+    --output-layout nested \
+    --target C12 \
+    --beam-energy 4.02962 \
+    --gemc-target-variation rgm_fall2021_C_S \
+    --q2-cut Q2-0.25 \
+    --input '/path/to/C12/run-15733/master-routine_validation_01-eScattering/*.root' \
+    --events 1000000 \
+    --output /path/to/run-15733-physical-genie-gst-output

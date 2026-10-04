@@ -1,0 +1,7 @@
+{
+    "build": true,
+    "run": true,
+    "build_dir": "build/release",
+    "build_type": "Release",
+    "jobs": 4
+}

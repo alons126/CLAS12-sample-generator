@@ -1,0 +1,72 @@
+#!/bin/tcsh
+
+# Submission shell bridge -----------------------------------------------------
+# Description:
+#     Connect the sourced launcher to the Python submission program.
+#
+# Purpose:
+#     Keep the sourced run.csh interface and shared terminal colors.
+#
+# Usage:
+#     source run.csh \
+#         --workflow submit \
+#         --lund-dir RUN/lundfiles
+#
+# CLI options (forwarded unchanged to submit.py and parsed by resolve_inputs.py):
+#     --lund-dir DIRECTORY          Completed RUN/lundfiles; repeat for multiple samples.
+#     --config FILE                 Optional key = value submission settings.
+#     --execute                     Submit and replace simulation output; default: preview.
+#     --source uniform|physical     Source when no manifest supplies it.
+#     --beam-energy GeV             Truth beam energy when no manifest supplies it.
+#     --target ID                   Truth target identity when no manifest supplies it.
+#     --channel NAME                Uniform electron-tester, 1e, eh, or a complete FD/CD label.
+#     --hadron NAME                 Proton, neutron, pip, or pim for eh.
+#     --hadron-region FD|CD         Eh hadron detector region.
+#     --event-generator NAME        Physical input adapter; default: genie-gst without a manifest.
+#     --tune NAME                   Physical tune; default: unknown without a manifest.
+#     --q2-cut NAME                 Physical input Q2 label; no cut is applied here.
+#     --prefix NAME                 LUND filename prefix; required without a manifest.
+#     --gemc-version VERSION        GEMC software and GCARD resources; default: 5.14.
+#     --coatjava-version VERSION    COATJAVA software and YAML resources; default: 10.0.7.
+#     --gemc-target-variation NAME  Detector target variation.
+#     --gcard FILE / --yaml FILE    Detector and reconstruction input overrides.
+#     --torus SCALE                 Beam-dependent torus override.
+#     --num-jobs N                  First N LUND files; default: all completed files.
+#     --events-per-job N            Event limit; required without a manifest.
+#     --job-name NAME               Metadata-derived Slurm job name override.
+#     --clas12tags-dir DIRECTORY    Custom clas12Tags checkout as GEMC_DATA_DIR.
+#     --clear-farm-out true|false   Delete direct files from --farm-out with --execute; default: false.
+#     --farm-out DIRECTORY          Exact cleanup directory; required with --clear-farm-out true.
+#     --help                        Print submission help before synchronization.
+#
+# Execution flow:
+#     Load colors -> check settings -> load and verify GEMC and COATJAVA -> call sbatch -> read the accepted
+#     job ID -> write the submission log -> print the shared final status.
+#
+# Inputs:
+#     quoted CLI arguments and the ifarm module/reconstruction environment.
+#
+# Outputs:
+#     Preview reports OUTPATH first, then groups each simulation-directory check with its planned action.
+#     It preserves existing contents, explains that execution would clear them, and creates and verifies
+#     missing directories. With --execute, Python warns before deleting each existing mchipo/reconhipo
+#     directory, recreates both empty, submits the arrays, prints each job ID, and saves each ID in the
+#     submission log. Printed command option values use normal white. Changes made for sbatch stay inside
+#     Python and do not change the user's shell.
+#
+# Failure:
+#     Return Python's exit status without closing the user's shell.
+
+# region Submission
+set CLAS12_SAMPLE_STATUS = 1
+if (-f ./src/launcher/presentation/set_colors.csh) then
+    source ./src/launcher/presentation/set_colors.csh
+    if ($status == 0) then
+        python3 src/workflows/slurm-submission/submit.py $argv:q
+        set CLAS12_SAMPLE_STATUS = $status
+    endif
+else
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} the following file does not exist: ./src/launcher/presentation/set_colors.csh"
+endif
+/bin/sh -c "exit $CLAS12_SAMPLE_STATUS"
+# endregion Submission
