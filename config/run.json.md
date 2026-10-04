@@ -8,10 +8,10 @@ The file is strict JSON. Unknown keys fail, so explanations live here rather tha
 
 | Key | Checked-in value | CLI override |
 | --- | --- | --- |
-| `build` | `true` | `--build true|false` |
-| `run` | `true` | `--run true|false` |
+| `build` | `true` | `--build true\|false` |
+| `run` | `true` | `--run true\|false` |
 | `build_dir` | `build/release` | `--build-dir DIRECTORY` |
-| `build_type` | `Release` | `--build-type Debug|Release|RelWithDebInfo|MinSizeRel` |
+| `build_type` | `Release` | `--build-type Debug\|Release\|RelWithDebInfo\|MinSizeRel` |
 | `jobs` | `4` | `--jobs N` with a positive integer |
 
 Resolution is built-in launcher defaults, then the selected JSON file, then explicit launcher options.

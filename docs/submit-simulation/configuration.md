@@ -34,7 +34,7 @@ Truth metadata from a manifest cannot be contradicted by an override. Detector p
 | `--torus SCALE` | Override the beam-dependent torus scale |
 | `--job-name NAME` | Override the metadata-derived Slurm job name |
 | `--clas12tags-dir DIRECTORY` | Use a reviewed custom clas12Tags checkout as `GEMC_DATA_DIR` |
-| `--clear-farm-out true|false` | With execution, optionally delete files directly inside one exact farm-output directory; default false |
+| `--clear-farm-out true\|false` | With execution, optionally delete files directly inside one exact farm-output directory; default false |
 | `--farm-out DIRECTORY` | Required exact cleanup target when farm-output cleanup is true |
 | `--execute` | Replace simulation output and call `sbatch` |
 
@@ -42,12 +42,12 @@ The following options describe LUND input that has no manifest. With a manifest,
 
 | Option | Meaning |
 | --- | --- |
-| `--source uniform|physical` | Required input kind |
+| `--source uniform\|physical` | Required input kind |
 | `--beam-energy GeV` | Required truth beam energy |
 | `--target ID` | Required truth target identity |
 | `--prefix NAME` | Required filename prefix before `_INDEX.txt` |
 | `--channel NAME` | Uniform `1e`, `electron-tester`, `eh`, or a [complete electron-hadron label](../create-lund/uniform.md#electron-hadron-labels) such as `epFD` |
-| `--hadron NAME`, `--hadron-region FD|CD` | Particle and region required when `channel=eh` |
+| `--hadron NAME`, `--hadron-region FD\|CD` | Particle and region required when `channel=eh` |
 | `--event-generator NAME` | Physical adapter label; default `genie-gst` |
 | `--tune NAME` | Physical tune/model label; default `unknown` |
 | `--q2-cut NAME` | Physical upstream-selection label; default `unknown`, with no cut applied during submission |
