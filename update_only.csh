@@ -12,6 +12,7 @@
 #
 # Inputs:
 #   The current checkout, its Git remote and branch, and the build directories that must be kept.
+#   Submodule declarations are optional; the updater skips that step when .gitmodules is absent.
 #
 # Outputs:
 #   A synchronized disposable checkout. No build, LUND creation, or submission is started.

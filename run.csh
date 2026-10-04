@@ -210,7 +210,7 @@ pushd "$_clas12_root" > /dev/null
 if (-f src/launcher/presentation/set_colors.csh) source src/launcher/presentation/set_colors.csh
 if (-f src/launcher/presentation/print_logo.csh) source src/launcher/presentation/print_logo.csh
 
-# Tests may explicitly skip the server update. Normal ifarm use always updates.
+# Local development may explicitly skip the server update. Normal ifarm use always updates.
 set _clas12_skip_server_sync = 0
 if ($?CLAS12_SKIP_SERVER_SYNC) then
     if ("$CLAS12_SKIP_SERVER_SYNC" == "1") set _clas12_skip_server_sync = 1
@@ -224,7 +224,7 @@ endif
 #   - `git reset --hard` to discard server-side tracked edits;
 #   - `git pull` to obtain the configured upstream revision;
 #   - `git submodule sync --recursive` and `git submodule update --init --recursive` to check out
-#     the recorded external revisions; and
+#     the recorded external revisions only when .gitmodules exists; and
 #   - `git log -1 --oneline` plus `git branch --show-current` to report the resulting checkout.
 # Any updater failure stops environment setup and the selected workflow.
 if ($_clas12_skip_server_sync == 1) then

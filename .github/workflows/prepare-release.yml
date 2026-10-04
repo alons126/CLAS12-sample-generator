@@ -103,6 +103,35 @@ jobs:
               --repository "$GITHUB_REPOSITORY" \
               --branch release-candidate
 
+      - name: Create a small sample and resolve detector inputs
+        shell: bash -el {0}
+        working-directory: ${{ runner.temp }}/publication
+        run: |
+          "$RUNNER_TEMP/release-install/bin/uniform-lund-creator" \
+              --config config/samples/uniform-lund-creation/electron-tester-2070MeV.conf \
+              --events 4 \
+              --events-per-file 2 \
+              --output "$RUNNER_TEMP/release-sample"
+          python3 - <<'PY'
+          import importlib.util
+          import os
+          from pathlib import Path
+
+          root = Path.cwd()
+          spec = importlib.util.spec_from_file_location("resolve_inputs", root / "src/workflows/slurm-submission/resolve_inputs.py")
+          resolver = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(resolver)
+          samples = list((Path(os.environ["RUNNER_TEMP"]) / "release-sample").rglob("lundfiles"))
+          if len(samples) != 1:
+              raise RuntimeError("Expected one completed LUND sample")
+
+          values = resolver.resolve(str(samples[0]), {}, root)
+          if not Path(values["GCARD_FILE"]).is_file() or not Path(values["YAML_FILE"]).is_file():
+              raise RuntimeError("Detector configuration did not resolve from publication files")
+
+          print("Completed sample and detector inputs are available without development files.")
+          PY
+
       - name: Package validated files
         run: tar --exclude=./.git -czf "$RUNNER_TEMP/publication.tar.gz" -C "$RUNNER_TEMP/publication" .
 
@@ -190,6 +219,8 @@ jobs:
           tech-note, and test implementations and fixtures. Development files remain
           on dev. Both LUND applications configure, build, install, and accept --help
           without those files. The generated wiki passes its local link checks.
+          A small uniform sample completes with monitoring, and its detector inputs
+          resolve from the publication files without loading ifarm software.
 
           Validation run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
 

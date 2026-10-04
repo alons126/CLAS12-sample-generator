@@ -17,7 +17,7 @@ source run.csh \
 
 The final run directory is `/path/to/quickstart-output/Uniform__1e__5986MeV`. The uniform LUND creator prints that resolved path before replacing or writing it.
 
-Before running the workflow, [`run.csh`](../../run.csh) discards uncommitted edits to tracked files and deletes untracked and ignored files, except `build/`. It then pulls the configured Git branch and updates submodules (external repositories included in this repository). Commit and push development changes from your local copy first. Keep generated samples outside the ifarm repository directory so cleanup cannot delete them.
+Before running the workflow, [`run.csh`](../../run.csh) discards uncommitted edits to tracked files and deletes untracked and ignored files, except `build/`. It then pulls the configured Git branch. If `.gitmodules` exists, it also updates the external repositories declared there, called submodules. A checkout without that file skips this step and uses its own application files. Commit and push development changes from your local copy first. Keep generated samples outside the ifarm repository directory so cleanup cannot delete them.
 
 ## Run locally during development
 

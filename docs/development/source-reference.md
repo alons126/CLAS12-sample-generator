@@ -8,7 +8,7 @@ Use this page to find the file that performs a particular task. CLI means comman
 | --- | --- |
 | [`run.csh`](../../run.csh) | Check early help and submission syntax, clean and update the ifarm checkout, then start the selected workflow |
 | [`src/launcher/workflow.py`](../../src/launcher/workflow.py) | Read build settings, run CMake, choose the LUND application, and pass its arguments unchanged |
-| [`src/launcher/checkout/`](../../src/launcher/checkout) | Check the repository, delete disposable files, discard edits, pull code, and update submodules |
+| [`src/launcher/checkout/`](../../src/launcher/checkout) | Check the repository, delete disposable files, discard edits, pull code, and update submodules only when `.gitmodules` exists |
 | [`src/launcher/environment/`](../../src/launcher/environment) | Find the checkout and check the host environment before running |
 | [`src/launcher/presentation/`](../../src/launcher/presentation) | Shared colors, startup output, and success/stop artwork |
 | [`CMakeLists.txt`](../../CMakeLists.txt) | Select build dependencies, applications, and C++ standard; generate source-version information and define installation rules |

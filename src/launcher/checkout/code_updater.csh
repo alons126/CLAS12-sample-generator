@@ -9,7 +9,7 @@
 #
 # Execution flow:
 #   Load banner colors -> verify the Git checkout -> clean server-only files -> reset tracked files ->
-#   pull the branch -> update submodules -> print the selected commit and branch.
+#   pull the branch -> update submodules when .gitmodules exists -> print the selected commit and branch.
 #
 # Inputs:
 #   The current Git checkout, its remote branch, and the build directories that must be kept.
@@ -17,6 +17,7 @@
 # Outputs:
 #   A refreshed checkout. Build directories are kept; other untracked files and tracked local changes
 #   are removed because the ifarm checkout is only a copy used for running jobs.
+#   A checkout without .gitmodules does not need any external repository checkout.
 #
 # Usage:
 #   This helper is run by run.csh. Run it from the verified repository root.
@@ -83,18 +84,22 @@ if ( $status != 0 ) then
     exit 1
 endif
 
-git submodule sync --recursive
-if ( $status != 0 ) then
-    echo "${ERROR_COLOR}Error:${RESET_COLOR} git submodule sync failed. Aborting update script."
-    exit 1
-endif
+if ( -f .gitmodules ) then
+    git submodule sync --recursive
 
-git submodule update --init --recursive
-if ( $status != 0 ) then
-    echo ""
-    echo "${ERROR_COLOR}Error:${RESET_COLOR} git submodule update failed. Aborting update script."
-    echo ""
-    exit 1
+    if ( $status != 0 ) then
+        echo "${ERROR_COLOR}Error:${RESET_COLOR} git submodule sync failed. Aborting update script."
+        exit 1
+    endif
+
+    git submodule update --init --recursive
+
+    if ( $status != 0 ) then
+        echo ""
+        echo "${ERROR_COLOR}Error:${RESET_COLOR} git submodule update failed. Aborting update script."
+        echo ""
+        exit 1
+    endif
 endif
 
 echo ""

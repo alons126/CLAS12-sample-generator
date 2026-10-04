@@ -2,6 +2,8 @@
 
 For example, run **Prepare release candidate** after a change reaches `dev`. The action copies the application files from that exact `dev` commit into `release-candidate` and opens a PR into `main`. Your workstation files and the `dev` branch remain unchanged. The action never merges the PR.
 
+The action runs only when requested through **Run workflow**. A local commit or a push to `dev` does not start it automatically.
+
 ## Files included in the PR
 
 The action exports only committed files. It applies [the publication exclusion list](../../.github/release-excludes.txt) to that export before building it. The list excludes repository instruction files, historical source directories, historical notes, submodule declarations, and test implementations and fixtures. No submodules are downloaded. A submodule outside the historical source directory stops publication so its dependency can be reviewed explicitly.
@@ -23,7 +25,7 @@ Reserve `release-candidate` for this action. The action refuses to replace an ex
 1. Commit and push the intended application and documentation changes to `dev`.
 2. Open **Actions → Prepare release candidate → Run workflow**. Select `dev` as the workflow branch. The action always reads the remote `dev` branch and records the commit it checked out.
 3. Wait for validation. The action installs ROOT 6.34 and a C++ compiler through conda-forge, configures a Release build with the default workflow options, builds both LUND applications, checks their help, and installs the output into a temporary directory. It leaves CMake's default test setting enabled so missing optional files cannot silently become a required dependency. It then builds the wiki from the filtered files and checks local documentation links.
-4. Review the resulting `release-candidate → main` PR. Validation covers compilation, installation, help, and documentation links. It does not run a detector simulation or establish scientific suitability for an analysis.
+4. Review the resulting `release-candidate → main` PR. Validation covers compilation, installation, help, and documentation links. It also creates a four-event electron-tester sample with monitoring and resolves its GCARD and YAML from the publication files. It does not load ifarm software, submit jobs, run a detector simulation, or establish scientific suitability for an analysis.
 5. Merge the PR when its changes are approved. Keep development material on `dev`; do not merge publication cleanup back into that branch.
 
 The publication commit is based on `main`, rather than on the development commits. Git history on `main` therefore receives the filtered snapshot without adding the development branch's history. Files removed from a new snapshot may still exist in older history already on `main`; this action does not rewrite that history.

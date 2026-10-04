@@ -25,7 +25,7 @@ This prepares the login environment. Submission then explicitly unloads and load
 
 ## Disposable checkout
 
-Use the ifarm repository copy to run code, not to keep development edits. Before a normal workflow starts, [`run.csh`](../../run.csh) checks the repository location, deletes untracked and ignored files except `build/`, discards uncommitted edits to tracked files, pulls the configured Git branch, and updates the included external repositories (submodules).
+Use the ifarm repository copy to run code, not to keep development edits. Before a normal workflow starts, [`run.csh`](../../run.csh) checks the repository location, deletes untracked and ignored files except `build/`, discards uncommitted edits to tracked files, and pulls the configured Git branch. It updates external repositories, called submodules, only when `.gitmodules` declares them. The published application files do not require that file or any submodule checkout.
 
 For example, an untracked profile you saved inside the ifarm checkout can be deleted before the workflow tries to read it. A custom build directory is also deleted unless it is inside `build/`. Keep the only copy of valuable code, configuration, and output elsewhere.
 
