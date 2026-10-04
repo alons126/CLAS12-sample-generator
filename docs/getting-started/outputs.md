@@ -37,7 +37,7 @@ These names are placeholders, not shell variables. Replace them before running a
 
 The generic directory formulas in configuration references use lowercase placeholders named after settings, such as `<target>`, `<tune>`, and `<q2-cut>`. `<beam-label>` is the complete campaign label, including `MeV` (for example, `5986MeV`); `<beam-group>` is the detector lookup group (for example, `6GeV`). Neither replaces the precise `beam-energy` setting. Angle-bracketed `<username>` denotes your login name, not a checked-in personal account.
 
-Creation takes `OUTPUT`; submission takes `RUN/lundfiles`, not `OUTPUT` or `RUN`. Keep each study's `OUTPUT` parent distinct when preserving earlier runs. CLI paths start at the repository root when using `run.csh`; direct application paths start at the caller's working directory. Creation-profile paths follow that working directory, while submission-config paths start at the config file's directory.
+Creation takes `OUTPUT`; submission takes `RUN/lundfiles`, not `OUTPUT` or `RUN`. Keep each study's `OUTPUT` parent distinct when preserving earlier runs. CLI paths start at the repository root when using [`run.csh`](../../run.csh); direct application paths start at the caller's working directory. Creation-profile paths follow that working directory, while submission-config paths start at the config file's directory.
 
 ## Output lifecycle
 

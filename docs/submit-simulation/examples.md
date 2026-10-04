@@ -1,6 +1,6 @@
 # Submission examples
 
-Run these commands on ifarm. Preview is the default and should be the first action for every sample.
+Run these commands with [`run.csh`](../../run.csh) on ifarm. Preview is the default and should be the first action for every sample.
 
 ## Preview a completed run
 
@@ -36,7 +36,7 @@ source run.csh \
     --torus -1.0
 ```
 
-The GCARD controls GEMC detector simulation. The YAML controls COATJAVA reconstruction.
+The [`rgm_fall2021_Ar_6GeV.gcard`](../../config/detector/GEMC_GCARDs_6GeV/5.14/rgm_fall2021_Ar_6GeV.gcard) controls GEMC detector simulation. The [`rgm_fall2021-ai_6Gev.yaml`](../../config/detector/COATJAVA_YAML_configs_6GeV/10.0.7/rgm_fall2021-ai_6Gev.yaml) controls COATJAVA reconstruction.
 
 ## Preview two independent arrays
 

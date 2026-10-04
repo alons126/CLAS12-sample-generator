@@ -8,9 +8,9 @@ Read the [architecture](../concepts/architecture.md), the user guide for the aff
 
 Do not casually edit protected external inputs:
 
-- `src/workflows/lund-creation/external/targets.h`
-- `src/workflows/slurm-submission/external/submit_GEMC_sample.sh`
-- anything under `config/detector/`
+- [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h)
+- [`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh)
+- anything under [`config/detector/`](../../config/detector)
 
 The [external-input guide](../concepts/external-inputs.md) defines their ownership and replacement process.
 
@@ -19,7 +19,7 @@ The [external-input guide](../concepts/external-inputs.md) defines their ownersh
 - Keep LUND configuration in `RunConfig`, source-specific event logic in its producer or adapter, and serialization/completion in `LundWriter`.
 - Keep uniform monitoring with the uniform LUND creator.
 - Keep submission resolution separate from environment loading, output actions, and the external task worker.
-- Add a new user-facing workflow as a peer under `src/workflows/` only when implementation begins.
+- Add a new user-facing workflow as a peer under [`src/workflows/`](../../src/workflows) only when implementation begins.
 - Move code into shared support only when more than one implemented workflow needs the same real contract.
 
 Use the terms **uniform LUND creator** and **physical LUND converter** when the distinction matters. The latter converts existing truth and does not run an event generator.
@@ -45,7 +45,7 @@ Do not add build trees, generated samples, HIPO files, credentials, personal pat
 
 ## Check the Wiki
 
-Build a local generated copy from the repository root:
+Build a local generated copy with [`build_wiki.py`](../../dev-tools/wiki/build_wiki.py) from the repository root:
 
 ```bash
 wiki_preview="$(mktemp -d)"

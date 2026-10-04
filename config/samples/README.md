@@ -1,8 +1,8 @@
 # Sample profiles
 
-Profiles under `config/samples/` describe a LUND sample. They do not choose a workflow, control CMake, or submit detector jobs.
+Profiles under [`config/samples/`](.) describe a LUND sample. They do not choose a workflow, control CMake, or submit detector jobs.
 
-The examples use `run.csh` on a disposable ifarm checkout. Its refresh discards tracked edits and removes untracked and ignored files except `build/`. Commit and push valuable changes first; for local development, invoke the compiled application directly. Keep output outside the ifarm checkout. Select a profile explicitly:
+The examples use [`run.csh`](../../run.csh) on a disposable ifarm checkout. Its refresh discards tracked edits and removes untracked and ignored files except `build/`. Commit and push valuable changes first; for local development, invoke the compiled application directly. Keep output outside the ifarm checkout. Select a profile explicitly:
 
 ```tcsh
 source run.csh \
@@ -12,7 +12,7 @@ source run.csh \
     --output /path/to/output
 ```
 
-The application applies built-in defaults, reads the profile, then applies command-line overrides. Profiles use plain `key = value` lines with blank lines and full-line comments. Unknown or repeated keys fail.
+The example selects [`uniform-1e-5986MeV.conf`](uniform-lund-creation/uniform-1e-5986MeV.conf). The application applies built-in defaults, reads the profile, then applies command-line overrides. Profiles use plain `key = value` lines with blank lines and full-line comments. Unknown or repeated keys fail.
 
 `output` is normally supplied at runtime so a checked-in profile contains no machine-specific path. Every resolved value, including defaults and CLI overrides, is recorded in the completion manifest.
 
@@ -35,7 +35,7 @@ The 1e, epFD, enFD, and electron-tester profiles are the production-tested modes
 
 ## Physical profile
 
-`physical-lund-creation/genie-gst.conf` is the current GENIE GST example. Supply `--input` and `--output` at runtime. Its `tune = auto` setting reads the exact `TUNE` value from the standard `input_options.txt` layout and records `unknown` when discovery is not possible.
+[`physical-lund-creation/genie-gst.conf`](physical-lund-creation/genie-gst.conf) is the current GENIE GST example. Supply `--input` and `--output` at runtime. Its `tune = auto` setting reads the exact `TUNE` value from the standard `input_options.txt` layout and records `unknown` when discovery is not possible.
 
 The profile does not run GENIE. It configures conversion of existing GST truth.
 

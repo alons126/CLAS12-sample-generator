@@ -1,6 +1,6 @@
 # Developer build reference
 
-Use direct CMake builds for source development. Normal ifarm operation uses `run.csh`, which reads `config/run.json` and builds LUND applications automatically.
+Use direct CMake builds for source development. Normal ifarm operation uses [`run.csh`](../../run.csh), which reads [`config/run.json`](../../config/run.json) and builds LUND applications automatically.
 
 ## Fresh Debug build
 

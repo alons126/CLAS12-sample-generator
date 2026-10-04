@@ -52,7 +52,7 @@ The following options describe LUND input that has no manifest. With a manifest,
 | `--tune NAME` | Physical tune/model label; default `unknown` |
 | `--q2-cut NAME` | Physical upstream-selection label; default `unknown`, with no cut applied during submission |
 
-Use `source run.csh --workflow submit --help` for the live interface. [`config/submission.conf`](../../config/submission.conf) is an example, not an automatically loaded site profile.
+Use [`source run.csh --workflow submit --help`](../../run.csh) for the live interface. [`config/submission.conf`](../../config/submission.conf) is an example, not an automatically loaded site profile.
 
 ## Detector defaults
 

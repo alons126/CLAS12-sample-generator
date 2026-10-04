@@ -1,6 +1,6 @@
 # Simulation submission guide
 
-Run submission from a csh/tcsh login shell on ifarm after LUND creation has published its completion manifest.
+Run submission with [`run.csh`](../../run.csh) from a csh/tcsh login shell on ifarm after LUND creation has published its completion manifest.
 
 ## Preview one run
 

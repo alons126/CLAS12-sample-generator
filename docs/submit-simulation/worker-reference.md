@@ -1,6 +1,6 @@
 # GEMC and reconstruction worker
 
-`src/workflows/slurm-submission/external/submit_GEMC_sample.sh` is the per-array-task boundary. It is adapted from RG-M submission code and is intentionally kept separate from the Python coordinator. Routine users should run `source run.csh --workflow submit`; they should not call this file directly.
+[`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) is the per-array-task boundary. It is adapted from RG-M submission code and is intentionally kept separate from the Python coordinator. Routine users should run [`source run.csh --workflow submit`](../../run.csh); they should not call this file directly.
 
 ## Responsibility split
 

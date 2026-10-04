@@ -25,11 +25,11 @@ This prepares the login environment. Submission then explicitly unloads and load
 
 ## Disposable checkout
 
-For a normal workflow command, `run.csh` verifies the checkout, removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and synchronizes submodules. This is intentional. Never keep the only copy of code, configuration, or output inside the ifarm checkout. A custom build directory outside `build/` is not protected by that exclusion.
+For a normal workflow command, [`run.csh`](../../run.csh) verifies the checkout, removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and synchronizes submodules. This is intentional. Never keep the only copy of code, configuration, or output inside the ifarm checkout. A custom build directory outside `build/` is not protected by that exclusion.
 
-Place LUND and HIPO data on shared storage outside the checkout. Commit and push valuable repository changes before invoking `run.csh`.
+Place LUND and HIPO data on shared storage outside the checkout. Commit and push valuable repository changes before invoking [`run.csh`](../../run.csh).
 
-Only limited checks happen before synchronization. A bare `source run.csh --help` returns without updating. Submission help and argument-syntax checks also run early when `--workflow submit` (or `--workflow=submit`) is the first option. Full submission input checks and LUND-creation option validation happen after synchronization. Forwarded LUND help (`-- --help`) also runs after synchronization; use the compiled application's `--help` directly in a development checkout.
+Only limited checks happen before synchronization. A bare [`source run.csh --help`](../../run.csh) returns without updating. Submission help and argument-syntax checks also run early when `--workflow submit` (or `--workflow=submit`) is the first option. Full submission input checks and LUND-creation option validation happen after synchronization. Forwarded LUND help (`-- --help`) also runs after synchronization; use the compiled application's `--help` directly in a development checkout.
 
 Use a csh/tcsh login shell:
 
@@ -39,7 +39,7 @@ source run.csh \
     --lund-dir /path/to/run/lundfiles
 ```
 
-Bash users may execute `./run.csh` when tcsh is installed, but must not source csh syntax into Bash.
+Bash users may execute [`./run.csh`](../../run.csh) when tcsh is installed, but must not source csh syntax into Bash.
 
 ## Run from another directory
 

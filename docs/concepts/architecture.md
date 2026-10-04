@@ -15,9 +15,9 @@ Future user-facing workflows belong beside the existing workflow directories. Th
 
 ## Entry points and control flow
 
-`run.csh` is the operational front door. It refreshes the disposable ifarm checkout and selects a workflow. Bare launcher help and limited submission syntax checks can return before refresh; full workflow validation happens afterward. The [checkout model](../submit-simulation/ifarm-environment.md#disposable-checkout) defines that boundary.
+[`run.csh`](../../run.csh) is the operational front door. It refreshes the disposable ifarm checkout and selects a workflow. Bare launcher help and limited submission syntax checks can return before refresh; full workflow validation happens afterward. The [checkout model](../submit-simulation/ifarm-environment.md#disposable-checkout) defines that boundary.
 
-For LUND creation:
+For LUND creation, [`workflow.py`](../../src/launcher/workflow.py) coordinates the build and application launch:
 
 ```text
 run.csh
@@ -30,7 +30,7 @@ run.csh
   -> LUND files and completion manifest
 ```
 
-For submission:
+For submission, [`setup_and_submit.csh`](../../src/workflows/slurm-submission/setup_and_submit.csh) bridges the sourced shell to the Python coordinator:
 
 ```text
 run.csh
@@ -50,13 +50,13 @@ The launcher never turns LUND creation into implicit submission. The submission 
 
 | Layer | Main responsibility |
 | --- | --- |
-| `apps/` | Thin CLI entry points and final error presentation |
+| [`apps/`](../../src/workflows/lund-creation/apps) | Thin CLI entry points and final error presentation |
 | `core/config/` | Parse, merge, resolve, and validate settings; select target metadata |
 | `core/geometry/` | Isolate the external target source and sample one vertex per event |
 | `core/lund/` | Define `Event` and `Particle`; serialize, split, and publish completion |
 | `core/presentation/` | Shared progress reporting for interactive and redirected output |
-| `uniform-lund-creator/` | Generate random acceptance-test particles and uniform-only monitoring |
-| `event-generator-to-lund-converter/` | Dispatch physical input to a format-specific adapter |
+| [`uniform-lund-creator/`](../../src/workflows/lund-creation/uniform-lund-creator) | Generate random acceptance-test particles and uniform-only monitoring |
+| [`event-generator-to-lund-converter/`](../../src/workflows/lund-creation/event-generator-to-lund-converter) | Dispatch physical input to a format-specific adapter |
 | `event-generator-to-lund-converter/genie-gst/` | Validate and translate GENIE GST records |
 
 `LundCore` compiles the small common layers once. `UniformGeneration` depends on it and adds ROOT histogram/graphics components. `GenieGstConversion` depends on it and adds ROOT tree components. `PhysicalConversion` is the stable dispatcher in front of the format-specific adapter. The installed executables remain separate so a restricted build can omit an unused source and its ROOT components.
@@ -99,9 +99,9 @@ To add another format, create a sibling adapter and one explicit dispatcher bran
 
 ## Submission boundary
 
-`resolve_inputs.py` is a pure resolution and validation layer: CLI, optional config, manifest, and defaults become one checked settings record per sample. GEMC and COATJAVA versions are separate submission settings: each selects its software module and corresponding configuration directory. Explicit GCARD or YAML files override file lookup without changing software selection.
+[`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) is a pure resolution and validation layer: CLI, optional config, manifest, and defaults become one checked settings record per sample. GEMC and COATJAVA versions are separate submission settings: each selects its software module and corresponding configuration directory. Explicit GCARD or YAML files override file lookup without changing software selection.
 
-`submit.py` unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<coatjava-version>` in a private environment. It verifies GEMC's installation, checks and prints the loaded COATJAVA release, and checks that the required programs are available. COATJAVA version validation does not depend on installation-directory names. It also owns reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
+[`submit.py`](../../src/workflows/slurm-submission/submit.py) unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<coatjava-version>` in a private environment. It verifies GEMC's installation, checks and prints the loaded COATJAVA release, and checks that the required programs are available. COATJAVA version validation does not depend on installation-directory names. It also owns reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
 
 This division prevents shell variables, path-name guesses, or worker-specific branches from becoming hidden configuration. It also keeps preview and execution on the same resolution path.
 
@@ -109,10 +109,10 @@ This division prevents shell variables, path-name guesses, or worker-specific br
 
 Two imported sources sit behind small interfaces:
 
-- `src/workflows/lund-creation/external/targets.h` supplies target geometry and particle masses through `TargetGeometry`.
-- `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` supplies the GEMC/COATJAVA worker command boundary.
+- [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h) supplies target geometry and particle masses through `TargetGeometry`.
+- [`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) supplies the GEMC/COATJAVA worker command boundary.
 
-Detector GCARD and YAML files under `config/detector/` are also external campaign resources. Replace these deliberately and validate the resulting production chain; do not edit them as routine project code. See [external inputs](external-inputs.md).
+Detector GCARD and YAML files under [`config/detector/`](../../config/detector) are also external campaign resources. Replace these deliberately and validate the resulting production chain; do not edit them as routine project code. See [external inputs](external-inputs.md).
 
 ## Rules for future workflows
 

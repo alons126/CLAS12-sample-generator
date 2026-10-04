@@ -4,7 +4,7 @@ These examples use small event counts. Replace every `/path/to/...` value before
 
 ## Create uniform LUND files on ifarm
 
-From a csh/tcsh login shell in the repository root:
+From a csh/tcsh login shell in the repository root, select the [`uniform-1e-5986MeV.conf`](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
 
 ```tcsh
 source run.csh \
@@ -17,7 +17,7 @@ source run.csh \
 
 The final run directory is `/path/to/quickstart-output/Uniform__1e__5986MeV`. The uniform LUND creator prints that resolved path before replacing or writing it.
 
-`run.csh` treats its ifarm checkout as disposable. A normal workflow run removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first, and keep production output outside that checkout.
+[`run.csh`](../../run.csh) treats its ifarm checkout as disposable. A normal workflow run removes untracked and ignored files except the checkout's `build/` tree, discards tracked changes, pulls the configured upstream branch, and updates submodules. Commit and push valuable changes from a development checkout first, and keep production output outside that checkout.
 
 ## Run locally during development
 
@@ -30,7 +30,7 @@ build/debug/apps/uniform-lund-creator \
     --output runs/quickstart
 ```
 
-To convert existing physical truth:
+To convert existing physical truth, select the [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
 
 ```bash
 build/debug/apps/event-generator-to-lund-converter \

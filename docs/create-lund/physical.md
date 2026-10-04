@@ -4,6 +4,8 @@ The physical LUND converter translates existing event-generator truth into the p
 
 ## Convert GENIE GST input
 
+Use [`run.csh`](../../run.csh) with the [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
+
 ```tcsh
 source run.csh \
     --workflow create-lund \

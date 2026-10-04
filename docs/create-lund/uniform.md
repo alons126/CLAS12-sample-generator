@@ -4,6 +4,8 @@ The uniform LUND creator makes controlled acceptance-test events. It samples con
 
 ## Run a reviewed profile
 
+Use [`run.csh`](../../run.csh) with the [`uniform-1e-5986MeV.conf`](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
+
 ```tcsh
 source run.csh \
     --workflow create-lund \

@@ -1,22 +1,22 @@
 # Publishing the GitHub Wiki
 
-The GitHub Wiki is the long-form reader manual. Repository Markdown is its version-controlled source; it is not a competing documentation set. `README.md` introduces the project, and `docs/index.md` becomes the Wiki home page.
+The GitHub Wiki is the long-form reader manual. Repository Markdown is its version-controlled source; it is not a competing documentation set. [`README.md`](../../README.md) introduces the project, and [`docs/index.md`](../index.md) becomes the Wiki home page.
 
 Never edit a generated Wiki page directly. Change the repository source and let publication replace the generated Wiki.
 
 ## What is published
 
-`dev-tools/wiki/build_wiki.py` collects:
+[`dev-tools/wiki/build_wiki.py`](../../dev-tools/wiki/build_wiki.py) collects:
 
-- `README.md`;
+- [`README.md`](../../README.md);
 - every non-ignored `docs/**/*.md` page;
-- `tutorials/README.md`;
-- `config/samples/README.md`; and
-- `config/run.json.md`.
+- [`tutorials/README.md`](../../tutorials/README.md);
+- [`config/samples/README.md`](../../config/samples/README.md); and
+- [`config/run.json.md`](../../config/run.json.md).
 
 It maps the nested sources into GitHub Wiki's flat page namespace, builds the sidebar and footer, converts local documentation links to Wiki links, converts code/configuration links to repository URLs, and converts Markdown footnotes to linked numbered references.
 
-Each sidebar section starts with its overview, then follows the local page links in that section's `index.md`. Unlisted pages appear afterward in Wiki-name order. Update the section index when changing its reading order; there is no separate sidebar order to maintain.
+Each sidebar section starts with its overview, then follows the local page links in that section's [`index.md`](index.md). Unlisted pages appear afterward in Wiki-name order. Update the section index when changing its reading order; there is no separate sidebar order to maintain.
 
 Git-ignored local drafts and copies are skipped. Development-only publication notes, bibliography material, and historical comparisons are not Wiki inputs.
 

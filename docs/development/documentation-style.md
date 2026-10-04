@@ -24,7 +24,7 @@ User-facing entry points list every owned CLI option with its value, meaning, an
 
 ## Runtime presentation
 
-`src/launcher/presentation/set_colors.csh` is the only ANSI palette. C++ reads it through `src/workflows/support/environment.h`; Python, shell, and CMake read the inherited environment. Do not define fallback palettes elsewhere.
+[`src/launcher/presentation/set_colors.csh`](../../src/launcher/presentation/set_colors.csh) is the only ANSI palette. C++ reads it through [`src/workflows/support/environment.h`](../../src/workflows/support/environment.h); Python, shell, and CMake read the inherited environment. Do not define fallback palettes elsewhere.
 
 Project errors use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line. The exception is `module` commands: print `module show gemc/<gemc-version>`, `module show coatjava/<coatjava-version>`, and `module list` on one line.
 
@@ -42,6 +42,8 @@ Use the shared [path notation](../getting-started/outputs.md#path-notation): `OU
 
 Preserve exact CLI, configuration, and environment-variable names. Explain aliases where they cross an interface rather than renaming them in prose. Do not treat placeholders such as `<INDEX>` as shell variables.
 
+Link every repository file or directory reference in prose and tables with a repository-relative Markdown link, including [`run.csh`](../../run.csh). Keep fenced commands and diagrams unchanged, and provide file links in the surrounding text. Generated output names, external input paths, and placeholders are not repository files; do not give them invented links. The Wiki builder converts repository links to the publishing fork's URLs.
+
 ## Protected sources
 
-These conventions do not authorize edits to external `targets.h`, the external submission worker, or detector resources. Their update procedure is documented in [external inputs](../concepts/external-inputs.md).
+These conventions do not authorize edits to external [`targets.h`](../../src/workflows/lund-creation/external/targets.h), the external submission worker, or detector resources. Their update procedure is documented in [external inputs](../concepts/external-inputs.md).

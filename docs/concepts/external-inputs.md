@@ -6,15 +6,15 @@ Some files are versioned in this repository but owned by an external scientific 
 
 | Path | Origin and role | Project boundary |
 | --- | --- | --- |
-| `src/workflows/lund-creation/external/targets.h` | RG-M target geometry and particle masses | Read through `TargetGeometry` |
-| `src/workflows/slurm-submission/external/submit_GEMC_sample.sh` | RG-M-derived Slurm worker | Called by the submission coordinator through environment variables |
-| `config/detector/` | Campaign GCARD and reconstruction YAML snapshots | Selected and hashed during submission |
+| [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h) | RG-M target geometry and particle masses | Read through `TargetGeometry` |
+| [`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) | RG-M-derived Slurm worker | Called by the submission coordinator through environment variables |
+| [`config/detector/`](../../config/detector) | Campaign GCARD and reconstruction YAML snapshots | Selected and hashed during submission |
 
 Do not edit these as part of a general cleanup. Treat a change as a reviewed source replacement with recorded origin and production validation.
 
 ## Target geometry adapter
 
-The checked-in `targets.h` is kept as an exact source copy from the [RG-M repository](https://github.com/awild7/rgm). That repository also contains RG-M analysis and utility code that may be useful for downstream work, but it is not a runtime dependency of this project. `TargetGeometry.cpp` is the only project source that includes the header. The adapter:
+The checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) is kept as an exact source copy from the [RG-M repository](https://github.com/awild7/rgm). That repository also contains RG-M analysis and utility code that may be useful for downstream work, but it is not a runtime dependency of this project. [`TargetGeometry.cpp`](../../src/workflows/lund-creation/core/geometry/TargetGeometry.cpp) is the only project source that includes the header. The adapter:
 
 - validates a resolved geometry name;
 - samples one position in centimeters;
@@ -36,7 +36,7 @@ The target implementations and RG-M variations are described in CLAS12 Note 2026
 
 ## Detector resources
 
-Files under `config/detector/` are fixed campaign snapshots. GCARD files define GEMC detector geometry and configuration; YAML files define COATJAVA reconstruction settings. The submission record hashes both selected files.
+Files under [`config/detector/`](../../config/detector) are fixed campaign snapshots. GCARD files define GEMC detector geometry and configuration; YAML files define COATJAVA reconstruction settings. The submission record hashes both selected files.
 
 For each beam group (`2GeV`, `4GeV`, or `6GeV`), `GEMC_GCARDs_<beam-group>/<gemc-version>/` holds GCARDs, while `COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/` holds reconstruction YAMLs. The checked-in YAML release is 10.0.7. Submission selects each directory using its corresponding software-version option. Reconstruction configurations are shared across GEMC versions rather than duplicated inside their directories.
 

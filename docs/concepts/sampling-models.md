@@ -31,7 +31,7 @@ The trigger electron has beam momentum and configured $\theta$, normally $25^\ci
 
 ## Vertex positions
 
-The target catalog resolves a geometry key. `TargetGeometry` uses the external `targets.h` implementation to draw $V_x$ and $V_y$ from its beam-spot distributions and $V_z$ from the selected target cell or foil positions. Exactly one vertex is drawn for each written event, and every particle in that event receives it.
+The target catalog resolves a geometry key. `TargetGeometry` uses the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) implementation to draw $V_x$ and $V_y$ from its beam-spot distributions and $V_z$ from the selected target cell or foil positions. Exactly one vertex is drawn for each written event, and every particle in that event receives it.
 
 In the checked-in target source, $V_x$ and $V_y$ are independent Gaussian draws,
 
@@ -51,7 +51,7 @@ $V_z$ follows the resolved geometry:
 | `1-foil-large` | $V_z=-2.32$ |
 | `Ca` | $V_z=-3.0$ |
 
-These values describe the checked-in `targets.h` snapshot. Recheck this table whenever that protected source is replaced.
+These values describe the checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) snapshot. Recheck this table whenever that protected source is replaced.
 
 Target identity, geometry, and LUND $A$/$Z$ metadata are distinct values. An $A$/$Z$ override does not change the vertex distribution.
 

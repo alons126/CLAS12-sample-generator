@@ -1,13 +1,11 @@
 # CLAS12 sample generator
 
-This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). It connects truth-level particle preparation to the standard CLAS12 detector chain without hiding the scientific or operational choices made along the way.
-
-The project has two separate workflows:
+This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). It prepares truth-level particles as LUND files and submits them for GEMC detector simulation and COATJAVA reconstruction, with explicit sample and detector settings. The project provides two workflows: creating LUND files and submitting CLAS12 detector simulation and reconstruction jobs.
 
 | Workflow | What it does | Main result |
 | --- | --- | --- |
-| `create-lund` | Creates [LUND](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html) input from random acceptance-test kinematics or converts existing event-generator truth | LUND files and a completion manifest |
-| `submit` | Submits those LUND files to ifarm Slurm | GEMC[^gemc-simulation] detector simulation followed by COATJAVA[^coatjava-reconstruction] reconstruction |
+| `create-lund` | Creates [LUND](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html) input from random acceptance-test kinematics or converts existing event-generator truth-level data | LUND files and a completion manifest log |
+| `submit` | Submit simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | GEMC[^gemc-simulation] detector simulation followed by COATJAVA[^coatjava-reconstruction] reconstruction |
 
 The **uniform LUND creator** makes deliberately unphysical samples that cover configured momentum and angle ranges. The **physical LUND converter** preserves supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) GST [ROOT](https://github.com/root-project/root) trees and does not run GENIE. Both paths use the same target geometry, LUND writer, file splitting, provenance, and completion rules where their meanings agree.
 
@@ -17,9 +15,9 @@ The workflows stop at reconstructed [HIPO](https://github.com/gavalian/hipo) out
 
 ## Start here
 
-The [project Wiki](../../wiki) is the user and developer manual. Its [documentation home](../../wiki/Home) gives separate reading paths for running the software and extending it.
+The [code Wiki](../../wiki) is the user and developer manual. Its [home page](../../wiki/Home) gives separate reading paths for running the software and extending it.
 
-For a small uniform run on ifarm:
+For a small uniform run on the ifarm, use the [`uniform-1e-5986MeV.conf`](config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf):
 
 ```tcsh
 source run.csh \
@@ -30,7 +28,7 @@ source run.csh \
     --output /path/to/quickstart-output
 ```
 
-`run.csh` is designed for a disposable ifarm checkout: it discards tracked changes and removes untracked and ignored files, preserving only the checkout's `build/` tree, then updates from Git and builds when needed. Full workflow validation happens after this refresh. Commit and push valuable development work before running it, and keep sample output outside the checkout. Local developers should build with CMake and invoke the compiled executables directly.
+[`run.csh`](run.csh) is designed for a disposable ifarm checkout: it discards tracked changes and removes untracked and ignored files, preserving only the checkout's `build/` tree, then updates from Git and builds when needed. Full workflow validation happens after this refresh. Commit and push valuable development work before running it, and keep sample output outside the checkout. Local developers should build with CMake and invoke the compiled executables directly.
 
 After LUND creation succeeds, preview simulation submission with the run's `lundfiles/` directory:
 

@@ -24,7 +24,7 @@ cd CLAS12-sample-generator
 
 ## Choose the right entry point
 
-Use `run.csh` for normal ifarm operation. It is a csh/tcsh entry point that refreshes a disposable checkout, configures and builds LUND applications when requested, and starts the selected workflow. The checked-in build defaults are Release, `build/release`, and four build workers.
+Use [`run.csh`](../../run.csh) for normal ifarm operation. It is a csh/tcsh entry point that refreshes a disposable checkout, configures and builds LUND applications when requested, and starts the selected workflow. The checked-in build defaults are Release, `build/release`, and four build workers.
 
 Use CMake and the compiled executables directly for local development. This avoids the disposable-checkout refresh and makes build failures easier to inspect:
 

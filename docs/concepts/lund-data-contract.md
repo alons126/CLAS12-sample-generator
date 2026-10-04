@@ -8,7 +8,7 @@ The common record and writer separate source-specific event logic from the [LUND
 
 Uniform events contain one electron or an electron followed by one hadron. Physical GENIE events contain the scattered electron followed by supported GST particles in input order. Every particle in one event has the same vertex.
 
-Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external `targets.h`; photon mass is exactly zero. The writer calculates energy as $E=\sqrt{P^2+m^2}$, using natural units ($c=1$) for the numerical calculation.
+Electron, proton, neutron, and charged-pion masses come through `TargetGeometry` from external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); photon mass is exactly zero. The writer calculates energy as $E=\sqrt{P^2+m^2}$, using natural units ($c=1$) for the numerical calculation.
 
 ## Ten-field event header
 
@@ -80,7 +80,7 @@ The serialized masses are:
 | $\pi^{+}$ / $\pi^{-}$ | 0.13957 |
 | $\gamma$ | 0.00000 |
 
-These are the five-decimal LUND values. Energy is calculated before serialization from the source precision in `targets.h` (for example, electron 0.000511 and proton 0.938272); photon mass is exactly zero.
+These are the five-decimal LUND values. Energy is calculated before serialization from the source precision in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) (for example, electron 0.000511 and proton 0.938272); photon mass is exactly zero.
 
 ## Splitting and file names
 
