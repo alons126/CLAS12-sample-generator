@@ -1,0 +1,243 @@
+name: Prepare release candidate
+
+# Manual publication only. The dev snapshot is exported without submodules or
+# local files, checked, and copied onto main in a separate runner checkout.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prepare-release-candidate
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Prepare and validate publication files
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+
+    steps:
+      - name: Check out dev without submodules
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Record source commit
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Export publication files
+        run: |
+          mkdir -p "$RUNNER_TEMP/source-export" "$RUNNER_TEMP/publication"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/source-export"
+          rsync --archive \
+              --exclude-from=.github/release-excludes.txt \
+              "$RUNNER_TEMP/source-export/" \
+              "$RUNNER_TEMP/publication/"
+          # Reapplying the filter must remove nothing from the resulting tree.
+          rsync --archive --dry-run --itemize-changes --delete-excluded \
+              --exclude-from=.github/release-excludes.txt \
+              "$RUNNER_TEMP/publication/" \
+              "$RUNNER_TEMP/publication/" > "$RUNNER_TEMP/excluded-files"
+          if test -s "$RUNNER_TEMP/excluded-files"; then
+            cat "$RUNNER_TEMP/excluded-files"
+            exit 1
+          fi
+          # No Git links (submodules) may remain outside the excluded archive.
+          if git ls-files --stage | awk '$1 == "160000" && $4 !~ /^legacy\// { found=1 } END { exit !found }'; then
+            echo '::error::A submodule outside legacy needs an explicit publication decision.'
+            exit 1
+          fi
+          # The wiki builder uses Git to identify ignored documentation drafts.
+          # This temporary index is not part of the delivered source archive.
+          git init "$RUNNER_TEMP/publication"
+          git -C "$RUNNER_TEMP/publication" add --all
+
+      - name: Install ROOT build environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: release-build
+          channels: conda-forge
+          conda-remove-defaults: true
+          auto-activate-base: false
+
+      - name: Install build dependencies
+        shell: bash -el {0}
+        run: |
+          conda install --yes \
+              root_base=6.34 \
+              cxx-compiler \
+              cmake \
+              ninja
+
+      - name: Build both applications without local test directories
+        shell: bash -el {0}
+        run: |
+          cmake \
+              -S "$RUNNER_TEMP/publication" \
+              -B "$RUNNER_TEMP/release-build" \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_PREFIX_PATH="$CONDA_PREFIX"
+          cmake \
+              --build "$RUNNER_TEMP/release-build" \
+              --parallel 2
+          "$RUNNER_TEMP/release-build/apps/uniform-lund-creator" --help
+          "$RUNNER_TEMP/release-build/apps/event-generator-to-lund-converter" --help
+          cmake \
+              --install "$RUNNER_TEMP/release-build" \
+              --prefix "$RUNNER_TEMP/release-install"
+
+      - name: Validate documentation links in publication tree
+        shell: bash -el {0}
+        working-directory: ${{ runner.temp }}/publication
+        run: |
+          python3 dev-tools/wiki/build_wiki.py \
+              --output "$RUNNER_TEMP/release-wiki" \
+              --repository "$GITHUB_REPOSITORY" \
+              --branch release-candidate
+
+      - name: Create a small sample and resolve detector inputs
+        shell: bash -el {0}
+        working-directory: ${{ runner.temp }}/publication
+        run: |
+          "$RUNNER_TEMP/release-install/bin/uniform-lund-creator" \
+              --config config/samples/uniform-lund-creation/electron-tester-2070MeV.conf \
+              --events 4 \
+              --events-per-file 2 \
+              --output "$RUNNER_TEMP/release-sample"
+          python3 - <<'PY'
+          import importlib.util
+          import os
+          from pathlib import Path
+
+          root = Path.cwd()
+          spec = importlib.util.spec_from_file_location("resolve_inputs", root / "src/workflows/slurm-submission/resolve_inputs.py")
+          resolver = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(resolver)
+          samples = list((Path(os.environ["RUNNER_TEMP"]) / "release-sample").rglob("lundfiles"))
+          if len(samples) != 1:
+              raise RuntimeError("Expected one completed LUND sample")
+
+          values = resolver.resolve(str(samples[0]), {}, root)
+          if not Path(values["GCARD_FILE"]).is_file() or not Path(values["YAML_FILE"]).is_file():
+              raise RuntimeError("Detector configuration did not resolve from publication files")
+
+          print("Completed sample and detector inputs are available without development files.")
+          PY
+
+      - name: Package validated files
+        run: tar --exclude=./.git -czf "$RUNNER_TEMP/publication.tar.gz" -C "$RUNNER_TEMP/publication" .
+
+      - name: Save validated publication tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-tree
+          path: ${{ runner.temp }}/publication.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    name: Update release-candidate and its PR
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out main without submodules
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download validated files
+        uses: actions/download-artifact@v4
+        with:
+          name: publication-tree
+          path: ${{ runner.temp }}/release-artifact
+
+      - name: Prepare candidate commit and push
+        id: candidate
+        env:
+          SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          previous=$(git rev-parse --verify refs/remotes/origin/release-candidate 2>/dev/null || true)
+          if test -n "$previous"; then
+            subject=$(git log -1 --format=%s "$previous")
+            if [[ "$subject" != 'Release candidate from '* ]]; then
+              echo '::error::release-candidate is not owned by this workflow; refusing to replace it.'
+              exit 1
+            fi
+          fi
+          mkdir "$RUNNER_TEMP/validated-tree"
+          tar -xzf "$RUNNER_TEMP/release-artifact/publication.tar.gz" -C "$RUNNER_TEMP/validated-tree"
+          git switch -c release-candidate
+          rsync --archive --delete --exclude=.git/ \
+              "$RUNNER_TEMP/validated-tree/" \
+              "$GITHUB_WORKSPACE/"
+          git add --all
+          tree=$(git write-tree)
+          if test "$tree" = "$(git rev-parse origin/main^{tree})"; then
+            echo 'Publication files already match main.'
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if test -n "$previous" && test "$tree" = "$(git rev-parse "$previous^{tree}")" && git merge-base --is-ancestor origin/main "$previous"; then
+            echo 'Validated candidate is already current.'
+          else
+            git commit -m "Release candidate from $SOURCE_SHA"
+            git push \
+                "--force-with-lease=refs/heads/release-candidate:$previous" \
+                origin \
+                HEAD:refs/heads/release-candidate
+          fi
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+
+      - name: Create or update publication PR
+        if: steps.candidate.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-pr.md" <<EOF
+          Publish the application files from dev commit ${SOURCE_SHA} into main.
+
+          The publication tree excludes AGENTS.md, legacy sources and submodules,
+          tech-note, and test implementations and fixtures. Development files remain
+          on dev. Both LUND applications configure, build, install, and accept --help
+          without those files. The generated wiki passes its local link checks.
+          A small uniform sample completes with monitoring, and its detector inputs
+          resolve from the publication files without loading ifarm software.
+
+          Validation run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+          This branch contains a filtered snapshot based on main. Review and merge
+          this PR separately. Do not merge publication cleanup back into dev.
+          EOF
+          number=$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head release-candidate --state open --json number --jq '.[0].number // empty')
+          if test -n "$number"; then
+            gh pr edit "$number" \
+                --repo "$GITHUB_REPOSITORY" \
+                --title 'Publish release candidate' \
+                --body-file "$RUNNER_TEMP/release-pr.md"
+          else
+            gh pr create \
+                --repo "$GITHUB_REPOSITORY" \
+                --base main \
+                --head release-candidate \
+                --title 'Publish release candidate' \
+                --body-file "$RUNNER_TEMP/release-pr.md"
+          fi

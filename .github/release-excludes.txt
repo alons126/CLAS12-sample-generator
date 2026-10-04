@@ -1,0 +1,15 @@
+# rsync exclusion patterns for the publication tree.
+# Paths beginning with / are relative to the repository root.
+# Keep this list explicit; electron-tester profiles are application inputs.
+AGENTS.md
+/legacy/
+/tech-note/
+/.gitmodules
+tests/
+test/
+test_*
+*_test.*
+*_tests.*
+*.test.*
+/pytest.ini
+/.pytest_cache/
