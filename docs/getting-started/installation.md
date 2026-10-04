@@ -4,18 +4,19 @@
 
 LUND creation requires:
 
-- CMake 3.20 or later;
-- a C++ compiler compatible with the selected ROOT installation;
-- [ROOT](https://github.com/root-project/root) with Core, Physics, and RIO;
-- ROOT Hist, Graf, and Gpad for the uniform LUND creator;
-- ROOT Tree and TreePlayer for the physical LUND converter; and
+- CMake 3.20 or later.
+- a C++ compiler compatible with the selected ROOT installation.
+- [ROOT](https://github.com/root-project/root):
+  - with Core, Physics, and RIO.
+  - Hist, Graf, and Gpad for the uniform LUND creator.
+  - Tree and TreePlayer for the physical LUND converter.
 - Python 3.9 or later for the launcher and submission tools.
 
-The executables do not link to GENIE. The physical LUND converter reads existing GENIE GST files through ROOT.
+The executables do not link to [GENIE](https://github.com/GENIE-MC/Generator). The physical LUND converter reads existing GENIE GST files through ROOT.
 
-Simulation submission additionally requires an ifarm account, Slurm, GEMC, COATJAVA, and storage visible to the Slurm workers. The [ifarm environment guide](../submit-simulation/ifarm-environment.md) defines the expected login setup and versions.
+Simulation submission additionally requires an ifarm account, Slurm, [GEMC](https://github.com/gemc/clas12Tags/tree/main), [COATJAVA](https://github.com/JeffersonLab/coatjava), and storage visible to the Slurm workers. The [ifarm environment guide](../submit-simulation/ifarm-environment.md) defines the expected login setup and versions.
 
-Clone the collaboration's fork by replacing the placeholder with its HTTPS or SSH address:
+Clone the repository by replacing the placeholder with its address:
 
 ```bash
 git clone REPOSITORY_URL
