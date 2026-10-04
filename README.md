@@ -5,9 +5,9 @@ This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e
 | Workflow | What it does | Main result |
 | --- | --- | --- |
 | `create-lund` | Writes LUND input from randomly sampled particles or existing event-generator output | LUND files and a JSON log listing their settings and event counts; this log marks successful creation |
-| `submit` | Submits simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | A job ID; the submitted jobs later write simulated and reconstructed HIPO files |
+| `submit` | Submits simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | A job ID; a JSON log; the submitted jobs later write simulated and reconstructed HIPO files |
 
-The **uniform LUND creator** randomly chooses particle momenta and angles within your configured ranges. Its samples are deliberately unphysical and are used to study which particles the detector can detect and reconstruct. The **physical LUND converter** copies supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) GST (generator summary tree) data stored in [ROOT](https://github.com/root-project/root) files. It does not run GENIE. Both applications use the same code to sample one vertex position in the target per event and assign it to every particle, write and split LUND files, and record the settings used.
+The **uniform LUND creator** randomly chooses particle momenta and angles within your configured ranges. Its samples are deliberately unphysical and are used to study which particles the detector can detect and reconstruct. The **physical LUND converter** copies supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) production output in the GST format stored in [ROOT](https://github.com/root-project/root) files. Both applications use the same code to sample one vertex position in the target per event and assign it to every particle, write and split LUND files, and record the settings used.
 
 The submitted jobs produce reconstructed [HIPO](https://github.com/gavalian/hipo) files, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). This project does not run a physical event generator, calculate detector acceptance, select events from reconstructed files, or perform physics analysis. Creating LUND files never submits jobs automatically.
 
@@ -26,9 +26,9 @@ source run.csh \
     --output /path/to/quickstart-output
 ```
 
-Use [`run.csh`](run.csh) in an ifarm copy of the repository used for running code, not editing it. Before running the selected workflow, the script discards uncommitted edits to files tracked by Git and deletes files Git does not track, including ignored files. It preserves the `build/` directory, then updates the code from Git and builds when needed. It checks the full sample settings only afterward, so an invalid command can still clean the checkout before failing.
+Use [`run.csh`](run.csh) in an ifarm clone of the repository used for running code, not editing it. Development is advised to be done locally and synced on the ifarm via Git. Before running the selected workflow, the script discards uncommitted edits to files tracked by Git and deletes files Git does not track, including ignored files. It preserves the `build/` directory, then updates the code from Git and builds when needed. It checks the full sample settings only afterward, so an invalid command can still clean the checkout before failing.
 
-Commit and push development changes from your local copy first. Store generated samples outside the ifarm repository directory so the next cleanup cannot delete them. For local development, build with CMake and run the compiled applications directly; those commands do not clean or update the checkout.
+Commit and push development changes from your local clone first. Store generated samples outside the ifarm repository directory so the next cleanup cannot delete them. For local development, build with CMake and run the compiled applications directly; those commands do not clean or update the checkout.
 
 After LUND creation succeeds, preview simulation submission with the run's `lundfiles/` directory:
 
