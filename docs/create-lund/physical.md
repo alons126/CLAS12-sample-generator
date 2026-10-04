@@ -71,7 +71,17 @@ The check counts input entries, including reactions that may later be skipped. H
 
 ## Provenance and output names
 
-The physical LUND converter never derives scientific metadata from a filename. Set target, beam, generator version, tune, and $Q^2$ label explicitly or through a profile. With `tune = auto`, it looks for the exact `TUNE` entry in `input_options.txt` above the standard `master-routine_validation_01-eScattering/` directory and otherwise records `unknown`.
+The physical LUND converter never derives scientific metadata from a filename. Set target, beam, generator version, tune, and $Q^2$ label explicitly or through a profile.
+
+### Automatic GENIE tune lookup
+
+`tune = auto` uses a GENIE-specific production convention, not a general event-generator feature. It is intended for GENIE samples generated with [`eAScatteringGridSubmitter.py`](https://github.com/GENIE-MC/Generator/blob/3a50ba6d0918f62b023194eb2d6b5267b2815868/src/scripts/production/python/eAScatteringGridSubmitter.py) using `--store-comitinfo`. That is the exact option spelling in the linked revision. It is disabled by default.
+
+With that option enabled, the GENIE script writes `input_options.txt` in its `--jobs-topdir` directory. The file records the parsed production options, including `TUNE`, whose value comes from the script's `--tune` setting. This metadata file is separate from the GST ROOT files; the physical LUND converter does not create it.
+
+The physical LUND converter searches upward from the local input path for the exact directory name `master-routine_validation_01-eScattering`, then reads the `TUNE` entry from `input_options.txt` in that directory's parent. This matches the GENIE script's default version, production name, and cycle. If those names were changed, the metadata file is absent or unreadable, `TUNE` is missing or empty, or the input is remote, automatic lookup records `unknown` and conversion continues.
+
+For GENIE samples produced another way, or stored in another layout, supply `--tune NAME` explicitly. This skips the search. The metadata convention is not a requirement for converting valid GST input, and finding the file does not verify how the sample was generated.
 
 The default nested layout is:
 

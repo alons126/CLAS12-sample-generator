@@ -6,6 +6,9 @@
 #
 # These directory names assume TUNE GEM21_11a_00_000 was discovered from
 # input_options.txt and the default nested output layout was used.
+# This GENIE metadata file is saved by eAScatteringGridSubmitter.py only when
+# --store-comitinfo is enabled. For other production methods or input layouts,
+# set --tune NAME during LUND creation and use the resulting run directory here.
 
 #########################################################################################
 # Physical C12 GENIE GST sample at 2.07052 GeV

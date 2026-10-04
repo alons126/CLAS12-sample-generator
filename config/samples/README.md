@@ -35,7 +35,7 @@ The 1e, epFD, enFD, and electron-tester profiles are the production-tested modes
 
 ## Physical profile
 
-[`physical-lund-creation/genie-gst.conf`](physical-lund-creation/genie-gst.conf) is the current GENIE GST example. Supply `--input` and `--output` at runtime. Its `tune = auto` setting reads the exact `TUNE` value from the standard `input_options.txt` layout and records `unknown` when discovery is not possible.
+[`physical-lund-creation/genie-gst.conf`](physical-lund-creation/genie-gst.conf) is the current GENIE GST example. Supply `--input` and `--output` at runtime. Its `tune = auto` setting expects GENIE samples generated with [`eAScatteringGridSubmitter.py`](https://github.com/GENIE-MC/Generator/blob/3a50ba6d0918f62b023194eb2d6b5267b2815868/src/scripts/production/python/eAScatteringGridSubmitter.py) using `--store-comitinfo`, which saves `TUNE` in `input_options.txt`. The [physical guide](../../docs/create-lund/physical.md#automatic-genie-tune-lookup) gives the exact directory layout. If lookup fails, conversion records `unknown`. For samples generated another way or stored elsewhere, provide `--tune NAME` explicitly.
 
 The profile does not run GENIE. It configures conversion of existing GST truth.
 

@@ -5,13 +5,19 @@
 # outside the ifarm checkout. For local development, run the built
 # event-generator-to-lund-converter executable.
 #
-# Expected input layout for each quoted glob:
+# Automatic tune lookup applies to GENIE samples produced with
+# eAScatteringGridSubmitter.py using --store-comitinfo (the exact GENIE spelling).
+# That option saves input_options.txt in the GENIE --jobs-topdir directory.
+# It is not an option of run.csh or the physical LUND converter.
+# Source: https://github.com/GENIE-MC/Generator/blob/3a50ba6d0918f62b023194eb2d6b5267b2815868/src/scripts/production/python/eAScatteringGridSubmitter.py
+# Expected input layout for each quoted glob, using the default production name:
 #   SAMPLE_DIRECTORY/input_options.txt
 #   SAMPLE_DIRECTORY/master-routine_validation_01-eScattering/*.root
 #
 # The profile uses tune=auto. The physical LUND converter reads the exact TUNE value from
 # input_options.txt and falls back to unknown when discovery fails. The explicit
 # target and beam energy select the normal GEMC target variation and vertex geometry.
+# For other production methods or directory names, provide --tune NAME explicitly.
 # Replace every /path/to/... placeholder before running these commands.
 
 #########################################################################################

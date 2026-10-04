@@ -76,7 +76,7 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `input` | required | GENIE GST [ROOT](https://github.com/root-project/root) file, quoted local pattern, or ROOT-supported remote address |
 | `event-generator` | `genie-gst` | Generator/format adapter; this is the only implemented value |
 | `event-generator-version` | `unknown` | Generator version recorded in the log and optionally included in the filename prefix |
-| `tune` | `auto` | Discover `TUNE` from the standard production layout or record `unknown` |
+| `tune` | `auto` | Read `TUNE` from [GENIE production metadata](physical.md#automatic-genie-tune-lookup) saved with GENIE's `--store-comitinfo`; otherwise record `unknown` |
 | `q2-cut` | beam-based | Record the minimum-$Q^2$ cut used to generate the input; conversion neither applies nor checks it |
 | `output-layout` | `nested` | `nested` or `metadata` |
 
