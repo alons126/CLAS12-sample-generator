@@ -1,4 +1,4 @@
-# CLAS12 sample generator documentation
+# CLAS12 sample generator Wiki
 
 This code prepares simulation samples for the [e4ν collaboration](https://e4nu.org) using the CLAS12 spectrometer[^clas12-spectrometer] simulation chain. It provides separate workflows for preparing truth-level particles and submitting detector simulation and reconstruction.
 
