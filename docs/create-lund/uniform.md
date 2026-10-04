@@ -33,14 +33,14 @@ Each output label joins `e` for the trigger electron, the selected hadron, and t
 
 | Label | Hadron option | Region | Event content |
 | --- | --- | --- | --- |
-| `epFD` | `proton` | Forward detector (`FD`) | $e^-p$ |
-| `enFD` | `neutron` | Forward detector (`FD`) | $e^-n$ |
-| `epipFD` | `pip` | Forward detector (`FD`) | $e^-\pi^{+}$ |
-| `epimFD` | `pim` | Forward detector (`FD`) | $e^-\pi^{-}$ |
-| `epCD` | `proton` | Central detector (`CD`) | $e^-p$ |
-| `enCD` | `neutron` | Central detector (`CD`) | $e^-n$ |
-| `epipCD` | `pip` | Central detector (`CD`) | $e^-\pi^{+}$ |
-| `epimCD` | `pim` | Central detector (`CD`) | $e^-\pi^{-}$ |
+| `epFD` | `proton` | Forward detector (FD) | $e^{-}p$ |
+| `enFD` | `neutron` | Forward detector (FD) | $e^{-}n$ |
+| `epipFD` | `pip` | Forward detector (FD) | $e^{-}\pi^{+}$ |
+| `epimFD` | `pim` | Forward detector (FD) | $e^{-}\pi^{-}$ |
+| `epCD` | `proton` | Central detector (CD) | $e^{-}p$ |
+| `enCD` | `neutron` | Central detector (CD) | $e^{-}n$ |
+| `epipCD` | `pip` | Central detector (CD) | $e^{-}\pi^{+}$ |
+| `epimCD` | `pim` | Central detector (CD) | $e^{-}\pi^{-}$ |
 
 The automatic run name and filename prefix are `Uniform__<channel-label>__<beam-label>`. Events are numbered from zero across the whole run. Starting a new output file does not restart those event numbers.
 
@@ -70,7 +70,7 @@ The 1e, epFD, enFD, and electron-tester modes are the production-tested uniform 
 
 The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, $A=40$, $Z=18$, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. $A$/$Z$ are separate LUND-header metadata and do not silently change geometry.
 
-The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls vertex positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. `TRandom3(0)` requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
+The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls vertex positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
 
 Electron, proton, neutron, and charged-pion masses come from the protected target source; photon mass is exactly zero. The [LUND data contract](../concepts/lund-data-contract.md) lists their serialized values and precision.
 

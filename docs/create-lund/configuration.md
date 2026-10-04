@@ -44,7 +44,7 @@ Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable w
 | `C12`, $2.07052\,\mathrm{GeV}$ | 12 | 6 | `rgm_fall2021_C_S` | `1-foil-small` |
 | `C12`, $4.02962\,\mathrm{GeV}$ | 12 | 6 | `rgm_fall2021_C_L` | `1-foil-large` |
 | `C12`, $5.98636\,\mathrm{GeV}$ | 12 | 6 | `rgm_fall2021_Cx4` | `4-foil` |
-| `Ca40` / `Ca48` | 40 / 48 | 20 | `rgm_fall2021_Ca` | `Ca` |
+| `Ca40`/`Ca48` | 40/48 | 20 | `rgm_fall2021_Ca` | `Ca` |
 | `Sn120` | 120 | 50 | `rgm_fall2021_Sn_L` | `1-foil-large` |
 | `Sn-nat` | 119 | 50 | `rgm_fall2021_Snx4` | `4-foil` |
 
@@ -57,9 +57,9 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `channel` | `1e` | `1e`, `electron-tester`, or `eh` |
 | `hadron` | `proton` | `proton` ($p$), `neutron` ($n$), `pip` ($\pi^{+}$), or `pim` ($\pi^{-}$); used by `eh`. See the [electron-hadron label definitions](uniform.md#electron-hadron-labels). |
 | `hadron-region` | `FD` | `FD` or `CD`; used by `eh` |
-| `electron-theta-min/max` | `5` / `40` | Electron-only $\theta$ bounds, in degrees |
+| `electron-theta-min/max` | `5`/`40` | Electron-only $\theta$ bounds, in degrees |
 | `electron-momentum` | `auto` | `auto`, `uniform`, `mixed`, or `beam` |
-| `electron-p-min/max` | `0.7` / beam | Electron momentum bounds in $\mathrm{GeV}/c$ |
+| `electron-p-min/max` | `0.7`/beam | Electron momentum bounds in $\mathrm{GeV}/c$ |
 | `hadron-theta-min/max` | `auto` | $\theta$ bounds resolved from hadron species and region |
 | `hadron-momentum` | `auto` | `auto`, compatibility alias `sampled`, `uniform`, `mixed`, or neutron-only `fixed` |
 | `hadron-p-min` | `auto` | Species/region minimum; maximum is always beam momentum |

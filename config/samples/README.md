@@ -18,15 +18,15 @@ Supply `--output` when running the command so profiles do not need paths specifi
 
 ## Uniform profiles
 
-Each supported uniform mode has a complete Ar40 profile for the three RG-M beam energies:
+Each supported uniform mode has a complete Ar40 profile for the three RG-M beam energies in [`uniform-lund-creation/`](uniform-lund-creation/):
 
 | Mode | Profile pattern |
 | --- | --- |
 | 1e | `uniform-1e-{2070,4029,5986}MeV.conf` |
-| epFD / enFD | `uniform-{epFD,enFD}-{2070,4029,5986}MeV.conf` |
-| epipFD / epimFD | `uniform-{epipFD,epimFD}-{2070,4029,5986}MeV.conf` |
-| epCD / enCD | `uniform-{epCD,enCD}-{2070,4029,5986}MeV.conf` |
-| epipCD / epimCD | `uniform-{epipCD,epimCD}-{2070,4029,5986}MeV.conf` |
+| epFD/enFD | `uniform-{epFD,enFD}-{2070,4029,5986}MeV.conf` |
+| epipFD/epimFD | `uniform-{epipFD,epimFD}-{2070,4029,5986}MeV.conf` |
+| epCD/enCD | `uniform-{epCD,enCD}-{2070,4029,5986}MeV.conf` |
+| epipCD/epimCD | `uniform-{epipCD,epimCD}-{2070,4029,5986}MeV.conf` |
 | electron tester | `electron-tester-{2070,4029,5986}MeV.conf` |
 
 Production profiles request 50,000,000 events and tester profiles request 1,000,000, with 25,000 events per file. Use `--events 100` for a small check before a long run.

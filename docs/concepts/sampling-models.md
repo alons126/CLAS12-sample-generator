@@ -64,4 +64,4 @@ Uniform creation owns two `TRandom3` objects:
 
 Each `TRandom3` object is a random-number generator (RNG) with its own sequence. Changing the target geometry draws from the vertex sequence, not the momentum-and-angle sequence. To use the external header, the geometry adapter temporarily copies the caller's vertex RNG state into the header's global RNG and copies the updated state back afterward. A mutex, a lock preventing simultaneous access, protects that shared global state.
 
-A nonzero seed repeats a sequence only when the complete configuration, software, ROOT version, and draw order also match. `TRandom3(0)` requests automatic seeding. A manifest containing zero therefore cannot reproduce the sequence from that value alone.
+A nonzero seed repeats a sequence only when the complete configuration, software, ROOT version, and draw order also match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic seeding. A manifest containing zero therefore cannot reproduce the sequence from that value alone.

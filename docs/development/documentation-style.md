@@ -4,7 +4,7 @@ Source explanations must describe what the code actually does. Tell contributors
 
 ## General writing
 
-Refer to this work as the “repository,” the “code,” or the specific application or workflow, not the “project.” Use “repository” for files and checkouts, and “code” or a component name for behavior. Preserve exact API names, identifiers, third-party names, URLs, and quotations, including CMake's `project()` command and `PROJECT_*` variables.
+Refer to this work as the “repository,” the “code,” or the specific application or workflow, not the “project.” Use “repository” for files and checkouts, and “code” or a component name for behavior. Preserve exact API names, identifiers, third-party names, URLs, and quotations, including CMake's [`project()`](https://cmake.org/cmake/help/latest/command/project.html) command and `PROJECT_*` variables.
 
 Use simple, direct language. Begin unfamiliar behavior with a concrete action and visible result. Keep exact technical terms when they name a real API, data format, scientific quantity, or language rule, and explain them where they first matter.
 
@@ -50,7 +50,9 @@ Use the shared [path notation](../getting-started/outputs.md#path-notation): `OU
 
 Preserve exact CLI, configuration, and environment-variable names. Explain aliases where they cross an interface rather than renaming them in prose. Do not treat placeholders such as `<INDEX>` as shell variables.
 
-Link every repository file or directory reference in prose and tables with a repository-relative Markdown link, including [`run.csh`](../../run.csh). Keep fenced commands and diagrams unchanged, and provide file links in the surrounding text. Generated output names, external input paths, and placeholders are not repository files; do not give them invented links. The Wiki builder converts repository links to the publishing fork's URLs.
+Link every repository file, directory, and function reference in prose and tables with a repository-relative Markdown link, including [`run.csh`](../../run.csh), source files, profiles, and detector settings. Directory links point to the actual repository directory. Function and method links point to the source file and current declaration or definition line that explains the behavior; put the exact, qualified name in inline code inside the link label. Verify the path and line instead of inventing an anchor. Recheck these links when source changes move the relevant lines. Link third-party functions to their authoritative API documentation or source when a verified target is available.
+
+Keep fenced commands, code examples, and diagrams unchanged during linking edits, and provide file, directory, and function links in the surrounding text. Generated output names, external input paths, and placeholders are not repository files; do not give them invented links. The Wiki builder converts repository links to the publishing fork's URLs and preserves explicit function links. Links must work in the repository Markdown as well as the Wiki.
 
 After editing documentation, check local links and heading anchors, tables, code fences, inline markup, and footnotes. Build the Wiki and check its generated links and formatting too. During prose-only edits, verify that commands and scientific details stayed unchanged. Report only checks that actually ran. Leave changes unstaged and uncommitted unless that Git action was explicitly requested, and preserve any edits already staged by the user.
 

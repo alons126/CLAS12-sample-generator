@@ -19,7 +19,7 @@ A physical adapter copies available truth. It must not resample particle kinemat
 
 ## 2. Add the adapter directory
 
-Create a format-specific sibling:
+Create a format-specific sibling under [`event-generator-to-lund-converter/`](../../src/workflows/lund-creation/event-generator-to-lund-converter/):
 
 ```text
 src/workflows/lund-creation/event-generator-to-lund-converter/
@@ -43,9 +43,9 @@ For each accepted input event:
 1. fill one `Event` with documented header metadata;
 2. sample exactly one vertex through `TargetGeometry`;
 3. add supported particles in the documented order;
-4. use `getParticleMass()` for particle species supported by the code;
+4. use [`getParticleMass()`](../../src/workflows/lund-creation/core/lund/Particle.cpp#L33) for particle species supported by the code;
 5. give every particle the same vertex; and
-6. call `LundWriter::writeEvent()`.
+6. call [`LundWriter::writeEvent()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L102).
 
 The adapter reads input in order and counts entries examined and events written. `LundWriter` enforces the output event limit, chooses filenames, starts new files, writes LUND text, checks paths before deleting output, and writes the final manifest. Physical adapters do not create uniform monitoring histograms or plots.
 
@@ -53,7 +53,7 @@ The adapter reads input in order and counts entries examined and events written.
 
 Add the adapter identifier to the physical branch of `RunConfig`. Add only settings that are genuinely format-specific; keep input, target, output, capacity, splitting, and provenance in the common physical contract.
 
-Add a branch in `convertPhysical()` that calls the new adapter when its name is selected. There are few adapters, so a direct function call is sufficient; do not add a plugin-loading system for this change.
+Add a branch in [`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) that calls the new adapter when its name is selected. There are few adapters, so a direct function call is sufficient; do not add a plugin-loading system for this change.
 
 Update CLI help and add a checked-in example profile with explicit metadata. Preserve the public executable name and `--event-generator` interface.
 

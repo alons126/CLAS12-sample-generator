@@ -66,7 +66,7 @@ This technique has not yet been tested with this code, and preservation of a fie
 
 ## Supported species and order
 
-Supported physical output species are the electron $e^-$ (11), photon $\gamma$ (22), charged pions $\pi^\pm$ ($\pm211$), neutron $n$ (2112), and proton $p$ (2212). The scattered electron is first. Supported final-state particles retain GST order.
+Supported physical output species are the electron $e^{-}$ (11), photon $\gamma$ (22), charged pions $\pi^{\pm}$ ($\pm211$), neutron $n$ (2112), and proton $p$ (2212). The scattered electron is first. Supported final-state particles retain GST order.
 
 Neutral pions are not written. The input production must decay them upstream so their photons exist in GST. The physical LUND converter skips a residual PDG 111 instead of inventing daughter momenta. The [physical-conversion guide](../create-lund/physical.md#selection-and-translation) identifies the GENIE decay setting required during input production.
 
@@ -74,10 +74,10 @@ The serialized masses are:
 
 | Species | $m$ ($\mathrm{GeV}/c^2$) |
 | --- | ---: |
-| $e^-$ | 0.00051 |
+| $e^{-}$ | 0.00051 |
 | $p$ | 0.93827 |
 | $n$ | 0.93957 |
-| $\pi^{+}$ / $\pi^{-}$ | 0.13957 |
+| $\pi^{+}$/$\pi^{-}$ | 0.13957 |
 | $\gamma$ | 0.00000 |
 
 These are the masses after formatting with five decimal places for LUND. Energy is calculated before that rounding, using the values in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) (for example, electron 0.000511 and proton 0.938272). Photon mass is exactly zero.

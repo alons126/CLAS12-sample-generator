@@ -1,6 +1,6 @@
 # Architecture
 
-LUND creation and simulation submission have separate directories because users run them separately:
+LUND creation and simulation submission have separate directories under [`src/workflows/`](../../src/workflows/) because users run them separately. The shared launcher lives under [`src/launcher/`](../../src/launcher/):
 
 ```text
 src/
@@ -51,13 +51,13 @@ Creating LUND files never submits jobs automatically. The submission program ask
 | Layer | Main responsibility |
 | --- | --- |
 | [`apps/`](../../src/workflows/lund-creation/apps) | Thin CLI entry points and final error presentation |
-| `core/config/` | Parse, merge, resolve, and validate settings; select target metadata |
-| `core/geometry/` | Isolate the external target source and sample one vertex per event |
-| `core/lund/` | Define `Event` and `Particle`; serialize, split, and publish completion |
-| `core/presentation/` | Shared progress reporting for interactive and redirected output |
+| [`core/config/`](../../src/workflows/lund-creation/core/config/) | Parse, merge, resolve, and validate settings; select target metadata |
+| [`core/geometry/`](../../src/workflows/lund-creation/core/geometry/) | Isolate the external target source and sample one vertex per event |
+| [`core/lund/`](../../src/workflows/lund-creation/core/lund/) | Define `Event` and `Particle`; serialize, split, and publish completion |
+| [`core/presentation/`](../../src/workflows/lund-creation/core/presentation/) | Shared progress reporting for interactive and redirected output |
 | [`uniform-lund-creator/`](../../src/workflows/lund-creation/uniform-lund-creator) | Generate random acceptance-test particles and uniform-only monitoring |
 | [`event-generator-to-lund-converter/`](../../src/workflows/lund-creation/event-generator-to-lund-converter) | Dispatch physical input to a format-specific adapter |
-| `event-generator-to-lund-converter/genie-gst/` | Validate and translate GENIE GST records |
+| [`event-generator-to-lund-converter/genie-gst/`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/) | Validate and translate GENIE GST records |
 
 `LundCore` compiles the small common layers once. `UniformGeneration` depends on it and adds ROOT histogram/graphics components. `GenieGstConversion` depends on it and adds ROOT tree components. `PhysicalConversion` is the stable dispatcher in front of the format-specific adapter. The installed executables remain separate so a restricted build can omit an unused source and its ROOT components.
 
@@ -89,13 +89,13 @@ This separation is the main extension rule. A new input adapter should translate
 
 ## Uniform path
 
-`generateUniform()` copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. Monitoring files are saved before the final manifest is written.
+[`generateUniform()`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp#L153) copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. Monitoring files are saved before the final manifest is written.
 
 ## Physical path
 
-`convertPhysical()` calls the selected input adapter. `convertGenieGST()` checks the ROOT tree and branch types, reads entries in order, selects supported interactions, copies supported particles, and calls the common writer. It separately counts entries examined and events written, and decides whether enough input remains to start another file. It creates no monitoring histograms.
+[`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) calls the selected input adapter. [`convertGenieGST()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp#L64) checks the ROOT tree and branch types, reads entries in order, selects supported interactions, copies supported particles, and calls the common writer. It separately counts entries examined and events written, and decides whether enough input remains to start another file. It creates no monitoring histograms.
 
-To read another input format, add a directory beside `genie-gst/` and a branch in `convertPhysical()` that calls its reader. Keep the same command-line executable and use the common writer for output. The [adapter guide](../development/adding-event-generator.md) lists the decisions and checks needed.
+To read another input format, add a directory beside [`genie-gst/`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/) and a branch in [`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) that calls its reader. Keep the same command-line executable and use the common writer for output. The [adapter guide](../development/adding-event-generator.md) lists the decisions and checks needed.
 
 ## Submission boundary
 

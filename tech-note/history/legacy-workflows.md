@@ -85,7 +85,7 @@ BASE_TL_SAMPLE_DIR/NUCLEUS/TUNE/ENERGY_Q2LABEL/
     master-routine_validation_01-eScattering/*.root
 ```
 
-| Nucleus / energy | Geometry | A/Z |
+| Nucleus/energy | Geometry | A/Z |
 | --- | --- | --- |
 | H1, any supported energy | liquid | 1/1 |
 | D2, any supported energy | liquid | 2/1 |
@@ -128,7 +128,7 @@ The current archived selection is uniform submission. Its active loop is **en at
 | --- | --- |
 | Uncomment uniform vs GENIE setup line | Choose generation/conversion CLI; both yield the same manifest contract |
 | Hardcoded output/input prefixes | `--output`, `--prefix`, manifest file list |
-| `NUM_OF_FILES` / Slurm array | Actual number of files listed by the completion manifest |
+| `NUM_OF_FILES`/Slurm array | Actual number of files listed by the completion manifest |
 | `NEVENTS=10000` in archived payloads | `JOB_NEVENTS` defaults to the largest selected manifest count; explicit event-limit overrides are supported |
 | `TARGET_VARIATION`, `GCARD_FILE`, `YAML_FILE` | Resolved manifest values and config/CLI overrides |
 | `TORUS_FIELD` | Retained +0.5 at 2 GeV; −1.0 at 4/6 GeV |

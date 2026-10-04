@@ -29,7 +29,7 @@ Paths in the following three LUND sections are relative to [`src/workflows/lund-
 | [`core/lund/LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h) | Check and replace the run directory, split and format LUND files, count events, and write the completion log |
 | [`core/presentation/ProgressReporter.h`](../../src/workflows/lund-creation/core/presentation/ProgressReporter.h) | Update one progress bar in a terminal, or print occasional full lines when output is redirected |
 
-`RunConfig::createFromCommandLine()` reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. `LundWriter::finalizeRun()` writes the final completion manifest only after all required output succeeds.
+[`RunConfig::createFromCommandLine()`](../../src/workflows/lund-creation/core/config/RunConfig.cpp#L283) reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. [`LundWriter::finalizeRun()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) writes the final completion manifest only after all required output succeeds.
 
 ## Uniform LUND creator
 
@@ -50,7 +50,7 @@ The uniform LUND creator chooses random momenta and angles. It samples one verte
 | [`event-generator-to-lund-converter/PhysicalConverter.h`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.h) and [`.cpp`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp) | Call the adapter selected by `event-generator` |
 | [`event-generator-to-lund-converter/genie-gst/GenieConverterGST.h`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.h) and [`.cpp`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp) | Check GST fields, select supported events and particles, count entries and output, and decide when to stop |
 
-The GENIE adapter reads a `TChain("gst")` with typed `TTreeReader` values and arrays. It validates the current array sizes against `nf` before access and imposes no fixed particle buffer. It calls the common writer and creates no monitoring objects.
+The GENIE adapter reads a [`TChain("gst")`](https://root.cern.ch/doc/master/classTChain.html) with typed `TTreeReader` values and arrays. It validates the current array sizes against `nf` before access and imposes no fixed particle buffer. It calls the common writer and creates no monitoring objects.
 
 ## Submission
 
