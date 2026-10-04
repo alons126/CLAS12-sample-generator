@@ -31,7 +31,7 @@ CLI options:
     --source uniform|physical     Set source when no completion manifest supplies it.
     --beam-energy GeV             Set truth beam energy when no manifest supplies it.
     --target ID                   Set truth target identity when no manifest supplies it.
-    --channel NAME                Set uniform 1e, eh, electron-tester, or a complete FD/CD label.
+    --channel NAME                Set uniform electron-tester, 1e, eh, or a complete FD/CD label.
     --hadron NAME                 Set proton, neutron, pip, or pim for an eh channel.
     --hadron-region FD|CD         Select the eh hadron detector region.
     --event-generator NAME        Set physical input adapter; default: genie-gst without a manifest.
@@ -93,7 +93,7 @@ OPTIONS = {
     'source': 'uniform or physical; normally read from the manifest',
     'beam-energy': 'Truth beam energy in GeV',
     'target': 'Truth target identity, independently of detector target variation',
-    'channel': 'Uniform 1e, eh, electron-tester, or a complete FD/CD sample label',
+    'channel': 'Uniform electron-tester, 1e, eh, or a complete FD/CD sample label',
     'hadron': 'proton, neutron, pip or pim when channel=eh',
     'hadron-region': 'FD or CD when channel=eh',
     'event-generator': 'Physical input adapter label (default: genie-gst for physical input)',
@@ -315,7 +315,7 @@ def channel_label(values):
         values: Merged settings containing channel and, for eh, hadron and hadron-region.
 
     Returns:
-        The corresponding 1e, electron-tester, or species-plus-region label.
+        The corresponding electron-tester, 1e, or species-plus-region label.
 
     Failure:
         Unknown channels or incomplete eh selections raise ValueError. Filenames are never
@@ -333,7 +333,7 @@ def channel_label(values):
 
     # A caller may provide the complete species-plus-region label. Never guess it from a path.
     if channel not in LABELS:
-        raise ValueError('--channel must be 1e, electron-tester, eh, or a complete label such as epFD or enCD')
+        raise ValueError('--channel must be electron-tester, 1e, eh, or a complete label such as epFD or enCD')
 
     return channel
 

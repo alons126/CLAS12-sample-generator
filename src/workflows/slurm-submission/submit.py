@@ -31,7 +31,7 @@ CLI options (parsed by resolve_inputs.py):
     --source uniform|physical     Set source when no manifest supplies it.
     --beam-energy GeV             Set truth beam energy when no manifest supplies it.
     --target ID                   Set truth target identity when no manifest supplies it.
-    --channel NAME                Set uniform 1e, eh, electron-tester, or a complete FD/CD label.
+    --channel NAME                Set uniform electron-tester, 1e, eh, or a complete FD/CD label.
     --hadron NAME                 Set proton, neutron, pip, or pim for eh.
     --hadron-region FD|CD         Select the eh hadron detector region.
     --event-generator NAME        Set physical input adapter; default: genie-gst without a manifest.

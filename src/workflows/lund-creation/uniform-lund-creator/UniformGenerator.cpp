@@ -57,7 +57,7 @@ namespace {
 /**
  * @brief Build the short sample name used in monitoring plots.
  * @param c Final settings containing the channel, hadron, and detector region.
- * @return `1e`, `electron-tester`, or a label such as `epFD` for an electron, proton, and forward
+ * @return `electron-tester`, `1e`, or a label such as `epFD` for an electron, proton, and forward
  *         detector.
  */
 std::string sampleLabel(const RunConfig& c) {

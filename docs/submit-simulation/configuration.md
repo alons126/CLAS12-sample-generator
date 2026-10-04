@@ -46,7 +46,7 @@ The following options describe LUND input that has no manifest. With a manifest,
 | `--beam-energy GeV` | Required truth beam energy |
 | `--target ID` | Required truth target identity |
 | `--prefix NAME` | Required filename prefix before `_INDEX.txt` |
-| `--channel NAME` | Uniform `1e`, `electron-tester`, `eh`, or a [complete electron-hadron label](../create-lund/uniform.md#electron-hadron-labels) such as `epFD` |
+| `--channel NAME` | Uniform `electron-tester`, `1e`, `eh`, or a [complete electron-hadron label](../create-lund/uniform.md#electron-hadron-labels) such as `epFD` |
 | `--hadron NAME`, `--hadron-region FD\|CD` | Particle and region required when `channel=eh` |
 | `--event-generator NAME` | Physical adapter label; default `genie-gst` |
 | `--tune NAME` | Physical tune/model label; default `unknown` |
@@ -56,9 +56,9 @@ Use [`source run.csh --workflow submit --help`](../../run.csh) for the live inte
 
 ## Detector defaults
 
-GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this code[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). GCARD defaults are selected from the manifest's target variation, beam energy, and submission-time GEMC version under `config/detector/GEMC_GCARDs_<beam-group>/<gemc-version>/`.
+GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this code[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). GCARD defaults are selected from the manifest's target variation, beam energy, and submission-time GEMC version under [`config/detector/`](../../config/detector/), using the pattern `config/detector/GEMC_GCARDs_<beam-group>/<gemc-version>/`.
 
-COATJAVA defaults to 10.0.7. Its version independently selects the reconstruction software and the YAML directory, `config/detector/COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/`. Only 10.0.7 YAML snapshots are currently checked in. Another release needs a reviewed YAML supplied with `--yaml` if its default file is absent. Explicit `--gcard` and `--yaml` paths override resource lookup, not software selection. Check that the selected files are compatible with the requested releases.
+COATJAVA defaults to 10.0.7. Its version independently selects the reconstruction software and the YAML directory under [`config/detector/`](../../config/detector/), using the pattern `config/detector/COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/`. Only 10.0.7 YAML snapshots are currently checked in. Another release needs a reviewed YAML supplied with `--yaml` if its default file is absent. Explicit `--gcard` and `--yaml` paths override resource lookup, not software selection. Check that the selected files are compatible with the requested releases.
 
 For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Beam labels outside the three supported lookup groups require explicit `--gcard`, `--yaml`, and `--torus` values.
 

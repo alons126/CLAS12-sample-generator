@@ -13,7 +13,7 @@
  *   return means the run directory contains its LUND files, monitoring output, and completion manifest.
  *
  * Scope:
- *   The function creates one-electron, electron-test, or electron-hadron test events from configured
+ *   The function creates electron-test, one-electron, or electron-hadron test events from configured
  *   random momentum and angles. It does not model a physical interaction, read event-generator input, run
  *   an external event generator such as GENIE, or submit detector-simulation jobs.
  */

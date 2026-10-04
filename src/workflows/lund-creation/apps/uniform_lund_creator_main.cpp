@@ -14,7 +14,7 @@
  *
  * CLI options:
  *   --config FILE                       Read `key = value` settings (default: no configuration file).
- *   --channel 1e|eh|electron-tester     Select the created final state (default: 1e).
+ *   --channel electron-tester|1e|eh     Select the created final state (default: 1e).
  *   --hadron proton|neutron|pip|pim     Select the hadron for `eh` (default: proton).
  *   --hadron-region FD|CD               Select the hadron detector region (default: FD).
  *   --beam-energy GeV                   Set the incident-electron energy (default: 5.98636 GeV).

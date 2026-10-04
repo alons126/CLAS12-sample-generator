@@ -15,15 +15,15 @@ source run.csh \
     --output /path/to/quickstart-output
 ```
 
-The profile is a text file containing the sample settings. `--events 100` replaces its event count with a small number for a basic check. Without that override, production profiles request 50,000,000 events and electron-tester profiles request 1,000,000. Command-line values take priority over profile values. The [sample-profile inventory](../../config/samples/README.md) lists the files for every implemented channel at $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$.
+The profile is a text file containing the sample settings. `--events 100` replaces its event count with a small number for a basic check. Without that override, electron-tester profiles request 1,000,000 events and production profiles request 50,000,000. Command-line values take priority over profile values. The [sample-profile inventory](../../config/samples/README.md) lists the files for every implemented channel at $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$.
 
 ## Available channels
 
 | Channel | Event content | Output label |
 | --- | --- | --- |
-| `1e` | One sampled electron | `1e` |
-| `electron-tester` | One beam-momentum electron in an angular scan | `electron-tester` |
-| `eh` | One trigger electron followed by one selected hadron | One of the electron-hadron labels defined below |
+| $(e,e')$ angular tester (`electron-tester`) | One beam-momentum electron in an angular scan | `electron-tester` |
+| $(e,e')$ (`1e`) | One sampled electron | `1e` |
+| $(e,e'h)$ (`eh`) | One trigger electron followed by one selected hadron | One of the electron-hadron labels defined below |
 
 For `eh`, select `--hadron proton|neutron|pip|pim` and `--hadron-region FD|CD`. In these command-line values, `pip` means a positively charged pion ($\pi^{+}$) and `pim` means a negatively charged pion ($\pi^{-}$). `FD` means the forward-detector sampling region and `CD` means the central-detector sampling region. These names describe the generated angular range; they do not claim that GEMC or reconstruction will detect the particle.
 
@@ -48,6 +48,8 @@ The automatic run name and filename prefix are `Uniform__<channel-label>__<beam-
 
 ## Production definitions
 
+The electron tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $P=P_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
+
 The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $P$ and uniform in $1/P$, from $0.7\,\mathrm{GeV}/c$ to $P_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are uniform-sampling bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts[^burkert-clas12][^asryan-ecal].
 
 Electron–hadron samples use a beam-momentum trigger electron at $\theta_e=25^\circ$. Its $\phi$ is placed at the CLAS12 sector center closest to the direction opposite the hadron, then shifted by $\Delta\phi=16^\circ$ at $2.07052\,\mathrm{GeV}$, $7^\circ$ at $4.02962\,\mathrm{GeV}$, $5^\circ$ at $5.98636\,\mathrm{GeV}$, and $0^\circ$ at other beam energies unless overridden. This separation rule is retained for CD samples even though the CD geometry does not require it. The hadron generation bounds below were chosen to cover the relevant CLAS12 forward-detector and central-detector regions described by the spectrometer and reconstruction system[^burkert-clas12][^ziegler-reconstruction].
@@ -60,11 +62,9 @@ Electron–hadron samples use a beam-momentum trigger electron at $\theta_e=25^\
 
 Every hadron momentum range ends at $P_{\mathrm{beam}}$. Hadron $\theta$ is uniform within its configured range and $\phi\in[-180^\circ,180^\circ]$, so equal-width angular bins receive comparable generated statistics. The optional fixed-momentum mode is neutron-only and defaults to $1\,\mathrm{GeV}/c$. The [sampling model](../concepts/sampling-models.md) gives the exact distributions, trigger correlation, and random-stream rules.
 
-The electron tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $P=P_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
-
 ## Validation status
 
-The 1e, epFD, enFD, and electron-tester modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented and covered by software checks but have not completed detector-level production validation. Their profile headers retain this warning.
+The electron-tester, 1e, epFD, and enFD modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented and covered by software checks but have not completed detector-level production validation. Their profile headers retain this warning.
 
 ## Targets and repeatability
 

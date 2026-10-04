@@ -9,7 +9,7 @@ Never edit a generated Wiki page directly. Change the repository source and let 
 [`dev-tools/wiki/build_wiki.py`](../../dev-tools/wiki/build_wiki.py) collects:
 
 - [`README.md`](../../README.md);
-- every non-ignored `docs/**/*.md` page;
+- every non-ignored Markdown page under [`docs/`](../), matching `docs/**/*.md`;
 - [`tutorials/README.md`](../../tutorials/README.md);
 - [`config/samples/README.md`](../../config/samples/README.md); and
 - [`config/run.json.md`](../../config/run.json.md).

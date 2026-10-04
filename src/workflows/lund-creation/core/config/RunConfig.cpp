@@ -27,7 +27,7 @@
  *   --prefix NAME                       Set the LUND filename prefix (default: auto from run settings).
  *
  * CLI options (uniform LUND creator):
- *   --channel 1e|eh|electron-tester     Select the created final state (default: 1e).
+ *   --channel electron-tester|1e|eh     Select the created final state (default: 1e).
  *   --hadron proton|neutron|pip|pim     Select the hadron for `eh` (default: proton).
  *   --hadron-region FD|CD               Select the hadron detector region (default: FD).
  *   --electron-theta-min DEG            Set the electron theta minimum (default: 5 degrees).
@@ -256,7 +256,7 @@ long long beamMeV(double energy) {
 /**
  * @brief Build the short particle-and-detector label used in uniform output names.
  * @param config Final configuration containing the channel, hadron, and detector region.
- * @return `1e` for one electron, `electron-tester` for the electron test, or a label such as `epFD` for
+ * @return `electron-tester` for the electron test, `1e` for one electron, or a label such as `epFD` for
  *         an electron, an FD proton.
  */
 std::string uniformSampleLabel(const RunConfig& config) {
@@ -638,10 +638,10 @@ void RunConfig::validateForSource(LundSource source) const {
         return;
     }
 
-    // The uniform LUND creator can create one electron, an electron with one hadron, or the electron test
-    // scan. These random test events measure detector acceptance; they do not describe a physical
+    // The uniform LUND creator can create the electron test scan, one sampled electron, or an electron
+    // with one hadron. These random test events measure detector acceptance; they do not describe a physical
     // interaction.
-    if ((getText("channel") != "1e") && (getText("channel") != "eh") && (getText("channel") != "electron-tester")) { throw std::runtime_error("channel must be 1e, eh or electron-tester"); }
+    if ((getText("channel") != "1e") && (getText("channel") != "eh") && (getText("channel") != "electron-tester")) { throw std::runtime_error("channel must be electron-tester, 1e or eh"); }
     if ((getText("hadron") != "proton") && (getText("hadron") != "neutron") && (getText("hadron") != "pip") && (getText("hadron") != "pim")) {
         throw std::runtime_error("hadron must be proton, neutron, pip or pim");
     }
@@ -728,7 +728,7 @@ std::string buildHelpText(LundSource source) {
 
     // Put quotes around the physical-input wildcard example so the shell passes `gst*.root` to the
     // program instead of replacing it before the program starts.
-    std::string result = uniform ? "uniform-lund-creator --channel 1e|eh|electron-tester [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
+    std::string result = uniform ? "uniform-lund-creator --channel electron-tester|1e|eh [--hadron proton|neutron|pip|pim --hadron-region FD|CD] --output PARENT_DIRECTORY\n"
                                  : "event-generator-to-lund-converter --event-generator genie-gst --input 'gst*.root' --output PARENT_DIRECTORY\n";
 
     // List the settings used by both random event creation and physical-input conversion.

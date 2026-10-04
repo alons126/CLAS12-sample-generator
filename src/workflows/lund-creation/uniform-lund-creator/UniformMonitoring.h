@@ -56,7 +56,7 @@ class UniformMonitoring {
    public:
     /**
      * @brief Constructor: Create the complete ordered plot set for one uniform sample.
-     * @param sample_label Final label such as `1e`, `electron-tester`, `epFD`, or `epipCD`.
+     * @param sample_label Final label such as `electron-tester`, `1e`, `epFD`, or `epipCD`.
      * @param hadron_pid Standard PDG integer for the configured hadron. Electron-only channels ignore it.
      * @param beam Beam energy in GeV. Momentum axes extend to 110% of this value.
      * @throws std::runtime_error If an electron-hadron sample uses an unsupported hadron.

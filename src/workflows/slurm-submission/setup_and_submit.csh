@@ -19,7 +19,7 @@
 #     --source uniform|physical     Source when no manifest supplies it.
 #     --beam-energy GeV             Truth beam energy when no manifest supplies it.
 #     --target ID                   Truth target identity when no manifest supplies it.
-#     --channel NAME                Uniform 1e, eh, electron-tester, or a complete FD/CD label.
+#     --channel NAME                Uniform electron-tester, 1e, eh, or a complete FD/CD label.
 #     --hadron NAME                 Proton, neutron, pip, or pim for eh.
 #     --hadron-region FD|CD         Eh hadron detector region.
 #     --event-generator NAME        Physical input adapter; default: genie-gst without a manifest.

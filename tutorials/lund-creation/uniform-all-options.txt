@@ -20,6 +20,18 @@ source run.csh \
     --help
 
 #########################################################################################
+# Electron-tester example: reviewed angular scan
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/electron-tester-5986MeV.conf \
+    --events 5000 \
+    --prefix tester-5986 \
+    --output /path/to/documented-uniform-output
+
+#########################################################################################
 # Arbitrary 1e study: all common options and all electron-range options
 #
 # The profile is read first. Every explicit option below overrides its matching value.
@@ -48,6 +60,20 @@ source run.csh \
     --electron-p-min 0.85 \
     --electron-p-max 3.25 \
     --output /path/to/arbitrary-uniform-output
+
+#########################################################################################
+# Documented 1e example: reviewed profile
+#########################################################################################
+
+source run.csh \
+    --workflow create-lund \
+    --source uniform \
+    --config config/samples/uniform-lund-creation/uniform-1e-4029MeV.conf \
+    --events 10000 \
+    --events-per-file 2500 \
+    --seed 67890 \
+    --vertex-seed 12345 \
+    --output /path/to/documented-uniform-output
 
 #########################################################################################
 # Arbitrary electron-hadron study: every sampled-hadron and trigger option
@@ -116,18 +142,8 @@ source run.csh \
     --output /path/to/arbitrary-uniform-output
 
 #########################################################################################
-# Documented examples: reviewed profile, explicit proton study, and electron tester
+# Documented eh example: explicit proton study
 #########################################################################################
-
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --config config/samples/uniform-lund-creation/uniform-1e-4029MeV.conf \
-    --events 10000 \
-    --events-per-file 2500 \
-    --seed 67890 \
-    --vertex-seed 12345 \
-    --output /path/to/documented-uniform-output
 
 source run.csh \
     --workflow create-lund \
@@ -143,12 +159,4 @@ source run.csh \
     --hadron-theta-max 45 \
     --trigger-theta 25 \
     --events 1000 \
-    --output /path/to/documented-uniform-output
-
-source run.csh \
-    --workflow create-lund \
-    --source uniform \
-    --config config/samples/uniform-lund-creation/electron-tester-5986MeV.conf \
-    --events 5000 \
-    --prefix tester-5986 \
     --output /path/to/documented-uniform-output

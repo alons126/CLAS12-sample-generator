@@ -22,16 +22,16 @@ Each supported uniform mode has a complete Ar40 profile for the three RG-M beam 
 
 | Mode | Profile pattern |
 | --- | --- |
+| electron tester | `electron-tester-{2070,4029,5986}MeV.conf` |
 | 1e | `uniform-1e-{2070,4029,5986}MeV.conf` |
 | epFD/enFD | `uniform-{epFD,enFD}-{2070,4029,5986}MeV.conf` |
 | epipFD/epimFD | `uniform-{epipFD,epimFD}-{2070,4029,5986}MeV.conf` |
 | epCD/enCD | `uniform-{epCD,enCD}-{2070,4029,5986}MeV.conf` |
 | epipCD/epimCD | `uniform-{epipCD,epimCD}-{2070,4029,5986}MeV.conf` |
-| electron tester | `electron-tester-{2070,4029,5986}MeV.conf` |
 
-Production profiles request 50,000,000 events and tester profiles request 1,000,000, with 25,000 events per file. Use `--events 100` for a small check before a long run.
+Tester profiles request 1,000,000 events and production profiles request 50,000,000, with 25,000 events per file. Use `--events 100` for a small check before a long run.
 
-The 1e, epFD, enFD, and electron-tester profiles are the production-tested modes. FD pion and all CD profiles are clearly marked as not yet production-validated. Their settings describe implemented behavior, not a validation claim.
+The electron-tester, 1e, epFD, and enFD profiles are the production-tested modes. FD pion and all CD profiles are clearly marked as not yet production-validated. Their settings describe implemented behavior, not a validation claim.
 
 ## Physical profile
 

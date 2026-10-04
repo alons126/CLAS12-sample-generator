@@ -11,7 +11,7 @@ Before using results in an analysis, check the complete simulation campaign. Use
 - Uniform samples are acceptance probes, not physical interactions.
 - A physical adapter copies supported truth and does not invent missing kinematics.
 - [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) is not reproducible from the recorded zero.
-- Target geometry and LUND $A$/$Z$ metadata are independently configurable.
+- Target geometry and LUND $A$ / $Z$ metadata are independently configurable.
 - The GENIE process code in LUND field 10 is not a cross-section weight.
 - Physical file cutoff counts remaining input entries, not remaining accepted events.
 - Uniform monitoring checks generated distributions; it is not reconstructed acceptance.
@@ -20,7 +20,7 @@ Before using results in an analysis, check the complete simulation campaign. Use
 
 ## Current uniform status
 
-The 1e, epFD, enFD, and electron-tester modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented but remain unvalidated for production. Keep that warning in their profiles and user documentation until detector-level evidence supports changing it.
+The electron-tester, 1e, epFD, and enFD modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented but remain unvalidated for production. Keep that warning in their profiles and user documentation until detector-level evidence supports changing it.
 
 ## Campaign record
 

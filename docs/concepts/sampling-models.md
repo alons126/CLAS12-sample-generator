@@ -10,6 +10,12 @@ The code converts degree-valued angles to radians before calling trigonometric f
 
 ## Electron-only events
 
+### Electron-tester
+
+The electron-tester profiles fix $P=P_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range. The electron angle and momentum options can override those profile choices.
+
+### 1e
+
 For `channel=1e`, $\theta$ and $\phi$ are uniform inside the configured ranges. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
 
 - even run-global event IDs draw $P\sim\mathcal{U}(a,b)$;
@@ -18,8 +24,6 @@ For `channel=1e`, $\theta$ and $\phi$ are uniform inside the configured ranges. 
 Here $\mathcal{U}(a,b)$ denotes a uniform distribution between $a$ and $b$. Alternation gives equal contributions for an even event count; an odd count has one extra uniform-in-$P$ event. Angles are uniform in $\theta$, not in solid angle: this gives equal statistics in equal-width $\theta$ bins rather than an isotropic distribution.
 
 The production bounds are $a=0.7\,\mathrm{GeV}/c$ and $b=P_{\mathrm{beam}}$. `electron-momentum=uniform` selects only the first distribution. The $2.07052\,\mathrm{GeV}$ production profile changes the $\theta$ minimum from $5^\circ$ to $2^\circ$; this is a profile choice rather than a hidden beam rule.
-
-The electron-tester profiles fix $P=P_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range. The electron angle and momentum options can override those profile choices.
 
 ## Electron–hadron events
 

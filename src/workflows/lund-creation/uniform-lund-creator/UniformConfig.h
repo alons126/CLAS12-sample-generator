@@ -36,7 +36,7 @@ namespace samples {
  * @brief Names the kind of random test event to create.
  *
  * Purpose:
- *   The `channel` setting begins as text such as `1e` or `eh`. Converting it once to UniformChannel lets
+ *   The `channel` setting begins as `electron-tester`, `1e`, or `eh`. Converting it once to UniformChannel lets
  *   the event loop choose the correct particles without comparing that text for every event.
  *
  * Creation and use:
@@ -44,8 +44,8 @@ namespace samples {
  *   to choose the number of particles and how their motion is sampled.
  *
  * Meaning:
- *   Electron creates one electron with sampled momentum and angles. ElectronTester creates one electron at
- *   beam momentum while scanning its angles. ElectronHadron creates a trigger electron followed by the
+ *   ElectronTester creates one electron at beam momentum while scanning its angles. Electron creates one
+ *   electron with sampled momentum and angles. ElectronHadron creates a trigger electron followed by the
  *   selected proton, neutron, positive pion, or negative pion. These are detector tests, not physical
  *   interaction models.
  */
@@ -132,7 +132,7 @@ struct UniformConfig {
      * @param c Checked uniform LUND creator settings with every automatic value already replaced.
      * @throws std::exception If a required setting is missing or its number cannot be converted. This
      *                        constructor assumes RunConfig has already checked the setting combinations.
-     * @note Any channel text other than `1e` or `electron-tester` becomes ElectronHadron. Any hadron text
+     * @note Any channel text other than `electron-tester` or `1e` becomes ElectronHadron. Any hadron text
      *       other than `proton`, `neutron`, or `pip` becomes PiMinus. This is safe only because
      *       RunConfig rejects all other values first.
      */

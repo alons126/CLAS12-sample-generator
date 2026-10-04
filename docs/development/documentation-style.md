@@ -4,6 +4,8 @@ Source explanations must describe what the code actually does. Tell contributors
 
 ## General writing
 
+Present uniform sample modes in this order: `electron-tester`, `1e`, then `eh`, including its resolved electron-hadron labels. Keep each mode's description and examples together. Reordering explanations must not change defaults, settings, or behavior; a focused example may still show only one mode.
+
 Refer to this work as the “repository,” the “code,” or the specific application or workflow, not the “project.” Use “repository” for files and checkouts, and “code” or a component name for behavior. Preserve exact API names, identifiers, third-party names, URLs, and quotations, including CMake's [`project()`](https://cmake.org/cmake/help/latest/command/project.html) command and `PROJECT_*` variables.
 
 Use simple, direct language. Begin unfamiliar behavior with a concrete action and visible result. Keep exact technical terms when they name a real API, data format, scientific quantity, or language rule, and explain them where they first matter.
