@@ -46,9 +46,14 @@ output/
 /config/samples/physical-lund-creation/legacy-genie-wrapper.conf
 
 # Editor and operating-system files ------------------------------------------
-# Ignore editor backups and macOS directory metadata wherever they appear.
+# Ignore editor backup names wherever they appear.
 *~
 *#
+
+# macOS Finder metadata -------------------------------------------------------
+# This basename rule ignores every `.DS_Store` at any depth in this module.
+# The parent repository cannot ignore files on behalf of this Git index.
+# Ignore rules do not untrack existing files; remove those from the index only.
 .DS_Store
 
 # Project test code -----------------------------------------------------------
