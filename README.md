@@ -26,7 +26,7 @@ source run.csh \
     --output /path/to/quickstart-output
 ```
 
-Use [`run.csh`](run.csh) in an ifarm clone of the repository used for running code, not editing it. Development is advised to be done locally and synced on the ifarm via Git. Before running the selected workflow, the script discards uncommitted edits to files tracked by Git and deletes files Git does not track, including ignored files. It preserves the `build/` directory, then updates the code from Git and builds when needed. It checks the full sample settings only afterward, so an invalid command can still clean the checkout before failing.
+Use [`run.csh`](run.csh) in an ifarm clone of the repository used for running code, not editing it. Edit the code locally, then update the ifarm checkout through Git. Before running the selected workflow, the script discards uncommitted edits to files tracked by Git and deletes files Git does not track, including ignored files. It preserves the `build/` directory, then updates the code from Git and builds when needed. It checks the full sample settings only afterward, so an invalid command can still clean the checkout before failing.
 
 Commit and push development changes from your local clone first. Store generated samples outside the ifarm repository directory so the next cleanup cannot delete them. For local development, build with CMake and run the compiled applications directly; those commands do not clean or update the checkout.
 

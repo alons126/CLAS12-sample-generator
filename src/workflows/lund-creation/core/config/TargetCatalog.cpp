@@ -52,7 +52,7 @@ namespace {
 const std::vector<TargetVariation>& targetVariations() {
     // Used RG-M targets and variations. For more details, see:
     //  1. RG-M analysis note.
-    //  2. CLAS12 Note 2026-001: https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=18
+    //  2. CLAS12 Note 2026-001: https://misportal.jlab.org/mis/physics/clas12/viewFile.cfm/2026-001.pdf?documentId=185
     static const std::vector<TargetVariation> variations = {
         // Three liquid targets use the same vertex-position rules for the 5-cm-long cryocell.
         {"rga_spring2019", "H1", "liquid"},

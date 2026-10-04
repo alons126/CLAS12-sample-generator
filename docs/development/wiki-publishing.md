@@ -30,15 +30,19 @@ python3 dev-tools/wiki/build_wiki.py \
     --branch main
 ```
 
-Use the current fork's `OWNER/NAME`. The Wiki builder rejects unsafe output locations, broken local links, missing mapped pages, page-name collisions, and invalid or unused footnotes.
+Use the current fork's `OWNER/NAME`. Choose a dedicated temporary directory or Wiki checkout for `--output`: the builder overwrites its generated pages and deletes every other top-level `.md` file there. It preserves `.git`, non-Markdown files, and nested directories. It rejects the repository root and its parent directories, but it does not prevent you from selecting a source subdirectory or an unrelated notes directory.
+
+The builder checks local link targets, mapped Wiki pages, page-name collisions, and footnote definitions. It does not check remote URLs, heading anchors, or whether a local target exists on the selected GitHub branch. Use one-line footnote definitions and triple-backtick fenced blocks, as in these source pages. Pages are written one at a time, so a failed build can leave partial output. Build and inspect a temporary copy before publishing.
 
 ## GitHub publication
 
-The `Publish documentation wiki` action checks documentation-related pull requests. When files covered by the action's filters reach `dev` or `main`, it builds the Wiki from that repository and branch, copies the generated pages into GitHub's separate `<repository>.wiki.git` repository, and pushes them if they changed. Links use the repository running the action, so a fork does not need to replace a hard-coded repository URL.
+The [`Publish documentation wiki` action](../../.github/workflows/publish-wiki.yml) checks documentation-related pull requests. When files covered by the action's filters reach `dev` or `main`, it builds the Wiki from that repository and branch, copies the generated pages into GitHub's separate `<repository>.wiki.git` repository, and pushes them if they changed. Links use the repository running the action, so a fork does not need to replace a hard-coded repository URL.
+
+Publication synchronizes the entire Wiki checkout to the generated tree, preserving only `.git`. Unlike the local builder's Markdown-only cleanup, this synchronization also removes unrelated files and directories. Do not store hand-edited pages or assets only in the Wiki checkout.
 
 There is one Wiki per repository, not one per branch. Publications from `dev` and `main` replace the same pages; the last successful publication determines which branch's documentation and source links readers see. A code-only push does not trigger this workflow. If source changes move automatically linked function definitions without changing documentation, run the action manually to refresh their line links.
 
-GitHub creates the separate Wiki Git repository only after the repository Wiki has been enabled and one initial page has been saved. This is a one-time repository setup step:
+GitHub makes the separate Wiki Git repository available after the repository Wiki has been enabled and one initial page has been saved, as described in its [Wiki setup instructions](https://docs.github.com/en/communities/documenting-your-project-with-wikis/adding-or-editing-wiki-pages#cloning-wikis-to-your-computer). This is a one-time repository setup step:
 
 1. Enable **Wikis** under **Settings → Features**.
 2. Save one initial Wiki page so `<repository>.wiki.git` exists.

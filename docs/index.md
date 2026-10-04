@@ -13,13 +13,13 @@ The diagram summarizes the path from event preparation to reconstructed output. 
 ```mermaid
 flowchart LR
     subgraph CREATION["LUND file creation"]
-        U["Uniform acceptance sampling"] --> L["LUND files"]
-        P["Existing physical event-generator truth"] --> L
+        U["Uniform acceptance sampling"] ==> L["LUND files"]
+        P["Existing physical event-generator truth"] ==> L
     end
-    subgraph SUBMISSION["Slurm job submittion"]
-        L --> G["GEMC detector simulation"]
-        G --> R["COATJAVA reconstruction"]
-        R --> H["Reconstructed HIPO files"]
+    subgraph SUBMISSION["Slurm job submission"]
+        L ==> G["GEMC detector simulation"]
+        G ==> R["COATJAVA reconstruction"]
+        R ==> H["Reconstructed HIPO files"]
     end
 
     classDef creation fill:#DEEBF7,color:#2E75B6,stroke:#2E75B6,stroke-width:2px;

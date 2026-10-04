@@ -29,7 +29,7 @@ Paths in the following three LUND sections are relative to [`src/workflows/lund-
 | [`core/lund/LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h) | Check and replace the run directory, split and format LUND files, count events, and write the completion log |
 | [`core/presentation/ProgressReporter.h`](../../src/workflows/lund-creation/core/presentation/ProgressReporter.h) | Update one progress bar in a terminal, or print occasional full lines when output is redirected |
 
-[`RunConfig::createFromCommandLine()`](../../src/workflows/lund-creation/core/config/RunConfig.cpp#L283) reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. [`LundWriter::finalizeRun()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) writes the final completion manifest only after all required output succeeds.
+[`RunConfig::createFromCommandLine()`](../../src/workflows/lund-creation/core/config/RunConfig.cpp#L285) reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. [`LundWriter::finalizeRun()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) writes the final completion manifest only after all required output succeeds.
 
 ## Uniform LUND creator
 

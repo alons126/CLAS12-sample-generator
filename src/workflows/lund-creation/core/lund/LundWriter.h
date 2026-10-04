@@ -21,8 +21,8 @@
  *   Particle momentum is measured in GeV/c, mass in GeV/c², energy and beam energy in GeV, and vertex
  *   positions in centimeters. The uniform LUND creator or physical LUND converter supplies the event
  *   header values and particle order. The writer keeps that order, calculates each particle's energy from
- *   its mass and momentum, and writes the fixed LUND text format. Every channel uses the physical-sample
- *   decimal precision for its event header.
+ *   its mass and momentum, and writes the same fixed LUND text format for every channel. Header fields
+ *   4, 5, and 7 have six decimal places; field 10 has two.
  */
 
 #pragma once

@@ -91,8 +91,8 @@ void convertGenieGST(const RunConfig& c) {
 #pragma region /* Resolved run state */
     std::cout << "\n" << env::SYSTEM_COLOR << "Preparing target geometry and LUND output..." << env::RESET_COLOR << "\n";
 
-    // The random number generator chooses vertex positions. A nonzero seed repeats the same positions on
-    // another run. ROOT gives seed 0 a new automatic value, so a run configured with 0 cannot be repeated from that value alone.
+    // The random number generator chooses vertex positions. A nonzero seed repeats the sequence only when
+    // ROOT, software, settings, and draw order match. Seed 0 cannot reproduce a run from that value alone.
     TRandom3 random(c.getNonnegativeInteger("vertex-seed"));
 
     // Target geometry controls where the event occurs. A and Z are separate numbers written in the LUND event header.

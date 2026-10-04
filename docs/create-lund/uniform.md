@@ -72,7 +72,7 @@ The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geome
 
 The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls vertex positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
 
-Electron, proton, neutron, and charged-pion masses come from the external target source; photon mass is exactly zero. The [LUND data contract](../concepts/lund-data-contract.md) lists their serialized values and precision.
+Electron, proton, neutron, and charged-pion masses come from the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); photon mass is exactly zero. The [LUND data contract](../concepts/lund-data-contract.md) lists their serialized values and precision.
 
 ## Results
 

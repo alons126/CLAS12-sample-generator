@@ -8,16 +8,16 @@
  *   interaction. The code uses the shared vertex-position, LUND-writing, progress, and monitoring tools.
  *
  * Execution flow:
- *   Check and print the settings. Start separate random-number generators for particle motion and target
- *   positions. Prepare the run directory and monitoring plots. Create each event, write it to LUND, and
+ *   Check and print the settings. Start separate random-number generators for particle kinematics and
+ *   vertex positions. Prepare the run directory and monitoring plots. Create each event, write it to LUND, and
  *   add its values to the plots. Finally, save the plots and publish the completion manifest. Stage
  *   messages and a progress bar show what work is happening.
  *
  * Repeatability:
  *   Particle motion and vertex positions use separate ROOT TRandom3 objects. Choosing a vertex position
  *   therefore does not consume a random value from the sequence used for momentum and angles. A nonzero
- *   seed repeats the same sequence. ROOT treats seed 0 as a request to choose a new seed, so that sequence
- *   cannot be repeated from the recorded zero alone.
+ *   seed repeats the same sequence when ROOT, software, configuration, and draw order match. ROOT treats
+ *   seed 0 as a request to choose a new seed, so that sequence cannot be repeated from the recorded zero alone.
  */
 
 #include "uniform-lund-creator/UniformGenerator.h"

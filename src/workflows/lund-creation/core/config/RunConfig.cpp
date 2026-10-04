@@ -126,8 +126,10 @@ std::string trim(std::string s) {
  * @param input Local GST ROOT filename or wildcard pattern.
  * @return The recorded tune. Returns `unknown` for a remote input, an unexpected directory layout, an
  *         unreadable metadata file, or a missing or empty `TUNE` value.
+ * @note This lookup supports GENIE productions made with eAScatteringGridSubmitter.py using
+ *       --store-comitinfo and its default production directory name. It is not a generic GST feature.
  * @note Failure to discover the tune does not stop conversion and does not change any file. Supplying
- *       `--tune` skips this search.
+ *       a non-auto `--tune` value skips this search.
  */
 std::string discoverGenieTune(const std::string& input) {
     // There is no local directory to search when no input was supplied. `://` identifies a remote address,
@@ -456,8 +458,9 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
         }
     }
 
-    // A GENIE tune names the physics settings used to produce the input events. Standard productions store
-    // it in input_options.txt near the input files. If it cannot be read, record `unknown` and continue.
+    // A GENIE tune names the physics settings used to produce the input events. Productions made with
+    // eAScatteringGridSubmitter.py and --store-comitinfo save it in input_options.txt. The lookup requires
+    // the default production directory name; if it cannot read the tune, record `unknown` and continue.
     if (!uniform && (c.getText("tune") == "auto")) { c.values_["tune"] = discoverGenieTune(c.getText("input")); }
 
     // Build a filename prefix that still describes the sample if a LUND file is copied out of its run

@@ -1,6 +1,6 @@
 # External geometry and detector inputs
 
-The target header, detector files, and job script come from external projects and are stored in this repository. Do not change them during a general code cleanup: their contents determine where particles start, how the detector responds, how reconstruction runs, and how jobs execute.
+The target header, detector files, and job script come from external repositories and are stored here. Do not change them during a general code cleanup: their contents determine the sampled vertex positions, how the detector responds, how reconstruction runs, and how jobs execute.
 
 ## External inputs
 
