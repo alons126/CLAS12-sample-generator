@@ -112,7 +112,7 @@ Two imported sources sit behind small interfaces:
 - [`src/workflows/lund-creation/external/targets.h`](../../src/workflows/lund-creation/external/targets.h) supplies target geometry and particle masses through `TargetGeometry`.
 - [`src/workflows/slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) supplies the GEMC/COATJAVA worker command boundary.
 
-Detector GCARD and YAML files under [`config/detector/`](../../config/detector) are also external campaign resources. Replace these deliberately and validate the resulting production chain; do not edit them as routine project code. See [external inputs](external-inputs.md).
+Detector GCARD and YAML files under [`config/detector/`](../../config/detector) are also external campaign resources. Replace these deliberately and validate the resulting production chain; do not edit them during routine code changes. See [external inputs](external-inputs.md).
 
 ## Rules for future workflows
 

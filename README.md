@@ -1,6 +1,6 @@
 # CLAS12 sample generator
 
-This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). First, it writes particles' momenta and vertex coordinates (the event's position in the target) to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). These are truth-level particles: the particles before detector simulation. In a separate step, it submits jobs that run GEMC[^gemc-simulation] detector simulation and COATJAVA[^coatjava-reconstruction] reconstruction. GEMC simulates the detector response; reconstruction uses that response to determine the measured particles.
+This code prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). First, it writes particles' momenta and vertex coordinates (the event's position in the target) to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). These are truth-level particles: the particles before detector simulation. In a separate step, it submits jobs that run GEMC[^gemc-simulation] detector simulation and COATJAVA[^coatjava-reconstruction] reconstruction. GEMC simulates the detector response; reconstruction uses that response to determine the measured particles.
 
 | Workflow | What it does | Main result |
 | --- | --- | --- |
@@ -9,7 +9,7 @@ This project prepares CLAS12[^clas12-spectrometer] simulation samples for the [e
 
 The **uniform LUND creator** randomly chooses particle momenta and angles within your configured ranges. Its samples are deliberately unphysical and are used to study which particles the detector can detect and reconstruct. The **physical LUND converter** copies supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) production output in the GST format stored in [ROOT](https://github.com/root-project/root) files. Both applications use the same code to sample one vertex position in the target per event and assign it to every particle, write and split LUND files, and record the settings used.
 
-The submitted jobs produce reconstructed [HIPO](https://github.com/gavalian/hipo) files, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). This project does not run a physical event generator, calculate detector acceptance, select events from reconstructed files, or perform physics analysis. Creating LUND files never submits jobs automatically.
+The submitted jobs produce reconstructed [HIPO](https://github.com/gavalian/hipo) files, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master). This code does not run a physical event generator, calculate detector acceptance, select events from reconstructed files, or perform physics analysis. Creating LUND files never submits jobs automatically.
 
 ## Start here
 

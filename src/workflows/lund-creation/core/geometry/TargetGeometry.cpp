@@ -5,7 +5,7 @@
  * Purpose:
  *   Every LUND particle record needs vertex x, y, and z coordinates. targets.h contains the target geometry,
  *   the code that chooses a vertex position, and the particle masses. This file gives TargetGeometry access
- *   to those features while keeping the shared targets.h variables out of the rest of the project.
+ *   to those features while keeping the shared targets.h variables out of other code.
  *
  * Execution flow:
  *   validateGeometryName() checks that targets.h contains the requested geometry. The uniform LUND creator
@@ -49,7 +49,7 @@
  * @brief Keeps targets.h and its thread lock available only inside this source file.
  *
  * targets.h creates shared variables and functions when it is included. Including it here, inside this
- * private namespace, prevents the rest of the project from using those details directly. It also prevents
+ * private namespace, prevents other code from using those details directly. It also prevents
  * the same variables and functions from being created in more than one source file.
  */
 namespace {
@@ -63,7 +63,7 @@ namespace {
  *
  * targets.h uses `cout`, `endl`, `sqrt`, and `string` without the usual `std::` prefix. These using
  * declarations provide those exact names before the file is included. Keeping everything inside
- * external_targets prevents its names from becoming part of the project's public interface.
+ * external_targets prevents its names from becoming part of the code's public interface.
  */
 namespace external_targets {
 using std::cout;

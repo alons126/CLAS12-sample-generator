@@ -11,7 +11,7 @@ Execution flow:
 
 Inputs:
     A create-lund source, strict build JSON, optional terminal colors, and sample options. Relative
-    project paths start at the repository root.
+    repository paths start at the repository root.
 
 Outputs:
     Build products, LUND files, and a completion manifest. Creation never submits simulation jobs.

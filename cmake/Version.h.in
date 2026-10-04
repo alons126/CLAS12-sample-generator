@@ -1,6 +1,6 @@
 /**
  * @file Version.h.in
- * @brief Template for the project and Git details recorded in each completed run.
+ * @brief Template for the build version and Git details recorded in each completed run.
  *
  * Purpose:
  *   A completed run should identify the exact source code and target definitions used to create it. This
@@ -8,13 +8,13 @@
  *
  * Execution flow:
  *   When CMake prepares the build, it replaces each placeholder between `@` characters with the value
- *   read from the project or Git. For example, `@PROJECT_VERSION@` becomes the current project version.
+ *   read from the build settings or Git. For example, `@PROJECT_VERSION@` becomes the current code version.
  *   CMake writes the completed header to `build/generated/Version.h`. The compiler includes that generated
  *   header, and LundWriter copies its values into each completed run manifest.
  *
  * Inputs and outputs:
  *   Git stores each saved source version as a commit with its own identifier, message, date, and author.
- *   The inputs are that Git information, the CMake project version, the source-directory path, and a
+ *   The inputs are that Git information, the version declared by CMake's project() command, the source-directory path, and a
  *   SHA-256 fingerprint of targets.h. A fingerprint is a text value that changes when the file contents
  *   change. The output is the generated Version.h header.
  */
@@ -67,7 +67,7 @@
 /** @brief Link to the source files for this exact commit when `origin` points to GitHub. */
 #define SAMPLE_GIT_FILES_URL "@SAMPLE_GIT_FILES_URL@"
 
-/** @brief Project version written in the root CMakeLists.txt file. */
+/** @brief Code version written in the root CMakeLists.txt file. */
 #define SAMPLE_VERSION "@PROJECT_VERSION@"
 
 /** @brief Complete path to the source checkout used to prepare the build. */

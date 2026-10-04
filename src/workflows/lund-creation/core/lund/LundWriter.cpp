@@ -171,7 +171,7 @@ void LundWriter::finalizeRun(std::uint64_t scannedEventCount) {
     const auto completed_log = monitoring_directory / "lund-creation-log.json";
     manifest.open(temporary_log);
 
-    // Record the manifest format version, project build, Git details, ROOT version, targets.h fingerprint,
+    // Record the manifest format version, application build, Git details, ROOT version, targets.h fingerprint,
     // and event counts. For the physical LUND converter, scannedEventCount may be larger than count_ because
     // unsupported input events are skipped.
     manifest << "{\n  \"schema_version\": 1,\n  \"workflow\": " << quoteAsJsonString(workflow_) << ",\n  \"version\": " << quoteAsJsonString(SAMPLE_VERSION)

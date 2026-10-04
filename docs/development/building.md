@@ -17,7 +17,7 @@ cmake \
 
 `-S .` tells CMake to read the source from your current directory. `-B build/debug` puts generated build files and compiled code in that separate directory. CMake saves its selected compiler, libraries, and options there in a cache. Use different build directories for different compilers, ROOT installations, or build types so an old cache does not select the wrong settings.
 
-The project adopts the C++ standard published by ROOT and requires at least C++17. It does not force a different standard that might be incompatible with the selected ROOT build.
+The code adopts the C++ standard published by ROOT and requires at least C++17. It does not force a different standard that might be incompatible with the selected ROOT build.
 
 ## Select ROOT explicitly
 

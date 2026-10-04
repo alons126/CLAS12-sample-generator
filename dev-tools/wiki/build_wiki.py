@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Build GitHub Wiki pages from the project's Markdown files.
+"""Build GitHub Wiki pages from the repository's Markdown files.
 
 Purpose:
     Keep one editable documentation source and publish a linked copy to the GitHub Wiki.
@@ -135,7 +135,7 @@ def git_ignored_sources(sources):
 
 
 def source_pages():
-    """Map each project Markdown source to its wiki filename.
+    """Map each repository Markdown source to its wiki filename.
 
     Execution flow:
         Add the pages with fixed names, then add every remaining non-ignored documentation page. Give
@@ -199,7 +199,7 @@ def repository_url(repository, branch, relative, fragment="", image=False):
 
     Args:
         repository: GitHub repository written as OWNER/NAME.
-        branch: Branch containing the project source.
+        branch: Branch containing the repository source.
         relative: Repository-relative path to link.
         fragment: Optional existing Markdown anchor, including its leading hash.
         image: Use raw.githubusercontent.com for an embedded image when true.
@@ -489,7 +489,7 @@ def rewrite_links(text, source, pages, repository, branch):
     Inputs:
         text: Complete Markdown page text.
         source: Absolute source file owning relative links.
-        pages: Absolute project-source to wiki-filename mapping.
+        pages: Absolute repository-source to wiki-filename mapping.
         repository: Public GitHub repository written as OWNER/NAME.
         branch: Public source branch.
 

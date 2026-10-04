@@ -56,7 +56,7 @@ Use [`source run.csh --workflow submit --help`](../../run.csh) for the live inte
 
 ## Detector defaults
 
-GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this project[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). GCARD defaults are selected from the manifest's target variation, beam energy, and submission-time GEMC version under `config/detector/GEMC_GCARDs_<beam-group>/<gemc-version>/`.
+GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this code[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). GCARD defaults are selected from the manifest's target variation, beam energy, and submission-time GEMC version under `config/detector/GEMC_GCARDs_<beam-group>/<gemc-version>/`.
 
 COATJAVA defaults to 10.0.7. Its version independently selects the reconstruction software and the YAML directory, `config/detector/COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/`. Only 10.0.7 YAML snapshots are currently checked in. Another release needs a reviewed YAML supplied with `--yaml` if its default file is absent. Explicit `--gcard` and `--yaml` paths override resource lookup, not software selection. Check that the selected files are compatible with the requested releases.
 

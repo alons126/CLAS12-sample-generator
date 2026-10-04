@@ -28,7 +28,7 @@ Run [`run.csh`](../run.csh) from a csh/tcsh login shell on ifarm. Before startin
 
 Submission previews by default. Some production command lists include `--execute`; remove it to inspect settings and actions without replacing simulation output or calling `sbatch`.
 
-The GENIE examples using `tune = auto` assume samples generated with [`eAScatteringGridSubmitter.py`](https://github.com/GENIE-MC/Generator/blob/3a50ba6d0918f62b023194eb2d6b5267b2815868/src/scripts/production/python/eAScatteringGridSubmitter.py) using `--store-comitinfo` and the default production directory name. That GENIE-only option writes `input_options.txt`; it is not an option of this project's launcher or physical LUND converter. Keep the saved metadata beside the event directory:
+The GENIE examples using `tune = auto` assume samples generated with [`eAScatteringGridSubmitter.py`](https://github.com/GENIE-MC/Generator/blob/3a50ba6d0918f62b023194eb2d6b5267b2815868/src/scripts/production/python/eAScatteringGridSubmitter.py) using `--store-comitinfo` and the default production directory name. That GENIE-only option writes `input_options.txt`; it is not an option of this repository's launcher or physical LUND converter. Keep the saved metadata beside the event directory:
 
 ```text
 SAMPLE_DIRECTORY/

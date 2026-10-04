@@ -106,15 +106,15 @@ endif
 # Make the path absolute before any cleanup or Git command.
 set _clas12_root = `cd "$_clas12_root" && pwd`
 
-# Load the one shared palette before run.csh prints any project-owned diagnostic. If this bootstrap
-# source fails, tcsh supplies its own diagnostic because no project color is available yet.
+# Load the one shared palette before run.csh prints any code-owned diagnostic. If this bootstrap
+# source fails, tcsh supplies its own diagnostic because no shared color is available yet.
 source "$_clas12_root/src/launcher/presentation/set_colors.csh"
 if ($status != 0) then
     set CLAS12_SAMPLE_STATUS = 1
     goto clas12_launcher_finish
 endif
 
-# Require both Git data and this project's workflow driver so cleanup cannot target another directory.
+# Require both Git data and this repository's workflow driver so cleanup cannot target another directory.
 if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
     echo "${ERROR_COLOR}Error:${RESET_COLOR} Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
 

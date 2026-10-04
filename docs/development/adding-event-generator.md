@@ -1,6 +1,6 @@
 # Adding a physical-input adapter
 
-For example, to convert another event generator's output, add a reader that turns its events into the project's `Event` records. This reader is called a physical-input adapter. Select it through `event-generator-to-lund-converter`; do not add another user-facing workflow or copy the shared target, writer, naming, splitting, logging, or completion code.
+For example, to convert another event generator's output, add a reader that turns its events into the code's `Event` records. This reader is called a physical-input adapter. Select it through `event-generator-to-lund-converter`; do not add another user-facing workflow or copy the shared target, writer, naming, splitting, logging, or completion code.
 
 ## 1. Define the scientific input contract
 
@@ -43,7 +43,7 @@ For each accepted input event:
 1. fill one `Event` with documented header metadata;
 2. sample exactly one vertex through `TargetGeometry`;
 3. add supported particles in the documented order;
-4. use `getParticleMass()` for supported project species;
+4. use `getParticleMass()` for particle species supported by the code;
 5. give every particle the same vertex; and
 6. call `LundWriter::writeEvent()`.
 

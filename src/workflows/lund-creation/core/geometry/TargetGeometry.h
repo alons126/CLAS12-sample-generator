@@ -44,7 +44,7 @@ namespace samples {
  *
  * Purpose:
  *   Give the event creators a simple way to request a valid vertex position. This class keeps the shared
- *   variables used by targets.h out of the rest of the project. It also provides access to the particle
+ *   variables used by targets.h out of other code. It also provides access to the particle
  *   masses defined there.
  *
  * Creation and lifecycle:

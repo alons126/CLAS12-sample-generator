@@ -5,7 +5,7 @@
  * Purpose:
  *   Each LUND particle needs a mass so LundWriter can calculate its energy. The uniform LUND creator or
  *   physical LUND converter identifies the particle with its standard PDG integer, such as 11 for an
- *   electron. getParticleMass() returns the matching mass from the external targets.h file. The project
+ *   electron. getParticleMass() returns the matching mass from the external targets.h file. The code
  *   does not keep another copy of those mass values.
  *
  * Execution flow:

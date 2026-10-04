@@ -1,6 +1,6 @@
 /**
  * @file environment.h
- * @brief Provides the project-wide terminal colors for C++ output.
+ * @brief Provides the shared terminal colors for C++ output.
  *
  * Purpose:
  *   Give C++ output clear color names while keeping the actual color values in set_colors.csh.
@@ -29,7 +29,7 @@
 
 /**
  * @namespace environment
- * @brief Color strings used by project C++ terminal output.
+ * @brief Color strings used by C++ terminal output.
  *
  * Lifetime and ownership:
  *   Each inline string stores its value for the life of the program. The variables are read during
@@ -49,7 +49,7 @@ namespace environment {
 
 #pragma region /* Environment decoding */
 /**
- * @brief Read one project color and make it ready for terminal output.
+ * @brief Read one shared color and make it ready for terminal output.
  * @param variable Name of the `*_COLOR` environment variable to read.
  * @return The decoded color string, or an empty string when the variable is missing.
  * @note Replaces the four ordinary characters `\033` with the one invisible escape character that tells

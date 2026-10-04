@@ -60,4 +60,4 @@ Before running GEMC, each array task prints the requested GEMC and COATJAVA vers
 
 The worker contains the GEMC and `recon-util` commands and the `#SBATCH` directives that tell Slurm how to run it. It does not read user options, find input files, create directories, preview actions, submit jobs, check task completion, or validate output. It does not use Bash's `set -e` option to stop on a failed command, so it may run reconstruction after GEMC fails. Check Slurm status and both `.out` and `.err` logs.
 
-When adopting an upstream RG-M worker change, compare the detector commands and scheduler directives while preserving this project's generator-independent environment interface and filenames. Update the coordinator, this reference, and production validation together if that interface changes.
+When adopting an upstream RG-M worker change, compare the detector commands and scheduler directives while preserving this code's generator-independent environment interface and filenames. Update the coordinator, this reference, and production validation together if that interface changes.

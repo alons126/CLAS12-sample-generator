@@ -4,19 +4,21 @@ Source explanations must describe what the code actually does. Tell contributors
 
 ## General writing
 
+Refer to this work as the “repository,” the “code,” or the specific application or workflow, not the “project.” Use “repository” for files and checkouts, and “code” or a component name for behavior. Preserve exact API names, identifiers, third-party names, URLs, and quotations, including CMake's `project()` command and `PROJECT_*` variables.
+
 Use simple, direct language. Begin unfamiliar behavior with a concrete action and visible result. Keep exact technical terms when they name a real API, data format, scientific quantity, or language rule, and explain them where they first matter.
 
 For example, say “deletes untracked files, then updates from Git,” not just “refreshes the checkout.” Say “writes the final JSON log only after output succeeds,” not just “publishes the completion boundary.” Name the actor, action, affected files, and result. Define necessary terms such as manifest, adapter, job array, and provenance before relying on them.
 
 Use this style in the README, user and developer guides, configuration references, tutorial notes, and source explanations. State when checks and deletion happen, what failure leaves behind, and what the user should do next. Simplify the wording without changing scientific meanings, API names, options, units, numerical limits, or assumptions.
 
-Name scientific objects and quantities explicitly, then explain them. Use “vertex position” for an event's position in the target and “vertex coordinates” for $V_x$, $V_y$, and $V_z$; do not replace those terms with “starting positions” or “target positions.” This project samples one vertex per written event and assigns its coordinates to every particle in that event. Physical target-cell and foil positions are separate geometry descriptions, not alternative names for the event vertex.
+Name scientific objects and quantities explicitly, then explain them. Use “vertex position” for an event's position in the target and “vertex coordinates” for $V_x$, $V_y$, and $V_z$; do not replace those terms with “starting positions” or “target positions.” This code samples one vertex per written event and assigns its coordinates to every particle in that event. Physical target-cell and foil positions are separate geometry descriptions, not alternative names for the event vertex.
 
-Do not describe project code as “maintained” or make current behavior depend on readers knowing historical implementations. Keep historical comparisons outside the reader documentation. When the documentation needs to identify the historical code, direct readers only to the plain `legacy-code-archive` tag name. Do not link the tag or name archived checkout paths.
+Do not describe repository code as “maintained” or make current behavior depend on readers knowing historical implementations. Keep historical comparisons outside the reader documentation. When the documentation needs to identify the historical code, direct readers only to the plain `legacy-code-archive` tag name. Do not link the tag or name archived checkout paths.
 
 ## C++
 
-Every project header and source starts with one file-level Doxygen block. A header explains its public types and use contract; the matching source explains implementation workflow, internal boundaries, assumptions, and failure behavior. Do not copy the same description into both.
+Every C++ header and source in this repository starts with one file-level Doxygen block. A header explains its public types and use contract; the matching source explains implementation workflow, internal boundaries, assumptions, and failure behavior. Do not copy the same description into both.
 
 Put a declared function's complete contract at its declaration. Do not repeat it above the out-of-line definition. A function defined only in a source file is documented at that definition. Constructors and destructors begin their brief with `Constructor:` or `Destructor:`.
 
@@ -32,13 +34,13 @@ User-facing entry points list every owned CLI option with its value, meaning, an
 
 [`src/launcher/presentation/set_colors.csh`](../../src/launcher/presentation/set_colors.csh) is the only ANSI palette. C++ reads it through [`src/workflows/support/environment.h`](../../src/workflows/support/environment.h); Python, shell, and CMake read the inherited environment. Do not define fallback palettes elsewhere.
 
-Project errors use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line. The exception is `module` commands: print `module show gemc/<gemc-version>`, `module show coatjava/<coatjava-version>`, and `module list` on one line.
+Errors from this code use one colored `Error:` prefix, and warnings use one colored `Warning:` prefix. Exception payloads remain prefix-free. Copyable commands are printed in multiline shell form with one option/value per continued line. The exception is `module` commands: print `module show gemc/<gemc-version>`, `module show coatjava/<coatjava-version>`, and `module list` on one line.
 
 Every workflow prints shared success artwork once after the complete invocation succeeds. A handled failure prints one blank line, the final error, one blank line, and shared stop artwork once while preserving the original status.
 
 ## Citations
 
-Repository Markdown uses GitHub footnotes with the marker immediately after the supported statement and before its closing punctuation. Copy complete citation details from the project's internal bibliography; readers should not need to open that working file. The Wiki generator converts footnotes into numbered Wiki references and rejects missing, duplicate, or unused definitions.
+Repository Markdown uses GitHub footnotes with the marker immediately after the supported statement and before its closing punctuation. Copy complete citation details from the repository's internal bibliography; readers should not need to open that working file. The Wiki generator converts footnotes into numbered Wiki references and rejects missing, duplicate, or unused definitions.
 
 ## Reading paths and examples
 

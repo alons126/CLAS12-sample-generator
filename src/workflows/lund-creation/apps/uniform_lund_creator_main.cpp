@@ -70,7 +70,7 @@ namespace env = environment;
  * Execution flow:
  *   Select the uniform LUND source. Print help when requested. Otherwise, create a checked RunConfig and
  *   pass it to generateUniform(). Return 0 after success. If either stage reports an error, print it with
- *   the standard project prefix and return 1.
+ *   the standard error prefix and return 1.
  *
  * @param argc Number of command-line strings, including the executable name.
  * @param argv Command-line strings read during this call. main() does not change or retain them.
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
         // All requested output and the completion manifest were written.
         return 0;
     } catch (const std::exception& error) {
-        // Print one standard project error and return failure to the calling shell.
+        // Print one standard error diagnostic and return failure to the calling shell.
         std::cerr << env::ERROR_COLOR << "Error:" << env::RESET_COLOR << ' ' << error.what() << '\n';
 
         return 1;

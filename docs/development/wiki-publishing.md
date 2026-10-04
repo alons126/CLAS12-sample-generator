@@ -1,6 +1,6 @@
 # Publishing the GitHub Wiki
 
-Edit the repository's Markdown files to change the manual. The publication workflow copies those files into the GitHub Wiki, where readers can browse them. There is only one set of editable documentation, not separate repository and Wiki manuals. [`README.md`](../../README.md) introduces the project, and [`docs/index.md`](../index.md) becomes the Wiki home page.
+Edit the repository's Markdown files to change the manual. The publication workflow copies those files into the GitHub Wiki, where readers can browse them. There is only one set of editable documentation, not separate repository and Wiki manuals. [`README.md`](../../README.md) introduces the repository, and [`docs/index.md`](../index.md) becomes the Wiki home page.
 
 Never edit a generated Wiki page directly. Change the repository source and let publication replace the generated Wiki.
 
@@ -34,7 +34,7 @@ Use the current fork's `OWNER/NAME`. The Wiki builder rejects unsafe output loca
 
 ## GitHub publication
 
-The `Publish documentation wiki` action checks documentation-related pull requests. When files covered by the action's filters reach `dev` or `main`, it builds the Wiki from that repository and branch, copies the generated pages into GitHub's separate `<repository>.wiki.git` repository, and pushes them if they changed. Links use the repository running the action, so a fork does not need to replace a hard-coded project URL.
+The `Publish documentation wiki` action checks documentation-related pull requests. When files covered by the action's filters reach `dev` or `main`, it builds the Wiki from that repository and branch, copies the generated pages into GitHub's separate `<repository>.wiki.git` repository, and pushes them if they changed. Links use the repository running the action, so a fork does not need to replace a hard-coded repository URL.
 
 There is one Wiki per repository, not one per branch. Publications from `dev` and `main` replace the same pages; the last successful publication determines which branch's documentation and source links readers see. A code-only push does not trigger this workflow. If source changes move automatically linked function definitions without changing documentation, run the action manually to refresh their line links.
 

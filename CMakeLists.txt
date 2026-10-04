@@ -1,6 +1,6 @@
 # CMakeLists.txt ---------------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Top-level project build settings.
+#   Top-level application build settings.
 #
 # Purpose:
 #   Select workflows, find dependencies, record build details, and add the production source targets.
@@ -17,9 +17,9 @@
 # Notes:
 #   ROOT must declare a C++ standard of at least 17. Configuration fails when required dependencies are unavailable.
 
-# Project and workflow options -------------------------------------------------------------------------------------------------------------------------------------------
+# Build and workflow options -------------------------------------------------------------------------------------------------------------------------------------------
 
-# region Project and workflow options
+# region Build and workflow options
 # Purpose:
 #   Select which compiled sample workflows are available.
 cmake_minimum_required(VERSION 3.20)
@@ -32,17 +32,17 @@ option(BUILD_GENIE "Build GENIE GST conversion" ON)
 
 # region Terminal diagnostics
 # Purpose:
-#   Give project-owned configure errors and warnings the same colored prefixes as runtime output.
+#   Give errors and warnings from these build settings the same colored prefixes as runtime output.
 #
 # Execution flow:
-#   Read colors inherited from run.csh -> decode shell escape markers -> route project diagnostics
+#   Read colors inherited from run.csh -> decode shell escape markers -> route code diagnostics
 #   through the helpers below.
 #
 # Inputs:
 #   Optional ERROR_COLOR, WARNING_COLOR, and RESET_COLOR environment values.
 #
 # Outputs:
-#   Colored project-owned CMake diagnostics. Native CMake and dependency output remains unchanged.
+#   Colored diagnostics from these build settings. Native CMake and dependency output remains unchanged.
 #
 # Failure:
 #   project_fatal_error prints the standard prefix and stops configuration.

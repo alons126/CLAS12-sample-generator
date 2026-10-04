@@ -27,9 +27,9 @@ Electron, proton, neutron, and charged-pion masses come through `TargetGeometry`
 
 For GENIE GST conversion, field 4 is the LUND slot otherwise used for target polarization. Storing `resid` there follows the pinned RG-M GENIE-to-LUND converter, in which `RES_ID` replaced the earlier `targP` polarization value[^rgm-resid]. This is a compatibility mapping: `resid` remains the GENIE resonance identifier and is not interpreted as polarization.
 
-Field 8 is always the literal value `1`. GEMC lists this user-defined column as the interacted-nucleon ID, but RG-M LUND-writing code widely uses `1` for uniform particles, GENIE events, and GCF events[^rgm-field-8]. This project preserves that RG-M convention. The value is not an interaction count and is not interpreted as a proton or neutron PDG identifier; GEMC retains this user-defined header value but does not use it for particle transport.
+Field 8 is always the literal value `1`. GEMC lists this user-defined column as the interacted-nucleon ID, but RG-M LUND-writing code widely uses `1` for uniform particles, GENIE events, and GCF events[^rgm-field-8]. This code preserves that RG-M convention. The value is not an interaction count and is not interpreted as a proton or neutron PDG identifier; GEMC retains this user-defined header value but does not use it for particle transport.
 
-Field 5 is zero in GEMC's first-particle spin-$z$ slot. Field 6 identifies an electron beam (PDG 11), and field 7 records its energy in $\mathrm{GeV}$. This project uses field 9 for an event ID rather than the user-defined process ID in GEMC's example convention. It uses field 10 for a process tag in converted GENIE input rather than an event weight or cross section. Readers must use these project meanings instead of treating the header as a generic weighting prescription.
+Field 5 is zero in GEMC's first-particle spin-$z$ slot. Field 6 identifies an electron beam (PDG 11), and field 7 records its energy in $\mathrm{GeV}$. This code uses field 9 for an event ID rather than the user-defined process ID in GEMC's example convention. It uses field 10 for a process tag in converted GENIE input rather than an event weight or cross section. Readers must use these field meanings instead of treating the header as a generic weighting prescription.
 
 Field 9 must fit a signed 32-bit integer (at most 2147483647); the writer rejects larger IDs. Physical IDs can have gaps because unsupported input events are skipped.
 
@@ -62,7 +62,7 @@ Momentum, energy, mass, and vertex values have five digits after the decimal poi
 
 For convenience, a LUND file can in principle include additional truth-level quantities encoded as particle records whose field 3 is `0`. GEMC propagates only records whose field 3 is `1` through Geant4. The pinned RG-M GCF-to-LUND converter demonstrates the `type = 0` convention for a non-propagated truth-level record[^rgm-type-zero].
 
-This project has not yet tested this technique or verified how a field-3 value of `0` is preserved through GEMC output, HIPO, and reconstruction. The current `LundWriter` always writes `1` and provides no option for auxiliary records. Treat `type = 0` as an experimental extension: validate the resulting files and downstream banks before production use, and include every added record in the event-header particle count.
+This technique has not yet been tested with this code, and preservation of a field-3 value of `0` through GEMC output, HIPO, and reconstruction has not been verified. The current `LundWriter` always writes `1` and provides no option for auxiliary records. Treat `type = 0` as an experimental extension: validate the resulting files and downstream banks before production use, and include every added record in the event-header particle count.
 
 ## Supported species and order
 
@@ -98,7 +98,7 @@ Schema version 1 contains:
 | --- | --- |
 | `schema_version` | Manifest schema, currently 1 |
 | `workflow` | `uniform` or `physical` |
-| `version`, `revision`, `root_version` | Project version, configure-time Git description, and ROOT version |
+| `version`, `revision`, `root_version` | Code version, configure-time Git description, and ROOT version |
 | `targets_sha256` | Hash of the compiled external target header |
 | `git` | Configure-time repository, branch, commit, status, tag, and tracking details |
 | `scanned_events`, `written_events` | Source entries examined and events written |

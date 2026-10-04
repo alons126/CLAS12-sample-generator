@@ -93,7 +93,7 @@ def git_information(root):
         Record the same main Git details as LUND creation.
 
     Args:
-        root: Verified project checkout passed to Git as its working directory.
+        root: Verified repository checkout passed to Git as its working directory.
 
     Returns:
         A dictionary ready for JSON. Missing optional values are written as unavailable.
@@ -1214,7 +1214,7 @@ def main():
     Inputs:
         Process arguments and the ifarm environment, including the shared colors and
         module/reconstruction paths. The current working directory must be the verified checkout
-        root because project files and the external worker path are relative to the checkout.
+        root because repository files and the external worker path are relative to the checkout.
 
     Outputs:
         A complete preview or execution report on standard output. Both modes create missing empty

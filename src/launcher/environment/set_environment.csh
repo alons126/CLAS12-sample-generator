@@ -2,10 +2,10 @@
 
 # set_environment.csh ----------------------------------------------------------------------------------------------------------------------------------------------------
 # Description:
-#   Set the shared project environment for the current checkout and host.
+#   Set the shared repository environment for the current checkout and host.
 #
 # Purpose:
-#   Tell later scripts where the project is and whether they are running on Jefferson Lab ifarm.
+#   Tell later scripts where the repository is and whether they are running on Jefferson Lab ifarm.
 #
 # Execution flow:
 #   Load colors -> save the current checkout path -> read the hostname -> set IFARM_RUN from the host.
@@ -54,16 +54,16 @@ echo "${SYSTEM_COLOR}- Updating environment ------------------------------------
 echo ""
 # endregion
 
-# Project root -----------------------------------------------------------------------------------------------------------------------------------------------------------
+# Repository root -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# region Project root
+# region Repository root
 
 # Remove both forms of the variable before exporting the new value. In tcsh, a local value made with
 # `set` can hide an environment value made with `setenv`.
 unset DIR_CLAS12_SAMPLE_GENERATOR_CODE
 unsetenv DIR_CLAS12_SAMPLE_GENERATOR_CODE
 
-# Save the current directory as the project root.
+# Save the current directory as the repository root.
 setenv DIR_CLAS12_SAMPLE_GENERATOR_CODE `pwd`
 
 # Show the resolved path.

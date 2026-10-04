@@ -12,7 +12,7 @@ Use this page to find the file that performs a particular task. CLI means comman
 | [`src/launcher/environment/`](../../src/launcher/environment) | Find the checkout and check the host environment before running |
 | [`src/launcher/presentation/`](../../src/launcher/presentation) | Shared colors, startup output, and success/stop artwork |
 | [`CMakeLists.txt`](../../CMakeLists.txt) | Select build dependencies, applications, and C++ standard; generate source-version information and define installation rules |
-| [`cmake/Version.h.in`](../../cmake/Version.h.in) | Template for project version, Git details, and the target-header hash compiled into the applications |
+| [`cmake/Version.h.in`](../../cmake/Version.h.in) | Template for code version, Git details, and the target-header hash compiled into the applications |
 
 [`config/run.json`](../../config/run.json) controls only launcher build/run behavior. Sample definitions belong under [`config/samples/`](../../config/samples); detector resources belong under [`config/detector/`](../../config/detector).
 
@@ -24,7 +24,7 @@ Paths in the following three LUND sections are relative to [`src/workflows/lund-
 | --- | --- |
 | [`core/config/RunConfig.h`](../../src/workflows/lund-creation/core/config/RunConfig.h) | Combine defaults, profile, and command line; calculate automatic values; check and return final settings |
 | [`core/config/TargetCatalog.h`](../../src/workflows/lund-creation/core/config/TargetCatalog.h) | Map target identity to $A$/$Z$ and compatible beam-dependent GEMC variation/geometry |
-| [`core/geometry/TargetGeometry.h`](../../src/workflows/lund-creation/core/geometry/TargetGeometry.h) | Sole project adapter to external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); vertex sampling and supported mass lookup |
+| [`core/geometry/TargetGeometry.h`](../../src/workflows/lund-creation/core/geometry/TargetGeometry.h) | Sole adapter in this repository to external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); vertex sampling and supported mass lookup |
 | [`core/lund/Event.h`](../../src/workflows/lund-creation/core/lund/Event.h) (`Particle` and `Event`) | Generator-independent in-memory record passed to the writer |
 | [`core/lund/LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h) | Check and replace the run directory, split and format LUND files, count events, and write the completion log |
 | [`core/presentation/ProgressReporter.h`](../../src/workflows/lund-creation/core/presentation/ProgressReporter.h) | Update one progress bar in a terminal, or print occasional full lines when output is redirected |

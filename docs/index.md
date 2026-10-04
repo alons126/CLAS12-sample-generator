@@ -1,10 +1,10 @@
 # CLAS12 sample generator documentation
 
-This project prepares simulation samples for the [e4ν collaboration](https://e4nu.org) using the CLAS12 spectrometer[^clas12-spectrometer] simulation chain. It provides separate workflows for preparing truth-level particles and submitting detector simulation and reconstruction.
+This code prepares simulation samples for the [e4ν collaboration](https://e4nu.org) using the CLAS12 spectrometer[^clas12-spectrometer] simulation chain. It provides separate workflows for preparing truth-level particles and submitting detector simulation and reconstruction.
 
 Neutrino oscillation experiments infer the incident neutrino energy from the particles measured after a neutrino interacts with a nucleus, so uncertainties in nuclear-interaction models can distort the reconstructed energy distribution. Electron beams instead provide a precise, known incident energy, while electron- and neutrino-nucleus scattering share the same nuclear ground state and many reaction and final-state effects. Electron-scattering data can therefore constrain the vector-current part of neutrino-interaction models and their energy-reconstruction performance[^electrons-for-neutrinos][^electron-beam-energy-reconstruction].
 
-The first workflow writes particles before detector simulation, called truth-level particles, to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). The **uniform LUND creator** randomly chooses momenta and angles within your configured ranges, producing deliberately unphysical events for detector-acceptance studies. The **physical LUND converter** copies supported particles from existing event-generator output. Its current input reader uses [GENIE](https://github.com/GENIE-MC/Generator) GST (generator summary tree) data stored in [ROOT](https://github.com/root-project/root) files; it does not run GENIE. After creation succeeds, it writes a completion manifest: a JSON log listing the sample settings, files, and event counts.
+The first workflow writes particles before detector simulation, called truth-level particles, to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). The **uniform LUND creator** randomly chooses momenta and angles within your configured ranges, producing deliberately unphysical events for detector-acceptance studies. The **physical LUND converter** copies supported particles from existing event-generator output. Its current input reader uses [GENIE](https://github.com/GENIE-MC/Generator) production output in the GST format stored in [ROOT](https://github.com/root-project/root) files; it does not run GENIE. After creation succeeds, it writes a completion manifest: a JSON log listing the sample settings, files, and event counts.
 
 The second workflow submits those LUND files to Slurm on Jefferson Lab's ifarm. Each task runs GEMC detector simulation[^gemc-simulation], followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction]. The result is reconstructed [HIPO](https://github.com/gavalian/hipo) data, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master).
 
@@ -17,6 +17,11 @@ flowchart LR
     L --> G["GEMC detector simulation"]
     G --> R["COATJAVA reconstruction"]
     R --> H["Reconstructed HIPO files"]
+
+    classDef decision fill:#183247,color:#ffffff,stroke:#183247,stroke-width:2px;
+    classDef stage fill:#e8f1ef,color:#183247,stroke:#0f8492,stroke-width:2px;
+    class EXECUTE decision;
+    class INPUTS,ENTRY,VALIDATE,PREVIEW,SUBMIT,GEMC,RECON stage;
 ```
 
 ## Reading order

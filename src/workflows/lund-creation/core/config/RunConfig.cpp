@@ -88,7 +88,7 @@ namespace samples {
  * @brief Contains small configuration functions that only this source file may call.
  *
  * These functions clean text, try to find a GENIE tune, and build names for output files and directories.
- * They are hidden from the rest of the project.
+ * They are hidden from other code.
  */
 namespace {
 
@@ -362,7 +362,7 @@ RunConfig RunConfig::createFromCommandLine(int argc, char** argv, LundSource sou
     }
 
     // Read at most one configuration file and report repeated names. A relative file path starts from the
-    // process's current directory. workflow.py starts project commands from the repository root.
+    // process's current directory. workflow.py starts workflow commands from the repository root.
     if (!config.empty()) {
         std::ifstream in(config);
 

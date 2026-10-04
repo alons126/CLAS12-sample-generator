@@ -3,7 +3,7 @@
 # Terminal color environment --------------------------------------------------
 
 # Description:
-#   Define the terminal colors shared by project shell, Python, and C++ output.
+#   Define the terminal colors shared by shell, Python, and C++ output.
 
 # region Terminal color environment
 # Purpose:

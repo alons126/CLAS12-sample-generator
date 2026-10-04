@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
         // All requested output and the completion manifest were written.
         return 0;
     } catch (const std::exception& error) {
-        // Print one standard project error and return failure to the calling shell.
+        // Print one standard error diagnostic and return failure to the calling shell.
         std::cerr << env::ERROR_COLOR << "Error:" << env::RESET_COLOR << ' ' << error.what() << '\n';
 
         return 1;

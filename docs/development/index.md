@@ -1,6 +1,6 @@
 # Development guide
 
-Read these pages in this order when changing the project:
+Read these pages in this order when changing the code:
 
 1. [Architecture](../concepts/architecture.md)
 2. [Source and API map](source-reference.md)
