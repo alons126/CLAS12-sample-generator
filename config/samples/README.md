@@ -29,6 +29,8 @@ Each supported uniform mode has a complete Ar40 profile for the three RG-M beam 
 | epCD/enCD | `uniform-{epCD,enCD}-{2070,4029,5986}MeV.conf` |
 | epipCD/epimCD | `uniform-{epipCD,epimCD}-{2070,4029,5986}MeV.conf` |
 
+There are no uniform kaon profiles because kaon yields in the physical data are low. The uniform LUND creator supports protons, neutrons, and charged pions as hadrons.
+
 Tester profiles request 1,000,000 events and production profiles request 50,000,000, with 25,000 events per file. Use `--events 100` for a small check before a long run.
 
 The electron-tester, 1e, epFD, and enFD profiles are the production-tested modes. FD pion and all CD profiles are clearly marked as not yet production-validated. Their settings describe implemented behavior, not a validation claim.
