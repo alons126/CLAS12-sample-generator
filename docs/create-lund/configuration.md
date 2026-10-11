@@ -6,9 +6,15 @@ The parser trims whitespace and splits at the first `=`. It does not interpret i
 
 The application first reads defaults, then the profile, then the command line. Later values replace earlier ones. It then calculates `auto` values and checks the result:
 
-```text
-built-in defaults -> configuration file -> command line -> automatic values -> validation
+```mermaid
+flowchart LR
+    DEFAULTS["Read built-in defaults"] --> PROFILE["Apply configuration file"]
+    PROFILE --> CLI["Apply command-line overrides"]
+    CLI --> AUTO["Calculate auto values"]
+    AUTO --> VALIDATE["Validate resolved settings"]
 ```
+
+For example, changing only `--beam-energy 4.02962` while using the [5.98636 GeV 1e profile](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf) leaves its explicit `electron-p-max = 5.98636` unchanged. Overrides replace individual settings; they do not recompute explicit momentum bounds, angular bounds, or trigger offsets. Choose the matching beam/channel/region profile, or review and override each affected setting. Automatic resolution applies only to values set to `auto`.
 
 The launcher does not choose a sample profile. Name one explicitly, or supply every required value. Launcher build settings belong to [`config/run.json`](../../config/run.json.md), not to a sample profile.
 
@@ -54,7 +60,7 @@ Creation accepts some broader values: physical directory components replace unsa
 | `Sn120` | 120 | 50 | `rgm_fall2021_Sn_L` | `1-foil-large` |
 | `Sn-nat` | 119 | 50 | `rgm_fall2021_Snx4` | `4-foil` |
 
-C12 at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. `Sn-nat` represents natural tin using the code's header value $A=119$, not a pure tin-119 isotope. The geometry rules come from the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md). A supported LUND target does not guarantee that a matching GCARD is included for every beam and software release; check detector resources separately before submission.
+$\mathrm{C}^{12}$ at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. `Sn-nat` represents natural tin using the code's header value $A=119$, not a pure $\mathrm{Sn}^{119}$ isotope. The geometry rules come from the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md). A supported LUND target does not guarantee that a matching GCARD is included for every beam and software release; check detector resources separately before submission.
 
 ## Uniform settings
 
@@ -73,7 +79,7 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `trigger-theta` | `25` | Trigger-electron $\theta$, in degrees |
 | `trigger-phi-offset` | `auto` | $\Delta\phi=16^\circ$, $7^\circ$, or $5^\circ$ at the three standard beams; otherwise $0^\circ$ |
 
-`auto` resolves electron momentum to `mixed` for 1e and `beam` for the other channels. It resolves charged-hadron momentum to `mixed` and neutron momentum to `uniform`. The [uniform LUND creator guide](uniform.md) owns the production ranges; the [sampling model](../concepts/sampling-models.md) owns the mathematical definitions.
+`auto` resolves electron momentum to `mixed` for 1e and `beam` for the other channels. It resolves charged-hadron momentum to `mixed` and neutron momentum to `uniform`. The [uniform LUND creator guide](uniform.md) lists the production ranges; the [sampling model](../concepts/sampling-models.md) defines the sampling distributions.
 
 ### Uniform option constraints
 

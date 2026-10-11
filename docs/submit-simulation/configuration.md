@@ -4,6 +4,8 @@ Use this page when selecting submission settings, software releases, detector re
 
 ## How inputs are resolved
 
+The [LUND creation log](../concepts/lund-data-contract.md#lund-creation-log) is also called the completion manifest in command output and error messages.
+
 The command line has the highest priority. If a setting is absent there, submission looks in the optional config, then the LUND creation log, then defaults:
 
 ```mermaid
@@ -23,9 +25,9 @@ If the LUND creation log says the sample used one beam energy or target, an opti
 
 ### Target variation and existing vertices
 
-For example, changing a C12 sample from the large-foil variation to the small-foil variation during submission does not move its existing LUND vertices. Creation samples vertex coordinates; submission only chooses the detector inputs used to transport those particles.
+For example, changing a $\mathrm{C}^{12}$ sample from the large-foil variation to the small-foil variation during submission does not move its existing LUND vertices. Creation samples vertex coordinates; submission only chooses the detector inputs used to transport those particles.
 
-The submission resolver checks target labels against the LUND creation log, but it does not enforce compatibility between that target and a replacement variation or inspect the GCARD's target geometry. It can accept an Ar40 LUND creation log with a carbon GCARD when the requested file exists. Explicit GCARD paths also bypass variation-based filename selection. A successful preview is not a geometry-consistency check.
+The submission resolver checks target labels against the LUND creation log, but it does not enforce compatibility between that target and a replacement variation or inspect the GCARD's target geometry. It can accept a $\mathrm{Ar}^{40}$ LUND creation log with a carbon GCARD when the requested file exists. Explicit GCARD paths also bypass variation-based filename selection. A successful preview is not a geometry-consistency check.
 
 Compare the LUND creation log's `target`, `gemc-target-variation`, and `target-geometry` with the selected GCARD and the [vertex distributions](../concepts/sampling-models.md#vertex-positions). If the intended target volume requires a different vertex distribution, create new LUND input with that geometry in a different output parent. Submission does not resample or relocate vertices. Keep deliberate mismatched-geometry studies separate and record their purpose.
 
@@ -74,6 +76,8 @@ GEMC defaults to 5.14 because that release contains the RG-M argon target and co
 COATJAVA defaults to 10.0.7. Its version independently selects the reconstruction software and the YAML directory under [`config/detector/`](../../config/detector/), using the pattern `config/detector/COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/`. Only 10.0.7 YAML snapshots are currently checked in. Another release needs a reviewed YAML supplied with `--yaml` if its default file is absent. Explicit `--gcard` and `--yaml` paths override resource lookup, not software selection. Check that the selected files are compatible with the requested releases.
 
 For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Beam labels outside the three supported lookup groups require explicit `--gcard`, `--yaml`, and `--torus` values.
+
+The supplied YAMLs also differ in tracking: the 2 GeV file uses conventional tracking, while the 4 and 6 GeV files use AI-assisted tracking. All three disable denoising. See the [detector-resource table](../concepts/external-inputs.md#detector-resources) before replacing a default YAML.
 
 ### Magnetic-field consistency
 

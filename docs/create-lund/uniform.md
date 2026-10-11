@@ -27,7 +27,7 @@ The profile is a text file containing the sample settings. `--events 100` replac
 
 For `eh`, select `--hadron proton|neutron|pip|pim` and `--hadron-region FD|CD`. In these command-line values, `pip` means a positively charged pion ($\pi^{+}$) and `pim` means a negatively charged pion ($\pi^{-}$). `FD` means the forward-detector sampling region and `CD` means the central-detector sampling region. These names describe the generated angular range; they do not claim that GEMC or reconstruction will detect the particle.
 
-The uniform LUND creator does not generate kaon samples because kaon yields in the physical data are low. The supported hadrons are protons, neutrons, and charged pions.
+The uniform LUND creator supports protons, neutrons, and charged pions; kaon samples are outside its current scope.
 
 ### Electron-hadron labels
 

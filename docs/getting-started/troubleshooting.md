@@ -2,6 +2,8 @@
 
 Start with the last error diagnostic and the phase that printed it. Do not repeatedly source [`run.csh`](../../run.csh) to diagnose missing software: it can clean the disposable checkout before the selected workflow fails. Use the read-only [prerequisite checks](installation.md#verify-prerequisites) and [ifarm command checks](../submit-simulation/ifarm-environment.md#check-commands-before-launching) first.
 
+Messages that mention a "manifest" refer to the [LUND creation log](../concepts/lund-data-contract.md#lund-creation-log), `lund-creation-log.json`.
+
 ## Before sample creation or submission
 
 | Symptom | What to check | Recovery and output effects |

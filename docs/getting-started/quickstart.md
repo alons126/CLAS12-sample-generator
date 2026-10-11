@@ -30,7 +30,7 @@ build/debug/apps/uniform-lund-creator \
     --output runs/quickstart
 ```
 
-For physical input, use electron-scattering GST with upstream neutral-pion decays, as described in the [physical-input contract](../create-lund/physical.md#selection-and-translation). The command below describes Ar40 at 5.98636 GeV with an upstream minimum $Q^2$ of 0.40 GeV². Use it only for input matching those values, or change all three to match your dataset. The physical LUND converter does not verify those assertions against GST truth. Changing only the beam energy does not change an explicit profile `q2-cut`.
+For physical input, use electron-scattering GST with upstream neutral-pion decays, as described in the [physical-input contract](../create-lund/physical.md#selection-and-translation). The command below describes $\mathrm{Ar}^{40}$ at 5.98636 GeV with an upstream minimum $Q^2$ of 0.40 GeV². Use it only for input matching those values, or change all three to match your dataset. The physical LUND converter does not verify those assertions against GST truth. Changing only the beam energy does not change an explicit profile `q2-cut`.
 
 To copy those particles, select the profile [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
 

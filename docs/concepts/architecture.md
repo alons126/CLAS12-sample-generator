@@ -53,7 +53,7 @@ Creating LUND files never submits jobs automatically. The submission program ask
 | [`apps/`](../../src/workflows/lund-creation/apps) | Thin CLI entry points and final error presentation |
 | [`core/config/`](../../src/workflows/lund-creation/core/config/) | Parse, merge, resolve, and validate settings; select target metadata |
 | [`core/geometry/`](../../src/workflows/lund-creation/core/geometry/) | Isolate the external target source and sample one vertex per event |
-| [`core/lund/`](../../src/workflows/lund-creation/core/lund/) | Define `Event` and `Particle`; serialize, split, and publish completion |
+| [`core/lund/`](../../src/workflows/lund-creation/core/lund/) | Define `Event` and `Particle`; write and split LUND files, then write the final LUND creation log |
 | [`core/presentation/`](../../src/workflows/lund-creation/core/presentation/) | Shared progress reporting for interactive and redirected output |
 | [`uniform-lund-creator/`](../../src/workflows/lund-creation/uniform-lund-creator) | Generate random acceptance-test particles and uniform-only monitoring |
 | [`event-generator-to-lund-converter/`](../../src/workflows/lund-creation/event-generator-to-lund-converter) | Dispatch physical input to a format-specific adapter |

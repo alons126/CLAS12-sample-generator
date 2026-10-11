@@ -27,6 +27,8 @@ This replacement covers both entire directories even when `--num-jobs` selects o
 
 ## Select files and settings
 
+The preview reports the number of selected LUND files, one per planned array task; it does not count unrelated directory entries or monitoring products.
+
 The LUND creation log supplies truth metadata, the file inventory, and per-file event counts. By default, submission selects every listed file and uses the largest event count among them as its common GEMC/reconstruction event limit. Use `--num-jobs N` to select the first N files and `--events-per-job N` to override that limit.
 
 Consult the [configuration reference](configuration.md) for all options, config-file precedence, software selection, GCARD/YAML defaults, magnetic-field checks, and the manual-input interface. Review those settings before adding `--execute`.

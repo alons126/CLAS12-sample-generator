@@ -6,13 +6,12 @@ Start here after Slurm accepts an array. `RUN` is the resolved sample run direct
 
 The submission program does not keep checking jobs, retry failed tasks, count their output files, or open HIPO files. You must check these yourself. After the array finishes:
 
-1. Review every array task in Slurm or the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob), and inspect its `.out` and `.err` files. Use the [queue command below](#slurm-commands) to check your queued or running jobs.
+1. Review every finished array task with `sacct`, where accounting is available, and inspect its `.out` and `.err` files. Use the accounting command below for finished tasks. Use the [queue command](#slurm-commands) or [active-jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob) while tasks are queued or running.
 2. Check that every submitted task has both a GEMC file in `RUN/mchipo/` and a reconstructed file in `RUN/reconhipo/`. For example, a five-task array should produce files with indexes 1 through 5 in each directory.
 3. Open at least one reconstructed file:
 
-   ```text
-   hipo-utils \
-       -dump RUN/reconhipo/<file>.hipo
+   ```bash
+   hipo-utils -dump RUN/reconhipo/<file>.hipo
    ```
 
 The file must open and display CLAS12 data banks, the named groups of records inside a HIPO file. Opening one file is only a basic check. It does not show that the other tasks succeeded or that the simulation is suitable for your analysis.
@@ -33,7 +32,7 @@ After tasks finish, possible failure indicators are:
 
 - Errors when opening the reconstructed file with the HIPO inspection command above.
 - Missing expected files in `RUN/mchipo/` or `RUN/reconhipo/`, or both.
-- A failure status for a task in the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob).
+- A failure state or nonzero exit code for a finished task in Slurm accounting, where available.
 
 Inspect the affected task's `.out` and `.err` files and any available dashboard diagnostics to find what went wrong. The default farm-output location, `/u/scifarm/farm_out/<username>`, is indicated in [`submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) as `/farm_out/<username>`; both paths refer to the same directory. Explicitly, the script sets the destinations for the `.out` and `.err` files with:
 

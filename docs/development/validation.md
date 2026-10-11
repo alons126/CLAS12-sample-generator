@@ -26,7 +26,9 @@ These comparisons are **detector-level validation**: they check simulated and re
 
 The electron-tester, 1e, epFD, and enFD modes are the production-tested uniform modes. Here, **production-tested** means reported as used and checked in detector-simulation production; it does not certify every configuration. FD charged-pion modes and all CD modes are implemented but remain unvalidated for production. Keep that warning in their profiles and user documentation until detector-level evidence supports changing it.
 
-This manual does not include a [campaign record](#campaign-record) linking that production-tested designation to an exact source revision, detector configuration, and comparison result. Treat it as the reported status of those modes, not certification of every target, beam, release, or override. Before reusing a result in an analysis, obtain the corresponding campaign record from the collaboration member responsible for that production.
+This manual does not include a [campaign record](#campaign-record) linking that production-tested designation to an exact source revision, detector configuration, and comparison result. Treat it as the reported status of those modes, not certification of every target, beam, release, or override. No campaign-record location or responsible contact is currently identified in this manual. Before reusing a result in an analysis, ask the collaboration member who supplied the sample to identify its production owner and provide the corresponding record. The reported status alone cannot establish that an arbitrary profile or override is suitable for an analysis.
+
+The [physical-input guide](../create-lund/physical.md#why-upstream-samples-use-q2-cuts) also reports campaign-specific minimum-$Q^2$ choices based on comparisons with $Q^2$ distributions in RG-M $\mathrm{C}^{12}$ data at all three beam energies. The manual does not currently link the comparison plots or identify the campaign's exact GENIE revision. These data-informed choices are not universal detector thresholds.
 
 ## Campaign record
 

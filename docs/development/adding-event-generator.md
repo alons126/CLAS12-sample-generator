@@ -49,6 +49,8 @@ For each accepted input event:
 
 The adapter reads input in order and counts scanned input entries and written events. `LundWriter` enforces the output event limit, chooses filenames, starts new files, writes LUND text, checks paths before deleting output, and writes the final LUND creation log. Physical-input adapters do not create uniform monitoring histograms or plots.
 
+Use the shared [progress reporter](../../src/workflows/lund-creation/core/presentation/ProgressReporter.h) during conversion. Report written events against the requested count, scanned input entries separately, and the final stop reason. After successful input processing, finish progress reporting, then call [`LundWriter::finalizeRun(scannedEventCount)`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) before returning successfully. This explicit call closes the output and writes the final LUND creation log; completing the event loop alone does not mark the run complete. Do not finalize failed conversion. Follow the completion sequence in the [GST adapter](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp#L199).
+
 ## 5. Register settings and dispatch
 
 Add the adapter identifier to the physical branch of `RunConfig`. Add only settings that are genuinely format-specific; keep input, target, output, capacity, splitting, and provenance in the common physical contract.

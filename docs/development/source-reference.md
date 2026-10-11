@@ -29,7 +29,7 @@ Paths in the following three LUND sections are relative to [`src/workflows/lund-
 | [`core/lund/LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h) | Check and replace the run directory, split and format LUND files, count events, and write the LUND creation log |
 | [`core/presentation/ProgressReporter.h`](../../src/workflows/lund-creation/core/presentation/ProgressReporter.h) | Update one progress bar in a terminal, or print occasional full lines when output is redirected |
 
-[`RunConfig::createFromCommandLine()`](../../src/workflows/lund-creation/core/config/RunConfig.cpp#L285) reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. [`LundWriter::finalizeRun()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) writes the final LUND creation log after the checked creation stages finish; see the [monitoring verification limit](../concepts/lund-data-contract.md#completion-LUND creation log).
+[`RunConfig::createFromCommandLine()`](../../src/workflows/lund-creation/core/config/RunConfig.cpp#L285) reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. [`LundWriter::finalizeRun()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) writes the final LUND creation log after the checked creation stages finish; see the [monitoring verification limit](../concepts/lund-data-contract.md#lund-creation-log).
 
 ## Uniform LUND creator
 

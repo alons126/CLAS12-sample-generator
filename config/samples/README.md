@@ -18,7 +18,7 @@ Supply `--output` when running the command so profiles do not need paths specifi
 
 ## Uniform profiles
 
-Each supported uniform mode has a complete Ar40 profile for the three RG-M beam energies in [`uniform-lund-creation/`](uniform-lund-creation/):
+Each supported uniform mode has a complete $\mathrm{Ar}^{40}$ profile for the three RG-M beam energies in [`uniform-lund-creation/`](uniform-lund-creation/):
 
 | Mode | Profile pattern |
 | --- | --- |
@@ -29,9 +29,9 @@ Each supported uniform mode has a complete Ar40 profile for the three RG-M beam 
 | epCD/enCD | `uniform-{epCD,enCD}-{2070,4029,5986}MeV.conf` |
 | epipCD/epimCD | `uniform-{epipCD,epimCD}-{2070,4029,5986}MeV.conf` |
 
-There are no uniform kaon profiles because kaon yields in the physical data are low. The uniform LUND creator supports protons, neutrons, and charged pions as hadrons.
+The uniform LUND creator supports protons, neutrons, and charged pions as hadrons; kaon samples are outside its current scope.
 
-Tester profiles request 1,000,000 events and production profiles request 50,000,000, with 25,000 events per file. Use `--events 100` for a small check before a long run.
+Tester profiles request 1,000,000 events and production profiles request 50,000,000, with 25,000 events per file. Use `--events 100` for a small check before a long run. Choose the matching beam/channel/region profile: changing one setting does not recalculate other explicit values. See the [configuration override example](../../docs/create-lund/configuration.md).
 
 The electron-tester, 1e, epFD, and enFD profiles are the production-tested modes. FD charged-pion and all CD profiles are marked as not yet validated for detector-simulation production. Their settings describe implemented behavior, not a validation claim.
 

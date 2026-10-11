@@ -92,6 +92,8 @@ After writing `events-per-file` events, the writer starts another file when the 
 
 ## LUND creation log
 
+The LUND creation log, `lund-creation-log.json`, is the **completion manifest** named in command output and error messages. A manifest is a list describing a set of files; this one also records the completed run's settings and event counts.
+
 After event writing and, for uniform samples, the monitoring routine return successfully, the writer closes the LUND file and writes the LUND creation log, a JSON file, to `lund-creation-log.json.tmp`. Only after that write succeeds does it rename the temporary file to `lund-creation-log.json`. This rename is atomic: the final name appears in one filesystem operation, so submission does not read a half-written final LUND creation log. The final name marks successful creation.
 
 The LUND creation log marks completion of the program’s checked stages. Uniform monitoring checks ROOT-file creation and histogram writes, but PDF/PNG export calls have no subsequent file verification. A final LUND creation log is therefore not independent proof that every rendered plot exists or opens. Inspect those products using the [monitoring guide](../create-lund/monitoring.md#check-monitoring-output).

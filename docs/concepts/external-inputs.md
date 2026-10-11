@@ -42,6 +42,16 @@ For each detector lookup group (`2GeV`, `4GeV`, or `6GeV`), `GEMC_GCARDs_<beam-g
 
 GCARD configurations come from the [`gemc` directory in `JeffersonLab/clas12-config`](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). The checked-in COATJAVA 10.0.7 reconstruction YAML files were obtained from its [`coatjava/10.0.7` directory](https://github.com/JeffersonLab/clas12-config/tree/main/coatjava/10.0.7). These snapshots are read locally during submission rather than downloaded from upstream at runtime.
 
+The supplied reconstruction files also differ in tracking settings. AI-assisted tracking uses a learned model to help reconstruct tracks. Denoising removes detector hits identified as noise; it is disabled in all three supplied configurations.
+
+| Beam group | COATJAVA 10.0.7 YAML | Tracking | Denoising |
+| --- | --- | --- | --- |
+| `2GeV` | [`rgm_fall2021-cv.yaml`](../../config/detector/COATJAVA_YAML_configs_2GeV/10.0.7/rgm_fall2021-cv.yaml) | Conventional, without AI assistance (`cv`) | Disabled |
+| `4GeV` | [`rgm_fall2021-ai_4Gev.yaml`](../../config/detector/COATJAVA_YAML_configs_4GeV/10.0.7/rgm_fall2021-ai_4Gev.yaml) | AI-assisted (`ai`) | Disabled |
+| `6GeV` | [`rgm_fall2021-ai_6Gev.yaml`](../../config/detector/COATJAVA_YAML_configs_6GeV/10.0.7/rgm_fall2021-ai_6Gev.yaml) | AI-assisted (`ai`) | Disabled |
+
+These are campaign-specific reconstruction snapshots, not interchangeable files distinguished only by beam energy or software release. When selecting an explicit YAML, review its tracking services and reconstruction conditions against the intended campaign.
+
 Standard field policy is:
 
 | Nominal beam | Torus field configuration | Torus | Solenoid |

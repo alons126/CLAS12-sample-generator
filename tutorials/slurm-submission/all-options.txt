@@ -1,5 +1,10 @@
 # Slurm submission option inventory
 #
+# Normal launcher invocations clean and update the disposable ifarm checkout, even
+# during submission preview. They discard tracked edits and delete untracked and
+# ignored files except build/. Keep development edits, inputs, and output outside
+# that checkout. Preview preserves existing simulation output; it does not disable
+# checkout cleanup. See docs/getting-started/installation.md, "Choose the right entry point".
 # Together these commands show every public submission option. Run them on ifarm from
 # csh/tcsh. Preview is the default. --execute replaces the selected run's mchipo/ and
 # reconhipo/ directories; optional farm cleanup deletes direct files from one exact
@@ -14,7 +19,7 @@ source run.csh \
     --help
 
 #########################################################################################
-# Safe preview of one sample with a LUND creation log
+# Preview one sample from the disposable ifarm checkout
 #########################################################################################
 
 source run.csh \

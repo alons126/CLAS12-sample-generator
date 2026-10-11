@@ -122,7 +122,7 @@ source setup_and_submit_jobs.csh
            -> gemc -> recon-util
 ```
 
-The current archived selection is uniform submission. Its active loop is **en at 2070MeV**, GEMC 5.14, target variation `rgm_fall2021_C_S`, using a `_ConstPn` output directory. This is different from the active 1e/Ar generation call in `CodeRun.cpp`. These files are snapshots of independently edited scripts; they are not a consistent single campaign. Select matching generation metadata and detector resources explicitly.
+The current archived selection is uniform submission. Its active loop is **en at 2070MeV**, GEMC 5.14, target variation `rgm_fall2021_C_S`, using a `_ConstPn` output directory. This does not match the three active 1e/ep/en generation calls under the carbon variation described above: in particular, the submission path selects fixed neutron momentum through `_ConstPn`. These files are snapshots of independently edited scripts; they are not a consistent single campaign. Select matching generation metadata and detector resources explicitly.
 
 | Former setting/action | Current location/action |
 | --- | --- |
