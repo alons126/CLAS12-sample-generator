@@ -81,7 +81,7 @@ built-in common and source defaults
 The uniform LUND creator and each physical-input adapter build `Event` objects containing particles in the order they should be written. `LundWriter` then converts those objects into LUND text. This keeps the decision about which particles exist separate from file formatting:
 
 - the uniform LUND creator decides which random particles exist;
-- a physical adapter decides which input events and particles are supported;
+- a physical-input adapter decides which input events and particles are supported;
 - `TargetGeometry` supplies one vertex shared by every particle in the event; and
 - `LundWriter` owns file names, splitting, exact formatting, output replacement, counts, and the final LUND creation log.
 
@@ -93,7 +93,7 @@ This separation is the main extension rule. A new input adapter should translate
 
 ## Physical path
 
-[`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) calls the selected input adapter. [`convertGenieGST()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp#L64) checks the ROOT tree and branch types, reads entries in order, selects supported interactions, copies supported particles, and calls the common writer. It separately counts entries examined and events written, and decides whether enough input remains to start another file. It creates no monitoring histograms.
+[`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) calls the selected input adapter. [`convertGenieGST()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp#L64) checks the ROOT tree and branch types, reads entries in order, selects supported interactions, copies supported particles, and calls the common writer. It separately counts scanned input entries and written events, and decides whether enough input remains to start another file. It creates no monitoring histograms.
 
 To read another input format, add a directory beside [`genie-gst/`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/) and a branch in [`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) that calls its reader. Keep the same command-line executable and use the common writer for output. The [adapter guide](../development/adding-event-generator.md) lists the decisions and checks needed.
 

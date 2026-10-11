@@ -67,7 +67,7 @@ For example, with 250 supported input entries, `events = 300`, and `events-per-f
 
 `events` limits how many events are written. `events-per-file`, default 10,000, sets when to start a new file and when to stop near the end of the input. Before starting a second or later file, the physical LUND converter requires at least `events-per-file` input entries from the current entry onward. This check does not prevent starting the first file or interrupt a file already started. Reaching the event limit or the end of the input can still leave a short file.
 
-The check counts input entries, including reactions that may later be skipped. Having enough input entries therefore does not guarantee a full output file. The LUND creation log records entries examined, events written, and the count in each LUND file. Examined entries minus written events includes skipped reactions and, when this end-of-input rule stops conversion, the supported entry examined but not written. The final progress line states why conversion stopped.
+The check counts input entries, including reactions that may later be skipped. Having enough input entries therefore does not guarantee a full output file. The LUND creation log records scanned input entries, written events, and the count in each LUND file. Scanned input entries minus written events includes skipped reactions and, when this end-of-input rule stops conversion, the supported input entry scanned but not written. The final progress line states why conversion stopped.
 
 ## Provenance and output names
 

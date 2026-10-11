@@ -61,7 +61,7 @@ The following options describe LUND input that has no LUND creation log. With a 
 | `--prefix NAME` | Required filename prefix before `_INDEX.txt` |
 | `--channel NAME` | Uniform `electron-tester`, `1e`, `eh`, or a [complete electron-hadron label](../create-lund/uniform.md#electron-hadron-labels) such as `epFD` |
 | `--hadron NAME`, `--hadron-region FD\|CD` | Particle and region required when `channel=eh` |
-| `--event-generator NAME` | Physical adapter label; default `genie-gst` |
+| `--event-generator NAME` | Physical-input adapter label; default `genie-gst` |
 | `--tune NAME` | Physical tune/model label; default `unknown` |
 | `--q2-cut NAME` | Physical upstream-selection label; default `unknown`, with no cut applied during submission |
 

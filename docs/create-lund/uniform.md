@@ -50,7 +50,7 @@ The automatic run name and filename prefix are `Uniform__<channel-label>__<beam-
 
 ## Production definitions
 
-The electron tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $P=P_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
+The electron-tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $P=P_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
 
 The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $P$ and uniform in $1/P$, from $0.7\,\mathrm{GeV}/c$ to $P_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are uniform-sampling bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts[^burkert-clas12][^asryan-ecal].
 

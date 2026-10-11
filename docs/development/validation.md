@@ -13,7 +13,7 @@ These comparisons are **detector-level validation**: they check simulated and re
 ## Important software boundaries
 
 - Uniform samples are acceptance probes, not physical interactions.
-- A physical adapter copies supported truth and does not invent missing kinematics.
+- A physical-input adapter copies supported truth and does not invent missing kinematics.
 - [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) is not reproducible from the recorded zero.
 - Target geometry and LUND $A$ / $Z$ metadata are independently configurable.
 - The GENIE process code in LUND field 10 is not a cross-section weight.

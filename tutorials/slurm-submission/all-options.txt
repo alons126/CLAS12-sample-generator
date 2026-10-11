@@ -37,7 +37,7 @@ source run.csh \
     --torus -1.0 \
     --num-jobs 3 \
     --events-per-job 5000 \
-    --job-name arbitrary_manifest_preview
+    --job-name arbitrary_lund_log_preview
 
 #########################################################################################
 # Manual uniform input: demonstrate every uniform truth option and runtime control

@@ -105,13 +105,13 @@ Schema version 1 contains:
 | `version`, `revision`, `root_version` | Code version, configure-time Git description, and ROOT version |
 | `targets_sha256` | Hash of the compiled external target header |
 | `git` | Configure-time repository, branch, commit, status, tag, and tracking details |
-| `scanned_events`, `written_events` | Source entries examined and events written |
+| `scanned_events`, `written_events` | Scanned source entries (input entries for physical conversion) and written events |
 | `config` | Complete resolved settings as strings |
 | `files` | Relative LUND paths and event counts in creation order |
 
 The `git` object includes the repository, branch, commit message, complete commit hash, commit date and author, working-tree status summary, nearest tag, detached-HEAD state, tracking branch, ahead/behind counts, and an exact-commit GitHub source link when the repository address permits one.
 
-For uniform creation, examined and written counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The LUND creation log does not hash the original GST input or save uncommitted source edits for later recovery. Keep the original input and source revision as part of the separate [campaign record](../development/validation.md#campaign-record).
+For uniform creation, scanned and written event counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The LUND creation log does not hash the original GST input or save uncommitted source edits for later recovery. Keep the original input and source revision as part of the separate [campaign record](../development/validation.md#campaign-record).
 
 Git fields describe the checkout when CMake configured the executable. Reusing a build after changing the working tree does not update them automatically; reconfigure with CMake and rebuild when provenance must reflect new source.
 

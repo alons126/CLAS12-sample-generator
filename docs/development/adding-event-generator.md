@@ -15,7 +15,7 @@ Before coding, document:
 - malformed-input and unsupported-only behavior; and
 - whether a finite-input tail rule is needed.
 
-A physical adapter copies available truth. It must not resample particle kinematics, manufacture missing decay products, or borrow GENIE-specific meanings without a scientific reason.
+A physical-input adapter copies available truth. It must not resample particle kinematics, manufacture missing decay products, or borrow GENIE-specific meanings without a scientific reason.
 
 ## 2. Add the adapter directory
 
@@ -47,7 +47,7 @@ For each accepted input event:
 5. give every particle the same vertex; and
 6. call [`LundWriter::writeEvent()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L102).
 
-The adapter reads input in order and counts entries examined and events written. `LundWriter` enforces the output event limit, chooses filenames, starts new files, writes LUND text, checks paths before deleting output, and writes the final LUND creation log. Physical adapters do not create uniform monitoring histograms or plots.
+The adapter reads input in order and counts scanned input entries and written events. `LundWriter` enforces the output event limit, chooses filenames, starts new files, writes LUND text, checks paths before deleting output, and writes the final LUND creation log. Physical-input adapters do not create uniform monitoring histograms or plots.
 
 ## 5. Register settings and dispatch
 
