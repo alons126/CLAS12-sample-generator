@@ -12,11 +12,11 @@ The code converts degree-valued angles to radians before calling trigonometric f
 
 ### Electron-tester
 
-The electron-tester profiles fix $P=P_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range. The electron angle and momentum options can override those profile choices.
+The $(e,e')$ angular tester (`electron-tester`) profiles fix $P=P_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range. The electron angle and momentum options can override those profile choices.
 
 ### 1e
 
-For `channel=1e`, $\theta$ is uniform inside its configured bounds and $\phi$ is uniform from -180 through 180 degrees. There are no phi-range options. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
+For the $(e,e')$ channel (`channel=1e`), $\theta$ is uniform inside its configured bounds and $\phi$ is uniform from -180 through 180 degrees. There are no phi-range options. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
 
 - even run-global event IDs draw $P\sim\mathcal{U}(a,b)$;
 - odd IDs draw $q\sim\mathcal{U}(b^{-1},a^{-1})$ and use $P=q^{-1}$.
@@ -27,7 +27,7 @@ The production bounds are $a=0.7\,\mathrm{GeV}/c$ and $b=P_{\mathrm{beam}}$. `el
 
 ## Electron–hadron events
 
-For `channel=eh`, hadron $\theta$ is uniform inside the configured FD or CD range and $\phi\in[-180^\circ,180^\circ]$. The upper momentum bound is $P_{\mathrm{beam}}$.
+For the $(e,e'h)$ channel (`channel=eh`), $h$ denotes the selected hadron. Hadron $\theta$ is uniform inside the configured FD or CD range and $\phi\in[-180^\circ,180^\circ]$. The upper momentum bound is $P_{\mathrm{beam}}$.
 
 Charged hadrons use the same run-global even/odd mixture of distributions uniform in $P$ and uniform in $1/P$. Neutrons use a distribution uniform in $P$, including a lower bound of zero. The optional fixed mode is neutron-only.
 

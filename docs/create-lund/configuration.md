@@ -60,7 +60,7 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `channel` | `1e` | `electron-tester`, `1e`, or `eh` |
+| `channel` | `1e` | $(e,e')$ angular tester (`electron-tester`), $(e,e')$ (`1e`), or $(e,e'h)$ (`eh`), where $h$ is the selected hadron |
 | `hadron` | `proton` | `proton` ($p$), `neutron` ($n$), `pip` ($\pi^{+}$), or `pim` ($\pi^{-}$); used by `eh`. See the [electron-hadron label definitions](uniform.md#electron-hadron-labels). |
 | `hadron-region` | `FD` | `FD` or `CD`; used by `eh` |
 | `electron-theta-min/max` | `5`/`40` | Electron-only $\theta$ bounds, in degrees |
