@@ -36,8 +36,6 @@ Use `main` for the published application and `dev` for development. The generate
 
 **If you want to modify or extend the software:** follow the [developer reading path](development/index.md). It starts with architecture and the source map, explains the scientific and data contracts, then covers contribution, builds, validation, and specific extensions. First read the user guide for the workflow you intend to change.
 
-The [terminology reference](concepts/terminology.md) defines the names used for workflows, settings, records, and validation.
-
 Use the [workflow command examples](../tutorials/README.md) as a copyable option inventory, not as a substitute for understanding the selected profile and output path.
 
 ## Scope

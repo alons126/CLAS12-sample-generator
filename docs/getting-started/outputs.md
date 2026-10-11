@@ -38,6 +38,8 @@ These names are placeholders, not shell variables. Replace them before running a
 
 The generic directory formulas in configuration references use lowercase placeholders named after settings, such as `<target>`, `<tune>`, and `<q2-cut>`. `<beam-label>` is the beam label, including `MeV` (for example, `5986MeV`); `<beam-group>` is the detector lookup group (for example, `6GeV`). Neither replaces the precise `beam-energy` setting. Angle-bracketed `<username>` denotes your login name, not a checked-in personal account.
 
+The beam label names sample directories and files. The detector lookup group selects directories containing GCARD and reconstruction YAML files. For example, a sample named with `5986MeV` uses detector resources from the `6GeV` group; its configured beam energy remains the precise value in the LUND creation log.
+
 Pass the parent `OUTPUT` to creation's `--output`, then pass the resulting `RUN/lundfiles` to submission's `--lund-dir`. To keep separate studies, use different output parents when their run names would match.
 
 Relative paths, such as `runs/example`, need a starting directory. With [`run.csh`](../../run.csh), that directory is the repository root. When running a compiled application directly, it is the directory your shell is currently in. Paths in a creation profile use that same starting directory; paths in a submission config instead start at the config file's directory.

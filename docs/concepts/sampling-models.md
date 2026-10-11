@@ -35,6 +35,8 @@ The trigger electron has beam momentum and configured $\theta$, normally $25^\ci
 
 ## Vertex positions
 
+An event's vertex position is its position in the target. Its vertex coordinates $V_x$, $V_y$, and $V_z$ are measured in centimeters. For example, an electron–proton event receives one sampled vertex position, and both particles are written with those same coordinates. Target-cell and foil positions describe the material from which the vertex is sampled.
+
 The target catalog resolves a geometry key. `TargetGeometry` uses the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) implementation to draw $V_x$ and $V_y$ from its beam-spot distributions and $V_z$ from the selected target cell or foil positions. Exactly one vertex is drawn for each written event, and every particle in that event receives it.
 
 In the checked-in target source, $V_x$ and $V_y$ are independent Gaussian draws,
@@ -57,7 +59,7 @@ $V_z$ follows the resolved geometry:
 
 These values describe the checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) snapshot. Recheck this table whenever that external source is replaced.
 
-Target identity, geometry, and LUND $A$ / $Z$ metadata are distinct values. An $A$ / $Z$ override does not change the vertex distribution.
+Target identity (`target`, such as `Ar40`), vertex geometry (`target-geometry`, such as `Ar`), detector target variation (`gemc-target-variation`), and nuclear header metadata (`A` and `Z`) describe distinct settings. Target identity names the target; vertex geometry selects the sampled spatial distribution; detector target variation selects the corresponding GEMC target configuration. $A$ is the nuclear mass number and $Z$ is the proton count stored in the LUND header. An $A$ / $Z$ override does not change the vertex distribution.
 
 ## Random-stream ownership
 

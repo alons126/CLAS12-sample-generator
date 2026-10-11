@@ -6,8 +6,11 @@ Use this page when selecting submission settings, software releases, detector re
 
 The command line has the highest priority. If a setting is absent there, submission looks in the optional config, then the LUND creation log, then defaults:
 
-```text
-command line -> optional submission config -> LUND creation log -> defaults
+```mermaid
+flowchart LR
+    CLI["Command line"] -->|Setting absent| CONFIG["Optional submission config"]
+    CONFIG -->|Setting absent| LOG["LUND creation log"]
+    LOG -->|Setting absent| DEFAULTS["Defaults"]
 ```
 
 Relative command-line paths start at the repository root. Relative paths inside a submission config start at that file's directory. Use plain `key = value` lines, blank lines, and full-line comments. Unknown, duplicate, and empty keys cause an error.

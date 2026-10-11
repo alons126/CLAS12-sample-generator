@@ -8,6 +8,8 @@ For example, a study of electron detection at one beam energy may use several si
 
 Before using results in an analysis, check the complete simulation campaign. Use the intended GEMC and COATJAVA versions, GCARD and YAML files, external databases, detector random settings, target code, input dataset, and reconstruction conditions. Compare output distributions with enough statistics to judge whether differences are meaningful.
 
+These comparisons are **detector-level validation**: they check simulated and reconstructed results under specified detector and reconstruction conditions, with enough statistics to assess their suitability for the intended analysis. Passing software checks alone does not provide this evidence.
+
 ## Important software boundaries
 
 - Uniform samples are acceptance probes, not physical interactions.
@@ -30,7 +32,7 @@ This manual does not include a [campaign record](#campaign-record) linking that 
 
 For that electron study, collect the run settings, job logs, comparison plots, and conclusions in a report with links to the supporting files. This report and its supporting files form the **campaign record**. The person or collaboration group responsible for the campaign assembles it so another reader can assess whether the results suit an analysis. It has no required file format and is not generated automatically by this code.
 
-The [LUND creation log and Slurm submission log](../concepts/terminology.md#records-and-validation) are inputs to the campaign record. They record software stages and accepted submissions; they do not replace detector-level comparisons or scientific review.
+The [LUND creation log](../concepts/lund-data-contract.md#lund-creation-log) and [Slurm submission log](../concepts/lund-data-contract.md#slurm-submission-log) are automatically written JSON files used as inputs to the campaign record. They record software stages and accepted submissions; they do not replace detector-level comparisons or scientific review.
 
 Retain the source revision, LUND creation log, original physical input, ROOT/compiler versions, GEMC and COATJAVA versions, loaded modules, target-header hash, GCARD/YAML hashes, geometry and calibration database versions, detector random settings, scheduler logs, expected and actual file inventories, comparison tolerances, and statistical uncertainties.
 

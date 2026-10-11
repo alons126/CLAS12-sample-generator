@@ -2,6 +2,8 @@
 
 For example, a uniform electron–proton event is written as one header line followed by two particle lines. The source code chooses the particles; the common writer formats their records for the [LUND reader in GEMC](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). This page defines those fields and the logs that record how the files were made. These settings, input details, and source versions are called provenance.
 
+Provenance is information about how output was produced, stored in the LUND creation log and Slurm submission log. It is not a separate file or a check that the output suits a physics analysis. Both logs are JSON files written automatically; the [campaign record](../development/validation.md#campaign-record) combines them with results and scientific comparisons assembled by the person responsible for the study.
+
 ## In-memory records
 
 `Particle` stores a PDG identifier, mass, three-momentum, and vertex. `Event` stores an event ID, $A$, $Z$, beam energy, two source-specific header values, and an ordered particle vector.
