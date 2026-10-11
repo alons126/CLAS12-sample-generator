@@ -59,7 +59,7 @@ The [worker script](../../src/workflows/slurm-submission/external/submit_GEMC_sa
 | Memory per CPU | `--mem-per-cpu=2000` (Slurm's default unit is megabytes) |
 | Time limit | `20:00:00` (20 hours) |
 
-The public submission interface sets the job name and array size, but exposes no account, partition, memory, or time-limit options. Review any inherited `SBATCH_*` environment overrides as part of your site setup; do not assume they are recorded as resolved resource allocations in the submission log. Use Slurm's job information to inspect the accepted allocation.
+The public submission interface sets the job name and array size, but exposes no account, partition, memory, or time-limit options. Review any inherited `SBATCH_*` environment overrides as part of your site setup; do not assume they are recorded as resolved resource allocations in the Slurm submission log. Use Slurm's job information to inspect the accepted allocation.
 
 If Slurm rejects the account or partition, contact site support or the collaboration's allocation administrator. For memory or time-limit failures, retain the task logs and consult the workflow maintainer about resource requirements or a smaller per-file workload. A worker resource change needs review; changing `--num-jobs` alone does not reduce the events in each selected file. See [troubleshooting](../getting-started/troubleshooting.md).
 

@@ -34,7 +34,7 @@ Provide one function that reads the already-checked `RunConfig` without taking o
 
 Check files, record containers, required fields, stored types, array lengths, units, and cross-field consistency before indexed access. Stop instead of guessing malformed input. Validate later files in a chain as well as the first.
 
-If no supported event is written, fail without publishing a completion manifest.
+If no supported event is written, fail without publishing a LUND creation log.
 
 ## 4. Translate to the common model
 
@@ -47,7 +47,7 @@ For each accepted input event:
 5. give every particle the same vertex; and
 6. call [`LundWriter::writeEvent()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L102).
 
-The adapter reads input in order and counts entries examined and events written. `LundWriter` enforces the output event limit, chooses filenames, starts new files, writes LUND text, checks paths before deleting output, and writes the final manifest. Physical adapters do not create uniform monitoring histograms or plots.
+The adapter reads input in order and counts entries examined and events written. `LundWriter` enforces the output event limit, chooses filenames, starts new files, writes LUND text, checks paths before deleting output, and writes the final LUND creation log. Physical adapters do not create uniform monitoring histograms or plots.
 
 ## 5. Register settings and dispatch
 
@@ -63,10 +63,10 @@ Create a format-specific library and link only its parser/runtime dependencies. 
 
 ## 7. Preserve names and provenance
 
-Physical output names include target, adapter, optional generator version, tune or model label, input-selection label, and beam energy. Use explicit `none` or `unknown` when a field does not apply. Keep every unsanitized resolved value separately in the manifest. GEMC and COATJAVA versions remain later submission choices.
+Physical output names include target, adapter, optional generator version, tune or model label, input-selection label, and beam energy. Use explicit `none` or `unknown` when a field does not apply. Keep every unsanitized resolved value separately in the LUND creation log. GEMC and COATJAVA versions remain later submission choices.
 
 ## 8. Validate the boundary
 
-Check every supported process and particle, particle order, and shared vertex. Also check malformed records, skipped particles, input with no supported events, the event limit, file splitting, short input, and input ending exactly at a file boundary. Test read failures in later files, event counts, recorded settings, and failures leaving no final manifest. Confirm that physical conversion produces no uniform monitoring histograms or plots.
+Check every supported process and particle, particle order, and shared vertex. Also check malformed records, skipped particles, input with no supported events, the event limit, file splitting, short input, and input ending exactly at a file boundary. Test read failures in later files, event counts, recorded settings, and failures leaving no final LUND creation log. Confirm that physical conversion produces no uniform monitoring histograms or plots.
 
 Update the physical user guide, configuration reference, data contract, source map, tutorials, and scientific validation status in the same change.

@@ -41,7 +41,7 @@ Slurm account, partition, memory, and time defaults are defined by the worker’
 | `SAMPLE_GENERATOR`, `GENERATOR_TUNE`, `SAMPLE_TARGET_NUCLEUS`, `Q2_CUT` | Physical provenance printed in the task log |
 | `BEAM_ENERGY_LABEL`, `UNIFORM_SAMPLE_CHANNEL` | Beam and uniform-channel labels printed in the task log |
 
-The worker inherits the verified `PATH` and module environment. It does not load modules or select software versions itself. The coordinator exports both version values, reports them before submission, and records them with executable paths in the submission log. The coordinator also resolves and reports `DETECTOR_ENERGY_GROUP` while selecting detector resources; the worker does not read that value.
+The worker inherits the verified `PATH` and module environment. It does not load modules or select software versions itself. The coordinator exports both version values, reports them before submission, and records them with executable paths in the Slurm submission log. The coordinator also resolves and reports `DETECTOR_ENERGY_GROUP` while selecting detector resources; the worker does not read that value.
 
 The worker prints the settings it received into the scheduler log. Printing a value does not check whether it is correct; the submission program performs the checks before submitting jobs.
 

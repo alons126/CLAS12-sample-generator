@@ -26,7 +26,7 @@ Use the terms **uniform LUND creator** and **physical LUND converter** when the 
 
 ## Validate the change
 
-Configure a fresh development build, compile the affected targets, inspect current `--help`, and run the smallest meaningful example. For submission changes, use preview first and verify that resolved settings and planned actions are correct. For format or output changes, inspect the generated records and manifest rather than relying only on process exit status.
+Configure a fresh development build, compile the affected targets, inspect current `--help`, and run the smallest meaningful example. For submission changes, use preview first and verify that resolved settings and planned actions are correct. For format or output changes, inspect the generated records and LUND creation log rather than relying only on process exit status.
 
 A successful build shows that the code compiles and links. It does not show that GEMC and reconstruction produce scientifically correct results. Record the production checks still needed and follow the [scientific validation guide](validation.md).
 

@@ -33,6 +33,6 @@ Use these plots to inspect the sampled momenta, angles, and vertex coordinates. 
 
 ## Check monitoring output
 
-For a small uniform run, open the ROOT file and combined PDF, and inspect the PNG files in the plot directory. Check that the expected plots for your channel are present and readable. A missing or unreadable export needs investigation even when the final manifest exists.
+For a small uniform run, open the ROOT file and combined PDF, and inspect the PNG files in the plot directory. Check that the expected plots for your channel are present and readable. A missing or unreadable export needs investigation even when the final LUND creation log exists.
 
-The monitoring routine checks that it can create the ROOT file and write each histogram. It then asks ROOT to export PDF and PNG files, but does not check those files afterward. The final manifest records completion of the program's checked stages; it is not an independent validation of rendered plots. Preserve the ROOT file and terminal diagnostics when reporting a rendering failure. Do not rerun into the same output parent merely to retry rendering: creation replaces the entire resolved run directory, including earlier simulation output.
+The monitoring routine checks that it can create the ROOT file and write each histogram. It then asks ROOT to export PDF and PNG files, but does not check those files afterward. The final LUND creation log records completion of the program's checked stages; it is not an independent validation of rendered plots. Preserve the ROOT file and terminal diagnostics when reporting a rendering failure. Do not rerun into the same output parent merely to retry rendering: creation replaces the entire resolved run directory, including earlier simulation output.

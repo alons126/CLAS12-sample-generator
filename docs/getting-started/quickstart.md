@@ -55,13 +55,13 @@ A successful run contains:
 RUN/lundfiles/lund-creation-monitoring/lund-creation-log.json
 ```
 
-This JSON file is the completion manifest: it lists the settings, LUND filenames, and event counts. The application writes it after its checked creation stages finish. For uniform samples, also open the monitoring ROOT file and PDF and check the PNG inventory: the program attempts rendering but does not independently verify PDF/PNG export success. If the manifest is missing, creation did not finish successfully, even if some LUND files exist. Do not submit those partial files.
+This JSON file is the LUND creation log: it lists the settings, LUND filenames, and event counts. The application writes it after its checked creation stages finish. For uniform samples, also open the monitoring ROOT file and PDF and check the PNG inventory: the program attempts rendering but does not independently verify PDF/PNG export success. If the LUND creation log is missing, creation did not finish successfully, even if some LUND files exist. Do not submit those partial files.
 
 ## Preview simulation submission
 
-The 100-event uniform example creates one LUND file ending in `_1.txt`; its manifest should report `written_events = 100` and one file with `events = 100`. Uniform monitoring should contain the ROOT file, PDF, and PNGs shown in the [output layout](outputs.md).
+The 100-event uniform example creates one LUND file ending in `_1.txt`; its LUND creation log should report `written_events = 100` and one file with `events = 100`. Uniform monitoring should contain the ROOT file, PDF, and PNGs shown in the [output layout](outputs.md).
 
-Make the complete run directory, including its manifest under `lundfiles/`, available on storage visible from ifarm. When moving local output, copy the whole run, not only the numbered text files. Submission derives its location from `--lund-dir`, so the original absolute `config.output` stored in the manifest does not need editing. On ifarm, preview all files:
+Make the complete run directory, including its LUND creation log under `lundfiles/`, available on storage visible from ifarm. When moving local output, copy the whole run, not only the numbered text files. Submission derives its location from `--lund-dir`, so the original absolute `config.output` stored in the LUND creation log does not need editing. On ifarm, preview all files:
 
 ```tcsh
 source run.csh \

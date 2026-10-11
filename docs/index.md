@@ -2,9 +2,9 @@
 
 This code prepares simulation samples for the [e4ν collaboration](https://e4nu.org) using the CLAS12 spectrometer[^clas12-spectrometer] simulation chain. It provides separate workflows for preparing truth-level particles and submitting detector simulation and reconstruction.
 
-The first workflow writes particles before detector simulation, called truth-level particles, to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). The **uniform LUND creator** randomly chooses momenta and angles within your configured ranges, producing deliberately unphysical events for detector-acceptance studies. The **physical LUND converter** copies supported particles from existing event-generator output. Its current input reader uses [GENIE](https://github.com/GENIE-MC/Generator) production output in the GST format stored in [ROOT](https://github.com/root-project/root) files; it does not run GENIE. After creation succeeds, it writes a completion manifest: a JSON log listing the sample settings, files, and event counts.
+The first workflow writes particles before detector simulation, called truth-level particles, to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). The **uniform LUND creator** randomly chooses momenta and angles within your configured ranges, producing deliberately unphysical events for detector-acceptance studies. The **physical LUND converter** copies supported particles from existing event-generator output. Its current input reader uses [GENIE](https://github.com/GENIE-MC/Generator) production output in the GST format stored in [ROOT](https://github.com/root-project/root) files; it does not run GENIE. After creation succeeds, it writes a LUND creation log: a JSON file listing the sample settings, files, and event counts.
 
-The second workflow submits those LUND files to Slurm on Jefferson Lab's ifarm. Each task runs GEMC detector simulation[^gemc-simulation], followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction]. The result is reconstructed [HIPO](https://github.com/gavalian/hipo) data, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master).
+The second workflow submits those LUND files to Slurm on Jefferson Lab's ifarm. Each task runs GEMC detector simulation[^gemc-simulation], followed by CLAS12 reconstruction with COATJAVA[^coatjava-reconstruction]. After Slurm accepts the jobs, submission writes a Slurm submission log, a JSON file describing the accepted submission. The jobs later produce reconstructed [HIPO](https://github.com/gavalian/hipo) data, which can be analyzed with [CLAS12ROOT](https://github.com/JeffersonLab/clas12root/tree/master).
 
 The diagram summarizes the path from event preparation to reconstructed output. Creation and submission are separate user actions:
 
@@ -35,6 +35,8 @@ Use `main` for the published application and `dev` for development. The generate
 **If you want to run the software:** follow the [getting-started reading path](getting-started/index.md): dependencies, quickstart, run directories and outputs, the selected LUND-creation guide, then simulation submission and output verification. Read the output layout immediately after the quickstart so you know which directory to pass to submission.
 
 **If you want to modify or extend the software:** follow the [developer reading path](development/index.md). It starts with architecture and the source map, explains the scientific and data contracts, then covers contribution, builds, validation, and specific extensions. First read the user guide for the workflow you intend to change.
+
+The [terminology reference](concepts/terminology.md) defines the names used for workflows, settings, records, and validation.
 
 Use the [workflow command examples](../tutorials/README.md) as a copyable option inventory, not as a substitute for understanding the selected profile and output path.
 

@@ -21,7 +21,7 @@ The checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.
 - uses the caller's random-number state while locking access to the external global random-number generator, so two calls cannot change that shared state at once; and
 - exposes the external electron, proton, neutron, and charged-pion masses.
 
-Repository code does not duplicate the geometry table or mass constants. The target catalog translates target variations into geometry names accepted by the header. Every manifest records a SHA-256 hash of the header used to build the application. This hash is a content fingerprint for checking which header was used.
+Repository code does not duplicate the geometry table or mass constants. The target catalog translates target variations into geometry names accepted by the header. Every LUND creation log records a SHA-256 hash of the header used to build the application. This hash is a content fingerprint for checking which header was used.
 
 To update the header:
 
@@ -36,9 +36,9 @@ The target implementations and RG-M variations are described in CLAS12 Note 2026
 
 ## Detector resources
 
-Files under [`config/detector/`](../../config/detector) are saved copies of configurations for particular data campaigns. GCARD files define GEMC detector geometry and settings; YAML files define COATJAVA reconstruction settings. The submission log records content hashes of both selected files.
+Files under [`config/detector/`](../../config/detector) are saved copies of configurations for particular data campaigns. GCARD files define GEMC detector geometry and settings; YAML files define COATJAVA reconstruction settings. The Slurm submission log includes content hashes of both selected files.
 
-For each beam group (`2GeV`, `4GeV`, or `6GeV`), `GEMC_GCARDs_<beam-group>/<gemc-version>/` holds GCARDs, while `COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/` holds reconstruction YAMLs. The checked-in YAML release is 10.0.7. Submission selects each directory using its corresponding software-version option. Reconstruction configurations are shared across GEMC versions rather than duplicated inside their directories.
+For each detector lookup group (`2GeV`, `4GeV`, or `6GeV`), `GEMC_GCARDs_<beam-group>/<gemc-version>/` holds GCARDs, while `COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/` holds reconstruction YAMLs. The checked-in YAML release is 10.0.7. Submission selects each directory using its corresponding software-version option. Reconstruction configurations are shared across GEMC versions rather than duplicated inside their directories.
 
 GCARD configurations come from the [`gemc` directory in `JeffersonLab/clas12-config`](https://github.com/JeffersonLab/clas12-config/tree/main/gemc). The checked-in COATJAVA 10.0.7 reconstruction YAML files were obtained from its [`coatjava/10.0.7` directory](https://github.com/JeffersonLab/clas12-config/tree/main/coatjava/10.0.7). These snapshots are read locally during submission rather than downloaded from upstream at runtime.
 

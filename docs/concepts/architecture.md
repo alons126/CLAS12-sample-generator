@@ -27,7 +27,7 @@ run.csh
   -> RunConfig
   -> source-specific event producer
   -> common Event/Particle model and LundWriter
-  -> LUND files and completion manifest
+  -> LUND files and LUND creation log
 ```
 
 For submission, [`setup_and_submit.csh`](../../src/workflows/slurm-submission/setup_and_submit.csh) bridges the sourced shell to the Python coordinator:
@@ -83,13 +83,13 @@ The uniform LUND creator and each physical-input adapter build `Event` objects c
 - the uniform LUND creator decides which random particles exist;
 - a physical adapter decides which input events and particles are supported;
 - `TargetGeometry` supplies one vertex shared by every particle in the event; and
-- `LundWriter` owns file names, splitting, exact formatting, output replacement, counts, and the final manifest.
+- `LundWriter` owns file names, splitting, exact formatting, output replacement, counts, and the final LUND creation log.
 
 This separation is the main extension rule. A new input adapter should translate its records into `Event`; it should not copy the writer, target sampling, or completion logic.
 
 ## Uniform path
 
-[`generateUniform()`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp#L153) copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. The monitoring routine runs before the final manifest is written; [PDF/PNG exports require separate inspection](../create-lund/monitoring.md#check-monitoring-output).
+[`generateUniform()`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp#L153) copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. The monitoring routine runs before the final LUND creation log is written; [PDF/PNG exports require separate inspection](../create-lund/monitoring.md#check-monitoring-output).
 
 ## Physical path
 
@@ -99,9 +99,9 @@ To read another input format, add a directory beside [`genie-gst/`](../../src/wo
 
 ## Submission boundary
 
-[`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) combines command-line options, an optional config, the manifest, and defaults into one checked settings record per sample. It does not submit jobs or change output directories. The GEMC and COATJAVA version settings independently select the software and its default configuration directory. Supplying a GCARD or YAML changes the selected file, not the software version.
+[`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) combines command-line options, an optional config, the LUND creation log, and defaults into one checked settings record per sample. It does not submit jobs or change output directories. The GEMC and COATJAVA version settings independently select the software and its default configuration directory. Supplying a GCARD or YAML changes the selected file, not the software version.
 
-[`submit.py`](../../src/workflows/slurm-submission/submit.py) unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<coatjava-version>` in a private environment. It verifies GEMC's installation, checks and prints the loaded COATJAVA release, and checks that the required programs are available. COATJAVA version validation does not depend on installation-directory names. It also owns reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
+[`submit.py`](../../src/workflows/slurm-submission/submit.py) unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<coatjava-version>` in a private environment. It verifies GEMC's installation, checks and prints the loaded COATJAVA release, and checks that the required programs are available. COATJAVA version validation does not depend on installation-directory names. It also owns reports, guarded directory actions, the `sbatch` call, and the Slurm submission log. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
 
 Both preview and execution use the same checked settings. The worker receives those settings from the submission program rather than guessing them from directory names or choosing its own defaults.
 

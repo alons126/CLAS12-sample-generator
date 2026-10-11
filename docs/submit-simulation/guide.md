@@ -1,6 +1,6 @@
 # Simulation submission guide
 
-After LUND creation writes its final JSON log, run submission with [`run.csh`](../../run.csh) from a csh/tcsh login shell on ifarm. That log is the completion manifest: it tells submission which files were written and what settings created them.
+After the LUND application writes its final LUND creation log, run submission with [`run.csh`](../../run.csh) from a csh/tcsh login shell on ifarm. The LUND creation log is the final JSON file that tells submission which files were written and what settings created them.
 
 ## Preview one run
 
@@ -10,7 +10,7 @@ source run.csh \
     --lund-dir /path/to/run/lundfiles
 ```
 
-Without `--execute`, submission runs a preview. It reads the sample settings, selects and checks the GEMC and COATJAVA versions, checks the detector files, and prints the exact `sbatch` command it would use. It keeps existing output files, but creates `mchipo/` or `reconhipo/` if either directory is missing. It does not submit jobs or write a submission log. The printed `sbatch` command is the exact argument list used with the coordinator’s private software and sample environment; it is not a standalone reproduction command. Use the launcher command below to execute the reviewed submission instead of pasting that `sbatch` line into your login shell.
+Without `--execute`, submission runs a preview. It reads the sample settings, selects and checks the GEMC and COATJAVA versions, checks the detector files, and prints the exact `sbatch` command it would use. It keeps existing output files, but creates `mchipo/` or `reconhipo/` if either directory is missing. It does not submit jobs or write a Slurm submission log. The printed `sbatch` command is the exact argument list used with the coordinator’s private software and sample environment; it is not a standalone reproduction command. Use the launcher command below to execute the reviewed submission instead of pasting that `sbatch` line into your login shell.
 
 Add `--execute` only after reviewing that report:
 
@@ -27,7 +27,7 @@ This replacement covers both entire directories even when `--num-jobs` selects o
 
 ## Select files and settings
 
-The completion manifest supplies truth metadata, the file inventory, and per-file event counts. By default, submission selects every listed file and uses the largest event count among them as its common GEMC/reconstruction event limit. Use `--num-jobs N` to select the first N files and `--events-per-job N` to override that limit.
+The LUND creation log supplies truth metadata, the file inventory, and per-file event counts. By default, submission selects every listed file and uses the largest event count among them as its common GEMC/reconstruction event limit. Use `--num-jobs N` to select the first N files and `--events-per-job N` to override that limit.
 
 Consult the [configuration reference](configuration.md) for all options, config-file precedence, software selection, GCARD/YAML defaults, magnetic-field checks, and the manual-input interface. Review those settings before adding `--execute`.
 
@@ -45,11 +45,11 @@ source run.csh \
 
 The submission program first reads and checks the settings for every sample. It then prepares output and submits one job array per sample, in the order given. If processing one sample fails, it stops without processing the remaining samples. Jobs submitted earlier are not cancelled.
 
-## Submission record and failures
+## Slurm submission log and failures
 
-After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the numeric job ID and atomically writes `RUN/reconhipo/slurm-submission-log.json`. It records the ID, exact command, resolved parameters, both requested software versions, executable paths, GEMC's data directory, loaded-module names, runtime Git state, and SHA-256 hashes of the GCARD, YAML, and worker payload.
+After `sbatch` returns `Submitted batch job NUMBER`, the coordinator prints the numeric job ID and atomically writes the Slurm submission log to `RUN/reconhipo/slurm-submission-log.json`. This JSON file records the ID, exact command, resolved parameters, both requested software versions, executable paths, GEMC's data directory, loaded-module names, runtime Git state, and SHA-256 hashes of the GCARD, YAML, and worker payload.
 
-If Slurm accepts an array but its response cannot be parsed, or writing the submission log fails afterward, inspect Slurm before retrying. Retrying blindly can create a duplicate array. An earlier accepted array is never cancelled automatically when a later sample fails.
+If Slurm accepts an array but its response cannot be parsed, or writing the Slurm submission log fails afterward, inspect Slurm before retrying. Retrying blindly can create a duplicate array. An earlier accepted array is never cancelled automatically when a later sample fails.
 
 To delete old scheduler logs, supply both `--clear-farm-out true` and `--farm-out DIRECTORY`. With `--execute`, cleanup runs once and deletes ordinary files directly inside that directory. It does not enter subdirectories or delete symbolic links (paths that point to other files or directories). Omit these options to keep the logs. Cleanup happens before the software-module checks; if a later check fails, the deleted logs are not restored.
 
