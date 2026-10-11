@@ -68,6 +68,8 @@ Every hadron momentum range ends at $P_{\mathrm{beam}}$. Hadron $\theta$ is unif
 
 The electron-tester, 1e, epFD, and enFD modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented and covered by software checks but have not completed detector-level production validation. Their profile headers retain this warning.
 
+For the scope and evidence limits of the production-tested designation, see the [campaign record guidance](../development/validation.md#campaign-record).
+
 ## Targets and repeatability
 
 The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, $A=40$, $Z=18$, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. $A$ / $Z$ are separate LUND-header metadata and do not silently change geometry.

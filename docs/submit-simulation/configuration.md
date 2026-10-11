@@ -18,6 +18,16 @@ The manifest supplies the exact LUND inventory and per-file event counts. The ar
 
 If the manifest says the sample used one beam energy or target, an option claiming another is rejected. You can still change the detector setup: GEMC and COATJAVA versions, a compatible target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name. Select both software versions during submission; LUND creation does not select them.
 
+### Target variation and existing vertices
+
+For example, changing a C12 sample from the large-foil variation to the small-foil variation during submission does not move its existing LUND vertices. Creation samples vertex coordinates; submission only chooses the detector inputs used to transport those particles.
+
+The submission resolver checks target labels against the manifest, but it does not enforce compatibility between that target and a replacement variation or inspect the GCARD's target geometry. It can accept an Ar40 manifest with a carbon GCARD when the requested file exists. Explicit GCARD paths also bypass variation-based filename selection. A successful preview is not a geometry-consistency check.
+
+Compare the manifest's `target`, `gemc-target-variation`, and `target-geometry` with the selected GCARD and the [vertex distributions](../concepts/sampling-models.md#vertex-positions). If the intended target volume requires a different vertex distribution, create new LUND input with that geometry in a different output parent. Submission does not resample or relocate vertices. Keep deliberate mismatched-geometry studies separate and record their purpose.
+
+For metadata and path restrictions shared with creation, read [names that can be submitted](../create-lund/configuration.md#names-that-can-be-submitted). Sanitized filenames do not make otherwise invalid manifest labels acceptable.
+
 ## Submission options
 
 | Option | Meaning |
@@ -109,6 +119,8 @@ When `--clas12tags-dir` is absent, GEMC uses the shared versioned clas12Tags dir
 Before GEMC, each array task prints the requested software versions, inherited module selections, and paths of `gemc` and `recon-util` to its `.out` file. This reports the job environment without requiring the `module` shell function or querying the binaries' versions. See the [worker reference](worker-reference.md#environment-interface).
 
 Module commands in the submission report appear on one line, such as `module show gemc/5.14`, `module show coatjava/10.0.7`, and `module list`. Other copyable commands use multiline shell form.
+
+The displayed `sbatch` arguments depend on the private environment described above. They do not contain every required worker variable. Run the submission through the [launcher procedure](guide.md#preview-one-run); copying only those arguments into the interactive shell does not reproduce it.
 
 ## LUND input without a manifest
 

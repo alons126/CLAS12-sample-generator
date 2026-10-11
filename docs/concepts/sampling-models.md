@@ -16,7 +16,7 @@ The electron-tester profiles fix $P=P_{\mathrm{beam}}$ while scanning $\theta\in
 
 ### 1e
 
-For `channel=1e`, $\theta$ and $\phi$ are uniform inside the configured ranges. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
+For `channel=1e`, $\theta$ is uniform inside its configured bounds and $\phi$ is uniform from -180 through 180 degrees. There are no phi-range options. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
 
 - even run-global event IDs draw $P\sim\mathcal{U}(a,b)$;
 - odd IDs draw $q\sim\mathcal{U}(b^{-1},a^{-1})$ and use $P=q^{-1}$.

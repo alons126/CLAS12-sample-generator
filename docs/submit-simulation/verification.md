@@ -6,12 +6,13 @@ Start here after Slurm accepts an array. `RUN` is the resolved sample run direct
 
 The submission program does not keep checking jobs, retry failed tasks, count their output files, or open HIPO files. You must check these yourself. After the array finishes:
 
-1. Review every array task in Slurm or the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob), and inspect its `.out` and `.err` files. Use `squeue -u <username>` to check your queued or running jobs.
+1. Review every array task in Slurm or the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob), and inspect its `.out` and `.err` files. Use the [queue command below](#slurm-commands) to check your queued or running jobs.
 2. Check that every submitted task has both a GEMC file in `RUN/mchipo/` and a reconstructed file in `RUN/reconhipo/`. For example, a five-task array should produce files with indexes 1 through 5 in each directory.
 3. Open at least one reconstructed file:
 
    ```text
-   hipo-utils -dump RUN/reconhipo/<file>.hipo
+   hipo-utils \
+       -dump RUN/reconhipo/<file>.hipo
    ```
 
 The file must open and display CLAS12 data banks, the named groups of records inside a HIPO file. Opening one file is only a basic check. It does not show that the other tasks succeeded or that the simulation is suitable for your analysis.
@@ -30,7 +31,7 @@ Replace `JOB_ID` with the array ID printed at submission. Read task states and e
 
 After tasks finish, possible failure indicators are:
 
-- Errors when running `hipo-utils -dump RUN/reconhipo/<file>.hipo`.
+- Errors when opening the reconstructed file with the HIPO inspection command above.
 - Missing expected files in `RUN/mchipo/` or `RUN/reconhipo/`, or both.
 - A failure status for a task in the [outstanding Jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob).
 
@@ -47,12 +48,33 @@ Missing output while a task is still queued or running is not by itself a failur
 
 ## Slurm commands
 
-Jefferson Lab's [Slurm batch user guide](https://scicomp.jlab.org/docs/farm_slurm_batch) explains `sbatch` and farm batch operation. Useful commands are:
+Jefferson Lab's [Slurm batch user guide](https://scicomp.jlab.org/docs/farm_slurm_batch) explains farm operation. Submit this workflow through the [submission guide](guide.md), which prepares the worker environment. Replace `USERNAME` and `JOB_ID` below before running a command.
 
-- Submit a GEMC job: `sbatch <submit-script>`
-- Cancel one job: `scancel <job-id>`
-- Cancel all of your jobs: `scancel --user=<username>`
-- Check your jobs: `squeue -u <username>`; see also the [active-jobs dashboard](https://scicomp.jlab.org/scicomp/slurmJob/activeJob)
-- Print the current priority for all pending production jobs: `squeue -t pd -p production -o "%.8Q %.10u/%10a" | uniq -c`
+Check queued or running jobs:
 
-Cancel-all acts on every job owned by the named account, so use it only when that full scope is intended.
+```bash
+squeue -u USERNAME
+```
+
+Cancel one submitted array or job:
+
+```bash
+scancel JOB_ID
+```
+
+Cancel every job owned by your account only when that full scope is intended:
+
+```bash
+scancel --user=USERNAME
+```
+
+Show priorities for pending production jobs:
+
+```bash
+squeue \
+    -t pd \
+    -p production \
+    -o "%.8Q %.10u/%10a"
+```
+
+For failures before jobs exist, use [setup and creation troubleshooting](../getting-started/troubleshooting.md). Preserve scheduler logs until failed tasks have been investigated.

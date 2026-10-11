@@ -22,8 +22,12 @@ Before using results in an analysis, check the complete simulation campaign. Use
 
 The electron-tester, 1e, epFD, and enFD modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented but remain unvalidated for production. Keep that warning in their profiles and user documentation until detector-level evidence supports changing it.
 
+This manual does not include a campaign report linking that production-tested designation to an exact source revision, detector configuration, and comparison result. Treat it as the reported status of those modes, not certification of every target, beam, release, or override. Before reusing a result in an analysis, obtain the corresponding campaign record from the collaboration member responsible for that production.
+
 ## Campaign record
 
 Retain the source revision, completion manifest, original physical input, ROOT/compiler versions, GEMC and COATJAVA versions, loaded modules, target-header hash, GCARD/YAML hashes, geometry and calibration database versions, detector random settings, scheduler logs, expected and actual file inventories, comparison tolerances, and statistical uncertainties.
 
 For acceptance work, compare generated and reconstructed counts and distributions using matched samples and identical detector/reconstruction conditions. Preserve the ROOT histograms behind exported figures. Local creation monitoring cannot substitute for these detector-level comparisons.
+
+A reviewable campaign record should identify the person or collaboration group responsible, date, sample modes and targets, exact source and input revisions, the settings listed above, comparison plots, numerical acceptance criteria, observed results, and approval or remaining limitations. Link that record from this page when it is available; do not replace missing evidence with a successful build or a readable HIPO file.

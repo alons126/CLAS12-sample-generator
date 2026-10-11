@@ -33,6 +33,12 @@ Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable w
 
 `target`, `A`, and `Z` are related but not interchangeable configuration keys. The target and variation select spatial geometry. The `A` and `Z` values are written to the LUND header. Explicit `A`/`Z` overrides never silently change geometry.
 
+### Names that can be submitted
+
+For runs intended for simulation, use labels matching `[A-Za-z0-9_][A-Za-z0-9_.-]*` for `prefix`, `tune`, and `q2-cut`: start with a letter, digit, or underscore, then use only those characters plus dots and hyphens. Use output paths containing only letters, digits, `/`, `_`, `-`, and `.` after resolving symbolic links.
+
+Creation accepts some broader values: physical directory components replace unsafe characters while the manifest retains the original metadata, and creation prefixes may start with a dot or hyphen. Submission validates the original values more strictly. For example, `tune = custom tune` can produce files but fails submission; changing it to `custom-tune` at submission conflicts with the manifest. Choose a submission-compatible label during creation. Do not edit the manifest to bypass this check; preserve the old run and create a new one with the intended metadata when correction is needed.
+
 ## Target catalog
 
 | Target | $A$ | $Z$ | Automatic GEMC variation | Vertex geometry |
@@ -68,6 +74,21 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `trigger-phi-offset` | `auto` | $\Delta\phi=16^\circ$, $7^\circ$, or $5^\circ$ at the three standard beams; otherwise $0^\circ$ |
 
 `auto` resolves electron momentum to `mixed` for 1e and `beam` for the other channels. It resolves charged-hadron momentum to `mixed` and neutron momentum to `uniform`. The [uniform guide](uniform.md) owns the production ranges; the [sampling model](../concepts/sampling-models.md) owns the mathematical definitions.
+
+### Uniform option constraints
+
+| Settings | Accepted values and use |
+| --- | --- |
+| Electron and hadron theta bounds | `0 <= minimum < maximum <= 180`, in degrees; electron bounds control electron-only channels and hadron bounds control `eh` |
+| Electron momentum bounds | `0 <= minimum < maximum`, in GeV/c; used by electron-only `uniform` or `mixed` sampling |
+| `electron-momentum = mixed` | Only `1e`, with a strictly positive electron momentum minimum |
+| `hadron-momentum = mixed` | Only charged-hadron `eh`, with a strictly positive hadron momentum minimum |
+| `hadron-momentum = fixed` | Only neutron `eh`; `hadron-p` must be positive |
+| `hadron-p-min` | Nonnegative and below beam momentum; checked even when a different channel or momentum mode does not consume it |
+| `trigger-theta` | From 0 through 180 degrees; used by `eh` |
+| `trigger-phi-offset` | From -180 through 180 degrees; used by `eh` |
+
+The parser checks all supplied uniform settings, including unused bounds and the positive `hadron-p` value. An `eh` trigger electron always uses beam momentum and the trigger angles; electron-only momentum and angle options do not change it. Electron-only phi and hadron phi always span -180 through 180 degrees; there are no phi-range options. Fixed neutron momentum is not bounded above by beam momentum, and an explicit electron momentum maximum may exceed it; these remain deliberately unphysical acceptance studies.
 
 ## Physical settings
 

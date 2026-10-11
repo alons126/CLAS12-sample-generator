@@ -46,3 +46,5 @@ The profile does not run GENIE. It configures conversion of existing GST truth.
 The [LUND configuration reference](../../docs/create-lund/configuration.md) is authoritative for types, defaults, ranges, automatic target resolution, output layouts, and replacement behavior. The [uniform guide](../../docs/create-lund/uniform.md) defines production sampling, and the [physical guide](../../docs/create-lund/physical.md) defines the GST selection and cutoff.
 
 Use the selected executable's `--help` for the current accepted CLI. The [all-options tutorials](../../tutorials/README.md) demonstrate the exact spelling of every public setting with deliberately arbitrary values.
+
+For the scope and evidence limits of the production-tested designation, see the [campaign record guidance](../../docs/development/validation.md#campaign-record).

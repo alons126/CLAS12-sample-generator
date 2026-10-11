@@ -89,7 +89,7 @@ This separation is the main extension rule. A new input adapter should translate
 
 ## Uniform path
 
-[`generateUniform()`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp#L153) copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. Monitoring files are saved before the final manifest is written.
+[`generateUniform()`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp#L153) copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. The monitoring routine runs before the final manifest is written; [PDF/PNG exports require separate inspection](../create-lund/monitoring.md#check-monitoring-output).
 
 ## Physical path
 

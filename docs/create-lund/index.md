@@ -18,7 +18,7 @@ Both applications use the same code to read settings, sample vertex positions in
 5. Write numbered LUND files; uniform creation also saves monitoring histograms and plots.
 6. Write `lund-creation-log.json` last, listing the settings, files, and event counts.
 
-That final JSON log is the completion manifest. Its presence marks successful creation. A failed run may leave partial LUND files; without the final manifest, do not submit them.
+That final JSON log is the completion manifest. Its presence marks completion of the program’s checked creation stages. Uniform PDF/PNG exports still need the [monitoring checks](monitoring.md#check-monitoring-output). A failed run may leave partial LUND files; without the final manifest, do not submit them.
 
 ## Reading order
 

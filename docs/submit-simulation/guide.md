@@ -10,7 +10,7 @@ source run.csh \
     --lund-dir /path/to/run/lundfiles
 ```
 
-Without `--execute`, submission runs a preview. It reads the sample settings, selects and checks the GEMC and COATJAVA versions, checks the detector files, and prints the exact `sbatch` command it would use. It keeps existing output files, but creates `mchipo/` or `reconhipo/` if either directory is missing. It does not submit jobs or write a submission log.
+Without `--execute`, submission runs a preview. It reads the sample settings, selects and checks the GEMC and COATJAVA versions, checks the detector files, and prints the exact `sbatch` command it would use. It keeps existing output files, but creates `mchipo/` or `reconhipo/` if either directory is missing. It does not submit jobs or write a submission log. The printed `sbatch` command is the exact argument list used with the coordinator’s private software and sample environment; it is not a standalone reproduction command. Use the launcher command below to execute the reviewed submission instead of pasting that `sbatch` line into your login shell.
 
 Add `--execute` only after reviewing that report:
 

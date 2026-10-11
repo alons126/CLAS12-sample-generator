@@ -1,6 +1,6 @@
 # Quickstart
 
-These examples use small event counts. Replace every `/path/to/...` value before running a command.
+Start with the [environment setup and prerequisite checks](installation.md). For ifarm, also complete the [login environment](../submit-simulation/ifarm-environment.md#login-environment). These examples use small event counts. Replace every `/path/to/...` value before running a command. Follow the uniform example first; the physical example requires a separately prepared GST dataset.
 
 ## Create uniform LUND files on ifarm
 
@@ -30,12 +30,17 @@ build/debug/apps/uniform-lund-creator \
     --output runs/quickstart
 ```
 
-To copy particles from existing GENIE GST output, select the profile [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
+For physical input, use electron-scattering GST with upstream neutral-pion decays, as described in the [physical-input contract](../create-lund/physical.md#selection-and-translation). The command below describes Ar40 at 5.98636 GeV with an upstream minimum $Q^2$ of 0.40 GeV². Use it only for input matching those values, or change all three to match your dataset. The physical LUND converter does not verify those assertions against GST truth. Changing only the beam energy does not change an explicit profile `q2-cut`.
+
+To copy those particles, select the profile [`genie-gst.conf`](../../config/samples/physical-lund-creation/genie-gst.conf):
 
 ```bash
 build/debug/apps/event-generator-to-lund-converter \
     --config config/samples/physical-lund-creation/genie-gst.conf \
     --input '/path/to/gst*.root' \
+    --target Ar40 \
+    --beam-energy 5.98636 \
+    --q2-cut Q2-0.40 \
     --events 100 \
     --output runs/quickstart
 ```
@@ -50,11 +55,13 @@ A successful run contains:
 RUN/lundfiles/lund-creation-monitoring/lund-creation-log.json
 ```
 
-This JSON file is the completion manifest: it lists the settings, LUND filenames, and event counts. The application writes it only after all required output succeeds. If it is missing, creation did not finish successfully, even if some LUND files exist. Do not submit those partial files.
+This JSON file is the completion manifest: it lists the settings, LUND filenames, and event counts. The application writes it after its checked creation stages finish. For uniform samples, also open the monitoring ROOT file and PDF and check the PNG inventory: the program attempts rendering but does not independently verify PDF/PNG export success. If the manifest is missing, creation did not finish successfully, even if some LUND files exist. Do not submit those partial files.
 
 ## Preview simulation submission
 
-The 100-event uniform example creates one LUND file. Make the run available on storage visible from ifarm, then preview submission of all its files:
+The 100-event uniform example creates one LUND file ending in `_1.txt`; its manifest should report `written_events = 100` and one file with `events = 100`. Uniform monitoring should contain the ROOT file, PDF, and PNGs shown in the [output layout](outputs.md).
+
+Make the complete run directory, including its manifest under `lundfiles/`, available on storage visible from ifarm. When moving local output, copy the whole run, not only the numbered text files. Submission derives its location from `--lund-dir`, so the original absolute `config.output` stored in the manifest does not need editing. On ifarm, preview all files:
 
 ```tcsh
 source run.csh \
@@ -64,4 +71,17 @@ source run.csh \
 
 Preview validates and reports the environment, detector inputs, output actions, and exact `sbatch` command. It does not call `sbatch`. Read the [submission guide](../submit-simulation/guide.md) before adding `--execute`.
 
-Next, read [outputs and path notation](outputs.md), then follow the guide for your chosen LUND source from the [getting-started reading order](index.md).
+Read [outputs and path notation](outputs.md) before continuing. After this first uniform run, follow the guide for your chosen LUND source from the [getting-started reading order](index.md).
+
+## Submit and verify the first uniform run
+
+Read the [submission guide](../submit-simulation/guide.md) and review the preview first. With execution, the command below deletes and recreates this run's entire `mchipo/` and `reconhipo/` directories. Use a new run for this exercise and do not submit into a run with active tasks.
+
+```tcsh
+source run.csh \
+    --workflow submit \
+    --lund-dir /path/to/quickstart-output/Uniform__1e__5986MeV/lundfiles \
+    --execute
+```
+
+The accepted job ID means submission succeeded, not that simulation finished. For this one-file run, expect one GEMC HIPO file and one reconstructed HIPO file with index 1 after the task completes. Follow [job and HIPO verification](../submit-simulation/verification.md) using that job ID. If an earlier step fails, use [troubleshooting](troubleshooting.md); do not repeatedly run the destructive launcher to diagnose a dependency problem.

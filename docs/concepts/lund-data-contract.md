@@ -90,7 +90,9 @@ After writing `events-per-file` events, the writer starts another file when the 
 
 ## Completion manifest
 
-After all required output succeeds, the writer closes the LUND file and writes the JSON log to `lund-creation-log.json.tmp`. Only after that write succeeds does it rename the log to `lund-creation-log.json`. This rename is atomic: the final name appears in one filesystem operation, so submission does not read a half-written final log. The final name marks successful creation.
+After event writing and, for uniform samples, the monitoring routine return successfully, the writer closes the LUND file and writes the JSON log to `lund-creation-log.json.tmp`. Only after that write succeeds does it rename the log to `lund-creation-log.json`. This rename is atomic: the final name appears in one filesystem operation, so submission does not read a half-written final log. The final name marks successful creation.
+
+The manifest marks completion of the program’s checked stages. Uniform monitoring checks ROOT-file creation and histogram writes, but PDF/PNG export calls have no subsequent file verification. A final manifest is therefore not independent proof that every rendered plot exists or opens. Inspect those products using the [monitoring guide](../create-lund/monitoring.md#check-monitoring-output).
 
 Schema version 1 contains:
 

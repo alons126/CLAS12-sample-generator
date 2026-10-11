@@ -24,6 +24,8 @@ The same `JOB_NEVENTS` limit is passed to GEMC and reconstruction. A shorter LUN
 
 Here `RUN` is `OUTPATH`, `<PREFIX>` is `SAMPLE_FILE_PREFIX`, `<INDEX>` is `SLURM_ARRAY_TASK_ID`, and `<TORUS>` is `TORUS_FIELD`, following the shared [path notation](../getting-started/outputs.md#path-notation).
 
+Slurm account, partition, memory, and time defaults are defined by the worker’s scheduler directives; see the [scheduler resource table](ifarm-environment.md#scheduler-resources). They are not public submission options.
+
 ## Environment interface
 
 | Variable | Meaning |
