@@ -30,7 +30,7 @@ Supply electron-scattering GST, not neutrino-scattering GST. The adapter always 
 | `pdgf[nf]` | `Int_t` array |
 | `pxf[nf]`, `pyf[nf]`, `pzf[nf]` | `Double_t` arrays |
 
-A branch is a named field in the ROOT tree. The adapter checks that required branches exist, have the expected types, and provide enough array elements before reading particles by index. Empty input, malformed records, read errors, or input with no supported events cause failure. No completion manifest is written in those cases.
+A branch is a named field in the ROOT tree. The adapter checks that required branches exist, have the expected types, and provide enough array elements before reading particles by index. Empty input, malformed records, read errors, or input with no supported events cause failure. No LUND creation log is written in those cases.
 
 ## Selection and translation
 
@@ -59,15 +59,15 @@ $$
 
 where $E_e$ and $E_{e'}$ are the incident and scattered electron energies and $\theta_e$ is the scattered electron's angle to the beam. At fixed energies, smaller angles give smaller $Q^2$. Generation without a suitable lower limit can concentrate statistics on very-forward electrons below the useful CLAS12 acceptance. A minimum-$Q^2$ cut is not identical to a fixed angular cut because the scattered energy also varies.
 
-The GENIE production campaign described here uses beam-dependent minimum-$Q^2$ cuts: $0.02\,\mathrm{GeV}^2$ at $2.07052\,\mathrm{GeV}$, $0.25\,\mathrm{GeV}^2$ at $4.02962\,\mathrm{GeV}$, and $0.40\,\mathrm{GeV}^2$ at $5.98636\,\mathrm{GeV}$. The $4$ and $6\,\mathrm{GeV}$ values are data-informed campaign choices intended to follow the lower edge of observed CLAS12 coverage, not universal detector thresholds supplied by the cited paper. The $2\,\mathrm{GeV}$ choice is GENIE's built-in electromagnetic-scattering threshold[^genie-em-q2-threshold]. These are upstream generation cuts, not detector-efficiency corrections. The code assumes that the supplied GST sample was generated with the minimum named by `q2-cut`; it does not calculate $Q^2$ or verify the input distribution. The user must therefore make the label match the actual truth-level generation cut. The physical LUND converter records that assertion as provenance without applying another cut.
+The GENIE production campaign described here uses beam-dependent minimum-$Q^2$ cuts: $0.02\,\mathrm{GeV}^2$ at $2.07052\,\mathrm{GeV}$, $0.25\,\mathrm{GeV}^2$ at $4.02962\,\mathrm{GeV}$, and $0.40\,\mathrm{GeV}^2$ at $5.98636\,\mathrm{GeV}$. At all three beam energies, these campaign choices are based on comparisons with $Q^2$ distributions in RG-M $\mathrm{C}^{12}$ data. They are not universal detector thresholds supplied by the cited paper. The $2\,\mathrm{GeV}$ value also matches GENIE's built-in electromagnetic-scattering threshold[^genie-em-q2-threshold]. The [validation page](../development/validation.md#current-uniform-status) states which campaign evidence is not yet linked from this manual. These are upstream generation cuts, not detector-efficiency corrections. The code assumes that the supplied GST sample was generated with the minimum named by `q2-cut`; it does not calculate $Q^2$ or verify the input distribution. The user must therefore make the label match the actual truth-level generation cut. The physical LUND converter records that assertion as provenance without applying another cut.
 
 ## File cutoff
 
-For example, with 250 supported input entries, `events = 300`, and `events-per-file = 100`, conversion writes two 100-event files. It scans entry 201 but does not write it: only 50 input entries remain, too few to start a third file.
+For example, with 250 supported input entries, `events = 300`, and `events-per-file = 100`, conversion writes two 100-event files. It scans the 201st input entry (GST index 200) but does not write it: only 50 input entries remain, too few to start a third file.
 
 `events` limits how many events are written. `events-per-file`, default 10,000, sets when to start a new file and when to stop near the end of the input. Before starting a second or later file, the physical LUND converter requires at least `events-per-file` input entries from the current entry onward. This check does not prevent starting the first file or interrupt a file already started. Reaching the event limit or the end of the input can still leave a short file.
 
-The check counts input entries, including reactions that may later be skipped. Having enough input entries therefore does not guarantee a full output file. The manifest records entries examined, events written, and the count in each LUND file. Examined entries minus written events includes skipped reactions and, when this end-of-input rule stops conversion, the supported entry examined but not written. The final progress line states why conversion stopped.
+The check counts input entries, including reactions that may later be skipped. Having enough input entries therefore does not guarantee a full output file. The LUND creation log records scanned input entries, written events, and the count in each LUND file. Scanned input entries minus written events includes skipped reactions and, when this end-of-input rule stops conversion, the supported input entry scanned but not written. The final progress line states why conversion stopped.
 
 ## Provenance and output names
 
@@ -91,10 +91,10 @@ OUTPUT/<target>/<event-generator>__<tune>/<q2-cut>__<beam-label>/
 
 The automatic file prefix is `<target>__<event-generator>[-<event-generator-version>]__<tune>__<q2-cut>__<beam-label>`. `output-layout = metadata` instead puts target variation, generator/version, tune, selection, and beam into one directory name. The [configuration reference](configuration.md) defines both forms.
 
-Physical conversion produces no ROOT/PDF/PNG monitoring. It writes LUND files, the completion manifest, and empty simulation-output directories.
+Physical conversion produces no ROOT/PDF/PNG monitoring. It writes LUND files, the LUND creation log, and empty simulation-output directories.
 
 [^electrons-for-neutrinos]: A. Papadopoulou et al. (electrons for neutrinos Collaboration), “Inclusive Electron Scattering And The GENIE Neutrino Event Generator,” *Phys. Rev. D* **103**, 113003 (2021). [doi:10.1103/PhysRevD.103.113003](https://doi.org/10.1103/PhysRevD.103.113003)
 
-[^genie-em-q2-threshold]: GENIE defines its electromagnetic-scattering minimum as `kMinQ2Limit = 0.02` in [`KineUtils.h`](https://github.com/GENIE-MC/Generator/blob/master/src/Framework/Utils/KineUtils.h), in units of $\mathrm{GeV}^2$.
+[^genie-em-q2-threshold]: GENIE defines `genie::utils::kinematics::electromagnetic::kMinQ2Limit = 0.02`, in units of $\mathrm{GeV}^2$, in [`KineUtils.h` at revision `6a91779`](https://github.com/GENIE-MC/Generator/blob/6a91779ea7443dc7b6ea31ad89985f23be127e4d/src/Framework/Utils/KineUtils.h#L114). This pins the cited implementation; it does not identify the revision used to produce the campaign's GST input.
 
 [^rgm-resid]: RG-M, *GENIE to LUND converter*, pinned revision `d0d6050`, [source line defining `RES_ID` in place of `targP`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GENIE_to_LUND.C#L25).

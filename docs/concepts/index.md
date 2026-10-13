@@ -3,7 +3,7 @@
 These pages explain the design that the user guides rely on:
 
 - [Architecture](architecture.md): workflow boundaries, control flow, and extension rules.
-- [LUND data contract](lund-data-contract.md): in-memory records, serialized fields, splitting, and manifests.
+- [LUND data contract](lund-data-contract.md): in-memory records, serialized fields, splitting, and logs.
 - [Sampling models](sampling-models.md): exact uniform distributions, correlations, and random streams.
 - [External inputs](external-inputs.md): imported target geometry, detector files, and the Slurm worker script.
 

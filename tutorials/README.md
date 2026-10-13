@@ -16,7 +16,7 @@ For the explanation before the commands, follow the [getting-started reading ord
 - [`launcher-options.txt`](launcher-options.txt) shows every launcher-owned build/run option, workflow selection, help forwarding, and run-settings override.
 - [`lund-creation/uniform-all-options.txt`](lund-creation/uniform-all-options.txt) shows every uniform LUND creator option.
 - [`lund-creation/physical-all-options.txt`](lund-creation/physical-all-options.txt) shows every physical LUND converter option.
-- [`slurm-submission/all-options.txt`](slurm-submission/all-options.txt) shows every public submission option, both manifest-backed and manually described input.
+- [`slurm-submission/all-options.txt`](slurm-submission/all-options.txt) shows every public submission option, both backed by a LUND creation log and manually described input.
 
 The all-options files use deliberately arbitrary values to show how to spell and combine options. Do not treat those values as recommended physics settings. Start with the sample profiles included in the repository.
 

@@ -8,7 +8,7 @@ Purpose:
 Execution flow:
     Find source pages and choose unique Wiki names -> collect file and function locations -> convert
     citations and rewrite links -> write pages, sidebar, and footer -> remove unexpected top-level
-    Markdown pages from the dedicated output directory.
+    Markdown pages from the dedicated output directory after checking generated internal links.
 
 Inputs:
     The repository README, non-ignored docs/**/*.md pages, tutorial index, sample-profile reference,
@@ -18,10 +18,12 @@ Inputs:
 Outputs:
     A flat wiki directory. Existing non-Markdown files and `.git` stay in place. File links use the
     selected branch, and function links include their current source line. Each sidebar section
-    follows its source index's reading order, with unlisted pages placed afterward.
+    follows its source index's reading order, with unlisted pages placed afterward. The footer reports
+    the checkout commit, commit date, local-change status, and source-link branch. Installation commands
+    use the supplied repository's clone URL instead of the source document's REPOSITORY_URL placeholder.
 
 Failure:
-    Missing files, broken local paths, duplicate page names, invalid citations, Git failures, and write
+    Missing files, broken local paths or Wiki anchors, duplicate page names, invalid citations, Git failures, and write
     failures stop the build. The output cannot be the checkout root or an ancestor of it. This is not a
     general directory-safety check: use a dedicated temporary directory or Wiki checkout, never a source
     directory. Pages are written one at a time; failure can leave a partial generated tree. This script
@@ -30,8 +32,8 @@ Failure:
 Markdown contract:
     Use ordinary inline Markdown links, single-backtick code spans, triple-backtick fenced blocks, and
     one-line footnote definitions. The regular expressions below recognize these repository conventions;
-    they are not a complete Markdown or programming-language parser. Heading anchors and remote URLs
-    are preserved, not checked for validity or availability.
+    they are not a complete Markdown or programming-language parser. Internal Wiki anchors are checked
+    against ATX headings and explicit HTML anchors. Remote URLs and source-code line anchors are not checked.
 
 CLI options:
     --output DIRECTORY       Write the generated wiki tree here (required).
@@ -553,7 +555,7 @@ def rewrite_links(text, source, pages, repository, branch):
 
     Limits:
         Existence is checked locally, not against Git tracking or the remote branch. Anchors are kept
-        without checking headings. Unlike citation and inline-code conversion, this pass scans all
+        for the later generated-Wiki check. Unlike citation and inline-code conversion, this pass scans all
         text; fenced examples should not contain literal relative Markdown-link syntax.
     """
 
@@ -608,6 +610,40 @@ def generated_notice(repository, branch, source):
     relative = source.relative_to(ROOT)
     url = repository_url(repository, branch, relative)
     return f"> This page is generated from [{relative.as_posix()}]({url}). Do not edit it directly; change the repository source and let automation publish the Wiki.\n\n"
+
+def source_identity(repository, branch):
+    """Describe the local source revision without claiming a local preview was published.
+
+    Inputs:
+        repository and branch select public source links. Git HEAD and status describe the checkout
+        whose files are read, which can differ from the requested link branch.
+
+    Returns:
+        Footer text with the commit date and local-change status. A checkout without a commit reports
+        unavailable revision information; modified previews explicitly do not claim to match HEAD.
+
+    Failure:
+        Missing Git metadata is nonfatal. No command changes Git state or contacts a remote.
+    """
+
+    revision = subprocess.run(["git", "log", "-1", "--format=%H%n%cI"], cwd=ROOT, capture_output=True, text=True)
+    status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=normal"], cwd=ROOT, capture_output=True, text=True)
+    lines = revision.stdout.strip().splitlines()
+    identity = f"Source links use branch `{branch}`. "
+
+    if revision.returncode or len(lines) != 2 or not re.fullmatch(r"[0-9a-f]{40,64}", lines[0]):
+        return identity + "Checkout commit and date unavailable (for example, an exported source tree)."
+
+    commit, date = lines
+    identity += f"Source checkout: [{commit[:12]}](https://github.com/{repository}/commit/{commit}); commit date: {date}. "
+
+    if status.returncode:
+        return identity + "Local-change status unavailable."
+
+    if status.stdout.strip():
+        return identity + "Local changes are present; generated content is not an exact copy of that commit."
+
+    return identity + "Source checkout was clean when generated."
 # endregion
 
 # Output publication ----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -629,14 +665,15 @@ def validate_output(output):
     return resolved
 
 def ordered_section_pages(directory, pages):
-    """Order a sidebar section by its index links, then by remaining Wiki names.
+    """Order a sidebar section by its reading-order links, then remaining Wiki names.
 
     Inputs:
         A docs section directory name and the source-path-to-Wiki-name mapping.
 
     Outputs:
         Wiki names, each once, with the section overview first. Links outside the
-        section do not move pages from another section into this one.
+        section do not move pages from another section into this one. Prefer an explicit
+        `## Reading order` section; otherwise use links throughout the index.
 
     Failure:
         An unreadable section index raises the underlying file error.
@@ -648,7 +685,11 @@ def ordered_section_pages(directory, pages):
     ordered = [index] if index in members else []
 
     if index in members:
-        for match in LINK.finditer(index.read_text(encoding="utf-8")):
+        text = index.read_text(encoding="utf-8")
+        reading_order = re.search(r"^## Reading order\s*\n(.*?)(?=^## |\Z)", text, re.MULTILINE | re.DOTALL)
+        navigation = reading_order.group(1) if reading_order else text
+
+        for match in LINK.finditer(navigation):
             target = urllib.parse.urlsplit(match.group("target").strip("<>"))
 
             if target.scheme or target.netloc or not target.path:
@@ -663,12 +704,71 @@ def ordered_section_pages(directory, pages):
 
     return [members[source] for source in ordered + remaining]
 
+def wiki_anchors(text):
+    """Collect GitHub-style ATX heading IDs and explicit HTML anchors outside code fences.
+
+    Contract:
+        Support this repository's inline heading markup, duplicate headings, and generated citation
+        anchors. This is not a general Markdown renderer; remote/source-code anchors are out of scope.
+    """
+
+    prose = "\n".join(FENCED_CODE.split(text)[::2])
+    anchors = set(re.findall(r'<a\s+(?:name|id)=["\']([^"\']+)["\']', prose))
+    headings = set()
+
+    for heading in re.findall(r"^#{1,6}[ \t]+(.+?)[ \t]*#*[ \t]*$", prose, re.MULTILINE):
+        heading = LINK.sub(lambda match: match.group("prefix").lstrip("![").removesuffix("]("), heading)
+        heading = re.sub(r"<[^>]+>", "", heading).lower()
+        slug = re.sub(r"[^\w\- ]", "", heading).replace(" ", "-")
+        anchor = slug
+        suffix = 0
+
+        while anchor in headings:
+            suffix += 1
+            anchor = f"{slug}-{suffix}"
+
+        headings.add(anchor)
+
+    return anchors | headings
+
+def validate_wiki_links(output, names):
+    """Reject missing generated pages and internal section anchors before reporting success.
+
+    Inputs:
+        output: Generated Wiki directory. names: Expected Markdown filenames, including navigation.
+
+    Failure:
+        Raise ValueError naming the source page and unresolved target. Generated files remain for
+        inspection. External URLs and fenced examples are skipped; no network requests are made.
+    """
+
+    pages = {Path(name).stem: (output / name).read_text(encoding="utf-8") for name in names}
+    anchors = {name: wiki_anchors(text) for name, text in pages.items()}
+
+    for name, text in pages.items():
+        prose = "\n".join(FENCED_CODE.split(text)[::2])
+
+        for match in LINK.finditer(prose):
+            target = urllib.parse.urlsplit(match.group("target").strip("<>"))
+
+            if target.scheme or target.netloc:
+                continue
+
+            if not re.fullmatch(r'''\s*(?:"[^"\n]*"|'[^'\n]*')?\s*\)''', match.group("suffix")):
+                raise ValueError(f"Malformed Wiki link in {name}.md: {match.group(0)}")
+
+            page = urllib.parse.unquote(target.path).removesuffix(".md") or name
+            anchor = urllib.parse.unquote(target.fragment)
+
+            if page not in pages or (anchor and anchor not in anchors[page]):
+                raise ValueError(f"Unresolved Wiki link in {name}.md: {match.group('target')}")
+
 def build(output, repository, branch):
     """Generate all pages in the flat wiki directory.
 
     Execution flow:
         Check the output path -> collect source references -> convert pages -> write navigation ->
-        delete every unexpected top-level Markdown page.
+        report source revision -> check internal page/heading links -> delete unexpected Markdown pages.
 
     Inputs:
         output: Dedicated temporary directory or Wiki checkout, not a source or notes directory.
@@ -694,21 +794,28 @@ def build(output, repository, branch):
     definitions = function_references(paths)
     output.mkdir(parents=True, exist_ok=True)
     titles = {}
+    identity = source_identity(repository, branch)
 
     # Citation definitions can themselves contain local links, so convert citations before rewriting
     # links. Add automatic inline-code links last, after explicit source links have their final targets.
     for source, wiki_name in pages.items():
         original = source.read_text(encoding="utf-8")
+
+        # Only the installation recipe contains this documented clone-address placeholder. Keep the
+        # editable Markdown fork-safe while making the generated Wiki command directly usable.
+        if source == ROOT / "docs/getting-started/installation.md":
+            original = original.replace("    REPOSITORY_URL \\", f"    https://github.com/{repository}.git \\")
+
         titles[wiki_name] = page_title(original, wiki_name)
         converted = convert_citations(original, source)
         converted = rewrite_links(converted, source, pages, repository, branch)
         converted = link_code_references(converted, source, repository, branch, paths, suffixes, definitions)
         (output / wiki_name).write_text(generated_notice(repository, branch, source) + converted, encoding="utf-8")
 
-    # Sidebar labels come from source headings. Section indexes control reading order; the fixed
+    # Sidebar labels come from source headings except for the explicit README label. Section indexes control reading order; the fixed
     # cross-directory references are inserted in their relevant sections rather than becoming orphans.
     sidebar = ["# CLAS12 Sample Generator", ""]
-    sidebar.extend((f"- [{titles['Home.md']}](Home)", f"- [{titles['Repository-Overview.md']}](Repository-Overview)"))
+    sidebar.extend((f"- [{titles['Home.md']}](Home)", "- [Repository README](Repository-Overview)"))
 
     for heading, directory in SIDEBAR_SECTIONS:
         members = ordered_section_pages(directory, pages)
@@ -726,12 +833,14 @@ def build(output, repository, branch):
     (output / "_Sidebar.md").write_text("\n".join(sidebar), encoding="utf-8")
 
     repository_home = f"https://github.com/{repository}"
-    footer = f"Generated from the [{repository} documentation]({repository_home}/tree/{branch}/docs)."
+    linked_branch = urllib.parse.quote(branch, safe="")
+    footer = f"Generated from the [{repository} documentation]({repository_home}/tree/{linked_branch}/docs).\n\n{identity}"
     (output / "_Footer.md").write_text(footer + "\n", encoding="utf-8")
 
     # Renaming or removing a source must also remove its old Wiki page. The output is dedicated to this
     # builder: do not assume an unexpected Markdown page is safe to keep as a hand-edited Wiki page.
     expected = set(titles) | {"_Sidebar.md", "_Footer.md"}
+    validate_wiki_links(output, expected)
 
     for stale in output.glob("*.md"):
         if stale.name not in expected:

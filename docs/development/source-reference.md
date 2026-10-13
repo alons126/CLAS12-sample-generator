@@ -26,10 +26,10 @@ Paths in the following three LUND sections are relative to [`src/workflows/lund-
 | [`core/config/TargetCatalog.h`](../../src/workflows/lund-creation/core/config/TargetCatalog.h) | Map target identity to $A$ / $Z$ and compatible beam-dependent GEMC variation/geometry |
 | [`core/geometry/TargetGeometry.h`](../../src/workflows/lund-creation/core/geometry/TargetGeometry.h) | Sole adapter in this repository to external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); vertex sampling and supported mass lookup |
 | [`core/lund/Event.h`](../../src/workflows/lund-creation/core/lund/Event.h) (`Particle` and `Event`) | Generator-independent in-memory record passed to the writer |
-| [`core/lund/LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h) | Check and replace the run directory, split and format LUND files, count events, and write the completion log |
+| [`core/lund/LundWriter.h`](../../src/workflows/lund-creation/core/lund/LundWriter.h) | Check and replace the run directory, split and format LUND files, count events, and write the LUND creation log |
 | [`core/presentation/ProgressReporter.h`](../../src/workflows/lund-creation/core/presentation/ProgressReporter.h) | Update one progress bar in a terminal, or print occasional full lines when output is redirected |
 
-[`RunConfig::createFromCommandLine()`](../../src/workflows/lund-creation/core/config/RunConfig.cpp#L285) reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. [`LundWriter::finalizeRun()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) writes the final completion manifest only after all required output succeeds.
+[`RunConfig::createFromCommandLine()`](../../src/workflows/lund-creation/core/config/RunConfig.cpp#L285) reads and checks settings without creating or deleting sample output. `LundWriter` then prepares the run directory and writes files. [`LundWriter::finalizeRun()`](../../src/workflows/lund-creation/core/lund/LundWriter.cpp#L161) writes the final LUND creation log after the checked creation stages finish; see the [monitoring verification limit](../concepts/lund-data-contract.md#lund-creation-log).
 
 ## Uniform LUND creator
 
@@ -40,7 +40,7 @@ Paths in the following three LUND sections are relative to [`src/workflows/lund-
 | [`uniform-lund-creator/UniformGenerator.cpp`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp) | Create random-number generators, build and write events, fill monitoring, and finish output |
 | [`uniform-lund-creator/UniformMonitoring.h`](../../src/workflows/lund-creation/uniform-lund-creator/UniformMonitoring.h) and [`.cpp`](../../src/workflows/lund-creation/uniform-lund-creator/UniformMonitoring.cpp) | Histogram definitions, labels, ROOT storage, PDF/PNG rendering |
 
-The uniform LUND creator chooses random momenta and angles. It samples one vertex position per event and writes the event before adding it to monitoring histograms. It writes the final manifest only after the monitoring files are saved.
+The uniform LUND creator chooses random momenta and angles. It samples one vertex position per event and writes the event before adding it to monitoring histograms. It writes the final LUND creation log after the monitoring routine returns; PDF/PNG export success is not independently checked.
 
 ## Physical LUND converter
 
@@ -57,8 +57,8 @@ The GENIE adapter reads a [`TChain("gst")`](https://root.cern.ch/doc/master/clas
 | Path | Responsibility |
 | --- | --- |
 | [`slurm-submission/setup_and_submit.csh`](../../src/workflows/slurm-submission/setup_and_submit.csh) | Sourced shell bridge, shared colors, argument forwarding, and return status |
-| [`slurm-submission/resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) | CLI/config/manifest/default resolution and truth-conflict validation |
-| [`slurm-submission/submit.py`](../../src/workflows/slurm-submission/submit.py) | GEMC and COATJAVA module loading and verification, reports, path checks, preview/execute actions, `sbatch`, submission record |
+| [`slurm-submission/resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) | Resolve CLI options, configuration, LUND creation log, and defaults; check truth-metadata conflicts |
+| [`slurm-submission/submit.py`](../../src/workflows/slurm-submission/submit.py) | GEMC and COATJAVA module loading and verification, reports, path checks, preview/execute actions, `sbatch`, Slurm submission log |
 | [`slurm-submission/external/submit_GEMC_sample.sh`](../../src/workflows/slurm-submission/external/submit_GEMC_sample.sh) | Per-task GEMC then COATJAVA commands and scheduler directives |
 
 The submission program reads and checks settings for all selected samples before changing output or submitting the first array. Preview and execution use those same settings. Slurm passes them to the worker as environment variables; the worker does not calculate them again.

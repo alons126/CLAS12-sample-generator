@@ -15,7 +15,7 @@ Submission does not create LUND files and does not run detector simulation in th
 4. Add `--execute` only when the preview and replacement actions are correct.
 5. [Follow jobs and verify output](verification.md): inspect every task state and log, and check the HIPO files.
 
-The completion manifest is the JSON log written after LUND creation succeeds. It supplies the filename prefix, list of files, event counts, beam energy, and target information. You can choose the detector files and software versions during submission, but you cannot change the recorded truth-level settings to describe a different sample.
+The LUND creation log is the final JSON file written after LUND creation succeeds. It supplies the filename prefix, list of files, event counts, beam energy, and target information. You can choose the detector files and software versions during submission, but you cannot change the recorded truth-level settings to describe a different sample.
 
 The submission command returns after Slurm accepts the jobs. The printed job ID means they were submitted, not that they have started or finished. Follow the [verification guide](verification.md) to check every task and its output.
 

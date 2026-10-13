@@ -4,8 +4,8 @@ This code prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν
 
 | Workflow | What it does | Main result |
 | --- | --- | --- |
-| `create-lund` | Writes LUND input from randomly sampled particles or existing event-generator output | LUND files and a JSON log listing their settings and event counts; this log marks successful creation |
-| `submit` | Submits simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | A job ID; a JSON log; the submitted jobs later write simulated and reconstructed HIPO files |
+| `create-lund` | Writes LUND input from randomly sampled particles or existing event-generator output | LUND files and a LUND creation log (JSON) listing their settings and event counts and marking completion of the checked creation stages |
+| `submit` | Submits simulation and reconstruction jobs to Jefferson Lab’s computing farm (ifarm), using the Slurm job scheduler | A job ID and a Slurm submission log (JSON) describing the accepted submission; the jobs later write simulated and reconstructed HIPO files |
 
 The **uniform LUND creator** randomly chooses particle momenta and angles within your configured ranges. Its samples are deliberately unphysical and are used to study which particles the detector can detect and reconstruct. The **physical LUND converter** copies supported particles from existing event-generator output; it currently reads [GENIE](https://github.com/GENIE-MC/Generator) production output in the GST format stored in [ROOT](https://github.com/root-project/root) files. Both applications use the same code to sample one vertex position in the target per event and assign it to every particle, write and split LUND files, and record the settings used.
 
