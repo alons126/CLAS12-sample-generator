@@ -27,6 +27,8 @@ The profile is a text file containing the sample settings. `--events 100` replac
 
 For `eh`, select `--hadron proton|neutron|pip|pim` and `--hadron-region FD|CD`. In these command-line values, `pip` means a positively charged pion ($\pi^{+}$) and `pim` means a negatively charged pion ($\pi^{-}$). `FD` means the forward-detector sampling region and `CD` means the central-detector sampling region. These names describe the generated angular range; they do not claim that GEMC or reconstruction will detect the particle.
 
+The uniform LUND creator supports protons, neutrons, and charged pions; kaon samples are outside its current scope.
+
 ### Electron-hadron labels
 
 Each output label joins `e` for the trigger electron, the selected hadron, and the detector-region abbreviation. The electron is always written first, followed by the hadron, and both particles receive the same sampled vertex position.
@@ -44,11 +46,11 @@ Each output label joins `e` for the trigger electron, the selected hadron, and t
 
 The automatic run name and filename prefix are `Uniform__<channel-label>__<beam-label>`. Events are numbered from zero across the whole run. Starting a new output file does not restart those event numbers.
 
-`events` is the total run size. `events-per-file` defaults to 25,000 and controls LUND file splitting. The completion manifest records the exact count in every file; submission uses the largest event count among the selected files as the common GEMC/reconstruction event limit.
+`events` is the total run size. `events-per-file` defaults to 25,000 and controls LUND file splitting. The LUND creation log records the exact count in every file; submission uses the largest event count among the selected files as the common GEMC/reconstruction event limit.
 
 ## Production definitions
 
-The electron tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $P=P_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
+The electron-tester scans $\theta\in[5^\circ,40^\circ]$ and full $\phi$ at $P=P_{\mathrm{beam}}$ while sampling the selected target geometry. It is the rough angular study from which the $25^\circ$ trigger-electron prescription was selected.
 
 The 1e sample draws $\theta\in[5^\circ,40^\circ]$ and $\phi$ over the full azimuth. Its default momentum alternates between distributions uniform in $P$ and uniform in $1/P$, from $0.7\,\mathrm{GeV}/c$ to $P_{\mathrm{beam}}$. The $2.07052\,\mathrm{GeV}$ outbending profile deliberately extends $\theta$ down to $2^\circ$. These are uniform-sampling bounds chosen to cover the forward-electron region described for CLAS12 and its electromagnetic calorimeter; they are not detector-efficiency cuts[^burkert-clas12][^asryan-ecal].
 
@@ -66,17 +68,19 @@ Every hadron momentum range ends at $P_{\mathrm{beam}}$. Hadron $\theta$ is unif
 
 The electron-tester, 1e, epFD, and enFD modes are the production-tested uniform modes. FD charged-pion modes and all CD modes are implemented and covered by software checks but have not completed detector-level production validation. Their profile headers retain this warning.
 
+For the scope and evidence limits of the production-tested designation, see the [campaign record guidance](../development/validation.md#campaign-record).
+
 ## Targets and repeatability
 
 The reviewed uniform profiles use `target = Ar40`. They resolve to `target-geometry = Ar`, $A=40$, $Z=18$, and `gemc-target-variation = rgm_fall2021_Ar`. For another target, target identity and beam energy select the compatible detector variation and vertex geometry; an explicit `gemc-target-variation` override changes the resolved geometry as well. $A$ / $Z$ are separate LUND-header metadata and do not silently change geometry.
 
-The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls vertex positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic, nonrepeatable seeding, so a manifest containing zero cannot reproduce that sequence from the recorded value alone.
+The default `seed = 67890` controls particle kinematics, while `vertex-seed = 12345` controls vertex positions through a separate random stream. Nonzero seeds are repeatable when the software, complete configuration, and draw order match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic, nonrepeatable seeding, so a LUND creation log containing zero cannot reproduce that sequence from the recorded value alone.
 
 Electron, proton, neutron, and charged-pion masses come from the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); photon mass is exactly zero. The [LUND data contract](../concepts/lund-data-contract.md) lists their serialized values and precision.
 
 ## Results
 
-The uniform LUND creator writes split LUND files, a completion manifest, one ROOT monitoring file, one combined PDF, and individual PNG plots. It also prepares empty `mchipo/` and `reconhipo/` directories for later submission. See [uniform monitoring](monitoring.md) and [run directories](../getting-started/outputs.md).
+The uniform LUND creator writes split LUND files, a LUND creation log, one ROOT monitoring file, one combined PDF, and individual PNG plots. It also prepares empty `mchipo/` and `reconhipo/` directories for later submission. See [uniform monitoring](monitoring.md) and [run directories](../getting-started/outputs.md).
 
 [^burkert-clas12]: V. D. Burkert et al., “The CLAS12 Spectrometer at Jefferson Laboratory,” *Nucl. Instrum. Meth. A* **959**, 163419 (2020). [doi:10.1016/j.nima.2020.163419](https://doi.org/10.1016/j.nima.2020.163419)
 

@@ -2,6 +2,8 @@
 
 For example, a uniform electron–proton event is written as one header line followed by two particle lines. The source code chooses the particles; the common writer formats their records for the [LUND reader in GEMC](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). This page defines those fields and the logs that record how the files were made. These settings, input details, and source versions are called provenance.
 
+Provenance is information about how output was produced, stored in the LUND creation log and Slurm submission log. It is not a separate file or a check that the output suits a physics analysis. Both logs are JSON files written automatically; the [campaign record](../development/validation.md#campaign-record) combines them with results and scientific comparisons assembled by the person responsible for the study.
+
 ## In-memory records
 
 `Particle` stores a PDG identifier, mass, three-momentum, and vertex. `Event` stores an event ID, $A$, $Z$, beam energy, two source-specific header values, and an ordered particle vector.
@@ -68,7 +70,7 @@ This technique has not yet been tested with this code, and preservation of a fie
 
 Supported physical output species are the electron $e^{-}$ (11), photon $\gamma$ (22), charged pions $\pi^{\pm}$ ($\pm211$), neutron $n$ (2112), and proton $p$ (2212). The scattered electron is first. Supported final-state particles retain GST order.
 
-Neutral pions are not written. The input production must decay them upstream so their photons exist in GST. The physical LUND converter skips a residual PDG 111 instead of inventing daughter momenta. The [physical-conversion guide](../create-lund/physical.md#selection-and-translation) identifies the GENIE decay setting required during input production.
+Neutral pions are not written. The input production must decay them upstream so their photons exist in GST. The physical LUND converter skips a residual PDG 111 instead of inventing daughter momenta. The [physical LUND converter guide](../create-lund/physical.md#selection-and-translation) identifies the GENIE decay setting required during input production.
 
 The serialized masses are:
 
@@ -86,34 +88,38 @@ These are the masses after formatting with five decimal places for LUND. Energy 
 
 LUND filenames are `lundfiles/<PREFIX>_<INDEX>.txt`, with one-based file indexes. A file opens only when an event is ready, so a successful run has no empty rollover file. Uniform event IDs remain continuous across files.
 
-After writing `events-per-file` events, the writer starts another file when the next event is ready. Physical conversion also uses this setting to decide whether enough input remains to start a later file, as explained in the [physical guide](../create-lund/physical.md). The manifest records the actual count in every file, including a short final file.
+After writing `events-per-file` events, the writer starts another file when the next event is ready. Physical conversion also uses this setting to decide whether enough input remains to start a later file, as explained in the [physical LUND converter guide](../create-lund/physical.md). The LUND creation log records the actual count in every file, including a short final file.
 
-## Completion manifest
+## LUND creation log
 
-After all required output succeeds, the writer closes the LUND file and writes the JSON log to `lund-creation-log.json.tmp`. Only after that write succeeds does it rename the log to `lund-creation-log.json`. This rename is atomic: the final name appears in one filesystem operation, so submission does not read a half-written final log. The final name marks successful creation.
+The LUND creation log, `lund-creation-log.json`, is the **completion manifest** named in command output and error messages. A manifest is a list describing a set of files; this one also records the completed run's settings and event counts.
+
+After event writing and, for uniform samples, the monitoring routine return successfully, the writer closes the LUND file and writes the LUND creation log, a JSON file, to `lund-creation-log.json.tmp`. Only after that write succeeds does it rename the temporary file to `lund-creation-log.json`. This rename is atomic: the final name appears in one filesystem operation, so submission does not read a half-written final LUND creation log. The final name marks successful creation.
+
+The LUND creation log marks completion of the program’s checked stages. Uniform monitoring checks ROOT-file creation and histogram writes, but PDF/PNG export calls have no subsequent file verification. A final LUND creation log is therefore not independent proof that every rendered plot exists or opens. Inspect those products using the [monitoring guide](../create-lund/monitoring.md#check-monitoring-output).
 
 Schema version 1 contains:
 
 | Member | Meaning |
 | --- | --- |
-| `schema_version` | Manifest schema, currently 1 |
+| `schema_version` | LUND creation log schema, currently 1 |
 | `workflow` | `uniform` or `physical` |
 | `version`, `revision`, `root_version` | Code version, configure-time Git description, and ROOT version |
 | `targets_sha256` | Hash of the compiled external target header |
 | `git` | Configure-time repository, branch, commit, status, tag, and tracking details |
-| `scanned_events`, `written_events` | Source entries examined and events written |
+| `scanned_events`, `written_events` | Scanned source entries (input entries for physical conversion) and written events |
 | `config` | Complete resolved settings as strings |
 | `files` | Relative LUND paths and event counts in creation order |
 
 The `git` object includes the repository, branch, commit message, complete commit hash, commit date and author, working-tree status summary, nearest tag, detached-HEAD state, tracking branch, ahead/behind counts, and an exact-commit GitHub source link when the repository address permits one.
 
-For uniform creation, examined and written counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The manifest does not hash the original GST input or save uncommitted source edits for later recovery. Keep the original input, the source revision, and the records for your simulation campaign separately.
+For uniform creation, scanned and written event counts are equal. For physical conversion, their difference includes skipped interactions and may also reflect where conversion stopped. The LUND creation log does not hash the original GST input or save uncommitted source edits for later recovery. Keep the original input and source revision as part of the separate [campaign record](../development/validation.md#campaign-record).
 
 Git fields describe the checkout when CMake configured the executable. Reusing a build after changing the working tree does not update them automatically; reconfigure with CMake and rebuild when provenance must reflect new source.
 
-## Submission record
+## Slurm submission log
 
-After `sbatch` accepts an array, the separate `reconhipo/slurm-submission-log.json` records the returned job ID, exact command, resolved worker environment, runtime Git state, and hashes of the GCARD, YAML, and worker payload. It records the handoff to Slurm, not task completion, detector database state, or scientific validity.
+After `sbatch` accepts an array, the coordinator writes the **Slurm submission log**, a JSON file at `reconhipo/slurm-submission-log.json`. It records the returned job ID, exact command, resolved worker environment, runtime Git state, and hashes of the GCARD, YAML, and worker payload. It records that Slurm accepted the submission. It does not establish task completion, detector database state, or scientific validity.
 
 [^rgm-resid]: RG-M, *GENIE to LUND converter*, pinned revision `d0d6050`, [source line defining `RES_ID` in place of `targP`](https://github.com/awild7/rgm/blob/d0d60503229a57784d25c8ea3cd71f9e061f295c/Simulation/GENIE_to_LUND.C#L25).
 

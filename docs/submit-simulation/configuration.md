@@ -4,19 +4,34 @@ Use this page when selecting submission settings, software releases, detector re
 
 ## How inputs are resolved
 
-The command line has the highest priority. If a setting is absent there, submission looks in the optional config, then the completion manifest, then defaults:
+The [LUND creation log](../concepts/lund-data-contract.md#lund-creation-log) is also called the completion manifest in command output and error messages.
 
-```text
-command line -> optional submission config -> completion manifest -> defaults
+The command line has the highest priority. If a setting is absent there, submission looks in the optional config, then the LUND creation log, then defaults:
+
+```mermaid
+flowchart LR
+    CLI["Command line"] -->|Setting absent| CONFIG["Optional submission config"]
+    CONFIG -->|Setting absent| LOG["LUND creation log"]
+    LOG -->|Setting absent| DEFAULTS["Defaults"]
 ```
 
 Relative command-line paths start at the repository root. Relative paths inside a submission config start at that file's directory. Use plain `key = value` lines, blank lines, and full-line comments. Unknown, duplicate, and empty keys cause an error.
 
 Paths forwarded to the external worker may contain only letters, digits, `/`, `_`, `-`, and `.`. This restriction is checked before submission because the worker passes those paths to external commands.
 
-The manifest supplies the exact LUND inventory and per-file event counts. The array size defaults to the number of selected files, and the shared `JOB_NEVENTS` limit defaults to the largest event count among them. `--num-jobs N` selects the first N files. `--events-per-job N` replaces the shared event limit; it does not rewrite or recount the files. A limit smaller than a file's event count leaves later events unprocessed; a larger limit does not add events to a shorter file.
+The LUND creation log supplies the exact LUND inventory and per-file event counts. The array size defaults to the number of selected files, and the shared `JOB_NEVENTS` limit defaults to the largest event count among them. `--num-jobs N` selects the first N files. `--events-per-job N` replaces the shared event limit; it does not rewrite or recount the files. A limit smaller than a file's event count leaves later events unprocessed; a larger limit does not add events to a shorter file.
 
-If the manifest says the sample used one beam energy or target, an option claiming another is rejected. You can still change the detector setup: GEMC and COATJAVA versions, a compatible target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name. Select both software versions during submission; LUND creation does not select them.
+If the LUND creation log says the sample used one beam energy or target, an option claiming another is rejected. You can still change the detector setup: GEMC and COATJAVA versions, a compatible target variation, GCARD, YAML, torus scale, custom clas12Tags directory, and Slurm job name. Select both software versions during submission; LUND creation does not select them.
+
+### Target variation and existing vertices
+
+For example, changing a $\mathrm{C}^{12}$ sample from the large-foil variation to the small-foil variation during submission does not move its existing LUND vertices. Creation samples vertex coordinates; submission only chooses the detector inputs used to transport those particles.
+
+The submission resolver checks target labels against the LUND creation log, but it does not enforce compatibility between that target and a replacement variation or inspect the GCARD's target geometry. It can accept a $\mathrm{Ar}^{40}$ LUND creation log with a carbon GCARD when the requested file exists. Explicit GCARD paths also bypass variation-based filename selection. A successful preview is not a geometry-consistency check.
+
+Compare the LUND creation log's `target`, `gemc-target-variation`, and `target-geometry` with the selected GCARD and the [vertex distributions](../concepts/sampling-models.md#vertex-positions). If the intended target volume requires a different vertex distribution, create new LUND input with that geometry in a different output parent. Submission does not resample or relocate vertices. Keep deliberate mismatched-geometry studies separate and record their purpose.
+
+For metadata and path restrictions shared with creation, read [names that can be submitted](../create-lund/configuration.md#names-that-can-be-submitted). Sanitized filenames do not make otherwise invalid LUND creation log labels acceptable.
 
 ## Submission options
 
@@ -38,7 +53,7 @@ If the manifest says the sample used one beam energy or target, an option claimi
 | `--farm-out DIRECTORY` | Required exact cleanup target when farm-output cleanup is true |
 | `--execute` | Replace simulation output and call `sbatch` |
 
-The following options describe LUND input that has no manifest. With a manifest, conflicting truth values are rejected rather than used to relabel the run.
+The following options describe LUND input that has no LUND creation log. With a LUND creation log, conflicting truth values are rejected rather than used to relabel the run.
 
 | Option | Meaning |
 | --- | --- |
@@ -48,7 +63,7 @@ The following options describe LUND input that has no manifest. With a manifest,
 | `--prefix NAME` | Required filename prefix before `_INDEX.txt` |
 | `--channel NAME` | Uniform `electron-tester`, `1e`, `eh`, or a [complete electron-hadron label](../create-lund/uniform.md#electron-hadron-labels) such as `epFD` |
 | `--hadron NAME`, `--hadron-region FD\|CD` | Particle and region required when `channel=eh` |
-| `--event-generator NAME` | Physical adapter label; default `genie-gst` |
+| `--event-generator NAME` | Physical-input adapter label; default `genie-gst` |
 | `--tune NAME` | Physical tune/model label; default `unknown` |
 | `--q2-cut NAME` | Physical upstream-selection label; default `unknown`, with no cut applied during submission |
 
@@ -56,11 +71,13 @@ Use [`source run.csh --workflow submit --help`](../../run.csh) for the live inte
 
 ## Detector defaults
 
-GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this code[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). GCARD defaults are selected from the manifest's target variation, beam energy, and submission-time GEMC version under [`config/detector/`](../../config/detector/), using the pattern `config/detector/GEMC_GCARDs_<beam-group>/<gemc-version>/`.
+GEMC defaults to 5.14 because that release contains the RG-M argon target and corrected one-foil carbon target used by this code[^sportes-2026-rgm]. CLAS12 GEMC detector data and available version directories are maintained in [`gemc/clas12Tags`](https://github.com/gemc/clas12Tags). GCARD defaults are selected from the LUND creation log's target variation, beam energy, and submission-time GEMC version under [`config/detector/`](../../config/detector/), using the pattern `config/detector/GEMC_GCARDs_<beam-group>/<gemc-version>/`.
 
 COATJAVA defaults to 10.0.7. Its version independently selects the reconstruction software and the YAML directory under [`config/detector/`](../../config/detector/), using the pattern `config/detector/COATJAVA_YAML_configs_<beam-group>/<coatjava-version>/`. Only 10.0.7 YAML snapshots are currently checked in. Another release needs a reviewed YAML supplied with `--yaml` if its default file is absent. Explicit `--gcard` and `--yaml` paths override resource lookup, not software selection. Check that the selected files are compatible with the requested releases.
 
 For $E_{\mathrm{beam}}=2.07052\,\mathrm{GeV}$, the torus default is $+0.5$. For $E_{\mathrm{beam}}=4.02962\,\mathrm{GeV}$ and $5.98636\,\mathrm{GeV}$, it is $-1.0$. The worker always applies solenoid scale $-1.0$. Beam labels outside the three supported lookup groups require explicit `--gcard`, `--yaml`, and `--torus` values.
+
+The supplied YAMLs also differ in tracking: the 2 GeV file uses conventional tracking, while the 4 and 6 GeV files use AI-assisted tracking. All three disable denoising. See the [detector-resource table](../concepts/external-inputs.md#detector-resources) before replacing a default YAML.
 
 ### Magnetic-field consistency
 
@@ -94,7 +111,7 @@ The checked-in $4\,\mathrm{GeV}$ and $6\,\mathrm{GeV}$ cards describe the inbend
 
 When using a custom GCARD or overriding `--torus`, inspect its `SCALE_FIELD` entries and change them together. The current worker fixes the solenoid scale at $-1.0$ and exposes no solenoid override. If the data uses another solenoid scale, updating only the GCARD is insufficient: the worker configuration must also be changed and validated before submission. A mismatch means the data, selected card, and submitted command describe different magnetic-field setups.
 
-The coordinator distinguishes the campaign sample label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector-resource group (`2GeV`, `4GeV`, or `6GeV`). The three standard beam energies use these fixed labels; other energies are rounded to the nearest MeV for naming. Detector defaults are looked up using the resolved MeV label. These are naming and lookup values, not alternate beam energies.
+The coordinator distinguishes the beam label (`2070MeV`, `4029MeV`, or `5986MeV`) from the detector lookup group (`2GeV`, `4GeV`, or `6GeV`). The three standard beam energies use these fixed labels; other energies are rounded to the nearest MeV for naming. Detector defaults are looked up using the resolved MeV label. These are naming and lookup values, not alternate beam energies.
 
 ## Software selection and version reports
 
@@ -110,9 +127,11 @@ Before GEMC, each array task prints the requested software versions, inherited m
 
 Module commands in the submission report appear on one line, such as `module show gemc/5.14`, `module show coatjava/10.0.7`, and `module list`. Other copyable commands use multiline shell form.
 
-## LUND input without a manifest
+The displayed `sbatch` arguments depend on the private environment described above. They do not contain every required worker variable. Run the submission through the [launcher procedure](guide.md#preview-one-run); copying only those arguments into the interactive shell does not reproduce it.
 
-You can submit independently prepared LUND files that have no completion manifest. In that case, supply the source, beam energy, target, filename prefix, event limit, and other required sample settings yourself. Number files consecutively from `PREFIX_1.txt` through `PREFIX_N.txt`, without gaps. The submission program does not read every file to count events or guess missing indexes.
+## LUND input without a LUND creation log
+
+You can submit independently prepared LUND files that have no LUND creation log. In that case, supply the source, beam energy, target, filename prefix, event limit, and other required sample settings yourself. Number files consecutively from `PREFIX_1.txt` through `PREFIX_N.txt`, without gaps. The submission program does not read every file to count events or guess missing indexes.
 
 ```tcsh
 source run.csh \

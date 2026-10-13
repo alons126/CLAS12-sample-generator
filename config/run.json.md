@@ -31,7 +31,7 @@ The launcher does not look for `run.local.json` automatically. Name an alternati
 
 ## Launcher and child options
 
-`--workflow create-lund|submit` is always required. For `create-lund`, launcher-owned `--source uniform|physical` selects the LUND application. Submission bypasses this build launcher; its resolver accepts the same `--source` spelling only as truth metadata for input without a completion manifest. Other unrecognized creation options are forwarded unchanged to the selected LUND executable.
+`--workflow create-lund|submit` is always required. For `create-lund`, launcher-owned `--source uniform|physical` selects the LUND application. Submission bypasses this build launcher; its resolver accepts the same `--source` spelling only as truth metadata for input without a LUND creation log. Other unrecognized creation options are forwarded unchanged to the selected LUND executable.
 
 Use `--` when forwarding help or any argument that should be unambiguously treated as a child option:
 
@@ -44,7 +44,7 @@ source run.csh \
     --help
 ```
 
-Submission bypasses [`workflow.py`](../src/launcher/workflow.py) and does not read this JSON. Its settings come from the LUND manifest, an optional submission config, CLI overrides, and submission defaults.
+Submission bypasses [`workflow.py`](../src/launcher/workflow.py) and does not read this JSON. Its settings come from the LUND creation log, an optional submission config, CLI overrides, and submission defaults.
 
 Even a command forwarding `--help` to a LUND application first cleans and updates the ifarm checkout. Only bare launcher help and limited early submission checks can return before cleanup; see the [checkout model](../docs/submit-simulation/ifarm-environment.md#disposable-checkout). During local development, run the compiled application's `--help` directly.
 

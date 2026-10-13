@@ -23,7 +23,7 @@
 # Purpose:
 #   Select which compiled sample workflows are available.
 cmake_minimum_required(VERSION 3.20)
-project(CLAS12SampleGenerator VERSION 1.0 LANGUAGES CXX)
+project(CLAS12SampleTools VERSION 1.0.1 LANGUAGES CXX)
 option(BUILD_UNIFORM "Build uniform sample generation" ON)
 option(BUILD_GENIE "Build GENIE GST conversion" ON)
 # endregion

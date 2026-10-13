@@ -12,11 +12,11 @@ The code converts degree-valued angles to radians before calling trigonometric f
 
 ### Electron-tester
 
-The electron-tester profiles fix $P=P_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range. The electron angle and momentum options can override those profile choices.
+The $(e,e')$ angular tester (`electron-tester`) profiles fix $P=P_{\mathrm{beam}}$ while scanning $\theta\in[5^\circ,40^\circ]$ and the full azimuthal range. The electron angle and momentum options can override those profile choices.
 
 ### 1e
 
-For `channel=1e`, $\theta$ and $\phi$ are uniform inside the configured ranges. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
+For the $(e,e')$ channel (`channel=1e`), $\theta$ is uniform inside its configured bounds and $\phi$ is uniform from -180 through 180 degrees. There are no phi-range options. The default momentum alternates between two random distributions, rather than randomly choosing which distribution to use. With lower bound $a$ and upper bound $b$:
 
 - even run-global event IDs draw $P\sim\mathcal{U}(a,b)$;
 - odd IDs draw $q\sim\mathcal{U}(b^{-1},a^{-1})$ and use $P=q^{-1}$.
@@ -27,13 +27,15 @@ The production bounds are $a=0.7\,\mathrm{GeV}/c$ and $b=P_{\mathrm{beam}}$. `el
 
 ## Electron–hadron events
 
-For `channel=eh`, hadron $\theta$ is uniform inside the configured FD or CD range and $\phi\in[-180^\circ,180^\circ]$. The upper momentum bound is $P_{\mathrm{beam}}$.
+For the $(e,e'h)$ channel (`channel=eh`), $h$ denotes the selected hadron. Hadron $\theta$ is uniform inside the configured FD or CD range and $\phi\in[-180^\circ,180^\circ]$. The upper momentum bound is $P_{\mathrm{beam}}$.
 
 Charged hadrons use the same run-global even/odd mixture of distributions uniform in $P$ and uniform in $1/P$. Neutrons use a distribution uniform in $P$, including a lower bound of zero. The optional fixed mode is neutron-only.
 
 The trigger electron has beam momentum and configured $\theta$, normally $25^\circ$. Its $\phi$ is determined rather than sampled: find the center in $\{-120^\circ,-60^\circ,0^\circ,60^\circ,120^\circ,180^\circ\}$ closest to the direction opposite the hadron, then add the configured offset $\Delta\phi$. Equal-distance ties keep the first center checked. The same separation rule is retained for CD samples even though the CD geometry does not require it.
 
 ## Vertex positions
+
+An event's vertex position is its position in the target. Its vertex coordinates $V_x$, $V_y$, and $V_z$ are measured in centimeters. For example, an electron–proton event receives one sampled vertex position, and both particles are written with those same coordinates. Target-cell and foil positions describe the material from which the vertex is sampled.
 
 The target catalog resolves a geometry key. `TargetGeometry` uses the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h) implementation to draw $V_x$ and $V_y$ from its beam-spot distributions and $V_z$ from the selected target cell or foil positions. Exactly one vertex is drawn for each written event, and every particle in that event receives it.
 
@@ -57,7 +59,7 @@ $V_z$ follows the resolved geometry:
 
 These values describe the checked-in [`targets.h`](../../src/workflows/lund-creation/external/targets.h) snapshot. Recheck this table whenever that external source is replaced.
 
-Target identity, geometry, and LUND $A$ / $Z$ metadata are distinct values. An $A$ / $Z$ override does not change the vertex distribution.
+Target identity (`target`, such as `Ar40`), vertex geometry (`target-geometry`, such as `Ar`), detector target variation (`gemc-target-variation`), and nuclear header metadata (`A` and `Z`) describe distinct settings. Target identity names the target; vertex geometry selects the sampled spatial distribution; detector target variation selects the corresponding GEMC target configuration. $A$ is the nuclear mass number and $Z$ is the proton count stored in the LUND header. An $A$ / $Z$ override does not change the vertex distribution.
 
 ## Random-stream ownership
 
@@ -68,4 +70,4 @@ Uniform creation owns two `TRandom3` objects:
 
 Each `TRandom3` object is a random-number generator (RNG) with its own sequence. Changing the target geometry draws from the vertex sequence, not the momentum-and-angle sequence. To use the external header, the geometry adapter temporarily copies the caller's vertex RNG state into the header's global RNG and copies the updated state back afterward. A mutex, a lock preventing simultaneous access, protects that shared global state.
 
-A nonzero seed repeats a sequence only when the complete configuration, software, ROOT version, and draw order also match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic seeding. A manifest containing zero therefore cannot reproduce the sequence from that value alone.
+A nonzero seed repeats a sequence only when the complete configuration, software, ROOT version, and draw order also match. [`TRandom3(0)`](https://root.cern.ch/doc/master/classTRandom3.html) requests automatic seeding. A LUND creation log containing zero therefore cannot reproduce the sequence from that value alone.

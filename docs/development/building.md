@@ -71,4 +71,4 @@ build/debug/apps/uniform-lund-creator --help
 build/debug/apps/event-generator-to-lund-converter --help
 ```
 
-Then run a small sample using fixed nonzero seeds through the code you changed. Inspect its files, event counts, manifest, and printed messages. Build commands alone never create LUND files or submit simulation.
+Then run a small sample using fixed nonzero seeds through the code you changed. Inspect its files, event counts, LUND creation log, and printed messages. Build commands alone never create LUND files or submit simulation.

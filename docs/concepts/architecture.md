@@ -27,7 +27,7 @@ run.csh
   -> RunConfig
   -> source-specific event producer
   -> common Event/Particle model and LundWriter
-  -> LUND files and completion manifest
+  -> LUND files and LUND creation log
 ```
 
 For submission, [`setup_and_submit.csh`](../../src/workflows/slurm-submission/setup_and_submit.csh) bridges the sourced shell to the Python coordinator:
@@ -53,7 +53,7 @@ Creating LUND files never submits jobs automatically. The submission program ask
 | [`apps/`](../../src/workflows/lund-creation/apps) | Thin CLI entry points and final error presentation |
 | [`core/config/`](../../src/workflows/lund-creation/core/config/) | Parse, merge, resolve, and validate settings; select target metadata |
 | [`core/geometry/`](../../src/workflows/lund-creation/core/geometry/) | Isolate the external target source and sample one vertex per event |
-| [`core/lund/`](../../src/workflows/lund-creation/core/lund/) | Define `Event` and `Particle`; serialize, split, and publish completion |
+| [`core/lund/`](../../src/workflows/lund-creation/core/lund/) | Define `Event` and `Particle`; write and split LUND files, then write the final LUND creation log |
 | [`core/presentation/`](../../src/workflows/lund-creation/core/presentation/) | Shared progress reporting for interactive and redirected output |
 | [`uniform-lund-creator/`](../../src/workflows/lund-creation/uniform-lund-creator) | Generate random acceptance-test particles and uniform-only monitoring |
 | [`event-generator-to-lund-converter/`](../../src/workflows/lund-creation/event-generator-to-lund-converter) | Dispatch physical input to a format-specific adapter |
@@ -81,27 +81,27 @@ built-in common and source defaults
 The uniform LUND creator and each physical-input adapter build `Event` objects containing particles in the order they should be written. `LundWriter` then converts those objects into LUND text. This keeps the decision about which particles exist separate from file formatting:
 
 - the uniform LUND creator decides which random particles exist;
-- a physical adapter decides which input events and particles are supported;
+- a physical-input adapter decides which input events and particles are supported;
 - `TargetGeometry` supplies one vertex shared by every particle in the event; and
-- `LundWriter` owns file names, splitting, exact formatting, output replacement, counts, and the final manifest.
+- `LundWriter` owns file names, splitting, exact formatting, output replacement, counts, and the final LUND creation log.
 
 This separation is the main extension rule. A new input adapter should translate its records into `Event`; it should not copy the writer, target sampling, or completion logic.
 
 ## Uniform path
 
-[`generateUniform()`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp#L153) copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. Monitoring files are saved before the final manifest is written.
+[`generateUniform()`](../../src/workflows/lund-creation/uniform-lund-creator/UniformGenerator.cpp#L153) copies checked settings into a typed `UniformConfig`. It creates separate random-number generators for momenta and angles and for vertex positions, then writes the requested number of events. It writes each event before adding it to `UniformMonitoring`, so histograms never count an event that failed to reach LUND. The monitoring routine runs before the final LUND creation log is written; [PDF/PNG exports require separate inspection](../create-lund/monitoring.md#check-monitoring-output).
 
 ## Physical path
 
-[`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) calls the selected input adapter. [`convertGenieGST()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp#L64) checks the ROOT tree and branch types, reads entries in order, selects supported interactions, copies supported particles, and calls the common writer. It separately counts entries examined and events written, and decides whether enough input remains to start another file. It creates no monitoring histograms.
+[`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) calls the selected input adapter. [`convertGenieGST()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/GenieConverterGST.cpp#L64) checks the ROOT tree and branch types, reads entries in order, selects supported interactions, copies supported particles, and calls the common writer. It separately counts scanned input entries and written events, and decides whether enough input remains to start another file. It creates no monitoring histograms.
 
 To read another input format, add a directory beside [`genie-gst/`](../../src/workflows/lund-creation/event-generator-to-lund-converter/genie-gst/) and a branch in [`convertPhysical()`](../../src/workflows/lund-creation/event-generator-to-lund-converter/PhysicalConverter.cpp#L41) that calls its reader. Keep the same command-line executable and use the common writer for output. The [adapter guide](../development/adding-event-generator.md) lists the decisions and checks needed.
 
 ## Submission boundary
 
-[`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) combines command-line options, an optional config, the manifest, and defaults into one checked settings record per sample. It does not submit jobs or change output directories. The GEMC and COATJAVA version settings independently select the software and its default configuration directory. Supplying a GCARD or YAML changes the selected file, not the software version.
+[`resolve_inputs.py`](../../src/workflows/slurm-submission/resolve_inputs.py) combines command-line options, an optional config, the LUND creation log, and defaults into one checked settings record per sample. It does not submit jobs or change output directories. The GEMC and COATJAVA version settings independently select the software and its default configuration directory. Supplying a GCARD or YAML changes the selected file, not the software version.
 
-[`submit.py`](../../src/workflows/slurm-submission/submit.py) unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<coatjava-version>` in a private environment. It verifies GEMC's installation, checks and prints the loaded COATJAVA release, and checks that the required programs are available. COATJAVA version validation does not depend on installation-directory names. It also owns reports, guarded directory actions, the `sbatch` call, and the submission record. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
+[`submit.py`](../../src/workflows/slurm-submission/submit.py) unloads and loads GEMC and switches COATJAVA with `module switch coatjava/<coatjava-version>` in a private environment. It verifies GEMC's installation, checks and prints the loaded COATJAVA release, and checks that the required programs are available. COATJAVA version validation does not depend on installation-directory names. It also owns reports, guarded directory actions, the `sbatch` call, and the Slurm submission log. The sourced shell bridge owns only shell integration and return status. The external worker inherits the checked environment and owns only commands executed by an array task; it does not select or load software releases.
 
 Both preview and execution use the same checked settings. The worker receives those settings from the submission program rather than guessing them from directory names or choosing its own defaults.
 
