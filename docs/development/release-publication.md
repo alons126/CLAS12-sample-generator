@@ -20,7 +20,7 @@ GitHub requires a manually triggered workflow to exist on the default branch bef
 
 Under **Settings → Actions → General → Workflow permissions**, enable **Allow GitHub Actions to create and approve pull requests**. The publication job requests repository-content and pull-request write permissions; the validation job has read permission. Repository or organization rules must permit writes to `release-candidate`. See GitHub's [Actions settings reference](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository).
 
-Reserve `release-candidate` for this action. The action refuses to replace an existing branch unless its last commit has the action's `Release candidate from ` subject prefix. Do not add manual commits there. Change `dev` and run the action again instead.
+Reserve `release-candidate` for this action. The action refuses to replace an existing branch unless its last commit uses `v<version> from <commit>`, with a numeric CMake version and the full source commit hash. It also accepts the earlier `Release candidate from ` subject prefix so existing candidates can still be updated. Do not add manual commits there. Change `dev` and run the action again instead.
 
 ## Run and review
 
@@ -33,6 +33,8 @@ Reserve `release-candidate` for this action. The action refuses to replace an ex
 The publication commit is based on `main`, rather than on the development commits. Git history on `main` therefore receives the filtered snapshot without adding the development branch's history. Files removed from a new snapshot may still exist in older history already on `main`; this action does not rewrite that history.
 
 ## Repeated runs and failures
+
+The candidate commit message is `v<version> from <commit>`, for example `v1.0.1 from db30d2e5871bcde67a0399d6c245f801d423c5ff`. The version and full commit hash come from the validated `dev` snapshot. GitHub’s squash-merge message can still be edited separately when merging the PR.
 
 The action creates one publication commit on the current `main` and replaces the remote `release-candidate` branch using `--force-with-lease`. This Git option permits replacement only if the remote branch still has the commit observed by the action. If another writer changes it, the push fails rather than discarding that change. Replacing the candidate removes earlier candidate commits from that branch; their source commits remain on `dev`.
 

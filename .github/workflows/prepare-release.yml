@@ -185,6 +185,7 @@ jobs:
         id: candidate
         env:
           SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+          CODE_VERSION: ${{ needs.validate.outputs.code_version }}
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
@@ -192,7 +193,9 @@ jobs:
           previous=$(git rev-parse --verify refs/remotes/origin/release-candidate 2>/dev/null || true)
           if test -n "$previous"; then
             subject=$(git log -1 --format=%s "$previous")
-            if [[ "$subject" != 'Release candidate from '* ]]; then
+            # Accept the current message and candidates created before this format changed.
+            candidate_message='^v[0-9]+(\.[0-9]+){0,3} from [0-9a-f]{40}$'
+            if [[ ! "$subject" =~ $candidate_message && "$subject" != 'Release candidate from '* ]]; then
               echo '::error::release-candidate is not owned by this workflow; refusing to replace it.'
               exit 1
             fi
@@ -213,7 +216,7 @@ jobs:
           if test -n "$previous" && test "$tree" = "$(git rev-parse "$previous^{tree}")" && git merge-base --is-ancestor origin/main "$previous"; then
             echo 'Validated candidate is already current.'
           else
-            git commit -m "Release candidate from $SOURCE_SHA"
+            git commit -m "v${CODE_VERSION} from ${SOURCE_SHA}"
             git push \
                 "--force-with-lease=refs/heads/release-candidate:$previous" \
                 origin \
@@ -232,13 +235,6 @@ jobs:
           cat > "$RUNNER_TEMP/release-pr.md" <<EOF
           Publish code version ${CODE_VERSION} from dev commit ${SOURCE_SHA} into main.
           The version comes from the top-level CMake project() declaration in the validated snapshot.
-
-          The publication tree excludes AGENTS.md, legacy sources and submodules,
-          tech-note, and test implementations and fixtures. Development files remain
-          on dev. Both LUND applications configure, build, install, and accept --help
-          without those files. The generated wiki passes its local link checks.
-          A small uniform sample completes with monitoring, and its detector inputs
-          resolve from the publication files without loading ifarm software.
 
           Validation run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
 
