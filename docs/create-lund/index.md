@@ -9,6 +9,10 @@
 
 Both applications use the same code to read settings, sample vertex positions in the target, write LUND records, split files, name directories, and record the settings and counts. The uniform LUND creator randomly chooses momenta and angles and saves plots of them. The physical LUND converter reads those momenta from existing input; its format-specific reader, called an adapter, must not invent missing particle kinematics (momenta and angles).
 
+For example, `--event-generator genie-gst` selects the physical-input adapter that reads GENIE GST events. The adapter translates their particle content; the shared LUND-writing code handles files, vertex positions, and logs.
+
+A sample profile is a `key = value` configuration file describing the particles, beam, target, and sampling or conversion settings for one sample. Launcher settings and submission configuration are separate inputs. See the [sample profiles](../../config/samples/README.md) before selecting a profile with `--config`.
+
 ## Creation lifecycle
 
 1. Read built-in defaults, an optional `key = value` profile, and command-line overrides.
@@ -18,11 +22,11 @@ Both applications use the same code to read settings, sample vertex positions in
 5. Write numbered LUND files; uniform creation also saves monitoring histograms and plots.
 6. Write `lund-creation-log.json` last, listing the settings, files, and event counts.
 
-That final JSON log is the completion manifest. Its presence marks successful creation. A failed run may leave partial LUND files; without the final manifest, do not submit them.
+The LUND creation log is that final JSON file. Its presence marks completion of the program’s checked creation stages. Uniform PDF/PNG exports still need the [monitoring checks](monitoring.md#check-monitoring-output). A failed run may leave partial LUND files; without the final LUND creation log, do not submit them.
 
 ## Reading order
 
-1. Choose the [uniform guide](uniform.md) or [physical guide](physical.md) for the source you need.
+1. Choose the [uniform LUND creator guide](uniform.md) or [physical LUND converter guide](physical.md) for the source you need.
 2. Use the [configuration reference](configuration.md) to choose settings and understand their defaults.
 3. For uniform samples, read [monitoring](monitoring.md) to inspect the generated kinematics.
 4. Use [examples](examples.md) for additional commands.

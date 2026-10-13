@@ -1255,7 +1255,7 @@ def main():
         path_value(root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh', 'SUBMIT_SCRIPT_FILE')
 
         if Path.cwd().resolve() != root or not (root / 'src/workflows/slurm-submission/external/submit_GEMC_sample.sh').is_file():
-            raise ValueError('source the submission script from the CLAS12-sample-generator checkout.')
+            raise ValueError('source the submission script from the CLAS12-sample-tools checkout.')
 
         # Reuse the copied environment and one-time farm cleanup across samples.
         farm_cleared = False

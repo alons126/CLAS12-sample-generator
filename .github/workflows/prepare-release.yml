@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 45
     outputs:
       source_sha: ${{ steps.source.outputs.sha }}
+      code_version: ${{ steps.build.outputs.code_version }}
 
     steps:
       - name: Check out dev without submodules
@@ -77,6 +78,7 @@ jobs:
               ninja
 
       - name: Build both applications without local test directories
+        id: build
         shell: bash -el {0}
         run: |
           cmake \
@@ -85,6 +87,20 @@ jobs:
               -G Ninja \
               -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_PREFIX_PATH="$CONDA_PREFIX"
+          # Read the version evaluated by CMake from this exact publication snapshot.
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          import re
+
+          cache = (Path(os.environ["RUNNER_TEMP"]) / "release-build/CMakeCache.txt").read_text()
+          match = re.search(r"^CMAKE_PROJECT_VERSION:STATIC=([0-9]+(?:\.[0-9]+){0,3})$", cache, re.MULTILINE)
+          if not match:
+              raise RuntimeError("CMake did not provide a numeric code version")
+
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              output.write(f"code_version={match.group(1)}\n")
+          PYCODE
           cmake \
               --build "$RUNNER_TEMP/release-build" \
               --parallel 2
@@ -210,10 +226,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+          CODE_VERSION: ${{ needs.validate.outputs.code_version }}
         run: |
           set -euo pipefail
           cat > "$RUNNER_TEMP/release-pr.md" <<EOF
-          Publish the application files from dev commit ${SOURCE_SHA} into main.
+          Publish code version ${CODE_VERSION} from dev commit ${SOURCE_SHA} into main.
+          The version comes from the top-level CMake project() declaration in the validated snapshot.
 
           The publication tree excludes AGENTS.md, legacy sources and submodules,
           tech-note, and test implementations and fixtures. Development files remain
@@ -231,13 +249,13 @@ jobs:
           if test -n "$number"; then
             gh pr edit "$number" \
                 --repo "$GITHUB_REPOSITORY" \
-                --title 'Publish release candidate' \
+                --title "Publish release candidate v${CODE_VERSION}" \
                 --body-file "$RUNNER_TEMP/release-pr.md"
           else
             gh pr create \
                 --repo "$GITHUB_REPOSITORY" \
                 --base main \
                 --head release-candidate \
-                --title 'Publish release candidate' \
+                --title "Publish release candidate v${CODE_VERSION}" \
                 --body-file "$RUNNER_TEMP/release-pr.md"
           fi

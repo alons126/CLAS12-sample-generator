@@ -96,7 +96,7 @@ endif
 # A user-set CLAS12_SAMPLES_DIR takes priority when sourcing from outside the checkout:
 #   unset CLAS12_SAMPLES_DIR
 #   unsetenv CLAS12_SAMPLES_DIR
-#   setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-generator
+#   setenv CLAS12_SAMPLES_DIR /shared/path/CLAS12-sample-tools
 #   source "$CLAS12_SAMPLES_DIR/run.csh"
 # The value remains until `unsetenv CLAS12_SAMPLES_DIR`.
 if ($?CLAS12_SAMPLES_DIR) then
@@ -116,7 +116,7 @@ endif
 
 # Require both Git data and this repository's workflow driver so cleanup cannot target another directory.
 if (! -d "$_clas12_root/.git" || ! -f "$_clas12_root/src/launcher/workflow.py") then
-    echo "${ERROR_COLOR}Error:${RESET_COLOR} Cannot identify the CLAS12-sample-generator Git checkout: $_clas12_root"
+    echo "${ERROR_COLOR}Error:${RESET_COLOR} Cannot identify the CLAS12-sample-tools Git checkout: $_clas12_root"
 
     # Return through the shared block so a sourced shell stays open.
     set CLAS12_SAMPLE_STATUS = 1

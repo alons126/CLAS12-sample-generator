@@ -4,6 +4,8 @@ For example, run **Prepare release candidate** after a change reaches `dev`. The
 
 The action runs only when requested through **Run workflow**. A local commit or a push to `dev` does not start it automatically.
 
+For example, `project(CLAS12SampleTools VERSION 1.0.1 LANGUAGES CXX)` in the top-level [`CMakeLists.txt`](../../CMakeLists.txt) produces the PR title **Publish release candidate v1.0.1**. The description records code version `1.0.1` and the source commit. The action reads the version that CMake evaluated when configuring the validated publication snapshot; creating or updating the PR uses that same value. It does not create a version tag or GitHub release. Change the CMake version before committing the next version to `dev`. If CMake does not provide a numeric version, validation fails before publication.
+
 ## Files included in the PR
 
 The action exports only committed files. It applies [the publication exclusion list](../../.github/release-excludes.txt) to that export before building it. The list excludes repository instruction files, historical source directories, historical notes, submodule declarations, and test implementations and fixtures. No submodules are downloaded. A submodule outside the historical source directory stops publication so its dependency can be reviewed explicitly.

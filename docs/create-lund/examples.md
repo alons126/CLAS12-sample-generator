@@ -19,7 +19,7 @@ source run.csh \
 
 ## Explicit central-detector pion study
 
-This mode is implemented but is not yet production-validated:
+This mode is implemented but is not yet validated for detector-simulation production:
 
 ```tcsh
 source run.csh \

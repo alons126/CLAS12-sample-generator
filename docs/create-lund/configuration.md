@@ -6,9 +6,15 @@ The parser trims whitespace and splits at the first `=`. It does not interpret i
 
 The application first reads defaults, then the profile, then the command line. Later values replace earlier ones. It then calculates `auto` values and checks the result:
 
-```text
-built-in defaults -> configuration file -> command line -> automatic values -> validation
+```mermaid
+flowchart LR
+    DEFAULTS["Read built-in defaults"] --> PROFILE["Apply configuration file"]
+    PROFILE --> CLI["Apply command-line overrides"]
+    CLI --> AUTO["Calculate auto values"]
+    AUTO --> VALIDATE["Validate resolved settings"]
 ```
+
+For example, changing only `--beam-energy 4.02962` while using the [5.98636 GeV 1e profile](../../config/samples/uniform-lund-creation/uniform-1e-5986MeV.conf) leaves its explicit `electron-p-max = 5.98636` unchanged. Overrides replace individual settings; they do not recompute explicit momentum bounds, angular bounds, or trigger offsets. Choose the matching beam/channel/region profile, or review and override each affected setting. Automatic resolution applies only to values set to `auto`.
 
 The launcher does not choose a sample profile. Name one explicitly, or supply every required value. Launcher build settings belong to [`config/run.json`](../../config/run.json.md), not to a sample profile.
 
@@ -27,11 +33,17 @@ The launcher does not choose a sample profile. Name one explicitly, or supply ev
 | `vertex-seed` | `12345` | Seed for vertex-position sampling |
 | `prefix` | `auto` | LUND filename prefix using letters, numbers, `_`, `-`, and `.` |
 
-The parser accepts the event-count range shown above, but serialized event IDs must also fit a signed 32-bit integer. Uniform IDs start at zero, so no run can write more than 2147483648 events. Physical IDs use GST entry indexes and must not exceed 2147483647 even when few events are retained. The writer fails without a completion manifest if an ID exceeds that limit. Submission additionally requires each file's count to fit its positive signed 32-bit event limit.
+The parser accepts the event-count range shown above, but serialized event IDs must also fit a signed 32-bit integer. Uniform IDs start at zero, so no run can write more than 2147483648 events. Physical IDs use GST entry indexes and must not exceed 2147483647 even when few events are retained. The writer fails without a LUND creation log if an ID exceeds that limit. Submission additionally requires each file's count to fit its positive signed 32-bit event limit.
 
-Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable when software, configuration, and draw order match. Seed 0 asks ROOT for automatic, nonrepeatable seeding; the manifest records the configured zero, not the internally chosen value.
+Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable when software, configuration, and draw order match. Seed 0 asks ROOT for automatic, nonrepeatable seeding; the LUND creation log records the configured zero, not the internally chosen value.
 
 `target`, `A`, and `Z` are related but not interchangeable configuration keys. The target and variation select spatial geometry. The `A` and `Z` values are written to the LUND header. Explicit `A`/`Z` overrides never silently change geometry.
+
+### Names that can be submitted
+
+For runs intended for simulation, use labels matching `[A-Za-z0-9_][A-Za-z0-9_.-]*` for `prefix`, `tune`, and `q2-cut`: start with a letter, digit, or underscore, then use only those characters plus dots and hyphens. Use output paths containing only letters, digits, `/`, `_`, `-`, and `.` after resolving symbolic links.
+
+Creation accepts some broader values: physical directory components replace unsafe characters while the LUND creation log retains the original metadata, and creation prefixes may start with a dot or hyphen. Submission validates the original values more strictly. For example, `tune = custom tune` can produce files but fails submission; changing it to `custom-tune` at submission conflicts with the LUND creation log. Choose a submission-compatible label during creation. Do not edit the LUND creation log to bypass this check; preserve the old run and create a new one with the intended metadata when correction is needed.
 
 ## Target catalog
 
@@ -48,13 +60,13 @@ Seeds range from 0 to 4294967295. A nonzero ROOT `TRandom3` seed is repeatable w
 | `Sn120` | 120 | 50 | `rgm_fall2021_Sn_L` | `1-foil-large` |
 | `Sn-nat` | 119 | 50 | `rgm_fall2021_Snx4` | `4-foil` |
 
-C12 at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. `Sn-nat` represents natural tin using the code's header value $A=119$, not a pure tin-119 isotope. The geometry rules come from the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md). A supported LUND target does not guarantee that a matching GCARD is included for every beam and software release; check detector resources separately before submission.
+$\mathrm{C}^{12}$ at another beam energy requires an explicit compatible variation. Run 15733 is the documented $4.02962\,\mathrm{GeV}$ exception and uses `rgm_fall2021_C_S`[^sportes-2026-rgm]. `Sn-nat` represents natural tin using the code's header value $A=119$, not a pure $\mathrm{Sn}^{119}$ isotope. The geometry rules come from the external [`targets.h`](../../src/workflows/lund-creation/external/targets.h); see [external inputs](../concepts/external-inputs.md). A supported LUND target does not guarantee that a matching GCARD is included for every beam and software release; check detector resources separately before submission.
 
 ## Uniform settings
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `channel` | `1e` | `electron-tester`, `1e`, or `eh` |
+| `channel` | `1e` | $(e,e')$ angular tester (`electron-tester`), $(e,e')$ (`1e`), or $(e,e'h)$ (`eh`), where $h$ is the selected hadron |
 | `hadron` | `proton` | `proton` ($p$), `neutron` ($n$), `pip` ($\pi^{+}$), or `pim` ($\pi^{-}$); used by `eh`. See the [electron-hadron label definitions](uniform.md#electron-hadron-labels). |
 | `hadron-region` | `FD` | `FD` or `CD`; used by `eh` |
 | `electron-theta-min/max` | `5`/`40` | Electron-only $\theta$ bounds, in degrees |
@@ -67,7 +79,22 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `trigger-theta` | `25` | Trigger-electron $\theta$, in degrees |
 | `trigger-phi-offset` | `auto` | $\Delta\phi=16^\circ$, $7^\circ$, or $5^\circ$ at the three standard beams; otherwise $0^\circ$ |
 
-`auto` resolves electron momentum to `mixed` for 1e and `beam` for the other channels. It resolves charged-hadron momentum to `mixed` and neutron momentum to `uniform`. The [uniform guide](uniform.md) owns the production ranges; the [sampling model](../concepts/sampling-models.md) owns the mathematical definitions.
+`auto` resolves electron momentum to `mixed` for 1e and `beam` for the other channels. It resolves charged-hadron momentum to `mixed` and neutron momentum to `uniform`. The [uniform LUND creator guide](uniform.md) lists the production ranges; the [sampling model](../concepts/sampling-models.md) defines the sampling distributions.
+
+### Uniform option constraints
+
+| Settings | Accepted values and use |
+| --- | --- |
+| Electron and hadron theta bounds | `0 <= minimum < maximum <= 180`, in degrees; electron bounds control electron-only channels and hadron bounds control `eh` |
+| Electron momentum bounds | `0 <= minimum < maximum`, in GeV/c; used by electron-only `uniform` or `mixed` sampling |
+| `electron-momentum = mixed` | Only `1e`, with a strictly positive electron momentum minimum |
+| `hadron-momentum = mixed` | Only charged-hadron `eh`, with a strictly positive hadron momentum minimum |
+| `hadron-momentum = fixed` | Only neutron `eh`; `hadron-p` must be positive |
+| `hadron-p-min` | Nonnegative and below beam momentum; checked even when a different channel or momentum mode does not consume it |
+| `trigger-theta` | From 0 through 180 degrees; used by `eh` |
+| `trigger-phi-offset` | From -180 through 180 degrees; used by `eh` |
+
+The parser checks all supplied uniform settings, including unused bounds and the positive `hadron-p` value. An `eh` trigger electron always uses beam momentum and the trigger angles; electron-only momentum and angle options do not change it. Electron-only phi and hadron phi always span -180 through 180 degrees; there are no phi-range options. Fixed neutron momentum is not bounded above by beam momentum, and an explicit electron momentum maximum may exceed it; these remain deliberately unphysical acceptance studies.
 
 ## Physical settings
 
@@ -80,9 +107,9 @@ C12 at another beam energy requires an explicit compatible variation. Run 15733 
 | `q2-cut` | beam-based | Record the minimum-$Q^2$ cut used to generate the input; conversion neither applies nor checks it |
 | `output-layout` | `nested` | `nested` or `metadata` |
 
-Automatic minimum-$Q^2$ cut labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Selecting or accepting one of these labels asserts that the supplied truth-level sample was generated with that minimum cut. The code assumes the assertion is correct: it does not calculate $Q^2$, inspect the input distribution, or remove events. An incorrect label therefore records incorrect provenance. The [physical-conversion guide](physical.md#why-upstream-samples-use-q2-cuts) explains the cuts' relation to the electron cross section and CLAS12 angular acceptance. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
+Automatic minimum-$Q^2$ cut labels are `Q2-0.02`, `Q2-0.25`, and `Q2-0.40` for $2.07052\,\mathrm{GeV}$, $4.02962\,\mathrm{GeV}$, and $5.98636\,\mathrm{GeV}$. Selecting or accepting one of these labels asserts that the supplied truth-level sample was generated with that minimum cut. The code assumes the assertion is correct: it does not calculate $Q^2$, inspect the input distribution, or remove events. An incorrect label therefore records incorrect provenance. The [physical LUND converter guide](physical.md#why-upstream-samples-use-q2-cuts) explains the cuts' relation to the electron cross section and CLAS12 angular acceptance. Other energies resolve to `none`. Accepted underscore spellings normalize to the hyphenated form.
 
-The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<q2-cut>__<beam-label>`. The metadata directory is `OUTPUT/<gemc-target-variation>__<event-generator>-<event-generator-version>__<tune>__<q2-cut>__<beam-label>`. Unsafe characters in each directory-name component are replaced; the manifest also keeps the original setting values. GEMC and COATJAVA versions are selected during simulation submission and are not part of LUND creation.
+The nested directory is `OUTPUT/<target>/<event-generator>__<tune>/<q2-cut>__<beam-label>`. The metadata directory is `OUTPUT/<gemc-target-variation>__<event-generator>-<event-generator-version>__<tune>__<q2-cut>__<beam-label>`. Unsafe characters in each directory-name component are replaced; the LUND creation log also keeps the original setting values. GEMC and COATJAVA versions are selected during simulation submission and are not part of LUND creation.
 
 ## Output replacement
 
