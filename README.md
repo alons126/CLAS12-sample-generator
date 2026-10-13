@@ -1,4 +1,4 @@
-# CLAS12 sample generator
+# CLAS12 sample tools
 
 This code prepares CLAS12[^clas12-spectrometer] simulation samples for the [e4ν collaboration](https://e4nu.org). First, it writes particles' momenta and vertex coordinates (the event's position in the target) to [LUND text files](https://gemc.jlab.org/gemc/html/documentation/generator/lund.html). These are truth-level particles: the particles before detector simulation. In a separate step, it submits jobs that run GEMC[^gemc-simulation] detector simulation and COATJAVA[^coatjava-reconstruction] reconstruction. GEMC simulates the detector response; reconstruction uses that response to determine the measured particles.
 

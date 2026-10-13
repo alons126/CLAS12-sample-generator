@@ -90,7 +90,7 @@ When the shell is not in the repository root, point the launcher to the checkout
 ```tcsh
 unset CLAS12_SAMPLES_DIR
 unsetenv CLAS12_SAMPLES_DIR
-setenv CLAS12_SAMPLES_DIR /path/to/CLAS12-sample-generator
+setenv CLAS12_SAMPLES_DIR /path/to/CLAS12-sample-tools
 source "$CLAS12_SAMPLES_DIR/run.csh" \
     --workflow submit \
     --lund-dir /path/to/run/lundfiles

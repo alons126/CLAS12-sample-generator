@@ -24,8 +24,8 @@ git \
     clone \
     --branch main \
     REPOSITORY_URL \
-    CLAS12-sample-generator
-cd CLAS12-sample-generator
+    CLAS12-sample-tools
+cd CLAS12-sample-tools
 ```
 
 ## Prepare a local build environment

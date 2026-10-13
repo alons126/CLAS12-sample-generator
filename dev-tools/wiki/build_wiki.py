@@ -814,7 +814,7 @@ def build(output, repository, branch):
 
     # Sidebar labels come from source headings except for the explicit README label. Section indexes control reading order; the fixed
     # cross-directory references are inserted in their relevant sections rather than becoming orphans.
-    sidebar = ["# CLAS12 Sample Generator", ""]
+    sidebar = ["# CLAS12 Sample Tools", ""]
     sidebar.extend((f"- [{titles['Home.md']}](Home)", "- [Repository README](Repository-Overview)"))
 
     for heading, directory in SIDEBAR_SECTIONS:

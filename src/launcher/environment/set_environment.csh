@@ -14,7 +14,7 @@
 #   The current working directory and hostname.
 #
 # Outputs:
-#   DIR_CLAS12_SAMPLE_GENERATOR_CODE, ANALYSIS_HOSTNAME, JLAB_TESTER, and IFARM_RUN in the caller's shell.
+#   DIR_CLAS12_SAMPLE_TOOLS_CODE, ANALYSIS_HOSTNAME, JLAB_TESTER, and IFARM_RUN in the caller's shell.
 #
 # Usage:
 #   Source this file from the repository root after checkout synchronization.
@@ -60,14 +60,14 @@ echo ""
 
 # Remove both forms of the variable before exporting the new value. In tcsh, a local value made with
 # `set` can hide an environment value made with `setenv`.
-unset DIR_CLAS12_SAMPLE_GENERATOR_CODE
-unsetenv DIR_CLAS12_SAMPLE_GENERATOR_CODE
+unset DIR_CLAS12_SAMPLE_TOOLS_CODE
+unsetenv DIR_CLAS12_SAMPLE_TOOLS_CODE
 
 # Save the current directory as the repository root.
-setenv DIR_CLAS12_SAMPLE_GENERATOR_CODE `pwd`
+setenv DIR_CLAS12_SAMPLE_TOOLS_CODE `pwd`
 
 # Show the resolved path.
-echo "${SYSTEM_COLOR}DIR_CLAS12_SAMPLE_GENERATOR_CODE:${RESET_COLOR} ${DIR_CLAS12_SAMPLE_GENERATOR_CODE}"
+echo "${SYSTEM_COLOR}DIR_CLAS12_SAMPLE_TOOLS_CODE:${RESET_COLOR} ${DIR_CLAS12_SAMPLE_TOOLS_CODE}"
 echo ""
 # endregion
 
